@@ -225,16 +225,25 @@ public class BackwardTypePropagation extends NodeVisitor {
 
         // Peek ahead for constants.
         if (signature.args().length > 0 &&
-            signature.args()[signature.args().length - 1].type() == VariableType.Variadic)
+        	// Is this a variadic native
+        	(signature.args()[signature.args().length - 1].type() == VariableType.Variadic
+        	// Or a call with more parameters passed than arguments defined?
+        	|| signature.args().length < call.numOperands()))
         {
             for (int i = signature.args().length - 1; i < call.numOperands(); i++)
             {
                 DNode node = call.getOperand(i);
-                if (node.type() != NodeType.Constant)
+                if (node.type() != NodeType.DeclareLocal)
                     continue;
 
-                DConstant constNode = (DConstant)node;
+                DDeclareLocal localNode = (DDeclareLocal)node;
+                if (localNode.value().type() != NodeType.Constant)
+                	continue;
+                
+                DConstant constNode = (DConstant)localNode.value();
                 Variable global = graph_.file().lookupGlobal(constNode.value());
+                if (global == null)
+            		global = graph_.file().lookupVariable(localNode.pc(), constNode.value(), Scope.Static);
                 if (global != null)
                 {
                     call.replaceOperand(i, new DGlobal(global));
