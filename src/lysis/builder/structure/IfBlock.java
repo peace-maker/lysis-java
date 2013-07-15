@@ -33,7 +33,7 @@ public class IfBlock extends ControlBlock {
         falseArm_ = null;
         join_ = join;
         invert_ = invert();
-        logic_ = logic();
+        logic_ = chain;
     }
 
     public IfBlock(NodeBlock source, LogicChain chain, ControlBlock trueArm, ControlBlock falseArm, ControlBlock join)
@@ -43,7 +43,7 @@ public class IfBlock extends ControlBlock {
         falseArm_ = falseArm;
         join_ = join;
         invert_ = invert();
-        logic_ = logic();
+        logic_ = chain;
     }
 
     @Override
