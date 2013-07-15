@@ -8,6 +8,7 @@ import lysis.instructions.LBinary;
 import lysis.instructions.LBounds;
 import lysis.instructions.LCall;
 import lysis.instructions.LConstant;
+import lysis.instructions.LDecGlobal;
 import lysis.instructions.LDecLocal;
 import lysis.instructions.LDecReg;
 import lysis.instructions.LEqualConstant;
@@ -616,6 +617,25 @@ public class NodeBuilder {
                     block.add(load);
                     block.add(val);
                     block.add(add);
+                    block.add(store);
+                    break;
+                }
+                
+                case DecGlobal:
+                {
+                    LDecGlobal ins = (LDecGlobal)uins;
+                    Variable global = file_.lookupGlobal(ins.address());
+                    if (global == null)
+                        global = file_.lookupVariable(ins.pc(), ins.address(), Scope.Static);
+                    DNode dglobal = new DGlobal(global);
+
+                    DLoad load = new DLoad(dglobal);
+                    DConstant val = new DConstant(1);
+                    DBinary sub = new DBinary(SPOpcode.sub, load, val);
+                    DStore store = new DStore(dglobal, sub);
+                    block.add(load);
+                    block.add(val);
+                    block.add(sub);
                     block.add(store);
                     break;
                 }

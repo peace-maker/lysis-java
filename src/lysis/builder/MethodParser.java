@@ -11,6 +11,7 @@ import lysis.instructions.LBounds;
 import lysis.instructions.LCall;
 import lysis.instructions.LConstant;
 import lysis.instructions.LDebugBreak;
+import lysis.instructions.LDecGlobal;
 import lysis.instructions.LDecI;
 import lysis.instructions.LDecLocal;
 import lysis.instructions.LDecReg;
@@ -338,6 +339,9 @@ public class MethodParser {
 
             case inc:
                 return new LIncGlobal(readInt32());
+                
+            case dec:
+                return new LDecGlobal(readInt32());
                 
             case inc_s:
                 return new LIncLocal(trackStack(readInt32()));

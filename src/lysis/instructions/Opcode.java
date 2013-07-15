@@ -22,6 +22,7 @@ public enum Opcode {
     MulConstant,
     ZeroGlobal,
     IncGlobal,
+    DecGlobal,
     IncLocal,
     DecLocal,
     IncI,
