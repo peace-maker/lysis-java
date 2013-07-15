@@ -190,6 +190,22 @@ public class BackwardTypePropagation extends NodeVisitor {
                            ? signature.args()[i]
                            : signature.args()[signature.args().length - 1];
 
+            // A reference to a constant. See if it's a global variable.
+            // This catches cases of stock ClearHandle(&Handle:handle) called with a global variable
+            if (arg.type() == VariableType.Reference && node.type() == NodeType.DeclareLocal && node.getOperand(0).type() == NodeType.Constant)
+            {
+            	DDeclareLocal localNode = (DDeclareLocal)node;
+            	DConstant constNode = (DConstant)localNode.getOperand(0);
+            	Variable global = graph_.file().lookupGlobal(constNode.value());
+            	if (global == null)
+            		global = graph_.file().lookupVariable(localNode.pc(), constNode.value(), Scope.Static);
+            	if (global != null)
+            	{
+            		call.replaceOperand(i, new DGlobal(global));
+            		node = call.getOperand(i);
+            	}
+            }
+                           
             TypeUnit tu = TypeUnit.FromArgument(arg);
             if (tu != null) {
             	// Ignore invalid function references.
