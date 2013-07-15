@@ -1,7 +1,6 @@
 package lysis.builder;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import lysis.BitConverter;
@@ -18,6 +17,7 @@ import lysis.instructions.LDecReg;
 import lysis.instructions.LEqualConstant;
 import lysis.instructions.LExchange;
 import lysis.instructions.LFill;
+import lysis.instructions.LGenArray;
 import lysis.instructions.LGoto;
 import lysis.instructions.LHeap;
 import lysis.instructions.LIncGlobal;
@@ -51,13 +51,15 @@ import lysis.instructions.LStoreGlobalConstant;
 import lysis.instructions.LStoreLocal;
 import lysis.instructions.LStoreLocalConstant;
 import lysis.instructions.LStoreLocalRef;
+import lysis.instructions.LStradjustPri;
 import lysis.instructions.LSwap;
 import lysis.instructions.LSwitch;
 import lysis.instructions.LSysReq;
+import lysis.instructions.LTrackerPopSetHeap;
+import lysis.instructions.LTrackerPushC;
 import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
-import lysis.instructions.Opcode;
 import lysis.instructions.SwitchCase;
 import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
@@ -600,6 +602,39 @@ public class MethodParser {
                 int ncases = readInt32();
                 pc_ += (long)ncases * 8 + 4;
                 return new LDebugBreak();
+            }
+            
+            case genarray:
+            {
+            	int dims = readInt32();
+            	return new LGenArray(dims, false);
+            }
+            
+            case genarray_z:
+            {
+            	int dims = readInt32();
+            	return new LGenArray(dims, true);
+            }
+            
+            case tracker_pop_setheap:
+            {
+            	return new LTrackerPopSetHeap();
+            }
+            
+            case tracker_push_c:
+            {
+            	int value = readInt32();
+            	return new LTrackerPushC(value);
+            }
+            
+            case stradjust_pri:
+            {
+            	return new LStradjustPri();
+            }
+            
+            case nop:
+            {
+            	return new LDebugBreak();
             }
 
             default:

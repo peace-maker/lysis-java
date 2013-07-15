@@ -64,6 +64,9 @@ public class Lysis {
 
         // Coalesce x[y] = x[y] + 5 into x[y] += 5
         NodeAnalysis.CoalesceLoadStores(ngraph);
+        
+        // Print string initializations new String:bla[] = "HALLO";
+        NodeAnalysis.SetDirectStringInitialization(ngraph);
 
         // After this, it is not legal to run type analysis again, because
         // arguments expecting references may have been rewritten to take
@@ -116,7 +119,6 @@ public class Lysis {
 			sysout = new PrintStream(System.out, true, "UTF-8");
 			System.setOut(sysout);
 		} catch (UnsupportedEncodingException e2) {
-			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 		
@@ -125,7 +127,6 @@ public class Lysis {
 		try {
 			file = PawnFile.FromFile(path);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			return;
 		}

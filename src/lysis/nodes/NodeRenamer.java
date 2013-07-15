@@ -23,6 +23,7 @@ public class NodeRenamer {
                 case IncDec:
                 case DeclareStatic:
                 case Switch:
+                case GenArray:
                 {
                     iter.next();
                     continue;

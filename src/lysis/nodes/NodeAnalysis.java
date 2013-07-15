@@ -1,17 +1,21 @@
 package lysis.nodes;
 
 import lysis.lstructure.Signature;
+import lysis.lstructure.Tag;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DCall;
 import lysis.nodes.types.DConstant;
 import lysis.nodes.types.DDeclareLocal;
+import lysis.nodes.types.DGenArray;
+import lysis.nodes.types.DGlobal;
 import lysis.nodes.types.DHeap;
 import lysis.nodes.types.DInlineArray;
 import lysis.nodes.types.DLoad;
 import lysis.nodes.types.DMemCopy;
 import lysis.nodes.types.DNode;
 import lysis.nodes.types.DStore;
+import lysis.nodes.types.DString;
 import lysis.nodes.types.DSysReq;
 import lysis.nodes.types.DUse;
 import lysis.sourcepawn.SPOpcode;
@@ -111,8 +115,13 @@ public class NodeAnalysis {
         TypeUnit tu = ts.types(0);
         if (tu.kind() == TypeUnit.Kind.Array)
             return true;
-        if (tu.kind() == TypeUnit.Kind.Reference && tu.inner().kind() == TypeUnit.Kind.Array)
-            return true;
+        if (tu.kind() == TypeUnit.Kind.Reference)
+        {
+        	// tu.inner().dims() <= tu2.inner().dims()!
+        	if(tu.inner().kind() == TypeUnit.Kind.Array && tu.inner().type() != null)
+        		return true;
+        }
+            
         return false;
     }
 
@@ -134,6 +143,18 @@ public class NodeAnalysis {
         {
             return op2;
         }
+        if(op1.type() == NodeType.Load)
+        {
+        	DLoad load = (DLoad)op1;
+        	if(load.from().type() == NodeType.ArrayRef)
+        		return op1;
+        }
+        if(op2.type() == NodeType.Load)
+        {
+        	DLoad load = (DLoad)op2;
+        	if(load.from().type() == NodeType.ArrayRef)
+        		return op2;
+        }
         return null;
     }
 
@@ -141,6 +162,12 @@ public class NodeAnalysis {
     {
         if (abase.type() == NodeType.ArrayRef)
             return true;
+        if(abase.type() == NodeType.Load)
+        {
+        	DLoad load = (DLoad)abase;
+        	if(load.from().type() == NodeType.ArrayRef)
+        		return true;
+        }
         if (IsArray(abase.typeSet()))
             return true;
         for (DUse use : node.uses())
@@ -163,6 +190,25 @@ public class NodeAnalysis {
         return false;
     }
 
+    private static boolean ShouldOperantsBeSwitched(DNode abase, DNode index, DBinary binary) throws Exception
+    {
+    	if(abase.type() != NodeType.Load || index.type() != NodeType.Load)
+    		return false;
+    	
+    	if(abase.getOperand(0) == index &&
+    	   index.getOperand(0).type() == NodeType.DeclareLocal)
+    	{
+    		// Make sure this binary is on the left side of the store?
+    		/*DBinary bin = binary;
+    		while(bin.uses().size() == 1 && bin.uses().get(0).node().type() == NodeType.Binary)
+    			bin = (DBinary) bin.uses().get(0).node();
+    		if(bin.uses().size() == 1 && bin.uses().get(0).node().type() == NodeType.Store && bin.uses().get(0).node().getOperand(0) == bin)*/
+    			return true;
+    		
+    	}
+    	return false;
+    }
+    
     private static boolean CollapseArrayReferences(NodeBlock block) throws Exception
     {
         boolean changed = false;
@@ -180,6 +226,7 @@ public class NodeAnalysis {
                     block.nodes().insertBefore(node, index0);
                     block.nodes().insertBefore(node, aref0);
                     node.replaceOperand(0, aref0);
+                    changed = true;
                     continue;
                 }
             }
@@ -202,9 +249,48 @@ public class NodeAnalysis {
                 continue;
             DNode index = (abase == binary.lhs()) ? binary.rhs() : binary.lhs();
 
+            if(ShouldOperantsBeSwitched(abase, index, binary))
+            {
+            	abase = binary.rhs();
+            	index = binary.lhs();
+            }
+            
             if (!IsReallyLikelyArrayCompute(binary, abase))
                 continue;
-
+            
+            // Don't collapse stuff like 
+            // array[2] += 5;
+            if(abase.type() == NodeType.Load)
+            {
+            	DLoad load = (DLoad)abase;
+            	if(load.from().type() == NodeType.ArrayRef && 
+        	    binary.uses().size() == 1 && 
+        	    index.type() == NodeType.Constant &&
+        	    binary.uses().get(0).node().type() == NodeType.Store)
+        		{
+            		DStore store = (DStore)binary.uses().get(0).node();
+            		if(store.rhs() == binary)
+        				continue;
+        		}
+            }
+            
+            // Make sure, we don't collapse more dimensions than the array we're dealing with has.
+            int num_dims = 1;
+            DNode check = abase;
+            while(check.type() == NodeType.Load)
+            {
+            	DLoad load = (DLoad)check;
+            	if(load.from().type() != NodeType.ArrayRef)
+            		break;
+            	
+            	num_dims++;
+            	DArrayRef ref = (DArrayRef)load.from();
+            	check = ref.lhs();
+            }
+            //System.out.printf("Already collapsed dims: %d (%s)%n", num_dims, check.type());
+            if(HasEnoughArrayDimensions(check, num_dims))
+            	continue;
+            
             // Multi-dimensional arrays are indexed like:
             // x[y] => x + x[y]
             //
@@ -219,7 +305,8 @@ public class NodeAnalysis {
                 continue;
             }
             
-            index.setUsedAsArrayIndex();
+            if(index.type() == NodeType.Constant)
+            	index.setUsedAsArrayIndex();
             
             // Otherwise, create a new array reference.
             DArrayRef aref = new DArrayRef(abase, index);
@@ -245,6 +332,56 @@ public class NodeAnalysis {
         } while (changed);
     }
 
+    public static boolean HasEnoughArrayDimensions(DNode check, int num_dims) throws Exception
+    {
+    	switch(check.type())
+        {
+        	case Load:
+        	{
+            	return HasEnoughArrayDimensions(((DLoad)check).from(), num_dims);
+        	}
+        	case DeclareLocal:
+        	{
+        		DDeclareLocal local = (DDeclareLocal)check;
+        		//System.out.printf("localvar %s has %d dimensions.%n", local.var().name(), local.var().dims().length);
+        		if(local.var() != null && local.var().dims() != null && local.var().dims().length < num_dims)
+        			return true;
+        		break;
+        	}
+        	case Global:
+        	{
+        		DGlobal global = (DGlobal)check;
+        		//System.out.printf("global %s has %d dimensions.%n", global.var().name(), global.var().dims().length);
+        		if(global.var().dims().length < num_dims)
+        			return true;
+        		break;
+        	}
+        	case GenArray:
+    		{
+    			DGenArray genarray = (DGenArray)check;
+    			//System.out.printf("genarray %s has %d dimensions.%n", genarray.var().name(), genarray.var().dims().length);
+            	if(genarray.var().dims().length < num_dims)
+            		return true;
+            	break;
+    		}
+        	case Constant:
+        	{
+        		// Hopefully this isn't too blue-eyed. Can't get a variable of a constant..
+        		// Catches cases like
+        		// new Float:newspeed = GetEntPropFloat(client, PropType:1, "m_flMaxspeed", 0) + g_flClassApplySpeed[client];
+        		DConstant constant = (DConstant)check;
+        		//System.out.printf("constant = %d.%n", constant.value());
+        		if(check.uses().size() == 1 && check.uses().get(0).node().type() == NodeType.Binary)
+        		{
+        			return HasEnoughArrayDimensions(check.uses().get(0).node().getOperand(0), num_dims);
+        		}
+        			
+        		break;
+        	}
+        }
+    	return false;
+    }
+    
     public static void CoalesceLoadsAndDeclarations(NodeGraph graph) throws Exception
     {
         for (int i = 0; i < graph.numBlocks(); i++)
@@ -363,6 +500,40 @@ public class NodeAnalysis {
         return ((DSysReq)node).nativeX();
     }
 
+    // Print the initialization of strings
+    // new String:bla[] = "HALLO";
+    public static void SetDirectStringInitialization(NodeGraph graph) throws Exception
+    {
+        for (int i = 0; i < graph.numBlocks(); i++)
+        {
+            NodeBlock block = graph.blocks(i);
+            for (NodeList.iterator iter = block.nodes().begin(); iter.more(); )
+            {
+                DNode node = iter.node();
+
+                if (node.type() == NodeType.MemCopy)
+                {
+                    DMemCopy mcpy = (DMemCopy)node;
+                    if(mcpy.from().type() == NodeType.Constant
+                    	&& mcpy.to().type() == NodeType.DeclareLocal)
+                    {
+                    	DConstant con = (DConstant)mcpy.from();
+                    	DDeclareLocal local = (DDeclareLocal)mcpy.to();
+                    	if(local.value() == null
+                    		&& local.var() != null
+                    		&& local.var().tag().name().equals("String"))
+                    	{
+                    		DString string = new DString(graph.file().stringFromData(con.value()));
+                    		local.initOperand(0, string);
+                    	}
+                    }
+                }
+
+                iter.next();
+            }
+        }
+    }
+    
     private static boolean AnalyzeHeapNode(NodeBlock block, DHeap node) throws Exception
     {
         // Easy case: compiler needed a lvalue.
@@ -398,6 +569,23 @@ public class NodeAnalysis {
                 return true;
             }
         }
+        else if (node.uses().size() == 1)
+        {
+        	DUse use = node.uses().getLast();
+        	if(use.node().type() == NodeType.SysReq
+        	|| use.node().type() == NodeType.Call)
+        	{
+        		if(node.next().type() == NodeType.Call)
+        		{
+        			DCall call = (DCall)node.next();
+        			if(call.function().returnType().name().equals("String"))
+        			{
+        				use.node().replaceOperand(use.index(), call);
+        				return true;
+        			}
+        		}
+        	}
+        }
 
         return false;
     }
@@ -418,5 +606,63 @@ public class NodeAnalysis {
     {
         for (int i = 0; i < graph.numBlocks(); i++)
             AnalyzeHeapUsage(graph.blocks(i));
+    }
+    
+    public static String PrintRecursively(DNode node, DNode start)
+    {
+    	String ret = node.type().toString() + "#" + node.hashCode() + " (uses: " + node.uses().size() + ")\n";
+    	switch(node.type())
+    	{
+    		case Binary:
+    		{
+    			DBinary binary = (DBinary)node;
+    			DNode abase = GuessArrayBase(binary.lhs(), binary.rhs());
+    			ret += "\tbase: " + (abase==null?"null":abase.type().toString() + "#" + abase.hashCode() + " (uses: " + abase.uses().size() + ")") + "\n";
+    			ret += "\tislikelyarray: " + (abase==null?"false":IsReallyLikelyArrayCompute(binary, abase)) + "\n";
+    			ret += "\tlhs: " + binary.lhs().type().toString() + "#" + binary.lhs().hashCode() + " (uses: " + binary.lhs().uses().size() + ")\n";
+    			ret += "\top: " + binary.spop().toString() + "\n";
+    			ret += "\trhs: " + binary.rhs().type().toString() + "#" + binary.rhs().hashCode() + " (uses: " + binary.rhs().uses().size() + ")\n";
+    			break;
+    		}
+    		case Constant:
+    		{
+    			DConstant constant = (DConstant)node;
+    			ret += "\tval: " + constant.value() + "\n";
+    			break;
+    		}
+    		case Load:
+    		{
+    			DLoad load = (DLoad)node;
+    			ret += "\tfrom: " + load.from().type().toString() + "#" + load.from().hashCode() + " (uses: " + load.from().uses().size() + ")\n";
+    			break;
+    		}
+    		case Store:
+    		{
+    			DStore store = (DStore)node;
+    			ret += "\tlhs: " + store.lhs().type().toString() + "#" + store.lhs().hashCode() + " (uses: " + store.lhs().uses().size() + ")\n";
+    			ret += "\top: " + store.spop().toString() + "\n";
+    			ret += "\trhs: " + store.rhs().type().toString() + "#" + store.rhs().hashCode() + " (uses: " + store.rhs().uses().size() + ")\n";
+    			break;
+    		}
+    		case ArrayRef:
+    		{
+    			DArrayRef arrayref = (DArrayRef)node;
+    			ret += "\tlhs: " + arrayref.lhs().type().toString() + "#" + arrayref.lhs().hashCode() + " (uses: " + arrayref.lhs().uses().size() + ")\n";
+    			ret += "\trhs: " + arrayref.rhs().type().toString() + "#" + arrayref.rhs().hashCode() + " (uses: " + arrayref.rhs().uses().size() + ")\n";
+    			break;
+    		}
+    		case DeclareLocal:
+    		{
+    			DDeclareLocal local = (DDeclareLocal)node;
+    			ret += "\tvar: " + (local.var() != null?local.var().name():"") + "\n";
+    			ret += "\tvalue: " + (local.value() != null?local.value().type().toString() + "#" + local.value().hashCode() + " (uses: " + local.value().uses().size() + ")":"") + "\n";
+    			break;
+    		}
+    	}
+    	ret += "\n";
+    	if(node.prev() != start)
+    		return ret + PrintRecursively(node.prev(), start);
+    	else
+    		return ret;
     }
 }

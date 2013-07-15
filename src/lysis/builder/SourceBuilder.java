@@ -1,6 +1,5 @@
 package lysis.builder;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -33,6 +32,7 @@ import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DDeclareStatic;
 import lysis.nodes.types.DFloat;
 import lysis.nodes.types.DFunction;
+import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
 import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DInlineArray;
@@ -197,7 +197,12 @@ public class SourceBuilder {
         {
             TypeUnit tu = node.typeSet().types(0);
             if (tu.kind() == TypeUnit.Kind.Cell && tu.type().type() == CellType.Tag)
-                prefix = tu.type().tag().name() + ":";
+            {
+            	if(tu.type().tag() != null)
+            		prefix = tu.type().tag().name() + ":";
+            	else
+            		prefix = "MissingTAG:";
+            }
         }
         return prefix + node.value();
     }
@@ -284,7 +289,7 @@ public class SourceBuilder {
                 return buildLoadStoreRef(load.from());
             }
             
-            case Binary:
+            /*case Binary:
             {
             	return buildBinary((DBinary)node);
             }
@@ -292,8 +297,13 @@ public class SourceBuilder {
             case Constant:
             {
             	return buildConstant((DConstant)node);
-            }
+            }*/
 
+            case GenArray:
+            {
+            	return ((DGenArray)node).var().name();
+            }
+            
             default:
                 throw new Exception("unknown load " + node.type());
         }
@@ -434,34 +444,39 @@ public class SourceBuilder {
                 return buildCall((DCall)node);
 
             case DeclareLocal:
-                {
-                    DDeclareLocal local = (DDeclareLocal)node;
-                    return local.var().name();
-                }
+            {
+                DDeclareLocal local = (DDeclareLocal)node;
+                return local.var().name();
+            }
 
             case TempName:
-                {
-                    DTempName name = (DTempName)node;
-                    return name.name();
-                }
+            {
+                DTempName name = (DTempName)node;
+                return name.name();
+            }
 
             case Global:
-                {
-                    DGlobal global = (DGlobal)node;
-                    return global.var().name();
-                }
+            {
+                DGlobal global = (DGlobal)node;
+                return global.var().name();
+            }
 
             case InlineArray:
-                {
-                    return buildInlineArray((DInlineArray)node);
-                }
+            {
+                return buildInlineArray((DInlineArray)node);
+            }
+            
+            case GenArray:
+            {
+            	return ((DGenArray)node).var().name();
+            }
 
             default:
-                throw new Exception("waT");
+                throw new Exception("Can't print expression: " + node.type());
         }
     }
 
-    private String buildArgDeclaration(Argument arg)
+	private String buildArgDeclaration(Argument arg)
     {
         String prefix = arg.type() == VariableType.Reference
                         ? "&"
@@ -525,9 +540,29 @@ public class SourceBuilder {
             return;
         }
 
+        if(local.value().type() == NodeType.Constant)
+        {
+        	DConstant con = (DConstant)local.value();
+        	if(con.value() == 0)
+        	{
+        		outputLine("new " + decl + ";");
+        		return;
+        	}
+        }
+        
         String expr = buildExpression(local.value());
         outputLine("new " + decl + " = " + expr + ";");
     }
+    
+    private void writeGenArray(DGenArray array) throws Exception {
+    	String prefix = (array.autozero()?"new ":"decl ");
+    	String decl = prefix + array.var().name();
+		for(int i=array.numOperands()-1;i>=0;i--)
+		{
+			decl += "[" + buildExpression(array.getOperand(i)) + "]";
+		}
+		outputLine(decl + ";");
+	}
 
     private void writeStatic(DDeclareStatic decl) throws IOException
     {
@@ -569,6 +604,9 @@ public class SourceBuilder {
 
     private void writeTempName(DTempName name) throws Exception
     {
+//    	if(name.next().type() == NodeType.JumpCondition && name.next() == name.block().nodes().last())
+//    		return;
+    	
         if (name.getOperand(0) != null)
             outputLine("new " + name.name() + " = " + buildExpression(name.getOperand(0)) + ";");
         else
@@ -617,13 +655,17 @@ public class SourceBuilder {
             case IncDec:
                 writeIncDec((DIncDec)node);
                 break;
+            
+            case GenArray:
+            	writeGenArray((DGenArray)node);
+            	break;
 
             default:
                 throw new Exception("unknown op (" + node.type() + ")");
         }
     }
 
-    private String lgop(LogicOperator lop)
+	private String lgop(LogicOperator lop)
     {
         return lop == LogicOperator.And
                       ? "&&"
@@ -661,11 +703,11 @@ public class SourceBuilder {
 
     private void writeIf(IfBlock block) throws Exception
     {
+    	writeStatements(block.source());
+    	
         String cond;
         if (block.logic() == null)
         {
-            writeStatements(block.source());
-
             DJumpCondition jcc = (DJumpCondition)block.source().nodes().last();
 
             if (block.invert())
@@ -854,6 +896,8 @@ public class SourceBuilder {
         str = str.replace("\u0003", "\\x03"); // Teamcolor
         str = str.replace("\u0004", "\\x04"); // Green
         str = str.replace("\u0005", "\\x05"); // Olive
+        str = str.replace("\u0007", "\\x07"); // followed by a hex code in RRGGBB format
+        str = str.replace("\u0008", "\\x08"); // followed by a hex code with alpha in RRGGBBAA format
         return str;
     }
     
@@ -1018,11 +1062,84 @@ public class SourceBuilder {
             decreaseIndent();
             outputLine("};");
         }
+        else if (var.name().startsWith("__ext_"))
+        {
+        	/*struct _ext
+			{
+				cell_t name;
+				cell_t file;
+				cell_t autoload;
+				cell_t required;
+			} *ext;*/
+        	long nameOffset = file_.int32FromData(var.address() + 0);
+        	long fileOffset = file_.int32FromData(var.address() + 4);
+        	long autoload = file_.int32FromData(var.address() + 8);
+        	long required = file_.int32FromData(var.address() + 12);
+        	String name = file_.stringFromData(nameOffset);
+            String file = file_.stringFromData(fileOffset);
+            outputLine("public Extension:" + var.name() + " =");
+            outputLine("{");
+            increaseIndent();
+            outputLine("name = " + buildString(name) + ",");
+            outputLine("file = " + buildString(file) + ",");
+            outputLine("autoload = " + autoload + ",");
+            outputLine("required = " + required + ",");
+            decreaseIndent();
+            outputLine("};");
+        }
+        else if (var.name().startsWith("__pl_"))
+        {
+        	/*struct _pl
+    		{
+    			cell_t name;
+    			cell_t file;
+    			cell_t required;
+    		} *pl;*/
+        	long nameOffset = file_.int32FromData(var.address() + 0);
+        	long fileOffset = file_.int32FromData(var.address() + 4);
+        	long required = file_.int32FromData(var.address() + 8);
+        	String name = file_.stringFromData(nameOffset);
+            String file = file_.stringFromData(fileOffset);
+            outputLine("public SharedPlugin:" + var.name() + " =");
+            outputLine("{");
+            increaseIndent();
+            outputLine("name = " + buildString(name) + ",");
+            outputLine("file = " + buildString(file) + ",");
+            outputLine("required = " + required + ",");
+            decreaseIndent();
+            outputLine("};");
+        }
+        else if(var.tag().name().equals("PlVers"))
+        {
+        	/*struct PlVers
+        	{
+        		version,
+        		String:filevers[],
+        		String:date[],
+        		String:time[]
+        	};*/
+        	long version = file_.int32FromData(var.address() + 0);
+        	long fileversOffset = file_.int32FromData(var.address() + 4);
+        	long dateOffset = file_.int32FromData(var.address() + 8);
+        	long timeOffset = file_.int32FromData(var.address() + 12);
+        	String filevers = file_.stringFromData(fileversOffset);
+            String date = file_.stringFromData(dateOffset);
+            String time = file_.stringFromData(timeOffset);
+            outputLine("public PlVers:__version =");
+            outputLine("{");
+            increaseIndent();
+            outputLine("version = " + version + ",");
+            outputLine("filevers = " + buildString(filevers) + ",");
+            outputLine("date = " + buildString(date) + ",");
+            outputLine("time = " + buildString(time));
+            decreaseIndent();
+            outputLine("};");
+        }
         else if (var.tag() != null && var.tag().name().equals("String"))
         {
             if (var.dims().length == 1)
             {
-                String text = decl + " String:" + var.name() + "[" + var.dims()[0].size() + "]";
+                String text = decl + " String:" + var.name() + "[" + var.dims()[0].size() * 4 + "]";
                 String primer = file_.stringFromData(var.address());
                 if (primer.length() > 0)
                     text += " = " + buildString(primer);
@@ -1034,7 +1151,13 @@ public class SourceBuilder {
                 if (var.dims() != null)
                 {
                     for (int i = 0; i < var.dims().length; i++)
-                        text += "[" + var.dims()[i].size() + "]";
+                    {
+                    	// Display the correct number of bytes for the last dim of a string array
+                    	if(i == (var.dims().length-1))
+                    		text += "[" + var.dims()[i].size() * 4 + "]";
+                    	else
+                    		text += "[" + var.dims()[i].size() + "]";
+                    }
                 }
                 if (isArrayEmpty(var))
                 {

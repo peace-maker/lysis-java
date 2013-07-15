@@ -12,6 +12,7 @@ import lysis.instructions.LDecLocal;
 import lysis.instructions.LDecReg;
 import lysis.instructions.LEqualConstant;
 import lysis.instructions.LFill;
+import lysis.instructions.LGenArray;
 import lysis.instructions.LGoto;
 import lysis.instructions.LHeap;
 import lysis.instructions.LIncGlobal;
@@ -62,6 +63,7 @@ import lysis.nodes.types.DCall;
 import lysis.nodes.types.DConstant;
 import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DDeclareStatic;
+import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
 import lysis.nodes.types.DHeap;
 import lysis.nodes.types.DIncDec;
@@ -157,6 +159,11 @@ public class NodeBuilder {
                     assert(block.stack().pri().type() == NodeType.Constant);
                     for (int i = 0; i < ins.amount(); i += 4)
                         block.stack().set(local.offset() + i, block.stack().pri());
+                    
+                    // Remember that this local is initialized -> "new" instead of "decl"!
+                    DConstant con = (DConstant)block.stack().pri();
+                    if(local.value() == null && con.value() == 0)
+                    	local.initOperand(0, con);
                     break;
                 }
 
@@ -200,7 +207,7 @@ public class NodeBuilder {
                 case StackAddress:
                 {
                     LStackAddress ins = (LStackAddress)uins;
-                    DDeclareLocal local = block.stack().getName(ins.offset());
+                    DDeclareLocal local = (DDeclareLocal) block.stack().getName(ins.offset());
                     block.stack().set(ins.reg(), local);
                     break;
                 }
@@ -208,7 +215,7 @@ public class NodeBuilder {
                 case PushStackAddress:
                 {
                     LPushStackAddress ins = (LPushStackAddress)uins;
-                    DLocalRef lref = new DLocalRef(block.stack().getName(ins.offset()));
+                    DLocalRef lref = new DLocalRef((DDeclareLocal) block.stack().getName(ins.offset()));
                     DDeclareLocal local = new DDeclareLocal(ins.pc(), lref);
                     block.stack().push(local);
                     block.add(lref);
@@ -425,7 +432,7 @@ public class NodeBuilder {
                 case IncLocal:
                 {
                     LIncLocal ins = (LIncLocal)uins;
-                    DDeclareLocal local = block.stack().getName(ins.offset());
+                    DDeclareLocal local = (DDeclareLocal) block.stack().getName(ins.offset());
                     DIncDec inc = new DIncDec(local, 1);
                     block.add(inc);
                     break;
@@ -442,7 +449,7 @@ public class NodeBuilder {
                 case DecLocal:
                 {
                     LDecLocal ins = (LDecLocal)uins;
-                    DDeclareLocal local = block.stack().getName(ins.offset());
+                    DDeclareLocal local = (DDeclareLocal) block.stack().getName(ins.offset());
                     DIncDec dec = new DIncDec(local, -1);
                     block.add(dec);
                     break;
@@ -631,7 +638,7 @@ public class NodeBuilder {
                 case StoreLocalConstant:
                 {
                     LStoreLocalConstant lstore = (LStoreLocalConstant)uins;
-                    DDeclareLocal var = block.stack().getName(lstore.address());
+                    DDeclareLocal var = (DDeclareLocal) block.stack().getName(lstore.address());
                     DConstant val = new DConstant(lstore.value());
                     DStore store = new DStore(var, val);
                     block.add(val);
@@ -642,7 +649,7 @@ public class NodeBuilder {
                 case ZeroLocal:
                 {
                     LZeroLocal lstore = (LZeroLocal)uins;
-                    DDeclareLocal var = block.stack().getName(lstore.address());
+                    DDeclareLocal var = (DDeclareLocal) block.stack().getName(lstore.address());
                     DConstant val = new DConstant(0);
                     DStore store = new DStore(var, val);
                     block.add(val);
@@ -673,6 +680,20 @@ public class NodeBuilder {
                     DSwitch switch_ = new DSwitch(block.stack().pri(), ins);
                     block.add(switch_);
                     break;
+                }
+                
+                case GenArray:
+                {
+                	LGenArray ins = (LGenArray)uins;
+                	DNode[] dims = new DNode[ins.dims()];
+                	for(int i=0;i<ins.dims();i++)
+                	{
+                		dims[i] = block.stack().popValue();
+                	}
+                	DGenArray genarray_ = new DGenArray(ins.pc()+4*ins.dims()+4, dims, ins.autozero());
+                	block.stack().push(genarray_);
+                	block.add(genarray_);
+                	break;
                 }
 
                 default:

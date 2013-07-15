@@ -50,5 +50,6 @@ public enum Opcode {
     ZeroLocal,
     Heap,
     MemCopy,
-    Switch
+    Switch,
+    GenArray
 }

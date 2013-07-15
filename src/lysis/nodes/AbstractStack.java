@@ -4,15 +4,16 @@ import java.util.LinkedList;
 
 import lysis.lstructure.Register;
 import lysis.nodes.types.DDeclareLocal;
+import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DNode;
 
 public class AbstractStack {
 	private class StackEntry
     {
-        public DDeclareLocal declaration;
+        public DNode declaration;
         public DNode assignment;
 
-        public StackEntry(DDeclareLocal decl, DNode assn)
+        public StackEntry(DNode decl, DNode assn)
         {
             declaration = decl;
             assignment = assn;
@@ -49,6 +50,11 @@ public class AbstractStack {
         stack_.add(new StackEntry(local, local.value()));
         local.setOffset(depth());
     }
+    public void push(DGenArray array)
+    {
+        stack_.add(new StackEntry(array, null));
+        array.setOffset(depth());
+    }
     private StackEntry popEntry()
     {
         StackEntry e = stack_.get(stack_.size() - 1);
@@ -80,13 +86,23 @@ public class AbstractStack {
         return value;
     }
 
+    public DNode peekName()
+    {
+        DNode value = stack_.get(stack_.size() - 1).declaration;
+        return value;
+    }
+    
     private StackEntry entry(long offset)
     {
         if (offset < 0)
             return stack_.get((int) ((-offset / 4) - 1));
+        
+        if((int) ((offset - 12) / 4) >= args_.length)
+        	return new StackEntry(null, null);
+        
         return args_[(int) ((offset - 12) / 4)];
     }
-    public DDeclareLocal getName(long offset)
+    public DNode getName(long offset)
     {
         return entry(offset).declaration;
     }

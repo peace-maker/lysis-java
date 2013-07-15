@@ -11,6 +11,7 @@ import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DDeclareStatic;
 import lysis.nodes.types.DFloat;
 import lysis.nodes.types.DFunction;
+import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
 import lysis.nodes.types.DHeap;
 import lysis.nodes.types.DIncDec;
@@ -56,4 +57,5 @@ public abstract class NodeVisitor {
     public void visit(DMemCopy phi) { }
     public void visit(DInlineArray ia) { }
     public void visit(DSwitch switch_) { }
+	public void visit(DGenArray genarray) throws Exception { }
 }

@@ -29,5 +29,6 @@ public enum NodeType {
     Heap,
     MemCopy,
     InlineArray,
-    Switch
+    Switch,
+    GenArray
 }

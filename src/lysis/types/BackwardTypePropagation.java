@@ -5,11 +5,41 @@ import java.nio.ByteBuffer;
 import lysis.BitConverter;
 import lysis.Lysis;
 import lysis.Public;
-import lysis.lstructure.*;
-import lysis.nodes.*;
-import lysis.nodes.types.*;
+import lysis.lstructure.Argument;
+import lysis.lstructure.Function;
+import lysis.lstructure.Scope;
+import lysis.lstructure.Signature;
+import lysis.lstructure.Variable;
+import lysis.lstructure.VariableType;
+import lysis.nodes.NodeBlock;
+import lysis.nodes.NodeGraph;
+import lysis.nodes.NodeList;
+import lysis.nodes.NodeType;
+import lysis.nodes.NodeVisitor;
+import lysis.nodes.types.DArrayRef;
+import lysis.nodes.types.DBinary;
+import lysis.nodes.types.DBoolean;
+import lysis.nodes.types.DBoundsCheck;
+import lysis.nodes.types.DCall;
+import lysis.nodes.types.DCharacter;
+import lysis.nodes.types.DConstant;
+import lysis.nodes.types.DDeclareLocal;
+import lysis.nodes.types.DFloat;
+import lysis.nodes.types.DFunction;
+import lysis.nodes.types.DGenArray;
+import lysis.nodes.types.DGlobal;
+import lysis.nodes.types.DJump;
+import lysis.nodes.types.DJumpCondition;
+import lysis.nodes.types.DLoad;
+import lysis.nodes.types.DLocalRef;
+import lysis.nodes.types.DNode;
+import lysis.nodes.types.DReturn;
+import lysis.nodes.types.DStore;
+import lysis.nodes.types.DString;
+import lysis.nodes.types.DSysReq;
 import lysis.sourcepawn.SPOpcode;
 import lysis.sourcepawn.SourcePawnFile;
+import lysis.types.TypeUnit.Kind;
 
 public class BackwardTypePropagation extends NodeVisitor {
 	private NodeGraph graph_;
@@ -164,7 +194,7 @@ public class BackwardTypePropagation extends NodeVisitor {
             if (tu != null) {
             	// Ignore invalid function references.
             	// HookUserMessage defines a default posthook callback as MsgPostHook:post=MsgPostHook:-1
-            	// We avoid such stupid invalid functags and to avoid trying to find the corresponding callback function
+            	// We avoid such stupid invalid functags by not trying to find the corresponding callback function
             	// and just print the tagged constant value.
             	if(tu.kind() == TypeUnit.Kind.Cell && tu.type().type() == CellType.Function 
             	&& node.type() == NodeType.DeclareLocal && node.getOperand(0).type() == NodeType.Constant
@@ -213,6 +243,45 @@ public class BackwardTypePropagation extends NodeVisitor {
     {
         if (binary.spop() == SPOpcode.add && binary.usedAsReference())
             binary.lhs().setUsedAsReference();
+        
+        // Check for Float constants in a store like
+        // new Float:bla = 1.0 * GetSomeProp();
+        // new Float:bla = 1065353216 * GetSomeProp();
+        if(binary.uses().size() != 1)
+        	return;
+        
+        DDeclareLocal local = null;
+        if(binary.lhs().type() == NodeType.DeclareLocal)
+        	local = (DDeclareLocal)binary.lhs();
+        else if(binary.rhs().type() == NodeType.DeclareLocal)
+        	local = (DDeclareLocal)binary.rhs();
+        else
+        	return;
+        
+		if(local.value() != null && local.value().type() == NodeType.Constant)
+		{
+			DConstant con = (DConstant)local.value();
+			if(con.value() < 1000000000)
+				return;
+			
+			if(con.typeSet() != null && con.typeSet().numTypes() > 0)
+				return;
+			
+			DNode use = binary.uses().getFirst().node();
+			if(use.type() == NodeType.Store)
+			{
+				DStore store = (DStore)use;
+				if(store.lhs().typeSet().numTypes() == 1)
+				{
+					TypeUnit unit = store.lhs().typeSet().types(0);
+					if(unit.kind() == Kind.Reference && unit.inner().type().type() == CellType.Float)
+					{
+						//System.out.printf("%d is probably a float?%n", con.value());
+						con.addType(new TypeUnit(new PawnType(CellType.Float)));
+					}
+				}
+			}
+		}
     }
     public void visit(DBoundsCheck check)
     {
@@ -233,6 +302,12 @@ public class BackwardTypePropagation extends NodeVisitor {
             TypeUnit tu = load.from().typeSet().types(0);
             if (tu.kind() == TypeUnit.Kind.Array)
             {
+            	if(load.from().type() == NodeType.ArrayRef)
+            	{
+            		DArrayRef arrayref = (DArrayRef)load.from();
+            		if(arrayref.abase().type() == NodeType.Global)
+            			return;
+            	}
                 DConstant cv = new DConstant(0);
                 DArrayRef aref = new DArrayRef(load.from(), cv, 1);
                 block_.nodes().insertAfter(load.from(), cv);
@@ -255,5 +330,14 @@ public class BackwardTypePropagation extends NodeVisitor {
     }
     public void visit(DString node)
     {
+    }
+    
+    @Override
+    public void visit(DGenArray genarray) throws Exception
+    {
+    	for(int i=0;i<genarray.numOperands();i++)
+    	{
+    		genarray.getOperand(i).accept(this);
+    	}
     }
 }
