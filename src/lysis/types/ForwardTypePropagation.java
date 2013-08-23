@@ -136,12 +136,12 @@ public class ForwardTypePropagation extends NodeVisitor {
 	    		case 't':
 	    		case 'T':
 	    		{
-	    			// %T translations have a client index before the phrase
+	    			DNode stringArg = call.getOperand(argumentIndex);
+	    			// %T translations have a client index after the phrase
 	    			if(parts[i].charAt(0) == 'T')
 	    			{
 	    				argumentIndex++;
 	    			}
-	    			DNode stringArg = call.getOperand(argumentIndex);
 	    			// Don't add any info, if we already know what that node is.
 	    			if(stringArg.typeSet().numTypes() != 0)
 	    				break;
