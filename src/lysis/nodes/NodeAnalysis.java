@@ -398,7 +398,7 @@ public class NodeAnalysis {
                     if (node.next().type() == NodeType.Store)
                     {
                         DStore store = (DStore)node.next();
-                        if (store.getOperand(0) == local)
+                        if (store.getOperand(0) == local && store.getOperand(1).type() != NodeType.Unary)
                         {
                         	DNode replacement;
                         	if(store.spop() != SPOpcode.nop)
