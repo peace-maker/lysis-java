@@ -42,7 +42,10 @@ public class LUnary extends LInstruction {
             case invert:
                 tw.writeBytes("invert");
                 break;
-
+            case neg:
+                tw.writeBytes("neg");
+                break;
+            
             default:
                 throw new Exception("unexpected op");
         }

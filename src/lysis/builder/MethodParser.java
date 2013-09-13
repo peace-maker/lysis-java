@@ -300,6 +300,7 @@ public class MethodParser {
                 return new LBinary(op, Register.Pri, Register.Alt);
 
             case not:
+            case neg:
             case invert:
                 return new LUnary(op, Register.Pri);
 

@@ -198,49 +198,63 @@ public class NodeRewriter extends NodeVisitor {
         }
 
         SPOpcode spop;
-        switch (op)
+        if(call.numOperands() == 2)
         {
-            case ">":
-                spop = SPOpcode.sgrtr;
-                break;
-            case ">=":
-                spop = SPOpcode.sgeq;
-                break;
-            case "<":
-                spop = SPOpcode.sless;
-                break;
-            case "<=":
-                spop = SPOpcode.sleq;
-                break;
-            case "==":
-                spop = SPOpcode.eq;
-                break;
-            case "!=":
-                spop = SPOpcode.neq;
-                break;
-            case "+":
-                spop = SPOpcode.add;
-                break;
-            case "-":
-                spop = SPOpcode.sub;
-                break;
-            case "*":
-                spop = SPOpcode.smul;
-                break;
-            case "/":
-                spop = SPOpcode.sdiv_alt;
-                break;
-            case "!":
-                spop = SPOpcode.not;
-                break;
-            case "++":
-            	spop = SPOpcode.add;
-            	break;
-            case "--":
-            	spop = SPOpcode.sub;
-                break;
-            default:
-                throw new Exception("unknown operator (" + op + ")");
+	        switch (op)
+	        {
+	            case ">":
+	                spop = SPOpcode.sgrtr;
+	                break;
+	            case ">=":
+	                spop = SPOpcode.sgeq;
+	                break;
+	            case "<":
+	                spop = SPOpcode.sless;
+	                break;
+	            case "<=":
+	                spop = SPOpcode.sleq;
+	                break;
+	            case "==":
+	                spop = SPOpcode.eq;
+	                break;
+	            case "!=":
+	                spop = SPOpcode.neq;
+	                break;
+	            case "+":
+	                spop = SPOpcode.add;
+	                break;
+	            case "-":
+	                spop = SPOpcode.sub;
+	                break;
+	            case "*":
+	                spop = SPOpcode.smul;
+	                break;
+	            case "/":
+	                spop = SPOpcode.sdiv_alt;
+	                break;
+	            default:
+	                throw new Exception("unknown operator (" + op + ")");
+	        }
+        }
+        else // if(call.numOperands() == 1)
+        {
+	        switch (op)
+	        {
+	            case "-":
+	                spop = SPOpcode.neg;
+	                break;
+	            case "!":
+	                spop = SPOpcode.not;
+	                break;
+	            case "++":
+	            	spop = SPOpcode.inc;
+	            	break;
+	            case "--":
+	            	spop = SPOpcode.dec;
+	                break;
+	            default:
+	                throw new Exception("unknown operator (" + op + ")");
+	        }
         }
 
         switch (spop)
@@ -256,32 +270,25 @@ public class NodeRewriter extends NodeVisitor {
             case smul:
             case sdiv_alt:
             {
-                if (call.numOperands() == 2)
-                {
-	                DBinary binary = new DBinary(spop, call.getOperand(0), call.getOperand(1));
-	                call.replaceAllUsesWith(binary);
-	                call.removeFromUseChains();
-	                current_.replace(iterator_, binary);
-	                break;
-                }
-                else if(call.numOperands() == 1 && (spop == SPOpcode.add || spop == SPOpcode.sub)) 
-                {
-                	DBinary binary = new DBinary(spop, call.getOperand(0), new DFloat(1.0f));
-	                call.replaceAllUsesWith(binary);
-	                call.removeFromUseChains();
-	                current_.replace(iterator_, binary);
-                	/*DIncDec unary = new DIncDec(call.getOperand(0), (spop == SPOpcode.add?1:-1));
-                    call.replaceAllUsesWith(unary);
-                    call.removeFromUseChains();
-                    current_.replace(iterator_, unary);*/
-	                break;
-                }
-                return;
+                DBinary binary = new DBinary(spop, call.getOperand(0), call.getOperand(1));
+                call.replaceAllUsesWith(binary);
+                call.removeFromUseChains();
+                current_.replace(iterator_, binary);
+                break;
             }
+            case inc:
+            case dec:
+            {
+            	DBinary rep = new DBinary((spop == SPOpcode.inc?SPOpcode.add:SPOpcode.sub), call.getOperand(0), new DFloat(1.0f));
+            	//DIncDec rep = new DIncDec(call.getOperand(0), (spop == SPOpcode.inc?1:-1));
+                call.replaceAllUsesWith(rep);
+                call.removeFromUseChains();
+                current_.replace(iterator_, rep);
+                break;
+            }
+            case neg:
             case not:
             {
-            	if (call.numOperands() != 1)
-                    return;
                 DUnary unary = new DUnary(spop, call.getOperand(0));
                 call.replaceAllUsesWith(unary);
                 call.removeFromUseChains();

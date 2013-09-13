@@ -91,6 +91,7 @@ public class SourceBuilder {
                 return "+";
             case sub:
             case sub_alt:
+            case neg:
                 return "-";
             case less:
             case sless:
