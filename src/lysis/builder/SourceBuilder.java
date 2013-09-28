@@ -369,7 +369,7 @@ public class SourceBuilder {
             }
             else
             {
-                long v = file_.int32FromData(ia.address());
+                long v = file_.int32FromData(ia.address() + i * 4);
                 text += buildTag(tu.type()) + v;
             }
             if (i != (ia.size() / 4) - 1)

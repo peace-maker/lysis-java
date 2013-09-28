@@ -2,6 +2,7 @@ package lysis.nodes;
 
 import lysis.lstructure.Signature;
 import lysis.lstructure.Tag;
+import lysis.lstructure.VariableType;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DCall;
@@ -502,7 +503,9 @@ public class NodeAnalysis {
 
     // Print the initialization of strings
     // new String:bla[] = "HALLO";
-    public static void SetDirectStringInitialization(NodeGraph graph) throws Exception
+    // Print local inline arrays too!
+    // new x[] = {1,2,3};
+    public static void FindLocalInlineArrays(NodeGraph graph) throws Exception
     {
         for (int i = 0; i < graph.numBlocks(); i++)
         {
@@ -515,17 +518,24 @@ public class NodeAnalysis {
                 {
                     DMemCopy mcpy = (DMemCopy)node;
                     if(mcpy.from().type() == NodeType.Constant
-                    	&& mcpy.to().type() == NodeType.DeclareLocal)
+                        && mcpy.to().type() == NodeType.DeclareLocal)
                     {
-                    	DConstant con = (DConstant)mcpy.from();
-                    	DDeclareLocal local = (DDeclareLocal)mcpy.to();
-                    	if(local.value() == null
-                    		&& local.var() != null
-                    		&& local.var().tag().name().equals("String"))
-                    	{
-                    		DString string = new DString(graph.file().stringFromData(con.value()));
-                    		local.initOperand(0, string);
-                    	}
+                        DConstant con = (DConstant)mcpy.from();
+                        DDeclareLocal local = (DDeclareLocal)mcpy.to();
+                        
+                        if(local.value() == null
+                            && con.value() > 0
+                            && local.var() != null
+                            && local.var().type() == VariableType.Array)
+                        {
+                            DInlineArray ia = new DInlineArray(con.value(), mcpy.bytes());
+                            block.nodes().insertAfter(node, ia);
+                            local.initOperand(0, ia);
+
+                            // Give the inline array some type information.
+                            TypeUnit tu = TypeUnit.FromVariable(local.var());
+                            ia.addType(tu);
+                        }
                     }
                 }
 
@@ -571,6 +581,7 @@ public class NodeAnalysis {
         }
         else if (node.uses().size() == 1)
         {
+        	// A function returning a string.
         	DUse use = node.uses().getLast();
         	if(use.node().type() == NodeType.SysReq
         	|| use.node().type() == NodeType.Call)

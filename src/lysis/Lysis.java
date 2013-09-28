@@ -66,7 +66,7 @@ public class Lysis {
         NodeAnalysis.CoalesceLoadStores(ngraph);
         
         // Print string initializations new String:bla[] = "HALLO";
-        NodeAnalysis.SetDirectStringInitialization(ngraph);
+        NodeAnalysis.FindLocalInlineArrays(ngraph);
 
         // After this, it is not legal to run type analysis again, because
         // arguments expecting references may have been rewritten to take
