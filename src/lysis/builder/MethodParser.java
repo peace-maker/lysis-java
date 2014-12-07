@@ -535,8 +535,8 @@ public class MethodParser {
 
             case load_both:
             {
-            	add(new LLoadLocal(readInt32(), Register.Pri));
-            	return new LLoadLocal(readInt32(), Register.Alt);
+            	add(new LLoadGlobal(readInt32(), Register.Pri));
+            	return new LLoadGlobal(readInt32(), Register.Alt);
             }
             
             case load_s_both:
