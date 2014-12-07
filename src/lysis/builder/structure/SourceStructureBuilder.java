@@ -68,7 +68,7 @@ public class SourceStructureBuilder {
 
     private static LogicOperator ToLogicOp(DJumpCondition jcc)
     {
-        NodeBlock trueTarget = BlockAnalysis.EffectiveTarget(jcc.trueTarget());
+        NodeBlock trueTarget = BlockAnalysis.ConstantSettingTarget(jcc.trueTarget());
         boolean targetIsTruthy;
     	LConstant constant = (LConstant)trueTarget.lir().instructions()[0];
     	targetIsTruthy = (constant.val() == 1);
@@ -155,6 +155,13 @@ public class SourceStructureBuilder {
                 	return retValue;
                 }
 
+                if(condBlock.lir().instructions()[0].op() == Opcode.Jump
+                   && earlyExit == SingleTarget(condBlock))
+                {
+                    retValue.set(1, chain);
+                    return retValue;
+                }
+                
                 /*if(condBlock.nodes().last().type() == NodeType.Return) {
                 	DReturn ret = (DReturn)condBlock.nodes().last();
                 	retValue.set(1, chain);
@@ -244,6 +251,11 @@ public class SourceStructureBuilder {
         LogicChain chain = (LogicChain) listRet.get(1);
         join = (NodeBlock) listRet.get(0);
 
+        if(join.nodes().last().type() == NodeType.Jump)
+        {
+            return new IfBlock(block, chain, null, null, null);
+        }
+        
         DJumpCondition finalJcc = (DJumpCondition)join.nodes().last();
         assert(finalJcc.spop() == SPOpcode.jzer);
       

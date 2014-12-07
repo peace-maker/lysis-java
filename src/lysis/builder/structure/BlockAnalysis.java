@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import lysis.instructions.LGoto;
 import lysis.instructions.LInstruction;
+import lysis.instructions.Opcode;
 import lysis.lstructure.LBlock;
 import lysis.nodes.NodeBlock;
 import lysis.nodes.NodeGraph;
@@ -445,6 +446,25 @@ public class BlockAnalysis {
             block = GetEmptyTarget(block);
             if (block == null)
                 return target;
+            target = block;
+        }
+    }
+    
+    public static NodeBlock ConstantSettingTarget(NodeBlock block)
+    {
+        NodeBlock target = block;
+        for (;;)
+        {
+            if (target.lir().instructions().length == 2 &&
+                target.lir().instructions()[0].op() == Opcode.Constant &&
+                (target.lir().instructions()[1].op() == Opcode.Jump
+                    || target.lir().instructions()[1].op() == Opcode.Goto))
+            {
+                return target;
+            }
+            block = GetEmptyTarget(block);
+            if (block == null)
+                return null;
             target = block;
         }
     }
