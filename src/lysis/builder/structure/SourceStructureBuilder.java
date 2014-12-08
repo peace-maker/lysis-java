@@ -13,7 +13,7 @@ import lysis.nodes.NodeType;
 import lysis.nodes.types.DJump;
 import lysis.nodes.types.DJumpCondition;
 import lysis.nodes.types.DNode;
-import lysis.nodes.types.DReturn;
+import lysis.nodes.types.DStore;
 import lysis.nodes.types.DSwitch;
 import lysis.sourcepawn.SPOpcode;
 
@@ -162,11 +162,17 @@ public class SourceStructureBuilder {
                     return retValue;
                 }
                 
-                /*if(condBlock.nodes().last().type() == NodeType.Return) {
-                	DReturn ret = (DReturn)condBlock.nodes().last();
+
+                if(condBlock.nodes().first().type() == NodeType.Store) {
+                    retValue.set(1, chain);
+                    return retValue;
+                }
+
+                
+                if(condBlock.nodes().last().type() == NodeType.Return) {
                 	retValue.set(1, chain);
                 	return retValue;
-                }*/
+                }
                 
                 DJumpCondition condJcc = (DJumpCondition)condBlock.nodes().last();
                 
@@ -195,13 +201,20 @@ public class SourceStructureBuilder {
                 LinkedList<Object> listRet = buildLogicChain(condJcc.falseTarget(), earlyExit, innerJoin);
                 LogicChain rhs = (LogicChain) listRet.get(1);
                 innerJoin = (NodeBlock) listRet.get(0);
-                AssertInnerJoinValidity(innerJoin, earlyExit);
 
                 // Build the full expression.
                 LogicChain root = new LogicChain(ToLogicOp(condJcc));
                 root.append(chain);
                 root.append(rhs);
                 chain = root;
+                
+                if(innerJoin.nodes().last().type() == NodeType.Return) {
+                        retValue.set(0, innerJoin);
+                	retValue.set(1, chain);
+                	return retValue;
+                }
+                
+                AssertInnerJoinValidity(innerJoin, earlyExit);
 
                 // If the inner join's false target is a conditional, the
                 // outer expression may continue.
@@ -238,8 +251,8 @@ public class SourceStructureBuilder {
         }
         return graph_.blocks(block.lir().idominated()[2].id());
     }
-
-    private IfBlock traverseComplexIf(NodeBlock block, DJumpCondition jcc)
+    
+    private ControlBlock traverseComplexIf(NodeBlock block, DJumpCondition jcc)
     {
         // Degenerate case: using || or &&, or any combination thereof,
         // will generate a chain of n+1 conditional blocks, where each
@@ -251,9 +264,27 @@ public class SourceStructureBuilder {
         LogicChain chain = (LogicChain) listRet.get(1);
         join = (NodeBlock) listRet.get(0);
 
+        // Complex if with no body. Someone wants to fool us?
+        // if(cond && !cond) {}
         if(join.nodes().last().type() == NodeType.Jump)
         {
             return new IfBlock(block, chain, null, null, null);
+        }
+        
+        // LogicChain assigned to a variable?
+        // new bla = cond1 && cond2;
+        if(join.nodes().first().type() == NodeType.Store)
+        {
+            DStore store_ = (DStore)join.nodes().first();
+            store_.setLogicChain(chain);
+            return new StatementBlock(block, traverseBlock(graph_.blocks(join.lir().id())));
+        }
+        
+        // complex return conditions
+        // return cond1 && cond2;
+        if(join.nodes().last().type() == NodeType.Return)
+        {
+            return new ReturnBlock(block, chain);
         }
         
         DJumpCondition finalJcc = (DJumpCondition)join.nodes().last();
@@ -306,7 +337,7 @@ public class SourceStructureBuilder {
         return new IfBlock(block, chain, trueArm2, falseArm, joinArm2);
     }
 
-    private IfBlock traverseIf(NodeBlock block, DJumpCondition jcc)
+    private ControlBlock traverseIf(NodeBlock block, DJumpCondition jcc)
     {
         if (HasSharedTarget(block, jcc))
             return traverseComplexIf(block, jcc);

@@ -9,6 +9,7 @@ import lysis.builder.structure.ControlBlock;
 import lysis.builder.structure.IfBlock;
 import lysis.builder.structure.LogicChain;
 import lysis.builder.structure.LogicOperator;
+import lysis.builder.structure.ReturnBlock;
 import lysis.builder.structure.StatementBlock;
 import lysis.builder.structure.SwitchBlock;
 import lysis.builder.structure.WhileLoop;
@@ -583,16 +584,27 @@ public class SourceBuilder {
     private void writeStore(DStore store) throws Exception
     {
         String lhs = buildLoadStoreRef(store.getOperand(0));
-        String rhs = buildExpression(store.getOperand(1));
+        String rhs;
+        if(store.logic() != null)
+            rhs = buildLogicChain(store.logic());
+        else
+            rhs = buildExpression(store.getOperand(1));
         String eq = store.spop() == SPOpcode.nop
                     ? "="
                     : spop(store.spop()) + "=";
         outputLine(lhs + " " + eq + " " + rhs + ";");
     }
 
-    private void writeReturn(DReturn ret) throws Exception
+    private void writeReturn(ReturnBlock block) throws Exception
     {
-        String operand = buildExpression(ret.getOperand(0));
+        String operand;
+        if(block.chain() != null) {
+            operand = buildLogicChain(block.chain());
+        }
+        else {
+            DReturn ret = (DReturn)block.source().nodes().last();
+            operand = buildExpression(ret.getOperand(0));
+        }
         outputLine("return " + operand + ";");
     }
 
@@ -874,7 +886,7 @@ public class SourceBuilder {
                 break;
             case Return:
                 writeStatements(block.source());
-                writeReturn((DReturn)block.source().nodes().last());
+                writeReturn((ReturnBlock)block);
                 break;
             case Switch:
                 writeSwitch((SwitchBlock)block);
