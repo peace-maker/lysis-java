@@ -180,7 +180,7 @@ public class NodeBuilder {
                 case PushConstant:
                 {
                     LPushConstant ins = (LPushConstant)uins;
-                    DConstant v = new DConstant(ins.val());
+                    DConstant v = new DConstant(ins.val(), ins.pc());
                     DDeclareLocal local = new DDeclareLocal(ins.pc(), v);
                     block.stack().push(local);
                     block.add(v);

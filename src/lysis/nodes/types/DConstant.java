@@ -1,5 +1,6 @@
 package lysis.nodes.types;
 
+import lysis.lstructure.Scope;
 import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
@@ -58,6 +59,8 @@ public class DConstant extends DNullaryNode {
             case Variadic:
             {
                 Variable global = file.lookupGlobal(value());
+                if(global == null)
+                    global = file.lookupVariable(pc(), value(), Scope.Static);
                 if (global != null)
                     return new DGlobal(global);
                 if (tag.name() == "String")
