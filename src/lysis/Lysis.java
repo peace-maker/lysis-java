@@ -155,7 +155,7 @@ public class Lysis {
                 DumpMethod((SourcePawnFile)file, source, fun.address());
                 System.out.println("");
             }
-            catch (Exception e)
+            catch (Throwable e)
             {
             	e.printStackTrace();
             	System.out.println("");
