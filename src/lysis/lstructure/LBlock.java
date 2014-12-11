@@ -39,6 +39,12 @@ public class LBlock {
         predecessors_.add(pred);
     }
     
+    public void removePredecessor(LBlock pred)
+    {
+        assert(predecessors_.contains(pred));
+        predecessors_.remove(pred);
+    }
+    
     public void mark()
     {
         assert(!marked_);

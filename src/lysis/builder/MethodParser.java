@@ -770,6 +770,16 @@ public class MethodParser {
             return lir_.entry;
         }
     }
+    
+    private boolean ContainsBlock(LBlock[] blocks, LBlock needle)
+    {
+        for(LBlock block: blocks)
+        {
+            if(block == needle)
+                return true;
+        }
+        return false;
+    }
 
     private LGraph buildBlocks() throws Exception
     {
@@ -780,6 +790,24 @@ public class MethodParser {
         // Get an RPO ordering of the blocks, since we don't have predecessors yet.
         LBlock[] blocks = BlockAnalysis.Order(entry);
 
+        // Remove dead references.
+        // Ignore blocks that are unreachable and are always jumped over
+        // e.g.
+        // if(1 != 1)
+        //   loop()..
+        for(LBlock block: blocks)
+        {
+            int numPredecessors = block.numPredecessors();
+            for(int i=0; i < numPredecessors; i++)
+            {
+                if(!ContainsBlock(blocks, block.getPredecessor(i)))
+                {
+                    block.removePredecessor(block.getPredecessor(i));
+                    numPredecessors--;
+                }
+            }
+        }
+        
         if (!BlockAnalysis.IsReducible(blocks))
             throw new Exception("control flow graph is not reducible");
 
