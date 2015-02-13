@@ -746,8 +746,14 @@ public class SourceBuilder {
         }
         else
         {
-            cond = buildLogicChain(block.logic());
-            assert(!block.invert());
+            if(block.invert())
+            {
+                cond = "!(" + buildLogicChain(block.logic()) + ")";
+            }
+            else
+            {
+                cond = buildLogicChain(block.logic());
+            }
         }
 
         outputLine("if (" + cond + ")");

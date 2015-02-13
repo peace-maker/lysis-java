@@ -275,7 +275,7 @@ public class SourceStructureBuilder {
         // if(cond && !cond) {}
         if(join.nodes().last().type() == NodeType.Jump)
         {
-            return new IfBlock(block, chain, null, null, null);
+            return new IfBlock(block, false, chain, null, null, null);
         }
         
         // LogicChain assigned to a variable?
@@ -325,21 +325,12 @@ public class SourceStructureBuilder {
 
         // If the true target is equivalent to the join point, promote
         // the false target to the true target and undo the inversion.
-        //boolean invert = false;
+        boolean invert = false;
         if (trueBlock == joinBlock)
         {
             trueBlock = falseBlock;
             falseBlock = null;
-            //invert ^= true;
-            LogicChain inverseChain = new LogicChain(chain.op() == LogicOperator.And ? LogicOperator.Or : LogicOperator.And);
-            for(LogicChain.Node node: chain.nodes())
-            {
-                if(node.isSubChain())
-                    inverseChain.append(node.subChain());
-                else
-                    inverseChain.append(node.expression());
-            }
-            chain = inverseChain;
+            invert ^= true;
         }
         
         if (join.lir().idominated().length == 2 ||
@@ -354,7 +345,7 @@ public class SourceStructureBuilder {
             popScope();
 
             ControlBlock joinArm1 = traverseJoin(joinBlock);
-            return new IfBlock(block, chain, trueArm1, joinArm1);
+            return new IfBlock(block, invert, chain, trueArm1, joinArm1);
         }
 
         //assert(join.lir().idominated().length == 3);
@@ -365,7 +356,7 @@ public class SourceStructureBuilder {
         popScope();
 
         ControlBlock joinArm2 = traverseJoin(joinBlock);
-        return new IfBlock(block, chain, trueArm2, falseArm, joinArm2);
+        return new IfBlock(block, invert, chain, trueArm2, falseArm, joinArm2);
     }
 
     private ControlBlock traverseIf(NodeBlock block, DJumpCondition jcc)
