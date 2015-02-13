@@ -49,6 +49,9 @@ public class SourceStructureBuilder {
         NodeBlock trueTarget = BlockAnalysis.EffectiveTarget(jcc.trueTarget());
         if (trueTarget.lir().numPredecessors() == 1)
             return false;
+        // The true target points to the backedge of the loop. There is no logic chain in here.
+        if (pred.lir().loop() != null && pred.lir().loop().backedge() == trueTarget.lir())
+            return false;
         if (pred.lir().idominated().length > 3)
             return true;
 
