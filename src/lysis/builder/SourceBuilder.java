@@ -517,7 +517,7 @@ public class SourceBuilder {
                 decl += "[";
                 if (dim.size() >= 1)
                 {
-                    if (var.tag() != null && var.tag().name().equals("String"))
+                    if (var.tag() != null && var.tag().name().equals("String") && i == var.dims().length-1)
                         decl += dim.size() * 4;
                     else
                         decl += dim.size();
