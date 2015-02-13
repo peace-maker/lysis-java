@@ -67,12 +67,12 @@ public class SourceBuilder {
 
     private void increaseIndent()
     {
-        indent_ += "    ";
+        indent_ += "	";
     }
 
     private void decreaseIndent()
     {
-        indent_ = indent_.substring(0, indent_.length() - 4);
+        indent_ = indent_.substring(0, indent_.length() - 1);
     }
 
     private void outputLine(String text) throws IOException
@@ -750,7 +750,8 @@ public class SourceBuilder {
             assert(!block.invert());
         }
 
-        outputLine("if (" + cond + ") {");
+        outputLine("if (" + cond + ")");
+        outputLine("{");
         // TODO empty if
         if(block.trueArm() != null)
         {
@@ -761,7 +762,9 @@ public class SourceBuilder {
         if (block.falseArm() != null &&
             BlockAnalysis.GetEmptyTarget(block.falseArm().source()) == null)
         {
-            outputLine("} else {");
+            outputLine("}");
+            outputLine("else");
+            outputLine("{");
             increaseIndent();
             writeBlock(block.falseArm());
             decreaseIndent();
@@ -786,7 +789,8 @@ public class SourceBuilder {
             cond = buildLogicChain(loop.logic());
         }
 
-        outputLine("while (" + cond + ") {");
+        outputLine("while (" + cond + ")");
+        outputLine("{");
         increaseIndent();
         writeBlock(loop.body());
         decreaseIndent();
@@ -828,7 +832,8 @@ public class SourceBuilder {
 
         DSwitch last = (DSwitch)switch_.source().nodes().last();
         String cond = buildExpression(last.getOperand(0));
-        outputLine("switch (" + cond + ") {");
+        outputLine("switch (" + cond + ")");
+        outputLine("{");
         increaseIndent();
         for (int i = 0; i < switch_.numCases(); i++)
         {
@@ -840,14 +845,16 @@ public class SourceBuilder {
             		values += ", ";
             	values += cas.value(j);
             }
-            outputLine("case " + values + ": {");
+            outputLine("case " + values + ":");
+            outputLine("{");
             increaseIndent();
             writeBlock(cas.target());
             decreaseIndent();
             outputLine("}");
         }
         //if(switch_.defaultCase().source().nodes().first().type() != NodeType.Jump) {
-	        outputLine("default: {");
+	        outputLine("default:");
+                outputLine("{");
 	        increaseIndent();
 	        writeBlock(switch_.defaultCase());
 	        decreaseIndent();
