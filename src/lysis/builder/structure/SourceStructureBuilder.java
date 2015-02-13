@@ -196,6 +196,13 @@ public class SourceStructureBuilder {
                 // conditional.
                 earlyExit = BlockAnalysis.EffectiveTarget(condJcc.trueTarget());
 
+                // This isn't really a subexpression, but a whole new expression starting.
+                if (earlyExit.lir().instructions()[0].op() != Opcode.Constant) {
+                    //retValue.set(0, condJcc.falseTarget());
+                    retValue.set(1, chain);
+                    return retValue;
+                }
+                
                 // Build the right-hand side of the expression.
                 NodeBlock innerJoin = null;
                 LinkedList<Object> listRet = buildLogicChain(condJcc.falseTarget(), earlyExit, innerJoin);
@@ -311,6 +318,30 @@ public class SourceStructureBuilder {
         if (joinBlock == null)
             joinBlock = falseBlock;
 
+        // If the false target is equivalent to the join point, eliminate
+        // it.
+        if (falseBlock == joinBlock)
+            falseBlock = null;
+
+        // If the true target is equivalent to the join point, promote
+        // the false target to the true target and undo the inversion.
+        //boolean invert = false;
+        if (trueBlock == joinBlock)
+        {
+            trueBlock = falseBlock;
+            falseBlock = null;
+            //invert ^= true;
+            LogicChain inverseChain = new LogicChain(chain.op() == LogicOperator.And ? LogicOperator.Or : LogicOperator.And);
+            for(LogicChain.Node node: chain.nodes())
+            {
+                if(node.isSubChain())
+                    inverseChain.append(node.subChain());
+                else
+                    inverseChain.append(node.expression());
+            }
+            chain = inverseChain;
+        }
+        
         if (join.lir().idominated().length == 2 ||
             BlockAnalysis.EffectiveTarget(falseBlock) == joinBlock)
         {
@@ -322,18 +353,18 @@ public class SourceStructureBuilder {
             ControlBlock trueArm1 = traverseBlock(trueBlock);
             popScope();
 
-            ControlBlock joinArm1 = traverseBlock(joinBlock);
+            ControlBlock joinArm1 = traverseJoin(joinBlock);
             return new IfBlock(block, chain, trueArm1, joinArm1);
         }
 
-        assert(join.lir().idominated().length == 3);
+        //assert(join.lir().idominated().length == 3);
 
         pushScope(joinBlock);
         ControlBlock trueArm2 = traverseBlock(trueBlock);
         ControlBlock falseArm = traverseBlock(falseBlock);
         popScope();
 
-        ControlBlock joinArm2 = traverseBlock(joinBlock);
+        ControlBlock joinArm2 = traverseJoin(joinBlock);
         return new IfBlock(block, chain, trueArm2, falseArm, joinArm2);
     }
 
@@ -389,7 +420,7 @@ public class SourceStructureBuilder {
 
     private LinkedList<Object> findLoopJoinAndBody(NodeBlock header, NodeBlock effectiveHeader)
     {
-        assert(effectiveHeader.lir().numSuccessors() == 2);
+        assert(effectiveHeader.lir().numSuccessors() >= 1);
 
         LinkedList<Object> retList = new LinkedList<>();
         retList.add(null); // ControlType controlType = null;
@@ -398,11 +429,18 @@ public class SourceStructureBuilder {
         retList.add(null); // NodeBlock cond = null;
         
         LBlock succ1 = effectiveHeader.lir().getSuccessor(0);
-        LBlock succ2 = effectiveHeader.lir().getSuccessor(1);
-
-        if (succ1.loop() != header.lir() || succ2.loop() != header.lir())
+        LBlock succ2 = null;
+        // We only have one successor, if the last node is a Jump instead of a JumpCondition.
+        if(effectiveHeader.lir().numSuccessors() == 2)
         {
-            assert(succ1.loop() == header.lir() || succ2.loop() == header.lir());
+            succ2 = effectiveHeader.lir().getSuccessor(1);
+        }
+
+        if (succ1.loop() == header.lir() && succ2 == null
+           || (succ2 != null && (
+                succ1.loop() != header.lir() || succ2.loop() != header.lir())))
+        {
+            assert(succ1.loop() == header.lir() || (succ2 != null && succ2.loop() == header.lir()));
             if (succ1.loop() != header.lir())
             {
             	retList.set(1, graph_.blocks(succ1.id()));
@@ -434,7 +472,7 @@ public class SourceStructureBuilder {
         {
             // Neither successor of the header exits the loop, so this is
             // probably a do-while loop. For now, assume it's simple.
-            assert(header == effectiveHeader);
+            //assert(header == effectiveHeader);
             LBlock backedge = header.lir().backedge();
             if (BlockAnalysis.GetEmptyTarget(graph_.blocks(backedge.id())) == header)
             {
@@ -481,9 +519,9 @@ public class SourceStructureBuilder {
         }
 
         last = effectiveHeader.nodes().last();
-        assert(last.type() == NodeType.JumpCondition);
+        assert(last.type() == NodeType.JumpCondition || last.type() == NodeType.Jump);
 
-        if (last.type() == NodeType.JumpCondition)
+        if (last.type() == NodeType.JumpCondition || last.type() == NodeType.Jump)
         {
             // Assert that the backedge is a straight jump.
             assert(BlockAnalysis.GetSingleTarget(graph_.blocks(block.lir().backedge().id())) == block);
@@ -495,7 +533,7 @@ public class SourceStructureBuilder {
             NodeBlock cond = (NodeBlock) byValueWorkaround.get(3);
             
             //ControlType type = findLoopJoinAndBody(block, effectiveHeader, join, body, cond);
-            ControlBlock joinArm = traverseBlock(join);
+            ControlBlock joinArm = traverseJoin(join);
 
             ControlBlock bodyArm = null;
             if (body != null)
@@ -507,7 +545,7 @@ public class SourceStructureBuilder {
                 popScope();
             }
 
-            if (chain != null)
+            if (chain != null && type != ControlType.DoWhileLoop)
                 return new WhileLoop(type, chain, bodyArm, joinArm);
             return new WhileLoop(type, cond, bodyArm, joinArm);
         }
@@ -566,7 +604,8 @@ public class SourceStructureBuilder {
         if (last.type() == NodeType.Jump)
         {
             DJump jump = (DJump)last;
-            NodeBlock target = BlockAnalysis.EffectiveTarget(jump.target());
+            //NodeBlock target = BlockAnalysis.EffectiveTarget(jump.target());
+            NodeBlock target = jump.target();
 
             ControlBlock next = null;
             if (!isJoin(target))
