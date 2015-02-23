@@ -502,9 +502,19 @@ public class NodeBuilder {
                 case Binary:
                 {
                     LBinary ins = (LBinary)uins;
-                    DBinary binary = new DBinary(ins.spop(), block.stack().reg(ins.lhs()), block.stack().reg(ins.rhs()));
+                    DNode nodeLHS = block.stack().reg(ins.lhs());
+                    DNode nodeRHS = block.stack().reg(ins.rhs());
+                    DBinary binary = new DBinary(ins.spop(), nodeLHS, nodeRHS);
                     block.stack().set(Register.Pri, binary);
                     block.add(binary);
+                    
+                    // sdiv: PRI = ALT / PRI; ALT = ALT mod PRI
+                    if (ins.spop() == SPOpcode.sdiv_alt)
+                    {
+                        binary = new DBinary(SPOpcode.sdiv_alt_mod, nodeLHS, nodeRHS);
+                        block.stack().set(Register.Alt, binary);
+                        block.add(binary);
+                    }
                     break;
                 }
 

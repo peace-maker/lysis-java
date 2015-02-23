@@ -126,6 +126,8 @@ public class SourceBuilder {
                 return "|";
             case sdiv_alt:
                 return "/";
+            case sdiv_alt_mod:
+                return "%";
             case smul:
                 return "*";
             case shr:

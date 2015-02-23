@@ -178,5 +178,6 @@ public enum SPOpcode {
     rnd_to_floor,
     rnd_to_ceil,
     rnd_to_zero,
-    floatcmp
+    floatcmp,
+    sdiv_alt_mod // placeholder opcode for modulo operation
 }
