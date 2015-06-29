@@ -948,6 +948,8 @@ public class SourceBuilder {
         {
         	long abase = address + i * 4;
             long inner = file_.int32FromData(abase);
+            if (inner == 0)
+                return true;
             long finalX = abase + inner;
             if (!isArrayEmpty(finalX, dims, level + 1))
                 return false;
