@@ -141,7 +141,7 @@ public class Lysis {
         SourceBuilder source = new SourceBuilder(file, System.out);
         try {
 			source.writeGlobals();
-		} catch (IOException e1) {
+		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
