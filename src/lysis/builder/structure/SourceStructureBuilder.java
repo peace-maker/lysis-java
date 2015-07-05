@@ -253,9 +253,11 @@ public class SourceStructureBuilder {
                      block.lir().idominated()[1] == jcc.trueTarget().lir());
         if (block.lir().idominated().length == 2)
         {
-            if (jcc.trueTarget() != BlockAnalysis.EffectiveTarget(jcc.trueTarget()))
+            NodeBlock trueTarget = BlockAnalysis.EffectiveTargetNoLoop(jcc.trueTarget());
+            if (trueTarget != null && jcc.trueTarget() != trueTarget)
                 return jcc.trueTarget();
-            if (jcc.falseTarget() != BlockAnalysis.EffectiveTarget(jcc.falseTarget()))
+            NodeBlock falseTarget = BlockAnalysis.EffectiveTargetNoLoop(jcc.falseTarget());
+            if (falseTarget != null && jcc.falseTarget() != falseTarget)
                 return jcc.falseTarget();
             return null;
         }
@@ -378,19 +380,29 @@ public class SourceStructureBuilder {
 
         // If the false target is equivalent to the join point, eliminate
         // it.
-        if (BlockAnalysis.EffectiveTarget(falseTarget) == joinTarget)
+        if (falseTarget == joinTarget || BlockAnalysis.EffectiveTargetNoLoop(falseTarget) == joinTarget)
             falseTarget = null;
 
         // If the true target is equivalent to the join point, promote
         // the false target to the true target and undo the inversion.
         boolean invert = false;
-        if (BlockAnalysis.EffectiveTarget(trueTarget) == joinTarget)
+        if (trueTarget == joinTarget || BlockAnalysis.EffectiveTargetNoLoop(trueTarget) == joinTarget)
         {
             trueTarget = falseTarget;
             falseTarget = null;
             invert ^= true;
         }
 
+        if (BlockAnalysis.EffectiveTargetNoLoop(trueTarget) == null)
+            trueTarget = null;
+        
+        if (BlockAnalysis.EffectiveTargetNoLoop(joinTarget) == null)
+        {
+            trueTarget = joinTarget;
+            joinTarget = null;
+            invert ^= true;
+        }
+        
         // If there is always a true target and a join target.
         ControlBlock trueArm = null;
         // TODO empty if / no true target?
@@ -438,11 +450,11 @@ public class SourceStructureBuilder {
             if (succ1.loop() != header.lir())
             {
             	retList.set(1, graph_.blocks(succ1.id()));
-            	retList.set(2, graph_.blocks(succ2.id()));
+            	retList.set(2, succ2 != null ? graph_.blocks(succ2.id()) : null);
             }
             else
             {
-            	retList.set(1, graph_.blocks(succ2.id()));
+            	retList.set(1, succ2 != null ? graph_.blocks(succ2.id()) : null);
             	retList.set(2, graph_.blocks(succ1.id()));
             }
             retList.set(3, header);
@@ -476,9 +488,12 @@ public class SourceStructureBuilder {
                 backedge = backedge.getPredecessor(0);
             }
 
-            assert(backedge.numSuccessors() == 2);
+            assert(backedge.numSuccessors() == 1 || backedge.numSuccessors() == 2);
             succ1 = backedge.getSuccessor(0);
-            succ2 = backedge.getSuccessor(1);
+            if (backedge.numSuccessors() > 1)
+                succ2 = backedge.getSuccessor(1);
+            else
+                succ2 = null;
 
             retList.set(2, header);
             retList.set(3, graph_.blocks(backedge.id()));
@@ -486,10 +501,14 @@ public class SourceStructureBuilder {
             {
             	retList.set(1, graph_.blocks(succ1.id()));
             }
-            else
+            else if (succ2 != null)
             {
                 assert(succ2.loop() != header.lir());
                 retList.set(1, graph_.blocks(succ2.id()));
+            }
+            else
+            {
+                retList.set(1, null);
             }
             retList.set(0, ControlType.DoWhileLoop);
             return retList;
@@ -527,7 +546,9 @@ public class SourceStructureBuilder {
             NodeBlock cond = (NodeBlock) byValueWorkaround.get(3);
             
             //ControlType type = findLoopJoinAndBody(block, effectiveHeader, join, body, cond);
-            ControlBlock joinArm = traverseJoin(join);
+            ControlBlock joinArm = null;
+            if (join != null)
+                joinArm = traverseJoin(join);
 
             ControlBlock bodyArm = null;
             if (body != null)

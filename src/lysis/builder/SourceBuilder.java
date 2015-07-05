@@ -37,6 +37,7 @@ import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
 import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DInlineArray;
+import lysis.nodes.types.DJump;
 import lysis.nodes.types.DJumpCondition;
 import lysis.nodes.types.DLoad;
 import lysis.nodes.types.DLocalRef;
@@ -820,8 +821,18 @@ public class SourceBuilder {
             writeStatements(loop.source());
             decreaseIndent();
 
-            DJumpCondition jcc = (DJumpCondition)loop.source().nodes().last();
-            cond = buildExpression(jcc.getOperand(0));
+            DNode last = loop.source().nodes().last();
+            if (last.type() == NodeType.JumpCondition)
+            {
+	            DJumpCondition jcc = (DJumpCondition)last;
+	            cond = buildExpression(jcc.getOperand(0));
+            }
+            else
+            {
+                DJump j = (DJump)last;
+                writeStatements(j.target());
+                cond = "true";
+            }
         }
         else
         {

@@ -1,6 +1,7 @@
 package lysis.builder.structure;
 
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -438,6 +439,29 @@ public class BlockAnalysis {
         }
     }
 
+    public static NodeBlock EffectiveTargetNoLoop(NodeBlock block)
+    {
+        if (block == null)
+            return null;
+        
+        NodeBlock target = block;
+        HashSet<NodeBlock> recursionCheck = new HashSet<>();
+        recursionCheck.add(block);
+        for (;;)
+        {
+            block = GetEmptyTarget(block);
+            if (block == null)
+                return target;
+            
+            // Infinite loop?
+            if (recursionCheck.contains(block))
+                return null;
+            
+            recursionCheck.add(block);
+            target = block;
+        }
+    }
+    
     public static NodeBlock EffectiveTarget(NodeBlock block)
     {
         NodeBlock target = block;
