@@ -132,7 +132,8 @@ public class MethodParser {
     {
         if (offset < 0)
             return offset;
-        if (offset > lir_.argDepth)
+        // 32 is max args
+        if (offset > lir_.argDepth && ((offset - 12) / 4) + 1 <= 32)
             lir_.argDepth = offset;
         return offset;
     }
