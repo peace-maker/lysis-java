@@ -145,6 +145,9 @@ public class ForwardTypePropagation extends NodeVisitor {
 	    			// Don't add any info, if we already know what that node is.
 	    			if(stringArg.typeSet().numTypes() != 0)
 	    				break;
+	    			// No constants as strings
+	    			if(stringArg.type() == NodeType.Heap)
+	    				break;
 	    			stringArg.addType(new TypeUnit(new PawnType(signature.args()[formatIndex].tag()), 1));
 	    			break;
 	    		}
