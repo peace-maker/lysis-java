@@ -2,6 +2,7 @@ package lysis.sourcepawn;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -462,6 +463,11 @@ public class SourcePawnFile extends PawnFile {
                 	br.skip(2);
                 long codestart = br.ReadUInt32();
                 long codeend = br.ReadUInt32();
+                
+                // Someone tampered with the .dbg.symbols table :(
+                if (addr == 0 || codeend == 0)
+                    continue;
+                
                 byte ident = br.readByte();
                 Scope vclass = Scope.values()[br.readByte()];
                 int dimcount = br.ReadInt16();
@@ -503,6 +509,38 @@ public class SourcePawnFile extends PawnFile {
                 }
             }
 
+            
+            // Fill in public functions and variables, if they're missing from the .dbg.symbols table
+            publicLoop:
+            for (Public pub: publics_)
+            {
+                // Search for this function in the .dbg.symbols table.
+                for (Function func: functions)
+                    {
+                    // That function was in the .dbg.symbols table
+                    // TODO: Check address as well and change the functions_ entry?
+                    if (pub.name().equals(func.name()))
+                        continue publicLoop;
+                    }
+                Function f = new Function(pub.address(), pub.address(), code().bytes().length, pub.name(), null);
+                functions.add(f);
+            }
+            
+            publicVars:
+            for (PubVar pub: pubvars_)
+            {
+                // Search for this variable in the .dbg.symbols table.
+                for (Variable var: globals)
+                    {
+                    // That function was in the .dbg.symbols table
+                    // TODO: Check address as well and change the functions_ entry?
+                    if (pub.name().equals(var.name()))
+                        continue publicVars;
+                    }
+                Variable var = new Variable(pub.address(), 0, null, pub.address(), code_.bytes().length, VariableType.Normal, Scope.Global, pub.name(), null);
+                globals.add(var);
+            }
+            
             Collections.sort(globals, new Comparator<Variable>() {
 
 				@Override
@@ -713,6 +751,49 @@ public class SourcePawnFile extends PawnFile {
     		}
     	}
     	return null;
+    }
+    
+    public void addFunction(long addr)
+    {
+        for (int i = 0; i < functions_.length; i++)
+        {
+            // This function already exists.
+            if (functions_[i].address() == addr)
+                return;
+        }
+        
+        functions_ = Arrays.copyOf(functions_, functions_.length + 1);
+        functions_[functions_.length-1] = new Function(addr, addr, code().bytes().length, "sub_" + Long.toHexString(addr), 0);
+    }
+    
+    public void addArgumentVar(Function func, int num)
+    {
+        long varAddr = 12 + num*4;
+
+        // Variable already exists.
+        if (lookupVariable(func.address(), varAddr) != null)
+            return;
+        
+        variables_ = Arrays.copyOf(variables_, variables_.length + 1);
+        variables_[variables_.length-1] = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(), VariableType.Normal, Scope.Local, "_arg" + num, null);
+    }
+    
+    public void addGlobal(long addr)
+    {
+        // This global variable already exists.
+        if (lookupGlobal(addr) != null)
+            return;
+
+        for (int i = 0; i < variables_.length; i++)
+        {
+            Variable var = variables_[i];
+            // This variable already exists as a static variable
+            if (addr == var.address() && var.scope() == Scope.Static)
+                return;
+        }
+
+        globals_ = Arrays.copyOf(globals_, globals_.length + 1);
+        globals_[globals_.length-1] = new Variable(addr, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global, "g_var" + Long.toHexString(addr), null);
     }
     
     @Override

@@ -1,5 +1,6 @@
 package lysis.types;
 
+import lysis.lstructure.Argument;
 import lysis.lstructure.Scope;
 import lysis.lstructure.Signature;
 import lysis.lstructure.Variable;
@@ -104,7 +105,8 @@ public class ForwardTypePropagation extends NodeVisitor {
     		if(signature.args().length == 0 || call.numOperands() <= signature.args().length)
 	    		return;
     		// We just assume the one right before the variadic argument is the format string.
-	    	if(!signature.args()[signature.args().length-1].tag().name().equals("String"))
+    		Argument formatArg = signature.args()[signature.args().length-1];
+	    	if(formatArg.tag() == null || !formatArg.tag().name().equals("String"))
 	    		return;
 	    	formatIndex = signature.args().length-1;
     	}

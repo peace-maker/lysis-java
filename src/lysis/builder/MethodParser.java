@@ -137,6 +137,12 @@ public class MethodParser {
             lir_.argDepth = offset;
         return offset;
     }
+    
+    private int trackGlobal(int addr)
+    {
+        file_.addGlobal(addr);
+        return addr;
+    }
 
     private LInstruction readInstruction(SPOpcode op) throws Exception
     {
@@ -146,7 +152,7 @@ public class MethodParser {
             case load_alt:
             {
                 Register reg = (op == SPOpcode.load_pri) ? Register.Pri : Register.Alt;
-                return new LLoadGlobal(readInt32(), reg);
+                return new LLoadGlobal(trackGlobal(readInt32()), reg);
             }
 
             case load_s_pri:
@@ -201,7 +207,7 @@ public class MethodParser {
             case stor_alt:
             {
                 Register reg = (op == SPOpcode.stor_pri) ? Register.Pri : Register.Alt;
-                return new LStoreGlobal(readInt32(), reg);
+                return new LStoreGlobal(trackGlobal(readInt32()), reg);
             }
 
             case stor_i:
@@ -243,7 +249,7 @@ public class MethodParser {
                 return new LPushConstant(readInt32());
 
             case push:
-                return new LPushGlobal(readInt32());
+                return new LPushGlobal(trackGlobal(readInt32()));
 
             case push_s:
                 return new LPushLocal(trackStack(readInt32()));
@@ -262,7 +268,11 @@ public class MethodParser {
                 return new LReturn();
 
             case call:
-                return new LCall(readInt32());
+            {
+                long addr = readInt32();
+                file_.addFunction(addr);
+                return new LCall(addr);
+            }
 
             case jump:
             {
@@ -322,7 +332,7 @@ public class MethodParser {
                 return new LZeroLocal(trackStack(readInt32()));
 
             case zero:
-                return new LZeroGlobal(readInt32());
+                return new LZeroGlobal(trackGlobal(readInt32()));
 
             case eq:
             case neq:
@@ -340,10 +350,10 @@ public class MethodParser {
             }
 
             case inc:
-                return new LIncGlobal(readInt32());
+                return new LIncGlobal(trackGlobal(readInt32()));
                 
             case dec:
-                return new LDecGlobal(readInt32());
+                return new LDecGlobal(trackGlobal(readInt32()));
                 
             case inc_s:
                 return new LIncLocal(trackStack(readInt32()));
@@ -434,8 +444,8 @@ public class MethodParser {
 
             case push2:
             {
-                add(new LPushGlobal(readInt32()));
-                return new LPushGlobal(readInt32());
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                return new LPushGlobal(trackGlobal(readInt32()));
             }
 
             case push3_s:
@@ -461,9 +471,9 @@ public class MethodParser {
 
             case push3:
             {
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                return new LPushGlobal(readInt32());
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                return new LPushGlobal(trackGlobal(readInt32()));
             }
 
             case push4_s:
@@ -492,10 +502,10 @@ public class MethodParser {
 
             case push4:
             {
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                return new LPushGlobal(readInt32());
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                return new LPushGlobal(trackGlobal(readInt32()));
             }
 
             case push5_s:
@@ -527,17 +537,17 @@ public class MethodParser {
 
             case push5:
             {
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                add(new LPushGlobal(readInt32()));
-                return new LPushGlobal(readInt32());
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                add(new LPushGlobal(trackGlobal(readInt32())));
+                return new LPushGlobal(trackGlobal(readInt32()));
             }
 
             case load_both:
             {
-            	add(new LLoadGlobal(readInt32(), Register.Pri));
-            	return new LLoadGlobal(readInt32(), Register.Alt);
+                add(new LLoadGlobal(trackGlobal(readInt32()), Register.Pri));
+                return new LLoadGlobal(trackGlobal(readInt32()), Register.Alt);
             }
             
             case load_s_both:
@@ -548,7 +558,7 @@ public class MethodParser {
 
             case const_:
             {
-                return new LStoreGlobalConstant(readInt32(), readInt32());
+                return new LStoreGlobalConstant(trackGlobal(readInt32()), readInt32());
             }
 
             case const_s:
@@ -847,5 +857,10 @@ public class MethodParser {
 
         readAll();
         return buildBlocks();
+    }
+    
+    public long getExitPC()
+    {
+        return lir_.exit_pc;
     }
 }

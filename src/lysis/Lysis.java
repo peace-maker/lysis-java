@@ -1,32 +1,66 @@
 package lysis;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
 
 import lysis.builder.MethodParser;
 import lysis.builder.SourceBuilder;
 import lysis.builder.structure.ControlBlock;
 import lysis.builder.structure.SourceStructureBuilder;
+import lysis.lstructure.Argument;
 import lysis.lstructure.Function;
 import lysis.lstructure.LGraph;
+import lysis.lstructure.VariableType;
 import lysis.nodes.NodeAnalysis;
 import lysis.nodes.NodeBlock;
 import lysis.nodes.NodeBuilder;
 import lysis.nodes.NodeGraph;
 import lysis.nodes.NodeRenamer;
 import lysis.nodes.NodeRewriter;
-import lysis.nodes.types.DNode;
 import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.BackwardTypePropagation;
 import lysis.types.ForwardTypePropagation;
 
 public class Lysis {
 
-	public static final boolean bDebug = false;
-	
-	static void DumpMethod(SourcePawnFile file, SourceBuilder source, long addr) throws Exception
+    public static final boolean bDebug = false;
+
+    static void PreprocessMethod(SourcePawnFile file, Function func) throws Exception
+    {
+        MethodParser mp = new MethodParser(file, func.address());
+        LGraph graph = mp.parse();
+        
+        // This function had no debug info attached :(
+        if (func.codeEnd() == file.code().bytes().length)
+        	func.setCodeEnd(mp.getExitPC()-4);
+        
+        // No argument information for this function :(
+        if (func.args() == null || func.args().length < graph.nargs)
+        {
+            LinkedList<Argument> args = new LinkedList<Argument>();
+            int start = 0;
+            int num = graph.nargs;
+            if (func.args() != null)
+            {
+                start = func.args().length;
+                // Copy present args
+                for (Argument arg: func.args())
+                    args.add(arg);
+            }
+            for (int i=start; i<num; i++)
+            {
+                Argument arg = new Argument(VariableType.Normal, "_arg" + i, 0, null, null);
+                args.add(arg);
+                
+                file.addArgumentVar(func, i);
+            }
+            func.setArguments(args);
+        }
+    }
+    
+    static void DumpMethod(SourcePawnFile file, SourceBuilder source, long addr) throws Exception
     {
         MethodParser mp = new MethodParser(file, addr);
         LGraph graph = mp.parse();
@@ -137,6 +171,23 @@ public class Lysis {
 		}
 		
 		//DataOutputStream dOut = new DataOutputStream(System.out);
+		
+        // Parse methods for calls and globals which don't have debug info attached.
+        for (int i = 0; i < file.functions().length; i++)
+        {
+            Function fun = file.functions()[i];
+            try
+            {
+                PreprocessMethod((SourcePawnFile)file, fun);
+            }
+            catch (Throwable e)
+            {
+                e.printStackTrace();
+                System.out.println("");
+                System.out.println("/* ERROR PREPROCESSING! " + e.getMessage() + " */");
+                System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
+            }
+        }
 		
         SourceBuilder source = new SourceBuilder(file, System.out);
         try {

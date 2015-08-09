@@ -161,7 +161,7 @@ public class SourceBuilder {
     private String buildTag(Tag tag)
     {
     	// TODO: why wouldn't one print "any"?
-        if (tag.name().equals("_")/* || tag.name().equals("any")*/)
+        if (tag == null || tag.name().equals("_")/* || tag.name().equals("any")*/)
             return "";
         return tag.name() + ":";
     }
@@ -185,11 +185,14 @@ public class SourceBuilder {
         }*/
 
         out_.print("(");
-        for (int i = 0; i < f.args().length; i++)
+        if (f.args() != null)
         {
-            out_.print(buildArgDeclaration(f.args()[i]));
-            if (i != f.args().length - 1)
-                out_.print(", ");
+            for (int i = 0; i < f.args().length; i++)
+            {
+                out_.print(buildArgDeclaration(f.args()[i]));
+                if (i != f.args().length - 1)
+                    out_.print(", ");
+            }
         }
 
         out_.print(")\n");
@@ -223,6 +226,10 @@ public class SourceBuilder {
 
     private String buildLocalRef(DLocalRef lref)
     {
+        if (lref.getOperand(0) instanceof DTempName)
+            return ((DTempName)lref.getOperand(0)).name();
+        if (lref.local() == null)
+            return "_NULLVAR_";
         return lref.local().var().name();
     }
 
@@ -248,6 +255,8 @@ public class SourceBuilder {
 
     private String buildLoadStoreRef(DNode node) throws Exception
     {
+        if (node == null)
+            return "unk__";
         switch (node.type())
         {
             case TempName:
@@ -294,12 +303,12 @@ public class SourceBuilder {
                 return buildLoadStoreRef(load.from());
             }
             
-            /*case Binary:
+            case Binary:
             {
             	return buildBinary((DBinary)node);
             }
             
-            case Constant:
+            /*case Constant:
             {
             	return buildConstant((DConstant)node);
             }*/

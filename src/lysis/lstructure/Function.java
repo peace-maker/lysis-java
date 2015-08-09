@@ -41,4 +41,9 @@ public class Function extends Signature {
     {
         return codeEnd_;
     }
+    
+    public void setCodeEnd(long codeEnd)
+    {
+        codeEnd_ = codeEnd;
+    }
 }
