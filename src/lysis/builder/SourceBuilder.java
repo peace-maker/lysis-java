@@ -1079,7 +1079,8 @@ public class SourceBuilder {
         String decl = var.scope() == Scope.Global
                                    ? "new"
                                    : "static";
-        if (var.tag() != null && var.tag().name().equals("Plugin"))
+        if (var.tag() != null && var.tag().name().equals("Plugin")
+        	|| var.name().equals("myinfo"))
         {
         	long nameOffset = file_.int32FromData(var.address() + 0);
         	long descriptionOffset = file_.int32FromData(var.address() + 4);
@@ -1150,7 +1151,8 @@ public class SourceBuilder {
             decreaseIndent();
             outputLine("};");
         }
-        else if(var.tag().name().equals("PlVers"))
+        else if(var.tag() != null && var.tag().name().equals("PlVers")
+        		|| var.name().equals("__version"))
         {
         	/*struct PlVers
         	{
