@@ -612,6 +612,19 @@ public class SourceStructureBuilder {
                 {
                     return new ContinueBlock(block);
                 }
+                
+                // We're jumping to a direct predecessor of the backedge.
+                // The loop header only has two predecessors: the block before it and the backedge.
+                // No other jumps to the header directly, so we're jumping to the for-step statement
+                // of the |for| loop.
+                if (block.lir().loop().numPredecessors() == 2 && 
+                        BlockAnalysis.EffectiveTarget(target).lir() == block.lir().loop().backedge() &&
+                        // HACK: Don't print an extra |continue| if we're at the end of the loop body.
+                        (block.lir().id() + 1) != target.lir().id())
+                {
+                    return new ContinueBlock(block);
+                }
+                
                 // We're jumping past the loop's backedge?
                 // This is a break!
                 if (target.lir().id() > block.lir().loop().backedge().id())
