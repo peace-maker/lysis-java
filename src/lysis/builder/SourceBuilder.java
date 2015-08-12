@@ -5,6 +5,8 @@ import java.io.PrintStream;
 
 import lysis.PawnFile;
 import lysis.builder.structure.BlockAnalysis;
+import lysis.builder.structure.BreakBlock;
+import lysis.builder.structure.ContinueBlock;
 import lysis.builder.structure.ControlBlock;
 import lysis.builder.structure.IfBlock;
 import lysis.builder.structure.LogicChain;
@@ -895,6 +897,18 @@ public class SourceBuilder {
         if (switch_.join() != null)
             writeBlock(switch_.join());
     }
+    
+    private void writeBreak(BreakBlock block) throws Exception
+    {
+        writeStatements(block.source());
+        outputLine("break;");
+    }
+    
+    private void writeContinue(ContinueBlock block) throws Exception
+    {
+        writeStatements(block.source());
+        outputLine("continue;");
+    }
 
     private void writeStatementBlock(StatementBlock block) throws Exception
     {
@@ -925,6 +939,12 @@ public class SourceBuilder {
                 break;
             case Switch:
                 writeSwitch((SwitchBlock)block);
+                break;
+            case Break:
+                writeBreak((BreakBlock)block);
+                break;
+            case Continue:
+                writeContinue((ContinueBlock)block);
                 break;
             default:
                 assert(false);

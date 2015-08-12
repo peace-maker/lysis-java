@@ -6,5 +6,7 @@ public enum ControlType {
     Statement,
     WhileLoop,
     DoWhileLoop,
-    Switch
+    Switch,
+    Break,
+    Continue
 }

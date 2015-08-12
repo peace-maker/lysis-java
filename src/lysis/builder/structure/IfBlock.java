@@ -26,23 +26,23 @@ public class IfBlock extends ControlBlock {
         join_ = join;
         invert_ = invert;
     }
-    public IfBlock(NodeBlock source, boolean invert, LogicChain chain, ControlBlock trueArm, ControlBlock join)
+    public IfBlock(NodeBlock source, LogicChain chain, ControlBlock trueArm, ControlBlock join)
     {
     	super(source);
         trueArm_ = trueArm;
         falseArm_ = null;
         join_ = join;
-        invert_ = invert;
+        invert_ = false;
         logic_ = chain;
     }
 
-    public IfBlock(NodeBlock source, boolean invert, LogicChain chain, ControlBlock trueArm, ControlBlock falseArm, ControlBlock join)
+    public IfBlock(NodeBlock source, LogicChain chain, ControlBlock trueArm, ControlBlock falseArm, ControlBlock join)
     {
     	super(source);
         trueArm_ = trueArm;
         falseArm_ = falseArm;
         join_ = join;
-        invert_ = invert;
+        invert_ = false;
         logic_ = chain;
     }
 

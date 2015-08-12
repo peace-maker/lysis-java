@@ -280,7 +280,7 @@ public class SourceStructureBuilder {
         // if(cond && !cond) {}
         if(join.nodes().last().type() == NodeType.Jump)
         {
-            return new IfBlock(block, false, chain, null, null, null);
+            return new IfBlock(block, chain, null, null, null);
         }
         
         // LogicChain assigned to a variable?
@@ -320,23 +320,13 @@ public class SourceStructureBuilder {
 
         // If there is no join block, both arms terminate control flow,
         // eliminate one arm and use the other as a join point.
-        if (joinBlock == null)
+        if (joinBlock == null || trueBlock == joinBlock)
             joinBlock = falseBlock;
 
         // If the false target is equivalent to the join point, eliminate
         // it.
         if (falseBlock == joinBlock)
             falseBlock = null;
-
-        // If the true target is equivalent to the join point, promote
-        // the false target to the true target and undo the inversion.
-        boolean invert = false;
-        if (trueBlock == joinBlock)
-        {
-            trueBlock = falseBlock;
-            falseBlock = null;
-            invert ^= true;
-        }
         
         if (join.lir().idominated().length == 2 ||
             BlockAnalysis.EffectiveTarget(falseBlock) == joinBlock)
@@ -350,7 +340,7 @@ public class SourceStructureBuilder {
             popScope();
 
             ControlBlock joinArm1 = traverseJoin(joinBlock);
-            return new IfBlock(block, invert, chain, trueArm1, joinArm1);
+            return new IfBlock(block, chain, trueArm1, joinArm1);
         }
 
         //assert(join.lir().idominated().length == 3);
@@ -361,7 +351,7 @@ public class SourceStructureBuilder {
         popScope();
 
         ControlBlock joinArm2 = traverseJoin(joinBlock);
-        return new IfBlock(block, invert, chain, trueArm2, falseArm, joinArm2);
+        return new IfBlock(block, chain, trueArm2, falseArm, joinArm2);
     }
 
     private ControlBlock traverseIf(NodeBlock block, DJumpCondition jcc)
@@ -373,9 +363,9 @@ public class SourceStructureBuilder {
         NodeBlock falseTarget = (jcc.spop() == SPOpcode.jzer) ? jcc.trueTarget() : jcc.falseTarget();
         NodeBlock joinTarget = findJoinOfSimpleIf(block, jcc);
 
-        // If there is no join block (both arms terminate control flow),
+        // If there is no join block (both arms terminate control flow) or the true block is the join block,
         // eliminate one arm and use the other as a join point.
-        if (joinTarget == null)
+        if (joinTarget == null || trueTarget == joinTarget || BlockAnalysis.EffectiveTargetNoLoop(trueTarget) == joinTarget)
             joinTarget = falseTarget;
 
         // If the false target is equivalent to the join point, eliminate
@@ -383,19 +373,10 @@ public class SourceStructureBuilder {
         if (falseTarget == joinTarget || BlockAnalysis.EffectiveTargetNoLoop(falseTarget) == joinTarget)
             falseTarget = null;
 
-        // If the true target is equivalent to the join point, promote
-        // the false target to the true target and undo the inversion.
-        boolean invert = false;
-        if (trueTarget == joinTarget || BlockAnalysis.EffectiveTargetNoLoop(trueTarget) == joinTarget)
-        {
-            trueTarget = falseTarget;
-            falseTarget = null;
-            invert ^= true;
-        }
-
         if (BlockAnalysis.EffectiveTargetNoLoop(trueTarget) == null)
             trueTarget = null;
         
+        boolean invert = false;
         if (BlockAnalysis.EffectiveTargetNoLoop(joinTarget) == null)
         {
             trueTarget = joinTarget;
@@ -622,6 +603,23 @@ public class SourceStructureBuilder {
             //NodeBlock target = BlockAnalysis.EffectiveTarget(jump.target());
             NodeBlock target = jump.target();
 
+            // Break or continue in a loop?
+            if (block.lir().loop() != null)
+            {
+                // We're jumping back to the loop header and aren't the backedge?
+                // This is a |continue|!
+                if (block.lir().loop() == target.lir() && block.lir().loop().backedge() != block.lir())
+                {
+                    return new ContinueBlock(block);
+                }
+                // We're jumping past the loop's backedge?
+                // This is a break!
+                if (target.lir().id() > block.lir().loop().backedge().id())
+                {
+                    return new BreakBlock(block);
+                }
+            }
+            
             ControlBlock next = null;
             if (!isJoin(target))
                 next = traverseBlock(target);

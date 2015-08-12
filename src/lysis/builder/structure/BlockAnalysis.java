@@ -344,7 +344,7 @@ public class BlockAnalysis {
                 pred = SkipContainedLoop(pred, backedge_.loop());
 
                 // If this assert hits, there is probably a |break| keyword.
-                assert(pred.loop() == null || pred.loop() == backedge_.loop());
+                //assert(pred.loop() == null || pred.loop() == backedge_.loop());
                 if (pred.loop() != null)
                     continue;
 
@@ -397,6 +397,14 @@ public class BlockAnalysis {
             LBlock block = blocks[i];
             if (block.backedge() != null)
                 MarkLoop(block.backedge());
+        }
+        
+        for (int i = 1; i < blocks.length-1; i++)
+        {
+            LBlock block = blocks[i];
+            LBlock prev = blocks[i-1];
+            if (block.loop() == null && prev.loop() != null && prev.loop().backedge() != prev)
+                block.setInLoop(prev.loop());
         }
     }
 
