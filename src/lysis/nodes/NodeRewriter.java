@@ -60,6 +60,16 @@ public class NodeRewriter extends NodeVisitor {
     @Override
     public void visit(DSysReq sysreq) throws Exception
     {
+        if (sysreq.numOperands() == 1 &&
+            sysreq.nativeX().name().equals("__FLOAT_NOT__"))
+        {
+            sysreq.getOperand(0).addType(new TypeUnit(new PawnType(CellType.Float)));
+            DUnary unary = new DUnary(SPOpcode.not, sysreq.getOperand(0));
+            sysreq.replaceAllUsesWith(unary);
+            sysreq.removeFromUseChains();
+            current_.replace(iterator_, unary);
+        }
+        
     	if (sysreq.numOperands() != 2)
             return;
 
@@ -77,6 +87,25 @@ public class NodeRewriter extends NodeVisitor {
                 break;
             case "FloatDiv":
                 spop = SPOpcode.sdiv_alt;
+                break;
+
+            case "__FLOAT_GT__":
+                spop = SPOpcode.sgrtr;
+                break;
+            case "__FLOAT_GE__":
+                spop = SPOpcode.sgeq;
+                break;
+            case "__FLOAT_LT__":
+                spop = SPOpcode.sless;
+                break;
+            case "__FLOAT_LE__":
+                spop = SPOpcode.sleq;
+                break;
+            case "__FLOAT_EQ__":
+                spop = SPOpcode.eq;
+                break;
+            case "__FLOAT_NE__":
+                spop = SPOpcode.neq;
                 break;
             default:
                 return;
