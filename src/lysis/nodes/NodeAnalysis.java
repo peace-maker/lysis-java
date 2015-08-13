@@ -521,7 +521,23 @@ public class NodeAnalysis {
                 if (node.type() == NodeType.MemCopy)
                 {
                     DMemCopy mcpy = (DMemCopy)node;
-                    if(mcpy.from().type() == NodeType.Constant
+                    // This is a multidimensional array copied to an array
+                    // new arr1[2][10], arr2[10];
+                    // arr2 = arr1[0];
+                    if(mcpy.from().type() == NodeType.Load
+                        && mcpy.to().type() == NodeType.DeclareLocal)
+                    {
+                        DLoad load = (DLoad)mcpy.from();
+                        DDeclareLocal local = (DDeclareLocal)mcpy.to();
+                        
+                        if (local.var() != null
+                            && local.var().type() == VariableType.Array)
+                        {
+                            DStore store = new DStore(local, load);
+                            block.nodes().insertAfter(node, store);
+                        }
+                    }
+                    else if(mcpy.from().type() == NodeType.Constant
                         && mcpy.to().type() == NodeType.DeclareLocal)
                     {
                         DConstant con = (DConstant)mcpy.from();
@@ -561,8 +577,6 @@ public class NodeAnalysis {
                         }
                     }
                 }
-
-                
             }
         }
     }
