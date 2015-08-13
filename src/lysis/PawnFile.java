@@ -29,6 +29,7 @@ public abstract class PawnFile {
     }
     
     public abstract String stringFromData(long address);
+    public abstract String stringFromData(long address, int maxread);
     public abstract float floatFromData(long address);
     public abstract int int32FromData(long address);
     

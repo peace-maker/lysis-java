@@ -803,6 +803,12 @@ public class SourcePawnFile extends PawnFile {
     }
     
     @Override
+    public String stringFromData(long address, int maxread)
+    {
+        return ReadStringEx(data().bytes(), (int) address, maxread);
+    }
+    
+    @Override
     public int int32FromData(long address)
     {
         assert(address >= 0 && data().bytes().length > address);

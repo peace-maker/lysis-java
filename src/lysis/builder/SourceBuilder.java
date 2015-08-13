@@ -368,7 +368,7 @@ public class SourceBuilder {
 
         if (tu.type().isString())
         {
-            String s = file_.stringFromData(ia.address());
+            String s = file_.stringFromData(ia.address(), (int) ia.size()-1);
             return buildString(s);
         }
 

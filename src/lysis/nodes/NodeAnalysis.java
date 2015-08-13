@@ -1,7 +1,9 @@
 package lysis.nodes;
 
+import lysis.lstructure.Scope;
 import lysis.lstructure.Signature;
 import lysis.lstructure.Tag;
+import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
@@ -505,12 +507,14 @@ public class NodeAnalysis {
     // new String:bla[] = "HALLO";
     // Print local inline arrays too!
     // new x[] = {1,2,3};
-    public static void FindLocalInlineArrays(NodeGraph graph) throws Exception
+    // Print static copys of arrays
+    // arr1 = arr2;
+    public static void HandleMemCopys(NodeGraph graph) throws Exception
     {
         for (int i = 0; i < graph.numBlocks(); i++)
         {
             NodeBlock block = graph.blocks(i);
-            for (NodeList.iterator iter = block.nodes().begin(); iter.more(); )
+            for (NodeList.iterator iter = block.nodes().begin(); iter.more(); iter.next())
             {
                 DNode node = iter.node();
 
@@ -523,23 +527,42 @@ public class NodeAnalysis {
                         DConstant con = (DConstant)mcpy.from();
                         DDeclareLocal local = (DDeclareLocal)mcpy.to();
                         
-                        if(local.value() == null
-                            && con.value() > 0
+                        if(con.value() > 0
                             && local.var() != null
                             && local.var().type() == VariableType.Array)
                         {
-                            DInlineArray ia = new DInlineArray(con.value(), mcpy.bytes());
-                            block.nodes().insertAfter(node, ia);
-                            local.initOperand(0, ia);
-
-                            // Give the inline array some type information.
-                            TypeUnit tu = TypeUnit.FromVariable(local.var());
-                            ia.addType(tu);
+                            // See if there is a global variable at that address.
+                            Variable global = graph.file().lookupGlobal(con.value());
+                            if (global == null)
+                                global = graph.file().lookupVariable(con.pc(), con.value(), Scope.Static);
+                            if (global == null)
+                            {
+                                // This is the initialization of an inline array.
+                                DInlineArray ia = new DInlineArray(con.value(), mcpy.bytes());
+                                block.nodes().insertAfter(node, ia);
+                                local.replaceOperand(0, ia);
+    
+                                // Give the inline array some type information.
+                                TypeUnit tu = TypeUnit.FromVariable(local.var());
+                                ia.addType(tu);
+                            }
+                            else
+                            {
+                                // This is a static array copy.
+                                DGlobal dglobal = new DGlobal(global);
+                                DNode load = new DLoad(dglobal);
+                                DDeclareLocal declare = new DDeclareLocal(con.pc(), load);
+                                DStore store = new DStore(local, declare);
+                                block.nodes().insertAfter(node, dglobal);
+                                block.nodes().insertAfter(dglobal, load);
+                                block.nodes().insertAfter(load, declare);
+                                block.nodes().insertAfter(declare, store);
+                            }
                         }
                     }
                 }
 
-                iter.next();
+                
             }
         }
     }
