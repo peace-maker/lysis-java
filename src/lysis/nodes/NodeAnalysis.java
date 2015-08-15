@@ -623,9 +623,18 @@ public class NodeAnalysis {
         	if(use.node().type() == NodeType.SysReq
         	|| use.node().type() == NodeType.Call)
         	{
-        		if(node.next().type() == NodeType.Call)
+        	    // Find the corresponding call. This is a hugh hack, but i can't think of anything better now.
+        	    DNode next = node;
+        	    while(next != use.node())
+        	    {
+        	        if (next.type() == NodeType.Call)
+        	            break;
+        	        next = next.next();
+        	    }
+        	    
+        		if(next.type() == NodeType.Call)
         		{
-        			DCall call = (DCall)node.next();
+        			DCall call = (DCall)next;
         			if(call.function().returnType().name().equals("String"))
         			{
         				use.node().replaceOperand(use.index(), call);
