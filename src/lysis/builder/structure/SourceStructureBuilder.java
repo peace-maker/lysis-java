@@ -231,6 +231,29 @@ public class SourceStructureBuilder {
                 DJumpCondition innerJcc = (DJumpCondition)innerJoin.nodes().last();
                 if (innerJcc.falseTarget().nodes().last().type() == NodeType.JumpCondition)
                 {
+                    DJumpCondition falseJcc = (DJumpCondition)innerJcc.falseTarget().nodes().last();
+                    
+                    // Special case for breaks in infinite loops...
+                    if (block.lir().loop() != null)
+                    {
+                        NodeBlock effTrue = BlockAnalysis.EffectiveTarget(falseJcc.trueTarget());
+                        NodeBlock effFalse = BlockAnalysis.EffectiveTarget(falseJcc.falseTarget());
+                        if(effTrue.lir().id() > block.lir().loop().backedge().id() ||
+                            effTrue.nodes().last().type() == NodeType.Return)
+                        {
+                            retValue.set(0, innerJoin);
+                            retValue.set(1, chain);
+                            return retValue;
+                        }
+                        if(effFalse.lir().id() > block.lir().loop().backedge().id() ||
+                            effFalse.nodes().last().type() == NodeType.Return)
+                        {
+                            retValue.set(0, innerJoin);
+                            retValue.set(1, chain);
+                            return retValue;
+                        }
+                    }
+                    
                     exprBlock = innerJcc.falseTarget();
                     break;
                 }
@@ -505,7 +528,7 @@ public class SourceStructureBuilder {
         if (last.type() == NodeType.JumpCondition)
         {
             DJumpCondition jcc = (DJumpCondition)last;
-            if (HasSharedTarget(block, jcc)) {
+            if (HasSharedTarget(block, jcc) && block.lir().dominators().length < 2) {
                 LinkedList<Object> listRet = buildLogicChain(block, null, effectiveHeader);
                 chain = (LogicChain) listRet.get(1);
                 effectiveHeader = (NodeBlock) listRet.get(0);
@@ -627,7 +650,12 @@ public class SourceStructureBuilder {
                 
                 // We're jumping past the loop's backedge?
                 // This is a break!
-                if (target.lir().id() > block.lir().loop().backedge().id())
+                if (target.lir().id() > block.lir().loop().backedge().id() ||
+                    // This is an explicit jump to a block ending with a |return| inside the loop.
+                    // |break| in infinite loops with a simple block after the loop look like this :(
+                    // The return block is inside the loop and not behind the backedge.
+                    (target.nodes().last().type() == NodeType.Return &&
+                    block.lir().instructions()[block.lir().instructions().length-1].op() != Opcode.Goto))
                 {
                     return new BreakBlock(block);
                 }
