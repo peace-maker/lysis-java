@@ -105,7 +105,8 @@ public class NodeRenamer {
                 DUse firstUse = node.uses().get(0);
                 DUse secondUse = node.uses().get(1);
                 if (firstUse.node().type() == NodeType.Store && 
-                    secondUse.node().type() == NodeType.Binary)
+                    (secondUse.node().type() == NodeType.Binary ||
+                    secondUse.node().type() == NodeType.JumpCondition))
                 {
                     secondUse.node().replaceOperand(secondUse.index(), firstUse.node());
                     
