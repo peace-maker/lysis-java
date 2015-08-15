@@ -357,6 +357,20 @@ public class SourceBuilder {
 
         return call.function().name() + "(" + args + ")";
     }
+    
+    private String buildStore(DStore store) throws Exception
+    {
+        String lhs = buildLoadStoreRef(store.getOperand(0));
+        String rhs;
+        if(store.logic() != null)
+            rhs = buildLogicChain(store.logic());
+        else
+            rhs = buildExpression(store.getOperand(1));
+        String eq = store.spop() == SPOpcode.nop
+                    ? "="
+                    : spop(store.spop()) + "=";
+        return lhs + " " + eq + " " + rhs;
+    }
 
     private String buildInlineArray(DInlineArray ia)
     {
@@ -484,6 +498,11 @@ public class SourceBuilder {
             {
             	return ((DGenArray)node).var().name();
             }
+            
+            case Store:
+            {
+                return "(" + buildStore((DStore)node) + ")";
+            }
 
             default:
                 throw new Exception("Can't print expression: " + node.type());
@@ -595,16 +614,7 @@ public class SourceBuilder {
 
     private void writeStore(DStore store) throws Exception
     {
-        String lhs = buildLoadStoreRef(store.getOperand(0));
-        String rhs;
-        if(store.logic() != null)
-            rhs = buildLogicChain(store.logic());
-        else
-            rhs = buildExpression(store.getOperand(1));
-        String eq = store.spop() == SPOpcode.nop
-                    ? "="
-                    : spop(store.spop()) + "=";
-        outputLine(lhs + " " + eq + " " + rhs + ";");
+        outputLine(buildStore(store) + ";");
     }
 
     private void writeReturn(ReturnBlock block) throws Exception

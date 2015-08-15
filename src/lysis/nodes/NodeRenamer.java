@@ -93,6 +93,28 @@ public class NodeRenamer {
                 }
             }
 
+            // Check for assignments in binary expressions
+            // while ((ent = FindEntityByClassname(ent, "*")) != -1) ..
+            // Avoid printing
+            // new var1 = FindEntityByClassname(ent, "*");
+            // ent = var1;
+            // while (var1 != -1) ...
+            if (node.uses().size() == 2)
+            {
+                // Only used in a store and in a binary expression?
+                DUse firstUse = node.uses().get(0);
+                DUse secondUse = node.uses().get(1);
+                if (firstUse.node().type() == NodeType.Store && 
+                    secondUse.node().type() == NodeType.Binary)
+                {
+                    secondUse.node().replaceOperand(secondUse.index(), firstUse.node());
+                    
+                    block.nodes().remove(firstUse.node());
+                    block.nodes().remove(iter);
+                    continue;
+                }
+            }
+            
             // If we've reached here, the expression has more than one use
             // and we have to wrap it in some kind of name, lest we
             // duplicate it in the expression tree which may be illegal.
