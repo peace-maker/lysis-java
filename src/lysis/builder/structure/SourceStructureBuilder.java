@@ -177,6 +177,12 @@ public class SourceStructureBuilder {
                 	return retValue;
                 }
                 
+                if(condBlock.nodes().last().type() == NodeType.Jump
+                    && BlockAnalysis.EffectiveTarget(condBlock) == earlyExit) {
+                    retValue.set(1, chain);
+                    return retValue;
+                }
+                
                 DJumpCondition condJcc = (DJumpCondition)condBlock.nodes().last();
                 
                 // If the true connects back to the early exit stop, we're
