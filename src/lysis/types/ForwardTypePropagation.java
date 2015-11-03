@@ -121,7 +121,7 @@ public class ForwardTypePropagation extends NodeVisitor {
     	formatString = formatString.replace("%%", "");
     	String[] parts = formatString.split("%");
     	int argumentIndex = formatIndex+1;
-    	for(int i=1;i<parts.length;i++)
+    	for(int i=1;i<parts.length && argumentIndex<call.numOperands();i++)
     	{
     		switch(parts[i].charAt(0))
     		{
