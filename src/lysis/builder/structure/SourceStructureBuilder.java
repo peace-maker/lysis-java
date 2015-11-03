@@ -182,6 +182,14 @@ public class SourceStructureBuilder {
                     retValue.set(1, chain);
                     return retValue;
                 }
+
+                // This is a single block body of a loop. The logic chains ends here.
+                if(condBlock.nodes().last().type() == NodeType.Jump
+                    && condBlock.lir().loop() != null
+                    && BlockAnalysis.GetSingleTarget(condBlock).lir() == condBlock.lir().loop()) {
+                    retValue.set(1, chain);
+                    return retValue;
+                }
                 
                 DJumpCondition condJcc = (DJumpCondition)condBlock.nodes().last();
                 
