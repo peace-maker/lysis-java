@@ -1,9 +1,11 @@
 package lysis.nodes;
 
+import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DNode;
 import lysis.nodes.types.DTempName;
 import lysis.nodes.types.DUse;
+import lysis.sourcepawn.SPOpcode;
 
 public class NodeRenamer {
 	private NodeGraph graph_;
@@ -114,6 +116,79 @@ public class NodeRenamer {
                     block.nodes().remove(iter);
                     continue;
                 }
+                
+                // Check for doubled comparisons like
+                // if(0 < a < 10)
+                // They're compiled as 
+                // new var1 = a;
+                // if(var1 > 10 & 0 < var1) 
+                if (firstUse.node().type() == NodeType.Binary &&
+                    secondUse.node().type() == NodeType.Binary)
+                {
+                    // See if they're both connected through a binary |and| expression
+                    if (firstUse.node().uses().size() == 1 &&
+                        secondUse.node().uses().size() == 1 &&
+                        firstUse.node().uses().get(0).node() == secondUse.node().uses().get(0).node() &&
+                        firstUse.node().uses().get(0).node().type() == NodeType.Binary)
+                    {
+                        DBinary connector = (DBinary)firstUse.node().uses().get(0).node();
+                        if (connector.spop() == SPOpcode.and)
+                        {
+                            assert(firstUse.index() == 1 && secondUse.index() == 1);
+                            // Replace with a "ternary" comparison chain
+                            DBinary leftSide = (DBinary)connector.rhs();
+                            DBinary rightSide = (DBinary)connector.lhs();
+                            
+                            leftSide.replaceOperand(1, rightSide);
+                            
+                            // Turn the operands around
+                            SPOpcode invertedOP = rightSide.spop();
+                            switch(rightSide.spop())
+                            {
+                            case jsleq: // <=
+                                invertedOP = SPOpcode.jsgeq; // >=
+                                break;
+                            case jsless: // <
+                                invertedOP = SPOpcode.jsgrtr; // >
+                                break;
+                            case jsgrtr: // >
+                                invertedOP = SPOpcode.jsless; // <
+                                break;
+                            case jsgeq: // >=
+                                invertedOP = SPOpcode.jsleq; // <=
+                                break;
+                            case sleq: // <=
+                                invertedOP = SPOpcode.sgeq; // >=
+                                break;
+                            case sless: // <
+                                invertedOP = SPOpcode.sgrtr; // >
+                                break;
+                            case sgrtr: // >
+                                invertedOP = SPOpcode.sless; // <
+                                break;
+                            case sgeq: // >=
+                                invertedOP = SPOpcode.sleq; // <=
+                                break;
+                            default:
+                                break;
+                            }
+                            
+                            DBinary rightInverted = new DBinary(invertedOP, rightSide.rhs(), rightSide.lhs());
+                            rightSide.replaceAllUsesWith(rightInverted);
+                            rightSide.removeFromUseChains();
+                            
+                            // Hide that |and| expression
+                            connector.replaceAllUsesWith(leftSide);
+                            connector.removeFromUseChains();
+                            
+                            block.nodes().remove(rightSide);
+                            block.nodes().remove(connector);
+                            block.nodes().remove(iter);
+                            continue;
+                        }
+                    }
+                }
+                    
             }
             
             // If we've reached here, the expression has more than one use
