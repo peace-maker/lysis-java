@@ -281,6 +281,9 @@ public class SourcePawnFile extends PawnFile {
         sections_ = new HashMap<String, Section>();
         
         int firstData = 0;
+        Section previousSection = null;
+        String previousSectionName = "";
+        
         // Read sections.
         for (int i = 0; i < header_.sections; i++)
         {
@@ -291,15 +294,29 @@ public class SourcePawnFile extends PawnFile {
             int size = (int)reader.ReadUInt32();
             String name;
             if (i == header_.sections - 1)
-        	{
-        	    int start = header_.stringtab + nameOffset;
-        	    name = ReadStringEx(binary, start, firstData - start - 2);
-        	}
-        	else
-        	{
-        	    name = ReadString(binary, header_.stringtab + nameOffset);
-        	}
-            sections_.put(name, new Section(dataoffs, size));
+            {
+                int start = header_.stringtab + nameOffset;
+                name = ReadStringEx(binary, start, firstData - start - 2);
+            }
+            else
+            {
+                name = ReadString(binary, header_.stringtab + nameOffset);
+            }
+            
+            // Sanity check for the sizes of sections
+            if (previousSection != null)
+            {
+                int nextDataOffs = previousSection.dataoffs + previousSection.size;
+                if (dataoffs != nextDataOffs)
+                {
+                    System.err.printf("// Bad section size for section %s. Trying to repair.%n", previousSectionName);
+                    previousSection.size = dataoffs - previousSection.dataoffs;
+                }
+            }
+            
+            previousSection = new Section(dataoffs, size);
+            previousSectionName = name;
+            sections_.put(name, previousSection);
         }
 
         // There was a brief period of incompatibility, where version == 0x0101
