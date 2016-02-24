@@ -34,6 +34,8 @@ public class SourcePawnFile extends PawnFile {
     private final static byte IDENT_FUNCTION = 9;
     private final static byte IDENT_VARARGS = 11;
     
+    private final static byte DIMEN_MAX = 4;
+    
     public enum Compression {
     	None,
         Gzip
@@ -532,16 +534,29 @@ public class SourcePawnFile extends PawnFile {
                 long codestart = br.ReadUInt32();
                 long codeend = br.ReadUInt32();
                 
-                // Someone tampered with the .dbg.symbols table :(
-                if (addr == 0 || codeend == 0)
-                    continue;
-                
                 byte ident = br.readByte();
-                Scope vclass = Scope.values()[br.readByte()];
+                byte vclassByte = br.readByte();
+                Scope vclass = Scope.Local;
+                if (vclassByte >= 0 && vclassByte < Scope.values().length)
+                    vclass = Scope.values()[vclassByte];
                 int dimcount = br.ReadInt16();
                 long nameOffset = br.ReadUInt32();
-                String name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int)nameOffset);
+                String name = "";
+                if (sections_.get(".dbg.strings").size > nameOffset)
+                    name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int)nameOffset);
 
+                // Someone tampered with the .dbg.symbols table :(
+                if (addr == 0 || codeend == 0 ||
+                    codestart > codeend ||
+                    tagid < 0 ||
+                    ident < 0 ||
+                    vclassByte < 0 || vclassByte >= Scope.values().length ||
+                    dimcount < 0 || dimcount > DIMEN_MAX ||
+                    nameOffset >= sections_.get(".dbg.strings").size)
+                {
+                    continue;
+                }
+                
                 if (ident == IDENT_FUNCTION)
                 {
                     Tag tag = tagid >= tags_.length ? null : tags_[tagid];
@@ -587,14 +602,14 @@ public class SourcePawnFile extends PawnFile {
                             	br.skip(2);
                             short dim_tagid = br.ReadInt16();
                             
-                            Tag dim_tag = dim_tagid >= tags_.length ? null : tags_[dim_tagid];
+                            Tag dim_tag = dim_tagid < 0 || dim_tagid >= tags_.length ? null : tags_[dim_tagid];
                             long size = br.ReadUInt32();
                             
                             dims[dim] = new Dimension(dim_tagid, dim_tag, (int)size);
                         }
                     }
 
-                    Tag tag = tagid >= tags_.length ? null : tags_[tagid];
+                    Tag tag = tagid < 0 || tagid >= tags_.length ? null : tags_[tagid];
                     Variable var = new Variable(addr, tagid, tag, codestart, codeend, type, vclass, name, dims);
                     if (vclass == Scope.Global)
                     {
