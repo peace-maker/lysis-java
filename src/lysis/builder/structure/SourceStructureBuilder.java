@@ -546,6 +546,13 @@ public class SourceStructureBuilder {
         }
 
         last = effectiveHeader.nodes().last();
+        
+        if (last.type() == NodeType.Switch)
+        {
+            SwitchBlock switchBlock = (SwitchBlock)traverseSwitch(block, (DSwitch)last);
+            return new WhileLoop(ControlType.DoWhileLoop, effectiveHeader, switchBlock, null);
+        }
+        
         assert(last.type() == NodeType.JumpCondition || last.type() == NodeType.Jump);
 
         if (last.type() == NodeType.JumpCondition || last.type() == NodeType.Jump)
@@ -562,7 +569,13 @@ public class SourceStructureBuilder {
             //ControlType type = findLoopJoinAndBody(block, effectiveHeader, join, body, cond);
             ControlBlock joinArm = null;
             if (join != null)
+            {
+                pushScope(block);
+                pushScope(cond);
                 joinArm = traverseJoin(join);
+                popScope();
+                popScope();
+            }
 
             ControlBlock bodyArm = null;
             if (body != null)
@@ -599,18 +612,26 @@ public class SourceStructureBuilder {
             join = graph_.blocks(dominators.get(dominators.size() - 1).id());
         }
 
+        // Don't run over blocks again, we've already passed before the switch.
         ControlBlock joinArm = null;
-        if (join != null)
-            joinArm = traverseBlock(join);
+        if (join != null && BlockAnalysis.EffectiveTarget(join).lir().id() > block.lir().id())
+            joinArm = traverseJoin(join);
 
+        pushScope(block);
         pushScope(join);
         LinkedList<Case> cases = new LinkedList<SwitchBlock.Case>();
-        ControlBlock defaultArm = traverseBlock(graph_.blocks(switch_.defaultCase().id()));
+        NodeBlock defaultBlock = graph_.blocks(switch_.defaultCase().id());
+        ControlBlock defaultArm = null;
+        if (!isJoin(defaultBlock))
+            defaultArm = traverseBlock(defaultBlock);
+        pushScope(defaultBlock);
         for (int i = 0; i < switch_.numCases(); i++)
         {
             ControlBlock arm = traverseBlock(graph_.blocks(switch_.getCase(i).target.id()));
             cases.add(new SwitchBlock.Case(switch_.getCase(i).values(), arm));
         }
+        popScope();
+        popScope();
         popScope();
 
         return new SwitchBlock(block, defaultArm, cases, joinArm);

@@ -809,8 +809,11 @@ public class SourceBuilder {
         {
             writeStatements(loop.source());
 
-            DJumpCondition jcc = (DJumpCondition)loop.source().nodes().last();
-            cond = buildExpression(jcc.getOperand(0));
+            DNode jcc = loop.source().nodes().last();
+            if (jcc.type() == NodeType.JumpCondition)
+                cond = buildExpression(jcc.getOperand(0));
+            else
+                cond = "true";
         }
         else
         {
@@ -848,8 +851,11 @@ public class SourceBuilder {
             }
             else
             {
-                DJump j = (DJump)last;
-                writeStatements(j.target());
+                if (last.type() == NodeType.Jump)
+                {
+                    DJump j = (DJump)last;
+                    writeStatements(j.target());
+                }
                 cond = "true";
             }
         }
