@@ -6,7 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.zip.Inflater;
 
 import lysis.BitConverter;
@@ -14,6 +16,7 @@ import lysis.ExtendedDataInputStream;
 import lysis.Lysis;
 import lysis.PawnFile;
 import lysis.Public;
+import lysis.Similarity;
 import lysis.StupidWrapper;
 import lysis.lstructure.Argument;
 import lysis.lstructure.Dimension;
@@ -60,13 +63,17 @@ public class SourcePawnFile extends PawnFile {
     
     private class Section
     {
+        public int nameoffs;
         public int dataoffs;
         public int size;
+        public String name;
 
-        public Section(int dataoffs, int size)
+        public Section(int nameoffs, int dataoffs, int size, String name)
         {
+            this.nameoffs = nameoffs;
             this.dataoffs = dataoffs;
             this.size = size;
+            this.name = name;
         }
     }
     
@@ -266,6 +273,11 @@ public class SourcePawnFile extends PawnFile {
     private Tag[] tags_;
     private Variable[] variables_ = new Variable[0];
 
+    private static final String[] KNOWN_SECTIONS = new String[] { ".code",
+            ".data", ".publics", ".pubvars", ".natives", ".tags", ".names",
+            ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols",
+            ".dbg.info", ".dbg.strings" };
+    
     public SourcePawnFile(byte[] binary) throws Exception
     {
     	ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -282,9 +294,12 @@ public class SourcePawnFile extends PawnFile {
 
         sections_ = new HashMap<String, Section>();
         
+        Set<String> knownSections = new HashSet<String>(Arrays.asList(KNOWN_SECTIONS));
+        
         int firstData = 0;
         Section previousSection = null;
-        String previousSectionName = "";
+        boolean previousUnknown = false;
+        LinkedList<Section> unknownSections = new LinkedList<Section>();
         
         // Read sections.
         for (int i = 0; i < header_.sections; i++)
@@ -305,20 +320,117 @@ public class SourcePawnFile extends PawnFile {
                 name = ReadString(binary, header_.stringtab + nameOffset);
             }
             
+            /*
+             * SOME SERIOUS BAD HEURISTICS AHEAD!
+             * WATCH OUT!
+             */
+            if (previousUnknown)
+            {
+                // The previous section got a tampered name.
+                // Lets see if we can recover it.
+                String recoveredName = "";
+                int offset = header_.stringtab + previousSection.nameoffs;
+                for (; offset < binary.length && (offset-header_.stringtab) < (nameOffset-1); offset++)
+                {
+                    // Read as many bytes until the next section's name starts
+                    // Replace any null bytes on the way with '_'
+                    if (binary[offset] == '\0')
+                        recoveredName += "_";
+                    else
+                        recoveredName += new String(binary, offset, 1, "UTF-8");
+                }
+                System.err.printf("// Recovered name of previous section as \"%s\".%n", recoveredName);
+                previousSection.name = recoveredName;
+            }
+            
+            // We're expecting that section. Good to see ya!
+            if (knownSections.contains(name))
+            {
+                previousUnknown = false;
+                knownSections.remove(name);
+            }
+            else
+            {
+                // This section shouldn't be here.
+                previousUnknown = true;
+                System.err.printf("// Unknown section \"%s\".%n", name);
+                if (previousSection != null)
+                {
+                    // Make sure the nameoffsets are sanely in order.
+                    int expectedNameOffs = previousSection.nameoffs + previousSection.name.length() + 1;
+                    if (nameOffset != expectedNameOffs)
+                    {
+                        System.err.printf("// Expected name to start at %d, but says it starts at %d. Correcting..%n", expectedNameOffs, nameOffset);
+                        nameOffset = expectedNameOffs;
+                    }
+                }
+            }
+            
             // Sanity check for the sizes of sections
             if (previousSection != null)
             {
                 int nextDataOffs = previousSection.dataoffs + previousSection.size;
                 if (dataoffs != nextDataOffs)
                 {
-                    System.err.printf("// Bad section size for section %s. Trying to repair.%n", previousSectionName);
+                    System.err.printf("// Bad section size for section %s. Trying to repair.%n", previousSection.name);
                     previousSection.size = dataoffs - previousSection.dataoffs;
                 }
             }
             
-            previousSection = new Section(dataoffs, size);
-            previousSectionName = name;
-            sections_.put(name, previousSection);
+            previousSection = new Section(nameOffset, dataoffs, size, name);
+            
+            // Remember that we're not done with this strange section yet.
+            if (previousUnknown)
+                unknownSections.add(previousSection);
+            else
+                sections_.put(name, previousSection);
+        }
+        
+        for (String sectionName : knownSections)
+        {
+            System.err.printf("// Missing section \"%s\".%n", sectionName);
+        }
+        
+        // There are some sections missing and some unknown ones there?
+        if (knownSections.size() == unknownSections.size())
+        {
+            // Try to match all of them
+            while (knownSections.size() > 0)
+            {
+                // Start with the ones with the highest similarity
+                // Then go down to the more different ones..
+                float highestSimilarity = -1.0f;
+                String bestMatchingName = null;
+                Section bestMatchinSection = null;
+                for (String missingSection : knownSections)
+                {
+                    for (Section unknownSection : unknownSections)
+                    {
+                        float similarity = Similarity.GetSimilarity(missingSection, unknownSection.name);
+                        if (similarity > highestSimilarity)
+                        {
+                            highestSimilarity = similarity;
+                            bestMatchingName = missingSection;
+                            bestMatchinSection = unknownSection;
+                        }
+                    }
+                }
+                
+                // This isn't good enough and we don't want to start parsing random stuff.
+                if (highestSimilarity < 0.3)
+                {
+                    System.err.printf("// Can't find good similarity between sections (only coefficient of %f).%n", highestSimilarity);
+                    break;
+                }
+                
+                // We have a guess for that section name, save it.
+                System.err.printf("// Section \"%s\" is probably (%f) missing section \"%s\".%n", bestMatchinSection.name, highestSimilarity, bestMatchingName);
+                knownSections.remove(bestMatchingName);
+                unknownSections.remove(bestMatchinSection);
+                
+                bestMatchinSection.name = bestMatchingName;
+                sections_.put(bestMatchingName, bestMatchinSection);
+            }
         }
 
         // There was a brief period of incompatibility, where version == 0x0101
