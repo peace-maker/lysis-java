@@ -305,13 +305,13 @@ public class SourceBuilder {
             
             case Binary:
             {
-            	return buildBinary((DBinary)node);
+            	return buildBinary((DBinary)node) + "/* ERROR unknown load Binary */";
             }
             
-            /*case Constant:
+            case Constant:
             {
-            	return buildConstant((DConstant)node);
-            }*/
+            	return buildConstant((DConstant)node) + "/* ERROR unknown load Constant */";
+            }
 
             case GenArray:
             {
