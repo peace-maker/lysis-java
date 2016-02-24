@@ -1278,6 +1278,11 @@ public class SourceBuilder {
 
     public void writeGlobals() throws IOException
     {
+        if (file_.globals() == null)
+        {
+            System.err.println("// File got no pubvars?");
+            return;
+        }
         for (int i = 0; i < file_.globals().length; i++)
             writeGlobal(file_.globals()[i]);
     }

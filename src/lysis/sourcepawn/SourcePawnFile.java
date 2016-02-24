@@ -262,7 +262,7 @@ public class SourcePawnFile extends PawnFile {
     private DebugLine[] debugLines_;
     private DebugHeader debugHeader_ = new DebugHeader();
     private Tag[] tags_;
-    private Variable[] variables_;
+    private Variable[] variables_ = new Variable[0];
 
     public SourcePawnFile(byte[] binary) throws Exception
     {
@@ -374,30 +374,72 @@ public class SourcePawnFile extends PawnFile {
         {
             Section sc = sections_.get(".publics");
             ExtendedDataInputStream br = new ExtendedDataInputStream(new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+            
+            // Maybe the .dbg.symbols section was inserted before this one?
+            // Merge the lists.
+            LinkedList<Function> functions = new LinkedList<Function>();
+            if (functions_ != null)
+                functions.addAll(Arrays.asList(functions_));
+            
             int numPublics = sc.size / 8;
             publics_ = new Public[numPublics];
+            publicLoop:
             for (int i = 0; i < numPublics; i++)
             {
                 long address = br.ReadUInt32();
                 long nameOffset = br.ReadUInt32();
                 String name = ReadString(binary, sections_.get(".names").dataoffs + (int)nameOffset);
                 publics_[i] = new Public(name, address);
+                
+                // Search for this function in the .dbg.symbols table.
+                for (Function func: functions)
+                {
+                    // That function was in the .dbg.symbols table
+                    // TODO: Check address as well and change the functions_ entry?
+                    if (name.equals(func.name()))
+                        continue publicLoop;
+                }
+                Function f = new Function(address, address, code().bytes().length, name, null);
+                functions.add(f);
+                
             }
+            // Add the public functions to the list right away.
+            functions_ = functions.toArray(new Function[0]);
         }
 
         if (sections_.containsKey(".pubvars"))
         {
             Section sc = sections_.get(".pubvars");
             ExtendedDataInputStream br = new ExtendedDataInputStream(new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+            
+            // Maybe the .dbg.symbols section was inserted before this one?
+            // Merge the lists.
+            LinkedList<Variable> globals = new LinkedList<Variable>();
+            if (globals_ != null)
+                globals.addAll(Arrays.asList(globals_));
+            
             int numPubVars = sc.size / 8;
             pubvars_ = new PubVar[numPubVars];
+            pubvarLoop:
             for (int i = 0; i < numPubVars; i++)
             {
                 long address = br.ReadUInt32();
                 long nameOffset = br.ReadUInt32();
                 String name = ReadString(binary, sections_.get(".names").dataoffs + (int)nameOffset);
                 pubvars_[i] = new PubVar(name, address);
+                
+                // Search for this variable in the .dbg.symbols table.
+                for (Variable glob: globals)
+                {
+                    // That variable was in the .dbg.symbols table
+                    if (glob.equals(glob.name()))
+                        continue pubvarLoop;
+                }
+                Variable v = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global, name, null);
+                globals.add(v);
             }
+            // Add the public variables to the list right away.
+            globals_ = globals.toArray(new Variable[0]);
         }
 
         if (sections_.containsKey(".natives"))
@@ -470,8 +512,17 @@ public class SourcePawnFile extends PawnFile {
             Section sc = sections_.get(".dbg.symbols");
             ExtendedDataInputStream br = new ExtendedDataInputStream(new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
             LinkedList<Variable> locals = new LinkedList<Variable>();
+            
+            // Merge the list with the .pubvars one
             LinkedList<Variable> globals = new LinkedList<Variable>();
+            if (globals_ != null)
+                globals.addAll(Arrays.asList(globals_));
+            
+            // Merge the list with the .publics one
             LinkedList<Function> functions = new LinkedList<Function>();
+            if (functions_ != null)
+                functions.addAll(Arrays.asList(functions_));
+            
             for (int i = 0; i < debugHeader_.numSyms; i++)
             {
                 long addr = br.ReadInt32();
@@ -494,6 +545,32 @@ public class SourcePawnFile extends PawnFile {
                 if (ident == IDENT_FUNCTION)
                 {
                     Tag tag = tagid >= tags_.length ? null : tags_[tagid];
+                    
+                    // Been in .publics as well?
+                    Function existingFunction = null;
+                    for (Function func: functions)
+                    {
+                        // That function was in the .dbg.symbols table
+                        // TODO: Check address as well and change the functions_ entry?
+                        if (name.equals(func.name()))
+                        {
+                            existingFunction = func;
+                            break;
+                        }
+                    }
+                    
+                    // This function came up already.
+                    if (existingFunction != null)
+                    {
+                        if (existingFunction.address() != addr || existingFunction.codeStart() != codestart)
+                        {
+                            System.err.printf("// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n", name, existingFunction.address());
+                            continue;
+                        }
+                        // Remove the old one from the list as this might have more info.
+                        functions.remove(existingFunction);
+                    }
+                    
                     Function func = new Function((long)addr, codestart, codeend, name, tag);
                     functions.add(func);
                 }
@@ -520,7 +597,31 @@ public class SourcePawnFile extends PawnFile {
                     Tag tag = tagid >= tags_.length ? null : tags_[tagid];
                     Variable var = new Variable(addr, tagid, tag, codestart, codeend, type, vclass, name, dims);
                     if (vclass == Scope.Global)
+                    {
+                        // Been in .publics as well?
+                        Variable existingGlobal = null;
+                        for (Variable glob: globals)
+                        {
+                            if (name.equals(glob.name()))
+                            {
+                                existingGlobal = glob;
+                                break;
+                            }
+                        }
+                        
+                        // This function came up already.
+                        if (existingGlobal != null)
+                        {
+                            if (existingGlobal.address() != addr)
+                            {
+                                System.err.printf("// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n", name, existingGlobal.address());
+                                continue;
+                            }
+                            // Remove the old one from the list as this might have more info.
+                            globals.remove(existingGlobal);
+                        }
                         globals.add(var);
+                    }
                     else
                         locals.add(var);
                 }
@@ -533,12 +634,12 @@ public class SourcePawnFile extends PawnFile {
             {
                 // Search for this function in the .dbg.symbols table.
                 for (Function func: functions)
-                    {
+                {
                     // That function was in the .dbg.symbols table
                     // TODO: Check address as well and change the functions_ entry?
                     if (pub.name().equals(func.name()))
                         continue publicLoop;
-                    }
+                }
                 Function f = new Function(pub.address(), pub.address(), code().bytes().length, pub.name(), null);
                 functions.add(f);
             }
@@ -548,12 +649,12 @@ public class SourcePawnFile extends PawnFile {
             {
                 // Search for this variable in the .dbg.symbols table.
                 for (Variable var: globals)
-                    {
+                {
                     // That function was in the .dbg.symbols table
                     // TODO: Check address as well and change the functions_ entry?
                     if (pub.name().equals(var.name()))
                         continue publicVars;
-                    }
+                }
                 Variable var = new Variable(pub.address(), 0, null, pub.address(), code_.bytes().length, VariableType.Normal, Scope.Global, pub.name(), null);
                 globals.add(var);
             }
