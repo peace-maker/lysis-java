@@ -246,6 +246,16 @@ public class SourceStructureBuilder {
                 if (innerJcc.falseTarget().nodes().last().type() == NodeType.JumpCondition)
                 {
                     exprBlock = innerJcc.falseTarget();
+                    
+                    // Make sure this conditional jump actually continues an expression.
+                    DJumpCondition childJcc = (DJumpCondition)exprBlock.nodes().last();
+                    NodeBlock exit = BlockAnalysis.EffectiveTarget(childJcc.trueTarget());
+                    if (exit.lir().instructions()[0].op() != Opcode.Constant)
+                    {
+                        retValue.set(0, innerJoin);
+                        retValue.set(1, chain);
+                        return retValue;
+                    }
                     break;
                 }
 
