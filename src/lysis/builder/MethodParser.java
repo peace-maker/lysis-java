@@ -46,6 +46,7 @@ import lysis.instructions.LPushStackAddress;
 import lysis.instructions.LReturn;
 import lysis.instructions.LStack;
 import lysis.instructions.LStackAddress;
+import lysis.instructions.LStackAdjust;
 import lysis.instructions.LStore;
 import lysis.instructions.LStoreGlobal;
 import lysis.instructions.LStoreGlobalConstant;
@@ -646,6 +647,12 @@ public class MethodParser {
             case stradjust_pri:
             {
             	return new LStradjustPri();
+            }
+            
+            case stackadjust:
+            {
+                int value = readInt32();
+                return new LStackAdjust(value);
             }
             
             case nop:
