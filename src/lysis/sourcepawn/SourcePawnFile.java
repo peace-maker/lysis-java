@@ -826,7 +826,7 @@ public class SourcePawnFile extends PawnFile {
             }
         }
 
-        if (sections_.containsKey(".dbg.natives"))
+        if (sections_.containsKey(".dbg.natives") && sections_.get(".dbg.natives").size > 0)
         {
             Section sc = sections_.get(".dbg.natives");
             ExtendedDataInputStream br = new ExtendedDataInputStream(new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
