@@ -1,7 +1,9 @@
 package lysis.builder;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 import lysis.BitConverter;
 import lysis.builder.structure.BlockAnalysis;
@@ -73,7 +75,7 @@ public class MethodParser {
 	private class LIR
     {
         public LBlock entry;
-        public LinkedList<LInstruction> instructions = new LinkedList<LInstruction>();
+        public List<LInstruction> instructions = new ArrayList<LInstruction>();
         public HashMap<Long, LBlock> targets = new HashMap<Long, LBlock>();
         public long entry_pc = 0;
         public long exit_pc = 0;
@@ -686,7 +688,7 @@ public class MethodParser {
 
     private class BlockBuilder
     {
-        private LinkedList<LInstruction> pending_ = new LinkedList<LInstruction>();
+        private List<LInstruction> pending_ = null;
         private LBlock block_ = null;
         private LIR lir_;
 
@@ -705,6 +707,7 @@ public class MethodParser {
 
         public BlockBuilder(LIR lir)
         {
+            pending_ = new ArrayList<LInstruction>(lir.instructions.size());
             lir_ = lir;
             block_ = lir_.entry;
         }
