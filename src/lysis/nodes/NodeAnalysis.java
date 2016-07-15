@@ -355,7 +355,7 @@ public class NodeAnalysis {
         	{
         		DGlobal global = (DGlobal)check;
         		//System.out.printf("global %s has %d dimensions.%n", global.var().name(), global.var().dims().length);
-        		if(global.var().dims().length < num_dims)
+        		if(global.var() != null && global.var().dims() != null && global.var().dims().length < num_dims)
         			return true;
         		break;
         	}
@@ -363,7 +363,7 @@ public class NodeAnalysis {
     		{
     			DGenArray genarray = (DGenArray)check;
     			//System.out.printf("genarray %s has %d dimensions.%n", genarray.var().name(), genarray.var().dims().length);
-            	if(genarray.var().dims().length < num_dims)
+            	if(genarray.var() != null && genarray.var().dims() != null && genarray.var().dims().length < num_dims)
             		return true;
             	break;
     		}
