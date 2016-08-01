@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import lysis.PawnFile;
+import lysis.Public;
 import lysis.builder.structure.BlockAnalysis;
 import lysis.builder.structure.ControlBlock;
 import lysis.builder.structure.IfBlock;
@@ -172,7 +173,10 @@ public class SourceBuilder {
         if(f == null)
         	throw new IOException("Function not found.");
 
-        if (file_.lookupPublic(entry.lir().pc()) != null)
+        Public pub = file_.lookupPublic(entry.lir().pc());
+        // All functions are in the .publics table now, so they can be used as callbacks.
+        // Functions without the "public" keyword are prefixed with their address like ".addr.FuncName"
+        if (pub != null && !pub.name().matches("\\.\\d+\\..+"))
             out_.print("public ");
 
         if (f != null)

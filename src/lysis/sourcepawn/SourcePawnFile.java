@@ -512,6 +512,11 @@ public class SourcePawnFile extends PawnFile {
                     // TODO: Check address as well and change the functions_ entry?
                     if (name.equals(func.name()))
                         continue publicLoop;
+                    
+                    // This is the "private name" of a non-public function in the .publics
+                    // section used for allowing non-public functions as callbacks.
+                    if (name.endsWith(func.name()) && name.matches("\\.\\d+\\..+"))
+                        continue publicLoop;
                 }
                 Function f = new Function(address, address, code().bytes().length, name, null);
                 functions.add(f);
@@ -684,6 +689,13 @@ public class SourcePawnFile extends PawnFile {
                             existingFunction = func;
                             break;
                         }
+                        
+                        // Workaround non-public functions named like .10313.FunctionName in the .publics section for callbacks
+                        if (func.name().endsWith(name) && func.name().matches("\\.\\d+\\..+"))
+                        {
+                            existingFunction = func;
+                            break;
+                        }
                     }
                     
                     // This function came up already.
@@ -765,6 +777,10 @@ public class SourcePawnFile extends PawnFile {
                     // That function was in the .dbg.symbols table
                     // TODO: Check address as well and change the functions_ entry?
                     if (pub.name().equals(func.name()))
+                        continue publicLoop;
+                    
+                    // Handle non-public functions named like .10313.FunctionName in the .publics section for callbacks
+                    if (pub.name().endsWith(func.name()) && pub.name().matches("\\.\\d+\\..+"))
                         continue publicLoop;
                 }
                 Function f = new Function(pub.address(), pub.address(), code().bytes().length, pub.name(), null);
