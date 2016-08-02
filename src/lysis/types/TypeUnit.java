@@ -117,6 +117,8 @@ public class TypeUnit {
                 TypeUnit tu = new TypeUnit(new PawnType(var.tag()), var.dims().length);
                 return new TypeUnit(tu);
             }
+            default:
+                break;
         }
         return null;
     }
@@ -130,6 +132,8 @@ public class TypeUnit {
             case Array:
             case ArrayReference:
                 return new TypeUnit(new PawnType(arg.tag()), arg.dimensions().length);
+            default:
+                break;
         }
         return null;
     }

@@ -35,4 +35,8 @@ public class DArrayRef extends DBinaryNode {
     {
         return getOperand(1);
     }
+    public long shift()
+    {
+        return shift_;
+    }
 }

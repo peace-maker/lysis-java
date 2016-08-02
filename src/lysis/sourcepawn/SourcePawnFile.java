@@ -148,13 +148,17 @@ public class SourcePawnFile extends PawnFile {
     public class Code
     {
         private byte[] code_;
+        private byte cellsize_;
         private int flags_;
+        private long main_;
         private int version_;
 
-        public Code(byte[] code, int flags, int version)
+        public Code(byte[] code, byte cellsize, int flags, long main, int version)
         {
             code_ = code;
+            cellsize_ = cellsize;
             flags_ = flags;
+            main_ = main;
             version_ = version;
         }
 
@@ -162,9 +166,17 @@ public class SourcePawnFile extends PawnFile {
         {
             return code_;
         }
+        public byte cellsize()
+        {
+            return cellsize_;
+        }
         public int flags()
         {
             return flags_;
+        }
+        public long main()
+        {
+            return main_;
         }
         public int version()
         {
@@ -282,8 +294,10 @@ public class SourcePawnFile extends PawnFile {
     {
     	ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
         header_.magic = reader.ReadUInt32(); //ReadUInt32();
-        if (header_.magic != MAGIC)
+        if (header_.magic != MAGIC) {
+            reader.close();
             throw new Exception("bad magic - not SourcePawn file");
+        }
         header_.version = reader.ReadInt16();
         header_.compression = Compression.values()[reader.readByte()];
         header_.disksize = (int)reader.ReadUInt32()&0xffffffff;
@@ -385,6 +399,7 @@ public class SourcePawnFile extends PawnFile {
             else
                 sections_.put(name, previousSection);
         }
+        reader.close();
         
         for (String sectionName : knownSections)
         {
@@ -440,6 +455,12 @@ public class SourcePawnFile extends PawnFile {
 
         switch (header_.compression)
         {
+            case None:
+            {
+                // Nothing to change here. Just keep the binary bytes as is.
+                break;
+            }
+            
             case Gzip:
             {
                 byte[] bits = new byte[header_.imagesize];
@@ -452,7 +473,8 @@ public class SourcePawnFile extends PawnFile {
                 Inflater gzip = new Inflater(true);
                 gzip.setInput(binary, header_.dataoffs + 2, compressedSize - 2);
                 int actuallyUncompressed = gzip.inflate(bits, header_.dataoffs, uncompressedSize);
-                //assert actuallyUncompressed == uncompressedSize : "uncompressed size mismatch, bad file?";
+                if (actuallyUncompressed != uncompressedSize)
+                    System.err.printf("uncompressed size mismatch, bad file? expected %d, got %d\n", uncompressedSize, actuallyUncompressed);
                 
                 binary = bits;
                 break;
@@ -470,7 +492,8 @@ public class SourcePawnFile extends PawnFile {
             long main = br.ReadUInt32();
             long codeoffs = br.ReadUInt32();
             byte[] codeBytes = Slice(binary, sc.dataoffs + (int)codeoffs, (int)codesize);
-            code_ = new Code(codeBytes, (int)flags, (int)codeversion);
+            code_ = new Code(codeBytes, cellsize, flags, main, (int)codeversion);
+            br.close();
         }
 
         if (sections_.containsKey(".data"))
@@ -482,6 +505,7 @@ public class SourcePawnFile extends PawnFile {
             long dataoffs = br.ReadUInt32();
             byte[] dataBytes = Slice(binary, sc.dataoffs + (int)dataoffs, (int)datasize);
             data_ = new Data(dataBytes, (int)memsize);
+            br.close();
         }
 
         if (sections_.containsKey(".publics"))
@@ -524,6 +548,7 @@ public class SourcePawnFile extends PawnFile {
             }
             // Add the public functions to the list right away.
             functions_ = functions.toArray(new Function[0]);
+            br.close();
         }
 
         if (sections_.containsKey(".pubvars"))
@@ -559,6 +584,7 @@ public class SourcePawnFile extends PawnFile {
             }
             // Add the public variables to the list right away.
             globals_ = globals.toArray(new Variable[0]);
+            br.close();
         }
 
         if (sections_.containsKey(".natives"))
@@ -573,6 +599,7 @@ public class SourcePawnFile extends PawnFile {
                 String name = ReadString(binary, sections_.get(".names").dataoffs + (int)nameOffset);
                 natives_[i] = new Native(name, i);
             }
+            br.close();
         }
 
         if (sections_.containsKey(".tags"))
@@ -588,6 +615,7 @@ public class SourcePawnFile extends PawnFile {
                 String name = ReadString(binary, sections_.get(".names").dataoffs + (int)nameOffset);
                 tags_[i] = new Tag(name, tag_id);
             }
+            br.close();
         }
 
         if (sections_.containsKey(".dbg.info"))
@@ -597,6 +625,7 @@ public class SourcePawnFile extends PawnFile {
             debugHeader_.numFiles = (int)br.ReadUInt32();
             debugHeader_.numLines = (int)br.ReadUInt32();
             debugHeader_.numSyms = (int)br.ReadUInt32();
+            br.close();
         }
 
         if (sections_.containsKey(".dbg.files") && debugHeader_.numFiles > 0)
@@ -609,8 +638,9 @@ public class SourcePawnFile extends PawnFile {
                 long address = br.ReadUInt32();
                 long nameOffset = br.ReadUInt32();
                 String name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int)nameOffset);
-                debugFiles_[i] = new DebugFile(name, nameOffset);
+                debugFiles_[i] = new DebugFile(name, address);
             }
+            br.close();
         }
 
         if (sections_.containsKey(".dbg.lines") && debugHeader_.numLines > 0)
@@ -624,6 +654,7 @@ public class SourcePawnFile extends PawnFile {
                 long line = br.ReadUInt32();
                 debugLines_[i] = new DebugLine((int)line, address);
             }
+            br.close();
         }
 
         if (sections_.containsKey(".dbg.symbols") && debugHeader_.numSyms > 0)
@@ -765,7 +796,7 @@ public class SourcePawnFile extends PawnFile {
                         locals.add(var);
                 }
             }
-
+            br.close();
             
             // Fill in public functions and variables, if they're missing from the .dbg.symbols table
             publicLoop:
@@ -886,10 +917,13 @@ public class SourcePawnFile extends PawnFile {
                 if ((int)index >= natives_.length)
                     continue;
 
+                if (!natives_[(int)index].name().equals("@") && name != null && !name.equals(natives_[(int)index].name()))
+                    System.err.printf("// Error reading .dbg.natives section. Native %d has different names. (\"%s\" != \"%s\")\n", index, natives_[(int)index].name(), name);
+                
                 natives_[(int) index].setDebugInfo(tagid, tag, args);
             }
+            br.close();
         }
-        reader.close();
     }
 
     public Code code()

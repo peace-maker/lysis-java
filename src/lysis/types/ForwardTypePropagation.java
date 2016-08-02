@@ -1,7 +1,6 @@
 package lysis.types;
 
 import lysis.lstructure.Argument;
-import lysis.lstructure.Scope;
 import lysis.lstructure.Signature;
 import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;

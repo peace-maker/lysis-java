@@ -8,7 +8,6 @@ import lysis.nodes.types.DConstant;
 import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DFloat;
 import lysis.nodes.types.DGlobal;
-import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DJump;
 import lysis.nodes.types.DJumpCondition;
 import lysis.nodes.types.DLoad;
@@ -25,7 +24,6 @@ import lysis.sourcepawn.SPOpcode;
 import lysis.types.CellType;
 import lysis.types.PawnType;
 import lysis.types.TypeUnit;
-import lysis.types.TypeUnit.Kind;
 
 public class NodeRewriter extends NodeVisitor {
 	private NodeGraph graph_;

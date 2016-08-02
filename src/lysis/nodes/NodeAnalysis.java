@@ -2,7 +2,6 @@ package lysis.nodes;
 
 import lysis.lstructure.Scope;
 import lysis.lstructure.Signature;
-import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
 import lysis.nodes.types.DArrayRef;
@@ -18,7 +17,6 @@ import lysis.nodes.types.DLoad;
 import lysis.nodes.types.DMemCopy;
 import lysis.nodes.types.DNode;
 import lysis.nodes.types.DStore;
-import lysis.nodes.types.DString;
 import lysis.nodes.types.DSysReq;
 import lysis.nodes.types.DUse;
 import lysis.sourcepawn.SPOpcode;
@@ -181,7 +179,7 @@ public class NodeAnalysis {
         return false;
     }
 
-    private static boolean IsArrayOpCandidate(DNode node)
+    /*private static boolean IsArrayOpCandidate(DNode node)
     {
         if (node.type() == NodeType.Load || node.type() == NodeType.Store)
             return true;
@@ -191,7 +189,7 @@ public class NodeAnalysis {
             return bin.spop() == SPOpcode.add;
         }
         return false;
-    }
+    }*/
 
     private static boolean ShouldOperantsBeSwitched(DNode abase, DNode index, DBinary binary) throws Exception
     {
@@ -372,7 +370,7 @@ public class NodeAnalysis {
         		// Hopefully this isn't too blue-eyed. Can't get a variable of a constant..
         		// Catches cases like
         		// new Float:newspeed = GetEntPropFloat(client, PropType:1, "m_flMaxspeed", 0) + g_flClassApplySpeed[client];
-        		DConstant constant = (DConstant)check;
+        		//DConstant constant = (DConstant)check;
         		//System.out.printf("constant = %d.%n", constant.value());
         		if(check.uses().size() == 1 && check.uses().get(0).node().type() == NodeType.Binary)
         		{
@@ -381,6 +379,8 @@ public class NodeAnalysis {
         			
         		break;
         	}
+        	default:
+        		break;
         }
     	return false;
     }
@@ -715,6 +715,8 @@ public class NodeAnalysis {
     			ret += "\tvalue: " + (local.value() != null?local.value().type().toString() + "#" + local.value().hashCode() + " (uses: " + local.value().uses().size() + ")":"") + "\n";
     			break;
     		}
+    		default:
+    			break;
     	}
     	ret += "\n";
     	if(node.prev() != start)

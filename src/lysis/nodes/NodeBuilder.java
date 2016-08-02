@@ -23,7 +23,6 @@ import lysis.instructions.LIndexAddress;
 import lysis.instructions.LInstruction;
 import lysis.instructions.LJump;
 import lysis.instructions.LJumpCondition;
-import lysis.instructions.LLoad;
 import lysis.instructions.LLoadGlobal;
 import lysis.instructions.LLoadIndex;
 import lysis.instructions.LLoadLocal;
@@ -39,7 +38,6 @@ import lysis.instructions.LPushReg;
 import lysis.instructions.LPushStackAddress;
 import lysis.instructions.LStack;
 import lysis.instructions.LStackAddress;
-import lysis.instructions.LStore;
 import lysis.instructions.LStoreGlobal;
 import lysis.instructions.LStoreGlobalConstant;
 import lysis.instructions.LStoreLocal;
@@ -363,7 +361,7 @@ public class NodeBuilder {
                 case Bounds:
                 {
                     LBounds ins = (LBounds)uins;
-                    DBoundsCheck node = new DBoundsCheck(block.stack().pri());
+                    DBoundsCheck node = new DBoundsCheck(block.stack().pri(), ins.amount());
                     block.add(node);
                     break;
                 }
@@ -389,7 +387,6 @@ public class NodeBuilder {
 
                 case Store:
                 {
-                    LStore ins = (LStore)uins;
                     DStore store = new DStore(block.stack().alt(), block.stack().pri());
                     block.add(store);
                     break;
@@ -397,7 +394,6 @@ public class NodeBuilder {
 
                 case Load:
                 {
-                    LLoad ins = (LLoad)uins;
                     DLoad load = new DLoad(block.stack().pri());
                     block.stack().set(Register.Pri, load);
                     block.add(load);

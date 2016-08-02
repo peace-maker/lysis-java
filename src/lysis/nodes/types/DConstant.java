@@ -67,6 +67,8 @@ public class DConstant extends DNullaryNode {
                     return new DString(file.stringFromData(value()));
                 break;
             }
+            default:
+                break;
         }
         return this;
     }

@@ -10,7 +10,6 @@ import lysis.instructions.LInstruction;
 import lysis.instructions.Opcode;
 import lysis.lstructure.LBlock;
 import lysis.nodes.NodeBlock;
-import lysis.nodes.NodeGraph;
 import lysis.nodes.NodeType;
 import lysis.nodes.types.DJump;
 
@@ -101,11 +100,9 @@ public class BlockAnalysis {
     {
         public LinkedList<RBlock> predecessors = new LinkedList<RBlock>();
         public LinkedList<RBlock> successors = new LinkedList<RBlock>();
-        public int id;
 
-        public RBlock(int id)
+        public RBlock()
         {
-            this.id = id;
         }
     }
 
@@ -115,7 +112,7 @@ public class BlockAnalysis {
         // Copy the graph into a temporary mutable structure.
         RBlock[] rblocks = new RBlock[blocks.length];
         for (int i = 0; i < blocks.length; i++)
-            rblocks[i] = new RBlock(i);
+            rblocks[i] = new RBlock();
 
         for (int i = 0; i < blocks.length; i++)
         {
@@ -289,10 +286,11 @@ public class BlockAnalysis {
 
     public static void ComputeDominatorTree(LBlock[] blocks)
     {
-    	// Cannot create a generic array of LinkedList<LBlock> ...
-    	class LinkedListLBlock extends LinkedList<LBlock> {}
+        // Cannot create a generic array of LinkedList<LBlock> ...
+        @SuppressWarnings("serial")
+        class LinkedListLBlock extends LinkedList<LBlock> {}
 
-    	LinkedList<LBlock>[] idominated = new LinkedListLBlock[blocks.length];
+        LinkedList<LBlock>[] idominated = new LinkedListLBlock[blocks.length];
         for (int i = 0; i < blocks.length; i++)
             idominated[i] = new LinkedListLBlock();
 
@@ -415,7 +413,7 @@ public class BlockAnalysis {
         return GetSingleTarget(block);
     }
 
-    private static NodeBlock FindJoinBlock(NodeGraph graph, NodeBlock block)
+    /*private static NodeBlock FindJoinBlock(NodeGraph graph, NodeBlock block)
     {
         if (block.nodes().last().type() == NodeType.JumpCondition && block.lir().idominated().length == 3)
             return graph.blocks(block.lir().idominated()[2].id());
@@ -437,7 +435,7 @@ public class BlockAnalysis {
                 return null;
             block = next;
         }
-    }
+    }*/
 
     public static NodeBlock EffectiveTargetNoLoop(NodeBlock block)
     {

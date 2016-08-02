@@ -1,7 +1,6 @@
 package lysis;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class BitConverter {
 	public static short ToInt16(byte[] bytes, int offset) {

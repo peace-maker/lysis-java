@@ -19,6 +19,7 @@ public abstract class PawnFile {
         int b;
         while ((b = fs.read()) >= 0)
         	bytes.write(b);
+        fs.close();
         byte[] vec = bytes.toByteArray();
         long magic = BitConverter.ToUInt32(vec, 0);
         if (magic == SourcePawnFile.MAGIC)

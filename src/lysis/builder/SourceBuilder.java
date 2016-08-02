@@ -81,10 +81,6 @@ public class SourceBuilder {
     {
         out_.println(indent_ + text);
     }
-    private void outputStart(String text) throws IOException
-    {
-        out_.print(indent_ + text);
-    }
 
     static public String spop(SPOpcode op) throws Exception
     {

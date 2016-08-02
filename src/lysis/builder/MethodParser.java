@@ -786,6 +786,9 @@ public class MethodParser {
                         transitionBlocks(null);
                         break;
                     }
+                    
+                    default:
+                        break;
                 }
             }
             return lir_.entry;
