@@ -659,7 +659,13 @@ public class MethodParser {
             
             case nop:
             {
-            	return new LDebugBreak();
+                return new LDebugBreak();
+            }
+            
+            case halt:
+            {
+                readInt32();
+                return new LDebugBreak();
             }
 
             default:
