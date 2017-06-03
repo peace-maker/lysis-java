@@ -209,9 +209,14 @@ public class LysisUI extends JFrame
                 LysisUI.this.output.setText(""); // clear
 
                 File output = File.createTempFile("output", ".tmp");
+                FileOutputStream outStream = new FileOutputStream(output);
                 File errors = File.createTempFile("errors", ".tmp");
+                FileOutputStream errStream = new FileOutputStream(errors);
 
-                Lysis.decompile(new FileOutputStream(output), new FileOutputStream(errors), LysisUI.this.path);
+                Lysis.decompile(outStream, errStream, LysisUI.this.path);
+
+                outStream.close();
+                errStream.close();
 
                 Scanner reader = new Scanner(new FileInputStream(output));
                 String line;
@@ -239,6 +244,9 @@ public class LysisUI extends JFrame
                 JOptionPane.showMessageDialog(null, "Error! Decompilation failed", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
+            JOptionPane.showMessageDialog(null, "Decompilation successful!", "Alert!", JOptionPane.INFORMATION_MESSAGE);
+            return;
         }
     }
 
