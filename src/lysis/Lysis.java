@@ -1,5 +1,6 @@
 package lysis;
 
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
@@ -21,6 +22,9 @@ import lysis.nodes.NodeRewriter;
 import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.BackwardTypePropagation;
 import lysis.types.ForwardTypePropagation;
+
+import ui.*;
+import javax.swing.UIManager;
 
 public class Lysis {
 
@@ -143,34 +147,52 @@ public class Lysis {
 	public static void main(String[] args) {
 		if (args.length < 1)
         {
-            System.err.println("usage: <file.smx> or <file.amxx>");
+            try {
+                UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+            }
+            catch (Exception ex) { }
+
+            new LysisUI();
             return;
         }
-		
-		PrintStream sysout;
-		try {
-			sysout = new PrintStream(System.out, true, "UTF-8");
-			System.setOut(sysout);
-		} catch (UnsupportedEncodingException e2) {
-			e2.printStackTrace();
-		}
-		
-		String path = args[0];
+
+        // default operation (params supplied)
+        Lysis.decompile(System.out, System.err, args[0]);
+	}
+
+	public static void decompile(OutputStream output, OutputStream error, String path)
+    {
+        PrintStream sysout;
+        try {
+            sysout = new PrintStream(output, true, "UTF-8");
+            System.setOut(sysout);
+        } catch (UnsupportedEncodingException e2) {
+            e2.printStackTrace();
+        }
+
+        PrintStream syserr;
+        try {
+            syserr = new PrintStream(error, true, "UTF-8");
+            System.setErr(syserr);
+        } catch (UnsupportedEncodingException e2) {
+            e2.printStackTrace();
+        }
+
         PawnFile file = null;
-		try {
-			file = PawnFile.FromFile(path);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-			return;
-		}
-        
-		if(file == null) {
-			System.err.println("Failed to parse file.");
-			return;
-		}
-		
-		//DataOutputStream dOut = new DataOutputStream(System.out);
-		
+        try {
+            file = PawnFile.FromFile(path);
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            return;
+        }
+
+        if(file == null) {
+            System.err.println("Failed to parse file.");
+            return;
+        }
+
+        //DataOutputStream dOut = new DataOutputStream(System.out);
+
         // Parse methods for calls and globals which don't have debug info attached.
         for (int i = 0; i < file.functions().length; i++)
         {
@@ -187,19 +209,19 @@ public class Lysis {
                 System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
             }
         }
-		
+
         SourceBuilder source = new SourceBuilder(file, System.out);
         try {
-			source.writeGlobals();
-		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+            source.writeGlobals();
+        } catch (Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
 
         for (int i = 0; i < file.functions().length; i++)
         {
             Function fun = file.functions()[i];
-//#if 
+//#if
             try
             {
                 DumpMethod((SourcePawnFile)file, source, fun.address());
@@ -207,14 +229,13 @@ public class Lysis {
             }
             catch (Throwable e)
             {
-            	e.printStackTrace();
-            	System.out.println("");
-            	System.out.println("/* ERROR! " + e.getMessage() + " */");
-            	System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
+                e.printStackTrace();
+                System.out.println("");
+                System.out.println("/* ERROR! " + e.getMessage() + " */");
+                System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
                 source = new SourceBuilder((SourcePawnFile)file, System.out);
             }
 //#endif
         }
-	}
-
+    }
 }
