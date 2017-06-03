@@ -118,7 +118,7 @@ public class LysisUI extends JFrame
         {
             if (!decompiled)
             {
-                JOptionPane.showMessageDialog(null, "You must first decompile before you save!", "Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LysisUI.this, "You must first decompile before you save!", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -127,7 +127,7 @@ public class LysisUI extends JFrame
             f.setDialogTitle("Select A Folder To Save");
             f.setSelectedFile(new File("output.txt"));
             f.setFileFilter(new FileNameExtensionFilter("Text File (*.txt)", "txt"));
-            int result = f.showSaveDialog(null);
+            int result = f.showSaveDialog(LysisUI.this);
 
             if (result != f.APPROVE_OPTION)
             {
@@ -150,7 +150,7 @@ public class LysisUI extends JFrame
             }
             catch (Exception ex)
             {
-                JOptionPane.showMessageDialog(null, "Error writing to file!", "Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LysisUI.this, "Error writing to file!", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
@@ -166,7 +166,7 @@ public class LysisUI extends JFrame
             f.setFileSelectionMode(JFileChooser.FILES_ONLY);
             f.setDialogTitle("Select a file to open");
             f.setFileFilter(filter);
-            f.showOpenDialog(null);
+            f.showOpenDialog(LysisUI.this);
 
             File file = f.getSelectedFile();
             if (file == null)
@@ -185,12 +185,12 @@ public class LysisUI extends JFrame
         {
             if (!decompiled)
             {
-                JOptionPane.showMessageDialog(null, "You must first decompile before you copy!", "Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LysisUI.this, "You must first decompile before you copy!", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(output.getText()), null);
-            JOptionPane.showMessageDialog(null, "Copied Successfully!", "Text Copied!", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(LysisUI.this, "Copied Successfully!", "Text Copied!", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -200,7 +200,7 @@ public class LysisUI extends JFrame
         {
             if (LysisUI.this.path == null)
             {
-                JOptionPane.showMessageDialog(null, "Error: No file selected!", "Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LysisUI.this, "Error: No file selected!", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -241,11 +241,11 @@ public class LysisUI extends JFrame
             }
             catch (Exception ex)
             {
-                JOptionPane.showMessageDialog(null, "Error! Decompilation failed", "Error!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LysisUI.this, "Error! Decompilation failed", "Error!", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            JOptionPane.showMessageDialog(null, "Decompilation successful!", "Alert!", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(LysisUI.this, "Decompilation successful!", "Alert!", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
     }
