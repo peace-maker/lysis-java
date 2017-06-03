@@ -23,7 +23,7 @@ import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.BackwardTypePropagation;
 import lysis.types.ForwardTypePropagation;
 
-import ui.*;
+import ui.LysisUI;
 import javax.swing.UIManager;
 
 public class Lysis {

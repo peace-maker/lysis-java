@@ -2,22 +2,33 @@ package ui;
 
 import lysis.Lysis;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Scanner;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
+import javax.swing.JButton;
+import javax.swing.JScrollPane;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
+import javax.swing.Box;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import java.awt.datatransfer.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Font;
+import java.awt.Color;
 import java.awt.Toolkit;
-import java.io.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.datatransfer.StringSelection;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 
 public class LysisUI extends JFrame
 {
