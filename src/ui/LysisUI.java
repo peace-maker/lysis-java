@@ -33,8 +33,8 @@ import java.io.FileInputStream;
 public class LysisUI extends JFrame
 {
     /* Window Settings */
-    public static final int WINDOW_WIDTH = 700;
-    public static final int WINDOW_HEIGHT = 270;
+    public static final int WINDOW_WIDTH = 850;
+    public static final int WINDOW_HEIGHT = 550;
 
     /* Instance Variables */
     JTextArea output;
@@ -107,7 +107,7 @@ public class LysisUI extends JFrame
         this.add(new JScrollPane(output), BorderLayout.CENTER);
 
         this.setVisible(true);
-        this.setResizable(false);
+        this.setResizable(true);
         this.setLocationRelativeTo(null);
     }
 
