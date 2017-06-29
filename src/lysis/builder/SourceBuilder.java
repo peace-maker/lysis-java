@@ -960,8 +960,15 @@ public class SourceBuilder {
         str = str.replace("\u0003", "\\x03"); // Teamcolor
         str = str.replace("\u0004", "\\x04"); // Green
         str = str.replace("\u0005", "\\x05"); // Olive
+        str = str.replace("\u0006", "\\x06");
         str = str.replace("\u0007", "\\x07"); // followed by a hex code in RRGGBB format
         str = str.replace("\u0008", "\\x08"); // followed by a hex code with alpha in RRGGBBAA format
+        str = str.replace("\u0009", "\\x09");
+        str = str.replace("\u000B", "\\x0B");
+        str = str.replace("\u000C", "\\x0C");
+        str = str.replace("\u000E", "\\x0E");
+        str = str.replace("\u000F", "\\x0F");
+        str = str.replace("\u0010", "\\x10");
         return str;
     }
     
