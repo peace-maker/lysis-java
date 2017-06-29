@@ -996,6 +996,12 @@ public class SourceBuilder {
 
     private boolean isArrayEmpty(Variable var)
     {
+    	// Initializing arrays like char arr[2][] = {"a", "b"}; 
+    	// has the last dimension undetermined, so just print
+    	// the strings as long as they are.
+    	if (var.dims().length == 2 && var.dims()[1].size() == 0)
+    		return false;
+    	
         int[] dims = new int[var.dims().length];
         for (int i = 0; i < var.dims().length; i++)
             dims[i] = var.dims()[i].size();
@@ -1219,10 +1225,14 @@ public class SourceBuilder {
                     for (int i = 0; i < var.dims().length; i++)
                     {
                     	// Display the correct number of bytes for the last dim of a string array
+                    	int size = var.dims()[i].size();
                     	if(i == (var.dims().length-1))
-                    		text += "[" + var.dims()[i].size() * 4 + "]";
+                    		size *= 4;
+                    	
+                    	if (size == 0)
+                    		text += "[]";
                     	else
-                    		text += "[" + var.dims()[i].size() + "]";
+                    		text += "[" + size + "]";
                     }
                 }
                 if (isArrayEmpty(var))
