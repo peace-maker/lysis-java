@@ -308,7 +308,19 @@ public class NodeBuilder {
                 case StoreLocal:
                 {
                     LStoreLocal ins = (LStoreLocal)uins;
-                    DStore store = new DStore(block.stack().getName(ins.offset()), block.stack().reg(ins.reg()));
+                    DNode regNode = block.stack().reg(ins.reg());
+
+                    // Work around compiler bug with chained assignments.
+                    // https://github.com/alliedmodders/sourcepawn/pull/118
+                    if (regNode == null) {
+                        DNode prev = block.nodes().last();
+                        assert(prev.type() == NodeType.Store);
+                        if (prev.type() == NodeType.Store) {
+                            regNode = prev.getOperand(1);
+                        }
+                    }
+
+                    DStore store = new DStore(block.stack().getName(ins.offset()), regNode);
                     block.add(store);
                     break;
                 }
