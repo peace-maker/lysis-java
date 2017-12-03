@@ -5,3 +5,9 @@
 *.war
 *.ear
 /bin/
+
+# IDE Files #
+*.iml
+/.idea/
+/out/
+/src/META-INF/
