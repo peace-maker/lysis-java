@@ -17,7 +17,6 @@ import lysis.Lysis;
 import lysis.PawnFile;
 import lysis.Public;
 import lysis.Similarity;
-import lysis.StupidWrapper;
 import lysis.lstructure.Argument;
 import lysis.lstructure.Dimension;
 import lysis.lstructure.Function;
@@ -55,12 +54,6 @@ public class SourcePawnFile extends PawnFile {
         public int dataoffs;
     }
     
-    public class DebugHeader {
-    	public int numFiles;
-        public int numLines;
-        public int numSyms;
-    }
-    
     private class Section
     {
         public int nameoffs;
@@ -94,14 +87,6 @@ public class SourcePawnFile extends PawnFile {
             default:
                 return VariableType.Normal;
         }
-    }
-    
-    private static byte[] Slice(byte[] bytes, int offset, int length)
-    {
-        byte[] shadow = new byte[length];
-        for (int i = 0; i < length; i++)
-            shadow[i] = bytes[offset + i];
-        return shadow;
     }
     
     private static String ReadString(byte[] bytes, long offset)
@@ -145,129 +130,6 @@ public class SourcePawnFile extends PawnFile {
 	    return null;
     }
     
-    public class Code
-    {
-        private byte[] code_;
-        private byte cellsize_;
-        private int flags_;
-        private long main_;
-        private int version_;
-
-        public Code(byte[] code, byte cellsize, int flags, long main, int version)
-        {
-            code_ = code;
-            cellsize_ = cellsize;
-            flags_ = flags;
-            main_ = main;
-            version_ = version;
-        }
-
-        public byte[] bytes()
-        {
-            return code_;
-        }
-        public byte cellsize()
-        {
-            return cellsize_;
-        }
-        public int flags()
-        {
-            return flags_;
-        }
-        public long main()
-        {
-            return main_;
-        }
-        public int version()
-        {
-            return version_;
-        }
-    }
-    
-    public class Data
-    {
-        private byte[] data_;
-        private int memory_;
-
-        public Data(byte[] data, int memory)
-        {
-            data_ = data;
-            memory_ = memory;
-        }
-
-        public byte[] bytes()
-        {
-            return data_;
-        }
-        public int memory()
-        {
-            return memory_;
-        }
-    }
-
-    public class PubVar
-    {
-        private long address_;
-        private String name_;
-
-        public PubVar(String name, long address)
-        {
-            name_ = name;
-            address_ = address;
-        }
-
-        public String name()
-        {
-            return name_;
-        }
-        public long address()
-        {
-            return address_;
-        }
-    }
-
-    public class DebugFile
-    {
-        private long address_;
-        private String name_;
-
-        public DebugFile(String name, long address)
-        {
-            name_ = name;
-            address_ = address;
-        }
-
-        public String name()
-        {
-            return name_;
-        }
-        public long address()
-        {
-            return address_;
-        }
-    }
-
-    public class DebugLine
-    {
-        private long address_;
-        private int line_;
-
-        public DebugLine(int line, long address)
-        {
-            line_ = line;
-            address_ = address;
-        }
-
-        public int line()
-        {
-            return line_;
-        }
-        public long address()
-        {
-            return address_;
-        }
-    }
-    
   /// <summary>
     /// File proper
     /// </summary>
@@ -275,15 +137,6 @@ public class SourcePawnFile extends PawnFile {
     private Header header_ = new Header();
     public static boolean debugUnpacked_;
     private HashMap<String, Section> sections_;
-    private Code code_;
-    private Data data_;
-    private PubVar[] pubvars_;
-    private Native[] natives_;
-    private DebugFile[] debugFiles_;
-    private DebugLine[] debugLines_;
-    private DebugHeader debugHeader_ = new DebugHeader();
-    private Tag[] tags_;
-    private Variable[] variables_ = new Variable[0];
 
     private static final String[] KNOWN_SECTIONS = new String[] { ".code",
             ".data", ".publics", ".pubvars", ".natives", ".tags", ".names",
@@ -926,113 +779,6 @@ public class SourcePawnFile extends PawnFile {
         }
     }
 
-    public Code code()
-    {
-        return code_;
-    }
-
-    public Data data()
-    {
-        return data_;
-    }
-
-    public PubVar[] pubvars()
-    {
-        return pubvars_;
-    }
-    public Native[] natives()
-    {
-        return natives_;
-    }
-
-    public String lookupFile(long address)
-    {
-        if (debugFiles_ == null)
-            return null;
-
-        int high = debugFiles_.length;
-        int low = -1;
-
-        while (high - low > 1)
-        {
-            int mid = (low + high) >> 1;
-            if (debugFiles_[mid].address() <= address)
-                low = mid;
-            else
-                high = mid;
-        }
-        if (low == -1)
-            return null;
-        return debugFiles_[low].name();
-    }
-
-    public int lookupLine(long address)
-    {
-        if (debugLines_ == null)
-            return -1;
-
-        int high = debugLines_.length;
-        int low = -1;
-
-        while (high - low > 1)
-        {
-            int mid = (low + high) >> 1;
-            if (debugLines_[mid].address() <= address)
-                low = mid;
-            else
-                high = mid;
-        }
-        if (low == -1)
-            return -1;
-        return debugLines_[low].line();
-    }
-
-    public Variable lookupDeclarations(long pc, StupidWrapper i, Scope scope)
-    {
-        for (i.i++; i.i < variables_.length; i.i++)
-        {
-            Variable var = variables_[i.i];
-            if (pc != var.codeStart())
-                continue;
-            if (var.scope() == scope)
-                return var;
-        }
-        return null;
-    }
-    
-    public Variable lookupDeclarations(long pc, StupidWrapper i) {
-    	return lookupDeclarations(pc, i, Scope.Local);
-    }
-
-    public Variable lookupVariable(long pc, long offset, Scope scope)
-    {
-        for (int i = 0; i < variables_.length; i++)
-        {
-            Variable var = variables_[i];
-            if ((pc >= var.codeStart() && pc < var.codeEnd()) &&
-                (offset == var.address() && var.scope() == scope))
-            {
-                return var;
-            }
-        }
-        return null;
-    }
-    
-    public Variable lookupVariable(long pc, long offset) {
-    	return lookupVariable(pc, offset, Scope.Local);
-    }
-
-    public Variable lookupGlobal(long address)
-    {
-        for (int i = 0; i < globals_.length; i++)
-        {
-            Variable var = globals_[i];
-            if (var.address() == address)
-                return var;
-        }
-        return null;
-    }
-
     public Scope getScope(byte b) {
     	switch(b) {
     		case 0: {
@@ -1046,49 +792,6 @@ public class SourcePawnFile extends PawnFile {
     		}
     	}
     	return null;
-    }
-    
-    public void addFunction(long addr)
-    {
-        for (int i = 0; i < functions_.length; i++)
-        {
-            // This function already exists.
-            if (functions_[i].address() == addr)
-                return;
-        }
-        
-        functions_ = Arrays.copyOf(functions_, functions_.length + 1);
-        functions_[functions_.length-1] = new Function(addr, addr, code().bytes().length, "sub_" + Long.toHexString(addr), 0);
-    }
-    
-    public void addArgumentVar(Function func, int num)
-    {
-        long varAddr = 12 + num*4;
-
-        // Variable already exists.
-        if (lookupVariable(func.address(), varAddr) != null)
-            return;
-        
-        variables_ = Arrays.copyOf(variables_, variables_.length + 1);
-        variables_[variables_.length-1] = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(), VariableType.Normal, Scope.Local, "_arg" + num, null);
-    }
-    
-    public void addGlobal(long addr)
-    {
-        // This global variable already exists.
-        if (lookupGlobal(addr) != null)
-            return;
-
-        for (int i = 0; i < variables_.length; i++)
-        {
-            Variable var = variables_[i];
-            // This variable already exists as a static variable
-            if (addr == var.address() && var.scope() == Scope.Static)
-                return;
-        }
-
-        globals_ = Arrays.copyOf(globals_, globals_.length + 1);
-        globals_[globals_.length-1] = new Variable(addr, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global, "g_var" + Long.toHexString(addr), null);
     }
     
     @Override
@@ -1123,5 +826,10 @@ public class SourcePawnFile extends PawnFile {
     {
         return data().bytes();
     }
+	
+	@Override
+	public boolean PassArgCountAsSize() {
+		return false;
+	}
 
 }

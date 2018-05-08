@@ -17,7 +17,7 @@ public class ExtendedDataInputStream extends DataInputStream {
 		return BitConverter.ToUInt32(bytes, 0);
 	}
 	
-	public long ReadInt32() throws IOException {
+	public int ReadInt32() throws IOException {
 		byte[] bytes = new byte[4];
 		if(this.read(bytes) != 4)
 			throw new IOException("Can't read 4 bytes.");

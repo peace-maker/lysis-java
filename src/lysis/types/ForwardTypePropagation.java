@@ -75,7 +75,7 @@ public class ForwardTypePropagation extends NodeVisitor {
     {
     	// This plugin was compiled without the .dbg.natives section, so there's no info about native's arguments..
     	if(signature.args() == null) {
-    		assert(SourcePawnFile.debugUnpacked_);
+    		//assert(SourcePawnFile.debugUnpacked_);
     		return;
     	}
     	// Alert: Nasty format specifier parsing to get some info about the params of variadic argumented functions

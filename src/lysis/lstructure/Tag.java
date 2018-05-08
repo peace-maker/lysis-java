@@ -18,4 +18,8 @@ public class Tag {
     {
         return name_;
     }
+    
+    public String toString() {
+    	return String.format("Tag %x (%s)", tag_id_, name_);
+    }
 }

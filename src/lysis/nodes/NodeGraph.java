@@ -1,15 +1,15 @@
 package lysis.nodes;
 
+import lysis.PawnFile;
 import lysis.lstructure.Function;
-import lysis.sourcepawn.SourcePawnFile;
 
 public class NodeGraph {
-	private SourcePawnFile file_;
+	private PawnFile file_;
     private NodeBlock[] blocks_;
     private int nameCounter_;
     private Function function_;
 
-    public NodeGraph(SourcePawnFile file, NodeBlock[] blocks)
+    public NodeGraph(PawnFile file, NodeBlock[] blocks)
     {
         file_ = file;
         blocks_ = blocks;
@@ -20,7 +20,7 @@ public class NodeGraph {
     {
         return blocks_[i];
     }
-    public SourcePawnFile file()
+    public PawnFile file()
     {
         return file_;
     }

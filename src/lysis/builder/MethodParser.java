@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import lysis.BitConverter;
+import lysis.PawnFile;
 import lysis.builder.structure.BlockAnalysis;
 import lysis.instructions.LAddConstant;
 import lysis.instructions.LBinary;
@@ -69,7 +70,6 @@ import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
 import lysis.lstructure.Register;
 import lysis.sourcepawn.SPOpcode;
-import lysis.sourcepawn.SourcePawnFile;
 
 public class MethodParser {
 	private class LIR
@@ -95,7 +95,7 @@ public class MethodParser {
         }
     }
 
-    private SourcePawnFile file_;
+    private PawnFile file_;
     private long pc_;
     private long current_pc_;
     private LIR lir_ = new LIR();
@@ -407,9 +407,13 @@ public class MethodParser {
                 SPOpcode nextOp = readOp();
                 int nextValue = readInt32();
                 // Assert, that we really clear the stack from the arguments after this.
-                assert(nextOp == SPOpcode.stack && nextValue == ((LPushConstant)lir_.instructions.get(lir_.instructions.size()-1)).val()*4+4);
+                long argSize = ((LPushConstant)lir_.instructions.get(lir_.instructions.size()-1)).val();
+                if (!file_.PassArgCountAsSize())
+                	argSize *= 4;
+                argSize += 4;
+                assert(nextOp == SPOpcode.stack && nextValue == argSize);
                 // Skip the stack op, if it's popping the arguments again.
-                if(nextOp != SPOpcode.stack || nextValue != ((LPushConstant)lir_.instructions.get(lir_.instructions.size()-1)).val() * 4 + 4)
+                if(nextOp != SPOpcode.stack || nextValue != argSize)
                     pc_ = prePeep;
                 return new LSysReq(file_.natives()[(int) index]);
             }
@@ -864,7 +868,7 @@ public class MethodParser {
         return graph;
     }
 
-    public MethodParser(SourcePawnFile file, long addr)
+    public MethodParser(PawnFile file, long addr)
     {
         file_ = file;
         pc_ = addr;

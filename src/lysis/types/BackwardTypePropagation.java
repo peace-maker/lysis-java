@@ -180,7 +180,7 @@ public class BackwardTypePropagation extends NodeVisitor {
     {
     	// This plugin was compiled without the .dbg.natives section, so there's no info about native's arguments..
     	if(signature.args() == null) {
-    		assert(SourcePawnFile.debugUnpacked_);
+    		//assert(SourcePawnFile.debugUnpacked_);
     		return;
     	}
         for (int i = 0; i < call.numOperands() && i < signature.args().length; i++)

@@ -26,7 +26,7 @@ public class Lysis {
 
     public static final boolean bDebug = false;
 
-    static void PreprocessMethod(SourcePawnFile file, Function func) throws Exception
+    static void PreprocessMethod(PawnFile file, Function func) throws Exception
     {
         MethodParser mp = new MethodParser(file, func.address());
         LGraph graph = mp.parse();
@@ -59,7 +59,7 @@ public class Lysis {
         }
     }
     
-    static void DumpMethod(SourcePawnFile file, SourceBuilder source, long addr) throws Exception
+    static void DumpMethod(PawnFile file, SourceBuilder source, long addr) throws Exception
     {
         MethodParser mp = new MethodParser(file, addr);
         LGraph graph = mp.parse();
@@ -177,7 +177,7 @@ public class Lysis {
             Function fun = file.functions()[i];
             try
             {
-                PreprocessMethod((SourcePawnFile)file, fun);
+                PreprocessMethod(file, fun);
             }
             catch (Throwable e)
             {
@@ -202,7 +202,7 @@ public class Lysis {
 //#if 
             try
             {
-                DumpMethod((SourcePawnFile)file, source, fun.address());
+                DumpMethod(file, source, fun.address());
                 System.out.println("");
             }
             catch (Throwable e)
@@ -211,7 +211,7 @@ public class Lysis {
             	System.out.println("");
             	System.out.println("/* ERROR! " + e.getMessage() + " */");
             	System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
-                source = new SourceBuilder((SourcePawnFile)file, System.out);
+                source = new SourceBuilder(file, System.out);
             }
 //#endif
         }

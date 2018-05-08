@@ -2,6 +2,7 @@ package lysis.nodes;
 
 import java.util.LinkedList;
 
+import lysis.PawnFile;
 import lysis.StupidWrapper;
 import lysis.instructions.LAddConstant;
 import lysis.instructions.LBinary;
@@ -78,14 +79,13 @@ import lysis.nodes.types.DSwitch;
 import lysis.nodes.types.DSysReq;
 import lysis.nodes.types.DUnary;
 import lysis.sourcepawn.SPOpcode;
-import lysis.sourcepawn.SourcePawnFile;
 
 public class NodeBuilder {
-	SourcePawnFile file_;
+    PawnFile file_;
     private LGraph graph_;
     private NodeBlock[] blocks_;
 
-    public NodeBuilder(SourcePawnFile file, LGraph graph)
+    public NodeBuilder(PawnFile file, LGraph graph)
     {
         file_ = file;
         graph_ = graph;
@@ -338,8 +338,12 @@ public class NodeBuilder {
                 {
                     LSysReq sysreq = (LSysReq)uins;
                     DConstant ins = (DConstant)block.stack().popValue();
+                    long argslength = ins.value();
+                    if (file_.PassArgCountAsSize())
+                    	argslength /= 4;
+                    
                     LinkedList<DNode> arguments = new LinkedList<DNode>();
-                    for (int i = 0; i < ins.value(); i++) {
+                    for (int i = 0; i < argslength; i++) {
                     	arguments.add(block.stack().popName());
                     }
                     DSysReq call = new DSysReq(sysreq.nativeX(), arguments.toArray(new DNode[0]));
@@ -574,8 +578,12 @@ public class NodeBuilder {
                     LCall ins = (LCall)uins;
                     Function f = file_.lookupFunction((long)ins.address());
                     DConstant args = (DConstant)block.stack().popValue();
+                    long argslength = args.value();
+                    if (file_.PassArgCountAsSize())
+                    	argslength /= 4;
+
                     LinkedList<DNode> arguments = new LinkedList<DNode>();
-                    for (int i = 0; i < args.value(); i++)
+                    for (int i = 0; i < argslength; i++)
                         arguments.add(block.stack().popName());
                     DCall call = new DCall(f, arguments.toArray(new DNode[0]));
                     block.stack().set(Register.Pri, call);
