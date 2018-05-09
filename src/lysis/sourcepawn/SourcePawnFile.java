@@ -429,7 +429,7 @@ public class SourcePawnFile extends PawnFile {
                 for (Variable glob: globals)
                 {
                     // That variable was in the .dbg.symbols table
-                    if (glob.equals(glob.name()))
+                    if (name.equals(glob.name()))
                         continue pubvarLoop;
                 }
                 Variable v = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global, name, null);
