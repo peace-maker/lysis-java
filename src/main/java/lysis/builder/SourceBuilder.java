@@ -1006,7 +1006,7 @@ public class SourceBuilder {
     	// Initializing arrays like char arr[2][] = {"a", "b"}; 
     	// has the last dimension undetermined, so just print
     	// the strings as long as they are.
-    	if (var.dims().length == 2 && var.dims()[1].size() == 0)
+    	if (var.dims().length > 0 && var.dims()[var.dims().length - 1].size() == 0)
     		return false;
     	
         int[] dims = new int[var.dims().length];
@@ -1040,7 +1040,8 @@ public class SourceBuilder {
             return;
         }
 
-        assert(false);
+        // TODO: Revisit for codeversion 13 and feature DirectArrays
+        // assert(false);
 
         for (int i = 0; i < var.dims()[level].size(); i++)
         {

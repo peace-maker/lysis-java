@@ -15,8 +15,52 @@ public Extension:__ext_core =
 	required = 0,
 };
 new MaxClients;
-new String:Array1[4][3][];
-new String:Array2[4][3][];
+new String:Array1[4][3][] =
+{
+	{
+		"hello",
+		"goodbye",
+		"yams"
+	},
+	{
+		"why",
+		"sigh",
+		"egg"
+	},
+	{
+		"egg",
+		"Egg",
+		"EGG"
+	},
+	{
+		"FOUUL DEMON",
+		"Lemonade",
+		"whaaaaaat"
+	}
+};
+new String:Array2[4][3][] =
+{
+	{
+		"hello",
+		"goodbye",
+		"yams"
+	},
+	{
+		"why",
+		"sigh",
+		"egg"
+	},
+	{
+		"egg",
+		"Egg",
+		"EGG"
+	},
+	{
+		"FOUUL DEMON",
+		"Lemonade",
+		"whaaaaaat"
+	}
+};
 new String:Array3[4][3][28] =
 {
 	{
