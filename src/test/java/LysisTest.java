@@ -55,7 +55,7 @@ public class LysisTest {
 		}
 	}
 	
-	@Parameters
+	@Parameters(name = "{index} {0}")
 	public static Collection<Object[]> files() {
 		Collection<Object[]> files = new LinkedList<Object[]>();
 

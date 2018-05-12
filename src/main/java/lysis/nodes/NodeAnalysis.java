@@ -615,6 +615,16 @@ public class NodeAnalysis {
                 ia.addType(tu);
                 return true;
             }
+            
+            // Ternary operator with functions returning arrays.
+            if (lastUse.node().type() == NodeType.Store &&
+            	firstUse.node().type() == NodeType.Phi &&
+            	firstUse.node().numOperands() == 2
+            	&& node.next().type() == NodeType.Call)
+            {
+            	lastUse.node().replaceOperand(lastUse.index(), node.next());
+            	return true;
+            }
         }
         else if (node.uses().size() == 1)
         {
