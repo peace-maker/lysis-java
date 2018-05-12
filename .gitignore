@@ -5,3 +5,5 @@
 *.war
 *.ear
 /bin/
+/.gradle/
+/build/

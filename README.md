@@ -4,9 +4,13 @@ lysis-java
 Lysis - SourceMod .smx decompiler
 
 This is an improved Java port of BAILOPAN's sourcepawn decompiler [Lysis](https://forums.alliedmods.net/showthread.php?t=170898).
-Originally written C#, i wasn't comfortable with debugging with VS and since C# and Java are quite similar..
+Originally written C#.
 
 [Original repository](https://hg.alliedmods.net/users/dvander_alliedmods.net/lysis/)
+
+## Building
+This project uses Gradle to build. Run `gradlew jar` to download all dependencies and build a runnable jar which will be located in `build/libs`.
+Run `gradlew eclipse` to generate an eclipse project for editing.
 
 ## Changes in this fork
 * Support for new opcodes
@@ -42,5 +46,4 @@ Originally written C#, i wasn't comfortable with debugging with VS and since C# 
 
 And probably more..
 
-[Try it in your browser!](http://godtony.mooo.com/lysis/)
-Applet by GoD-Tony
+[Try it in your browser!](http://headlinedev.xyz/lysis/)

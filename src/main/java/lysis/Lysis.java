@@ -26,7 +26,7 @@ public class Lysis {
 
     public static final boolean bDebug = false;
 
-    static void PreprocessMethod(PawnFile file, Function func) throws Exception
+    public static void PreprocessMethod(PawnFile file, Function func) throws Exception
     {
         MethodParser mp = new MethodParser(file, func.address());
         LGraph graph = mp.parse();
@@ -59,7 +59,7 @@ public class Lysis {
         }
     }
     
-    static void DumpMethod(PawnFile file, SourceBuilder source, long addr) throws Exception
+    public static void DumpMethod(PawnFile file, SourceBuilder source, long addr) throws Exception
     {
         MethodParser mp = new MethodParser(file, addr);
         LGraph graph = mp.parse();

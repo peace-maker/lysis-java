@@ -195,7 +195,7 @@ public class SourceBuilder {
             }
         }
 
-        out_.print(")\n");
+        out_.println(")");
     }
 
     private String buildConstant(DConstant node)
