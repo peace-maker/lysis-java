@@ -6,8 +6,8 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -31,29 +31,36 @@ public class LysisTest {
 	@Parameter(0)
 	public String path;
 
+	private static void collectFiles(Collection<Object[]> files, File folder) {
+		assertTrue("Folder containing test binaries doesn't exist.", folder.exists());
+
+		File[] nodes = folder.listFiles(new FileFilter() {
+
+			@Override
+			public boolean accept(File file) {
+				if (file.isDirectory())
+					return true;
+				
+				return file.getName().endsWith(".smx");
+			}
+		});
+
+		for (File file : nodes) {
+			if (file.isFile())
+				files.add(new String[] { file.getAbsolutePath() });
+			else if (file.isDirectory())
+				collectFiles(files, file);
+
+			// System.out.println("Collecting file " + file.getAbsolutePath());
+		}
+	}
+	
 	@Parameters
 	public static Collection<Object[]> files() {
 		Collection<Object[]> files = new LinkedList<Object[]>();
 
 		File testFolder = new File(TEST_FOLDER);
-		assertTrue("Folder containing test binaries doesn't exist.", testFolder.exists());
-
-		File[] nodes = testFolder.listFiles(new FilenameFilter() {
-
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".smx");
-			}
-		});
-
-		for (File file : nodes) {
-			if (!file.isFile())
-				continue;
-
-			files.add(new String[] { file.getAbsolutePath() });
-			// System.out.println("Collecting file " + file.getAbsolutePath());
-		}
-
+		collectFiles(files, testFolder);
 		return files;
 	}
 
