@@ -1,0 +1,2688 @@
+new PLUGIN_VERSION[21] =
+{
+	49, 46, 49, 32, 36, 82, 101, 118, 105, 115, 105, 111, 110, 58, 32, 50, 57, 48, 32, 36, 0
+};
+new MENU_CHOOSEMAP[18] =
+{
+	103, 97, 108, 95, 109, 101, 110, 117, 67, 104, 111, 111, 115, 101, 77, 97, 112, 0
+};
+new DIR_CONFIGS[64];
+new DIR_DATA[64];
+new CLR_RED[3];
+new CLR_WHITE[3];
+new CLR_YELLOW[3];
+new CLR_GREY[3];
+new bool:g_wasLastRound;
+new g_mapPrefix[32][16];
+new g_mapPrefixCnt = 1;
+new g_currentMap[32];
+new Float:g_originalTimelimit = -1082130432;
+new g_nomination[33][6];
+new g_nominationCnt;
+new g_nominationMatchesMenu[32];
+new g_voteWeightFlags[32];
+new Array:g_emptyCycleMap;
+new bool:g_isUsingEmptyCycle;
+new g_emptyMapCnt;
+new Array:g_mapCycle;
+new g_recentMap[16][32];
+new g_cntRecentMap;
+new Array:g_nominationMap;
+new g_nominationMapCnt;
+new Array:g_fillerMap;
+new Float:g_rtvWait;
+new bool:g_rockedVote[33];
+new g_rockedVoteCnt;
+new g_mapChoice[9][32];
+new g_choiceCnt;
+new g_choiceMax;
+new bool:g_voted[33] =
+{
+	1, ...
+};
+new g_mapVote[9];
+new g_voteStatus;
+new g_voteDuration;
+new g_votesCast;
+new g_runoffChoice[2];
+new g_vote[512];
+new bool:g_handleMapChange = 1;
+new g_refreshVoteStatus = 1;
+new g_voteTallyType[3];
+new g_snuffDisplay[33];
+new g_menuChooseMap;
+new g_pauseMapEndVoteTask;
+new g_pauseMapEndManagerTask;
+new cvar_extendmapMax;
+new cvar_extendmapStep;
+new cvar_endOnRound;
+new cvar_endOfMapVote;
+new cvar_rtvWait;
+new cvar_rtvRatio;
+new cvar_rtvCommands;
+new cvar_cmdVotemap;
+new cvar_cmdListmaps;
+new cvar_listmapsPaginate;
+new cvar_banRecent;
+new cvar_banRecentStyle;
+new cvar_voteDuration;
+new cvar_nomMapFile;
+new cvar_nomPrefixes;
+new cvar_nomQtyUsed;
+new cvar_nomPlayerAllowance;
+new cvar_voteExpCountdown;
+new cvar_voteWeightFlags;
+new cvar_voteWeight;
+new cvar_voteMapChoiceCnt;
+new cvar_voteAnnounceChoice;
+new cvar_voteUniquePrefixes;
+new cvar_voteMapFile;
+new cvar_rtvReminder;
+new cvar_srvStart;
+new cvar_emptyWait;
+new cvar_emptyMapFile;
+new cvar_emptyCycle;
+new cvar_runoffEnabled;
+new cvar_runoffDuration;
+new cvar_voteStatus;
+new cvar_voteStatusType;
+new cvar_soundsMute;
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return floatcmp(oper1, oper2) != 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 < floatcmp(oper1, oper2);
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 <= floatcmp(oper1, oper2);
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 > floatcmp(oper1, oper2);
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 >= floatcmp(oper1, oper2);
+}
+
+bool:operator!(Float:)(Float:oper)
+{
+	return oper & -1 == 0;
+}
+
+Float:floatmin(Float:ValueA, Float:ValueB)
+{
+	if (ValueA <= ValueB)
+	{
+		return ValueA;
+	}
+	return ValueB;
+}
+
+Float:floatmax(Float:ValueA, Float:ValueB)
+{
+	if (ValueA >= ValueB)
+	{
+		return ValueA;
+	}
+	return ValueB;
+}
+
+is_user_admin(id)
+{
+	new __flags = get_user_flags(id, 0);
+	new var1;
+	return __flags > 0 && !__flags & 33554432;
+}
+
+cmd_access(id, level, cid, num, bool:accesssilent)
+{
+	new has_access;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == id)
+	{
+		has_access = 1;
+	}
+	else
+	{
+		if (level == 16777216)
+		{
+			if (is_user_admin(id))
+			{
+				has_access = 1;
+			}
+		}
+		if (level & get_user_flags(id, 0))
+		{
+			has_access = 1;
+		}
+		if (!level)
+		{
+			has_access = 1;
+		}
+	}
+	if (has_access)
+	{
+		if (num > read_argc())
+		{
+			new hcmd[32];
+			new hinfo[128];
+			new hflag;
+			get_concmd(cid, hcmd, 31, hflag, hinfo, 127, level, -1);
+			console_print(id, 140, id, 184, hcmd, hinfo);
+			return 0;
+		}
+		return 1;
+	}
+	if (!accesssilent)
+	{
+		console_print(id, 84, id, 96);
+	}
+	return 0;
+}
+
+colored_menus()
+{
+	new mod_name[32];
+	get_modname(mod_name, 31);
+	new var1;
+	return equal(mod_name, 208, 0) || equal(mod_name, 240, 0) || equal(mod_name, 264, 0);
+}
+
+get_configsdir(name[], len)
+{
+	return get_localinfo(280, name, len);
+}
+
+get_datadir(name[], len)
+{
+	return get_localinfo(344, name, len);
+}
+
+has_flag(id, flags[])
+{
+	return read_flags(flags) & get_user_flags(id, 0);
+}
+
+public plugin_init()
+{
+	new jnk[1];
+	new version[8];
+	new rev[8];
+	parse(0, version, 7, jnk, 0, rev, 7, jnk, 0);
+	new pluginVersion[16];
+	formatex(pluginVersion, 15, 10544, version, rev);
+	register_plugin(10568, pluginVersion, 10600);
+	register_cvar(10644, pluginVersion, 68, 0);
+	set_cvar_string(10692, pluginVersion);
+	register_cvar(10740, 10820, 64, 0);
+	cvar_emptyCycle = register_cvar(10828, 10904, 64, 0);
+	register_cvar(10912, 10952, 0, 0);
+	register_dictionary(10960);
+	register_dictionary(11004);
+	register_dictionary(11052);
+	if (module_exists(11100))
+	{
+		register_event(11132, 11152, 11224, 11232, 11248);
+	}
+	else
+	{
+		if (module_exists(11264))
+		{
+			register_event(11284, 11328, 11400, 11408);
+		}
+	}
+	register_event(11424, 11456, 11544, 11552, 11628);
+	register_event(11724, 11736, 11812, 11820);
+	g_menuChooseMap = register_menuid(396, 0);
+	register_menucmd(g_menuChooseMap, 1023, 11824);
+	register_clcmd(11896, 11912, -1, 11944, -1);
+	register_clcmd(11948, 11996, 0, 12044, -1);
+	register_clcmd(12120, 12180, 0, 12240, -1);
+	register_clcmd(12328, 12356, 0, 12384, -1);
+	register_clcmd(12508, 12540, -1, 11944, -1);
+	register_clcmd(12604, 12640, -1, 11944, -1);
+	register_concmd(12708, 12764, 32, 12820, -1);
+	register_concmd(12824, 12896, 2048, 12820, -1);
+	register_cvar(12968, 13016, 76, 0);
+	cvar_extendmapMax = register_cvar(13020, 13092, 0, 0);
+	cvar_extendmapStep = register_cvar(13104, 13180, 0, 0);
+	cvar_cmdVotemap = register_cvar(13192, 13256, 0, 0);
+	cvar_cmdListmaps = register_cvar(13264, 13332, 0, 0);
+	cvar_listmapsPaginate = register_cvar(13340, 13428, 0, 0);
+	cvar_banRecent = register_cvar(13440, 13496, 0, 0);
+	cvar_banRecentStyle = register_cvar(13504, 13580, 0, 0);
+	cvar_endOnRound = register_cvar(13588, 13648, 0, 0);
+	cvar_endOfMapVote = register_cvar(13656, 13724, 0, 0);
+	cvar_emptyWait = register_cvar(13732, 13816, 0, 0);
+	cvar_emptyMapFile = register_cvar(13824, 13920, 0, 0);
+	cvar_srvStart = register_cvar(13924, 13980, 0, 0);
+	cvar_rtvCommands = register_cvar(13988, 14056, 0, 0);
+	cvar_rtvWait = register_cvar(14064, 14116, 0, 0);
+	cvar_rtvRatio = register_cvar(14128, 14184, 0, 0);
+	cvar_rtvReminder = register_cvar(14204, 14272, 0, 0);
+	cvar_nomPlayerAllowance = register_cvar(14280, 14376, 0, 0);
+	cvar_nomMapFile = register_cvar(14384, 14448, 0, 0);
+	cvar_nomPrefixes = register_cvar(14484, 14552, 0, 0);
+	cvar_nomQtyUsed = register_cvar(14560, 14624, 0, 0);
+	cvar_voteWeight = register_cvar(14632, 14696, 0, 0);
+	cvar_voteWeightFlags = register_cvar(14704, 14788, 0, 0);
+	cvar_voteMapFile = register_cvar(14796, 14864, 0, 0);
+	cvar_voteDuration = register_cvar(14916, 14988, 0, 0);
+	cvar_voteExpCountdown = register_cvar(15000, 15116, 0, 0);
+	cvar_voteMapChoiceCnt = register_cvar(15124, 15204, 0, 0);
+	cvar_voteAnnounceChoice = register_cvar(15212, 15308, 0, 0);
+	cvar_voteStatus = register_cvar(15316, 15396, 0, 0);
+	cvar_voteStatusType = register_cvar(15404, 15500, 0, 0);
+	cvar_voteUniquePrefixes = register_cvar(15508, 15604, 0, 0);
+	cvar_runoffEnabled = register_cvar(15612, 15688, 0, 0);
+	cvar_runoffDuration = register_cvar(15696, 15776, 0, 0);
+	cvar_soundsMute = register_cvar(15788, 15852, 0, 0);
+	return 0;
+}
+
+public dbg_fakeVotes()
+{
+	if (!g_voteStatus & 4)
+	{
+		new var1 = g_mapVote;
+		var1[0] = var1[0] + 2;
+		g_mapVote[1] += 0;
+		g_mapVote[2] += 6;
+		g_mapVote[3] += 0;
+		g_mapVote[4] += 0;
+		g_mapVote[5] += 4;
+		g_votesCast = g_mapVote[5] + g_mapVote[4] + g_mapVote[3] + g_mapVote[2] + g_mapVote[1] + g_mapVote[0];
+	}
+	else
+	{
+		if (g_voteStatus & 4)
+		{
+			new var2 = g_mapVote;
+			var2[0] = var2[0] + 1;
+			g_mapVote[1] += 0;
+			g_votesCast = g_mapVote[1] + g_mapVote[0];
+		}
+	}
+	return 0;
+}
+
+public plugin_cfg()
+{
+	formatex(DIR_CONFIGS[get_configsdir(DIR_CONFIGS, 63)], 63, 15860);
+	formatex(DIR_DATA[get_datadir(DIR_DATA, 63)], 63, 15896);
+	server_cmd(15932, 468);
+	server_exec();
+	if (colored_menus())
+	{
+		copy(980, 2, 16012);
+		copy(992, 2, 16024);
+		copy(1004, 2, 16036);
+	}
+	g_rtvWait = get_pcvar_float(cvar_rtvWait);
+	get_pcvar_string(cvar_voteWeightFlags, 4400, 31);
+	get_mapname(3212, 31);
+	g_choiceMax = max(min(8, get_pcvar_num(cvar_voteMapChoiceCnt)), 2);
+	g_fillerMap = ArrayCreate(32, 32);
+	g_nominationMap = ArrayCreate(32, 32);
+	nomination_clearAll();
+	if (get_pcvar_num(cvar_banRecent))
+	{
+		register_clcmd(16048, 16108, 0, 11944, -1);
+		map_loadRecentList();
+		new var1;
+		if (get_cvar_num(16168) && get_pcvar_num(cvar_srvStart))
+		{
+			map_writeRecentList();
+		}
+	}
+	if (get_pcvar_num(cvar_rtvCommands) & 1)
+	{
+		register_clcmd(16248, 16312, 0, 11944, -1);
+	}
+	if (get_pcvar_num(cvar_nomPlayerAllowance))
+	{
+		register_concmd(16376, 16428, -1, 12820, -1);
+		register_clcmd(16480, 16544, 0, 16608, -1);
+		if (get_pcvar_num(cvar_nomPrefixes))
+		{
+			map_loadPrefixList();
+		}
+		map_loadNominationList();
+	}
+	new mapName[32];
+	get_mapname(mapName, 31);
+	dbg_log(6, "[%s]", mapName);
+	dbg_log(6, 16804);
+	if (get_cvar_num(16808))
+	{
+		srv_handleStart();
+	}
+	set_task(1092616192, 16888, 0, 16944, 0, 16948, 0);
+	if (get_pcvar_num(cvar_emptyWait))
+	{
+		g_emptyCycleMap = ArrayCreate(32, 32);
+		map_loadEmptyCycleList();
+		set_task(1114636288, 16952, 0, 16944, 0, 16948, 0);
+	}
+	return 0;
+}
+
+public plugin_end()
+{
+	map_restoreOriginalTimeLimit();
+	return 0;
+}
+
+public vote_setupEnd()
+{
+	dbg_log(4, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(in)", get_cvar_float(17288), g_originalTimelimit);
+	g_originalTimelimit = get_cvar_float(17340);
+	new nextMap[32];
+	if (get_pcvar_num(cvar_endOfMapVote))
+	{
+		formatex(nextMap, 31, 17392, 0, 17404);
+	}
+	else
+	{
+		g_mapCycle = ArrayCreate(32, 32);
+		map_populateList(g_mapCycle, 17484);
+		map_getNext(g_mapCycle, g_currentMap, nextMap);
+	}
+	map_setNext(nextMap);
+	if (g_originalTimelimit)
+	{
+		set_task(1097859072, 17536, 0, 16944, 0, 17596, 0);
+	}
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(out)", get_cvar_float(17868), g_originalTimelimit);
+	return 0;
+}
+
+map_getNext(Array:mapArray, currentMap[], nextMap[32])
+{
+	new thisMap[32];
+	new mapCnt = ArraySize(mapArray);
+	new nextmapIdx;
+	new returnVal = -1;
+	new mapIdx;
+	while (mapIdx < mapCnt)
+	{
+		ArrayGetString(mapArray, mapIdx, thisMap, 31);
+		if (equal(currentMap, thisMap, 0))
+		{
+			new var1;
+			if (mapCnt + -1 == mapIdx)
+			{
+				var1 = 0;
+			}
+			else
+			{
+				var1 = mapIdx + 1;
+			}
+			nextmapIdx = var1;
+			returnVal = nextmapIdx;
+			ArrayGetString(mapArray, nextmapIdx, nextMap, 31);
+			return returnVal;
+		}
+		mapIdx++;
+	}
+	ArrayGetString(mapArray, nextmapIdx, nextMap, 31);
+	return returnVal;
+}
+
+public srv_handleStart()
+{
+	set_cvar_num(17920, 0);
+	new startAction = get_pcvar_num(cvar_srvStart);
+	if (startAction)
+	{
+		new nextMap[32];
+		new var1;
+		if (startAction == 1 || startAction == 2)
+		{
+			new filename[256];
+			formatex(filename, 255, 18000, 724);
+			new file = fopen(filename, 18048);
+			if (file)
+			{
+				fgets(file, nextMap, 31);
+				if (startAction == 2)
+				{
+					nextMap[0] = 0;
+					fgets(file, nextMap, 31);
+				}
+			}
+			fclose(file);
+		}
+		else
+		{
+			if (startAction == 4)
+			{
+				if (!(get_pcvar_num(cvar_nomPlayerAllowance)))
+				{
+					map_loadNominationList();
+				}
+				if (g_nominationMapCnt)
+				{
+					ArrayGetString(g_nominationMap, random_num(0, g_nominationMapCnt + -1), nextMap, 31);
+				}
+			}
+		}
+		trim(nextMap);
+		new var2;
+		if (nextMap[0] && is_map_valid(nextMap))
+		{
+			server_cmd(18060, nextMap);
+		}
+		else
+		{
+			vote_manageEarlyStart();
+		}
+	}
+	return 0;
+}
+
+vote_manageEarlyStart()
+{
+	g_voteStatus = g_voteStatus | 16;
+	set_task(1123024896, 18120, 0, 16944, 0, 16948, 0);
+	return 0;
+}
+
+map_setNext(nextMap[])
+{
+	set_cvar_string(18196, nextMap);
+	new filename[256];
+	formatex(filename, 255, 18244, 724);
+	new file = fopen(filename, 18292);
+	if (file)
+	{
+		fprintf(file, 18304, 3212);
+		fprintf(file, 18316, nextMap);
+		fclose(file);
+	}
+	return 0;
+}
+
+public vote_manageEnd()
+{
+	new secondsLeft = get_timeleft();
+	new var1;
+	if (secondsLeft < 150 && secondsLeft > 90 && !g_pauseMapEndVoteTask && get_pcvar_num(cvar_endOfMapVote) && !get_pcvar_num(cvar_emptyCycle))
+	{
+		vote_startDirector(false);
+	}
+	new var2;
+	if (secondsLeft < 20 && !g_pauseMapEndManagerTask)
+	{
+		map_manageEnd();
+	}
+	return 0;
+}
+
+public map_loadRecentList()
+{
+	new filename[256];
+	formatex(filename, 255, 18332, 724);
+	new file = fopen(filename, 18404);
+	if (file)
+	{
+		new buffer[32];
+		while (!feof(file))
+		{
+			fgets(file, buffer, 31);
+			trim(buffer);
+			if (buffer[0])
+			{
+				if (!(get_pcvar_num(cvar_banRecent) == g_cntRecentMap))
+				{
+					g_cntRecentMap += 1;
+					copy(g_recentMap[g_cntRecentMap], 31, buffer);
+				}
+				fclose(file);
+			}
+		}
+		fclose(file);
+	}
+	return 0;
+}
+
+public map_writeRecentList()
+{
+	new filename[256];
+	formatex(filename, 255, 18416, 724);
+	new file = fopen(filename, 18488);
+	if (file)
+	{
+		fprintf(file, 18500, 3212);
+		new idxMap;
+		while (get_pcvar_num(cvar_banRecent) - 1 > idxMap)
+		{
+			fprintf(file, 18512, g_recentMap[idxMap]);
+			idxMap++;
+		}
+		fclose(file);
+	}
+	return 0;
+}
+
+public map_loadFillerList(filename[])
+{
+	return map_populateList(g_fillerMap, filename);
+}
+
+public cmd_rockthevote(id)
+{
+	client_print(id, 3, 18528, id, 18540);
+	vote_rock(id);
+	return 0;
+}
+
+public cmd_nominations(id)
+{
+	client_print(id, 3, 18588, id, 18600);
+	nomination_list(id);
+	return 0;
+}
+
+public cmd_nextmap(id)
+{
+	new map[32];
+	get_cvar_string(18652, map, 31);
+	client_print(0, 3, 18700, -1, 18724, map);
+	return 0;
+}
+
+public cmd_currentmap(id)
+{
+	client_print(0, 3, 18760, -1, 18788, 3212);
+	return 0;
+}
+
+public cmd_listrecent(id)
+{
+	switch (get_pcvar_num(cvar_banRecentStyle))
+	{
+		case 1:
+		{
+			new msg[101];
+			new msgIdx;
+			new idx;
+			while (idx < g_cntRecentMap)
+			{
+				msgIdx = format(msg[msgIdx], 100 - msgIdx, 18832, g_recentMap[idx]) + msgIdx;
+				idx++;
+			}
+			client_print(0, 3, 18852, -1, 18880, msg[2]);
+		}
+		case 2:
+		{
+			new idx;
+			while (idx < g_cntRecentMap)
+			{
+				client_print(0, 3, 18956, -1, 19004, idx + 1, g_recentMap[idx]);
+				idx++;
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public cmd_startVote(id, level, cid)
+{
+	if (!cmd_access(id, level, cid, 1, false))
+	{
+		return 1;
+	}
+	if (g_voteStatus & 1)
+	{
+		client_print(id, 3, 19076, id, 19088);
+	}
+	else
+	{
+		if (g_voteStatus & 8)
+		{
+			client_print(id, 3, 19168, id, 19180);
+		}
+		if (read_argc() == 2)
+		{
+			new arg[32];
+			read_args(arg, 31);
+			if (equali(arg, 19240, 0))
+			{
+				g_handleMapChange = false;
+			}
+		}
+		vote_startDirector(true);
+	}
+	return 1;
+}
+
+map_populateList(Array:mapArray, mapFilename[])
+{
+	ArrayClear(mapArray);
+	new mapCnt;
+	if (!equal(mapFilename, 19280, 0))
+	{
+		new file = fopen(mapFilename, 19288);
+		if (file)
+		{
+			new buffer[32];
+			while (!feof(file))
+			{
+				fgets(file, buffer, 31);
+				trim(buffer);
+				new var1;
+				if (buffer[0] && !equal(buffer, 19300, 2) && !equal(buffer, 19312, 1) && is_map_valid(buffer))
+				{
+					ArrayPushString(mapArray, buffer);
+					mapCnt++;
+				}
+			}
+			fclose(file);
+		}
+		else
+		{
+			log_error(19, 19320, 0, 19332, mapFilename);
+		}
+	}
+	else
+	{
+		new dir;
+		new mapName[32];
+		dir = open_dir(19416, mapName, 31);
+		if (dir)
+		{
+			new lenMapName;
+			while (next_file(dir, mapName, 31))
+			{
+				lenMapName = strlen(mapName);
+				new var2;
+				if (lenMapName > 4 && equali(mapName[lenMapName + -4], 19436, 4))
+				{
+					mapName[lenMapName + -4] = 0;
+					if (is_map_valid(mapName))
+					{
+						ArrayPushString(mapArray, mapName);
+						mapCnt++;
+					}
+				}
+			}
+			close_dir(dir);
+		}
+		else
+		{
+			log_error(19, 19456, 0, 19468);
+		}
+	}
+	return mapCnt;
+}
+
+public map_loadNominationList()
+{
+	new filename[256];
+	get_pcvar_string(cvar_nomMapFile, filename, 255);
+	g_nominationMapCnt = map_populateList(g_nominationMap, filename);
+	return 0;
+}
+
+public cmd_ff()
+{
+	new var1;
+	if (get_cvar_num(19636))
+	{
+		var1 = 19700;
+	}
+	else
+	{
+		var1 = 19712;
+	}
+	client_print(0, 3, 19560, -1, 19588, -1, var1);
+	return 0;
+}
+
+public cmd_createMapFile(id, level, cid)
+{
+	if (!cmd_access(id, level, cid, 1, false))
+	{
+		return 1;
+	}
+	new cntArg = read_argc() - 1;
+	switch (cntArg)
+	{
+		case 1:
+		{
+			new arg1[256];
+			read_argv(1, arg1, 255);
+			remove_quotes(arg1);
+			new mapName[36];
+			new dir;
+			new file;
+			new mapCnt;
+			new lenMapName;
+			dir = open_dir(19728, mapName, 35);
+			if (dir)
+			{
+				new filename[256];
+				formatex(filename, 255, 19748, 468, arg1);
+				file = fopen(filename, 19772);
+				if (file)
+				{
+					mapCnt = 0;
+					while (next_file(dir, mapName, 35))
+					{
+						lenMapName = strlen(mapName);
+						new var1;
+						if (lenMapName > 4 && equali(mapName[lenMapName + -4], 19784, 4))
+						{
+							mapName[lenMapName + -4] = 0;
+							if (is_map_valid(mapName))
+							{
+								mapCnt++;
+								fprintf(file, 19804, mapName);
+							}
+						}
+					}
+					fclose(file);
+					con_print(id, "%L", 0, "GAL_CREATIONSUCCESS", filename, mapCnt);
+				}
+				else
+				{
+					con_print(id, "%L", 0, "GAL_CREATIONFAILED", filename);
+				}
+				close_dir(dir);
+			}
+			else
+			{
+				con_print(id, "%L", 0, "GAL_MAPSFOLDERMISSING");
+			}
+		}
+		default:
+		{
+			con_print(id, "%L", id, "GAL_CMD_CREATEFILE_USAGE1");
+			con_print(id, "%L", id, "GAL_CMD_CREATEFILE_USAGE2");
+		}
+	}
+	return 1;
+}
+
+public map_loadPrefixList()
+{
+	new filename[256];
+	formatex(filename, 255, 20332, 468);
+	new file = fopen(filename, 20396);
+	if (file)
+	{
+		new buffer[16];
+		while (!feof(file))
+		{
+			fgets(file, buffer, 15);
+			new var1;
+			if (buffer[0] && !equal(buffer, 20408, 2))
+			{
+				if (g_mapPrefixCnt <= 32)
+				{
+					trim(buffer);
+					g_mapPrefixCnt += 1;
+					copy(g_mapPrefix[g_mapPrefixCnt], 15, buffer);
+				}
+				log_error(4, 20420, 0, 20432, 32, filename);
+				fclose(file);
+			}
+		}
+		fclose(file);
+	}
+	else
+	{
+		log_error(19, 20516, 0, 20528, filename);
+	}
+	return 1;
+}
+
+map_loadEmptyCycleList()
+{
+	new filename[256];
+	get_pcvar_string(cvar_emptyMapFile, filename, 255);
+	g_emptyMapCnt = map_populateList(g_emptyCycleMap, filename);
+	return 0;
+}
+
+public map_manageEnd()
+{
+	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(in)", get_cvar_float(20776));
+	g_pauseMapEndManagerTask = 1;
+	if (1 >= get_realplayersnum())
+	{
+		map_change();
+	}
+	else
+	{
+		new var1;
+		if (get_pcvar_num(cvar_endOnRound) && g_wasLastRound)
+		{
+			g_wasLastRound = true;
+			if (g_voteStatus & 2)
+			{
+				client_print(0, 3, 20828, -1, 20840);
+			}
+			else
+			{
+				client_print(0, 3, 20924, -1, 20948, -1, 21040);
+			}
+			server_cmd(21124);
+		}
+		else
+		{
+			message_begin(2, 30, 21184, 0);
+			message_end();
+			set_task(floatmax(get_cvar_float(21196), 2.0), 21244, 0, 16944, 0, 16948, 0);
+		}
+		new map[32];
+		get_cvar_string(21288, map, 31);
+		client_print(0, 3, 21336, -1, 21348, map);
+	}
+	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(out)", get_cvar_float(21560));
+	return 0;
+}
+
+public event_round_start()
+{
+	if (g_wasLastRound)
+	{
+		map_manageEnd();
+	}
+	return 0;
+}
+
+public event_game_commencing()
+{
+	map_restoreOriginalTimeLimit();
+	return 0;
+}
+
+public event_intermission()
+{
+	g_pauseMapEndManagerTask = 1;
+	set_task(floatmax(get_cvar_float(21612), 2.0), 21660, 0, 16944, 0, 16948, 0);
+	return 0;
+}
+
+map_getIdx(text[])
+{
+	new map[32];
+	new mapIdx;
+	new nominationMap[32];
+	new prefixIdx;
+	while (prefixIdx < g_mapPrefixCnt)
+	{
+		formatex(map, 31, 21704, g_mapPrefix[prefixIdx], text);
+		mapIdx = 0;
+		while (mapIdx < g_nominationMapCnt)
+		{
+			ArrayGetString(g_nominationMap, mapIdx, nominationMap, 31);
+			if (equal(map, nominationMap, 0))
+			{
+				return mapIdx;
+			}
+			mapIdx++;
+		}
+		prefixIdx++;
+	}
+	return -1;
+}
+
+public cmd_say(id)
+{
+	static arg3[2];
+	static arg2[32];
+	static arg1[32];
+	static text[70];
+	read_args(21724, 69);
+	remove_quotes(21724);
+	arg1[0] = 0;
+	arg2[0] = 0;
+	arg3[0] = 0;
+	parse(21724, 22004, 31, 22132, 31, 22260, 1);
+	if (!arg3[0])
+	{
+		new idxMap;
+		if (arg2[0])
+		{
+			if (get_pcvar_num(cvar_nomPlayerAllowance))
+			{
+				new var4;
+				if (equali(22004, 22356, 0) || equali(22004, 22392, 0))
+				{
+					nomination_attempt(id, arg2);
+					return 1;
+				}
+				if (equali(22004, 22408, 0))
+				{
+					idxMap = map_getIdx(arg2);
+					if (0 <= idxMap)
+					{
+						nomination_cancel(id, idxMap);
+						return 1;
+					}
+				}
+			}
+		}
+		else
+		{
+			new var1;
+			if ((get_pcvar_num(cvar_rtvCommands) & 2 && equali(22004, 22268, 0)) || (get_pcvar_num(cvar_rtvCommands) & 4 && equali(22004, 22284, 7) && equali(arg1[strlen(22004) - 4], 22316, 0)))
+			{
+				vote_rock(id);
+				return 1;
+			}
+			if (get_pcvar_num(cvar_nomPlayerAllowance))
+			{
+				if (equali(22004, 22336, 0))
+				{
+					nomination_list(id);
+					return 1;
+				}
+				idxMap = map_getIdx(arg1);
+				if (0 <= idxMap)
+				{
+					nomination_toggle(id, idxMap);
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+nomination_attempt(id, nomination[])
+{
+	strtolower(nomination);
+	g_nominationMatchesMenu[id] = menu_create(22436, 22488, 0);
+	new mapIdx;
+	new nominationMap[32];
+	new matchCnt;
+	new matchIdx = -1;
+	new info[1];
+	new choice[64];
+	new disabledReason[16];
+	mapIdx = 0;
+	while (mapIdx < g_nominationMapCnt && matchCnt <= 1000)
+	{
+		ArrayGetString(g_nominationMap, mapIdx, nominationMap, 31);
+		if (-1 < contain(nominationMap, nomination))
+		{
+			matchCnt++;
+			matchIdx = mapIdx;
+			info[0] = mapIdx;
+			disabledReason[0] = 0;
+			if (nomination_getPlayer(mapIdx))
+			{
+				formatex(disabledReason, 15, 22604, id, 22616);
+			}
+			else
+			{
+				if (map_isTooRecent(nominationMap))
+				{
+					formatex(disabledReason, 15, 22696, id, 22708);
+				}
+				if (equal(3212, nominationMap, 0))
+				{
+					formatex(disabledReason, 15, 22788, id, 22800);
+				}
+			}
+			formatex(choice, 63, 22884, nominationMap, disabledReason);
+			new var2;
+			if (disabledReason[0])
+			{
+				var2 = 67108864;
+			}
+			else
+			{
+				var2 = 0;
+			}
+			menu_additem(g_nominationMatchesMenu[id], choice, info, var2, -1);
+		}
+		mapIdx++;
+	}
+	switch (matchCnt)
+	{
+		case 0:
+		{
+			client_print(id, 3, 22908, id, 22920, nomination);
+		}
+		case 1:
+		{
+			map_nominate(id, matchIdx, -1);
+		}
+		default:
+		{
+			client_print(id, 3, 23012, id, 23024, nomination);
+			if (matchCnt == 1000)
+			{
+				client_print(id, 3, 23088, id, 23100, 1000, 1000);
+			}
+			menu_display(id, g_nominationMatchesMenu[id], 0);
+		}
+	}
+	return 0;
+}
+
+java.lang.NullPointerException
+
+/* ERROR! null */
+ function "nomination_handleMatchChoice" (number 46)
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapNode(NodeAnalysis.java:614)
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:666)
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:675)
+	at lysis.Lysis.DumpMethod(Lysis.java:107)
+	at lysis.Lysis.main(Lysis.java:205)
+nomination_getPlayer(idxMap)
+{
+	new idxNomination;
+	new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+	new idPlayer = 1;
+	while (idPlayer <= 32)
+	{
+		idxNomination = 1;
+		while (idxNomination <= playerNominationMax)
+		{
+			if (g_nomination[idPlayer][idxNomination] == idxMap)
+			{
+				return idPlayer;
+			}
+			idxNomination++;
+		}
+		idPlayer++;
+	}
+	return 0;
+}
+
+nomination_toggle(id, idxMap)
+{
+	new idNominator = nomination_getPlayer(idxMap);
+	if (id == idNominator)
+	{
+		nomination_cancel(id, idxMap);
+	}
+	else
+	{
+		map_nominate(id, idxMap, idNominator);
+	}
+	return 0;
+}
+
+nomination_cancel(id, idxMap)
+{
+	if (g_voteStatus & 1)
+	{
+		client_print(id, 3, 23184, id, 23196);
+		return 0;
+	}
+	if (g_voteStatus & 8)
+	{
+		client_print(id, 3, 23304, id, 23316);
+		return 0;
+	}
+	new bool:nominationFound;
+	new idxNomination;
+	new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+	idxNomination = 1;
+	while (idxNomination <= playerNominationMax)
+	{
+		if (idxMap == g_nomination[id][idxNomination])
+		{
+			nominationFound = true;
+			new mapName[32];
+			ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+			if (nominationFound)
+			{
+				g_nomination[id][idxNomination] = -1;
+				g_nominationCnt -= 1;
+				nomination_announceCancellation(mapName);
+			}
+			else
+			{
+				new idNominator = nomination_getPlayer(idxMap);
+				if (idNominator)
+				{
+					new name[32];
+					get_user_name(idNominator, name, 31);
+					client_print(id, 3, 23416, id, 23428, mapName, name);
+				}
+				else
+				{
+					client_print(id, 3, 23540, id, 23552, mapName);
+				}
+			}
+			return 0;
+		}
+		idxNomination++;
+	}
+	new mapName[32];
+	ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+	if (nominationFound)
+	{
+		g_nomination[id][idxNomination] = -1;
+		g_nominationCnt -= 1;
+		nomination_announceCancellation(mapName);
+	}
+	else
+	{
+		new idNominator = nomination_getPlayer(idxMap);
+		if (idNominator)
+		{
+			new name[32];
+			get_user_name(idNominator, name, 31);
+			client_print(id, 3, 23416, id, 23428, mapName, name);
+		}
+		else
+		{
+			client_print(id, 3, 23540, id, 23552, mapName);
+		}
+	}
+	return 0;
+}
+
+map_nominate(id, idxMap, idNominator)
+{
+	if (g_voteStatus & 1)
+	{
+		client_print(id, 3, 23656, id, 23668);
+		return 0;
+	}
+	if (g_voteStatus & 8)
+	{
+		client_print(id, 3, 23764, id, 23776);
+		return 0;
+	}
+	new mapName[32];
+	ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+	if (equal(3212, mapName, 0))
+	{
+		client_print(id, 3, 23864, id, 23876, 3212);
+		return 0;
+	}
+	if (map_isTooRecent(mapName))
+	{
+		client_print(id, 3, 23972, id, 23984, mapName);
+		client_print(id, 3, 24076, id, 24088);
+		return 0;
+	}
+	if (idNominator == -1)
+	{
+		idNominator = nomination_getPlayer(idxMap);
+	}
+	if (idNominator)
+	{
+		if (id == idNominator)
+		{
+			client_print(id, 3, 24528, id, 24540, mapName);
+		}
+		new name[32];
+		get_user_name(idNominator, name, 31);
+		client_print(id, 3, 24624, id, 24636, mapName, name);
+		client_print(id, 3, 24736, id, 24748);
+	}
+	else
+	{
+		new nominationCnt;
+		new idxNominationOpen;
+		new idxNomination;
+		new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+		idxNomination = 1;
+		while (idxNomination <= playerNominationMax)
+		{
+			if (0 <= g_nomination[id][idxNomination])
+			{
+				nominationCnt++;
+			}
+			else
+			{
+				idxNominationOpen = idxNomination;
+			}
+			idxNomination++;
+		}
+		if (playerNominationMax == nominationCnt)
+		{
+			new nominatedMaps[256];
+			new buffer[32];
+			idxNomination = 1;
+			while (idxNomination <= playerNominationMax)
+			{
+				idxMap = g_nomination[id][idxNomination];
+				ArrayGetString(g_nominationMap, idxMap, buffer, 31);
+				new var1;
+				if (idxNomination == 1)
+				{
+					var1 = 24224;
+				}
+				else
+				{
+					var1 = 24228;
+				}
+				format(nominatedMaps, 255, 24196, nominatedMaps, var1, buffer);
+				idxNomination++;
+			}
+			client_print(id, 3, 24240, id, 24252, playerNominationMax, nominatedMaps);
+			client_print(id, 3, 24336, id, 24348);
+		}
+		else
+		{
+			g_nomination[id][idxNominationOpen] = idxMap;
+			g_nominationCnt += 1;
+			map_announceNomination(id, mapName);
+			client_print(id, 3, 24448, id, 24460);
+		}
+	}
+	return 0;
+}
+
+public nomination_list(id)
+{
+	new idxNomination;
+	new idxMap;
+	new msg[101];
+	new mapCnt;
+	new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+	new mapName[32];
+	new idPlayer = 1;
+	while (idPlayer <= 32)
+	{
+		idxNomination = 1;
+		while (idxNomination <= playerNominationMax)
+		{
+			idxMap = g_nomination[idPlayer][idxNomination];
+			if (0 <= idxMap)
+			{
+				ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+				format(msg, 100, 24864, msg, mapName);
+				mapCnt++;
+				if (mapCnt == 4)
+				{
+					client_print(0, 3, 24892, -1, 24920, msg[2]);
+					mapCnt = 0;
+					msg[0] = 0;
+				}
+			}
+			idxNomination++;
+		}
+		idPlayer++;
+	}
+	if (msg[0])
+	{
+		client_print(0, 3, 24984, -1, 25012, msg[2]);
+	}
+	else
+	{
+		client_print(0, 3, 25076, -1, 25104, -1, 25168);
+	}
+	return 0;
+}
+
+java.lang.NullPointerException
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapNode(NodeAnalysis.java:614)
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:666)
+	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:675)
+	at lysis.Lysis.DumpMethod(Lysis.java:107)
+	at lysis.Lysis.main(Lysis.java:205)
+
+/* ERROR! null */
+ function "vote_startDirector" (number 52)
+public vote_countdownPendingVote()
+{
+	static countdown = 7;
+	set_hudmessage(0, 222, 50, -1082130432, 1040522936, 0, 1065353216, 1064346583, 0, 0, -1);
+	show_hudmessage(0, 26468, -1, 26480, 26464);
+	if (!get_pcvar_num(cvar_soundsMute) & 2)
+	{
+		new word[6];
+		num_to_word(countdown, word, 5);
+		client_cmd(0, 26556, word);
+	}
+	countdown -= 1;
+	if (!countdown)
+	{
+		countdown = 7;
+	}
+	return 0;
+}
+
+vote_addNominations()
+{
+	if (get_realplayersnum())
+	{
+		dbg_log(4, "   [NOMINATIONS (%i)]", g_nominationCnt);
+	}
+	if (g_nominationCnt)
+	{
+		new maxNominations = get_pcvar_num(cvar_nomQtyUsed);
+		new slotsAvailable = g_choiceMax - g_choiceCnt;
+		decl voteNominationMax;
+		new var1;
+		if (maxNominations)
+		{
+			var1 = min(maxNominations, slotsAvailable);
+		}
+		else
+		{
+			var1 = slotsAvailable;
+		}
+		voteNominationMax = var1;
+		new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+		new idxMap;
+		new id;
+		new mapName[32];
+		if (get_realplayersnum())
+		{
+			new nominator_id;
+			new playerName[32];
+			new idxNomination = playerNominationMax;
+			while (idxNomination >= 1)
+			{
+				id = 1;
+				while (id <= 32)
+				{
+					idxMap = g_nomination[id][idxNomination];
+					if (0 <= idxMap)
+					{
+						ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+						nominator_id = nomination_getPlayer(idxMap);
+						get_user_name(nominator_id, playerName, 31);
+						dbg_log(4, "      %-32s %s", mapName, playerName);
+					}
+					id++;
+				}
+				idxNomination--;
+			}
+			dbg_log(4, 26760);
+		}
+		new idxNomination = playerNominationMax;
+		while (idxNomination >= 1)
+		{
+			id = 1;
+			while (id <= 32)
+			{
+				idxMap = g_nomination[id][idxNomination];
+				if (0 <= idxMap)
+				{
+					ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+					g_choiceCnt += 1;
+					copy(g_mapChoice[g_choiceCnt], 31, mapName);
+					if (voteNominationMax == g_choiceCnt)
+					{
+						if (voteNominationMax == g_choiceCnt)
+						{
+						}
+						idxNomination--;
+					}
+				}
+				id++;
+			}
+			if (voteNominationMax == g_choiceCnt)
+			{
+			}
+			idxNomination--;
+		}
+	}
+	return 0;
+}
+
+vote_addFiller()
+{
+	if (g_choiceMax == g_choiceCnt)
+	{
+		return 0;
+	}
+	new filename[256];
+	get_pcvar_string(cvar_voteMapFile, filename, 255);
+	new fillerFile[8][256] = {32,1052,2072,3092,4112,5132,6152,7172};
+	new mapsPerGroup[8];
+	new groupCnt;
+	if (!equal(filename, 26796, 0))
+	{
+		new file = fopen(filename, 26804);
+		if (file)
+		{
+			new buffer[16];
+			fgets(file, buffer, 15);
+			trim(buffer);
+			fclose(file);
+			if (equali(buffer, 26816, 0))
+			{
+				dbg_log(8, 26852);
+				dbg_log(8, 26860);
+				new groupIdx;
+				file = fopen(filename, 26956);
+				while (!feof(file))
+				{
+					fgets(file, buffer, 15);
+					trim(buffer);
+					if (isdigit(buffer[0]))
+					{
+						if (groupCnt < 8)
+						{
+							groupCnt++;
+							groupIdx = groupCnt;
+							mapsPerGroup[groupIdx] = str_to_num(buffer);
+							formatex(fillerFile[groupIdx], 255, 26968, 468, groupCnt);
+						}
+						log_error(4, 27008, 0, 27020, filename);
+						fclose(file);
+						if (!groupCnt)
+						{
+							log_error(27, 27104, 0, 27116, filename);
+							return 0;
+						}
+					}
+				}
+				fclose(file);
+				if (!groupCnt)
+				{
+					log_error(27, 27104, 0, 27116, filename);
+					return 0;
+				}
+			}
+			else
+			{
+				copy(fillerFile[0][fillerFile], 255, filename);
+				mapsPerGroup[0] = 8;
+				groupCnt = 1;
+			}
+		}
+		else
+		{
+			log_error(19, 27204, 0, 27216, fillerFile);
+		}
+	}
+	else
+	{
+		copy(fillerFile[0][fillerFile], 255, filename);
+		mapsPerGroup[0] = 8;
+		groupCnt = 1;
+	}
+	new mapCnt;
+	new mapKey;
+	new allowedCnt;
+	new unsuccessfulCnt;
+	new choiceIdx;
+	new mapName[32];
+	new groupIdx;
+	while (groupIdx < groupCnt)
+	{
+		mapCnt = map_loadFillerList(fillerFile[groupIdx]);
+		dbg_log(8, "[%i] groupCnt:%i   mapCnt: %i   g_choiceCnt: %i   g_choiceMax: %i   fillerFile: %s", groupIdx, groupCnt, mapCnt, g_choiceCnt, g_choiceMax, fillerFile[groupIdx]);
+		new var1;
+		if (g_choiceCnt < g_choiceMax && mapCnt)
+		{
+			unsuccessfulCnt = 0;
+			allowedCnt = min(min(mapsPerGroup[groupIdx], g_choiceMax - g_choiceCnt), mapCnt);
+			dbg_log(8, "[%i] allowedCnt: %i   mapsPerGroup: %i   Max-Cnt: %i", groupIdx, allowedCnt, mapsPerGroup[groupIdx], g_choiceMax - g_choiceCnt);
+			choiceIdx = 0;
+			while (choiceIdx < allowedCnt)
+			{
+				mapKey = random_num(0, mapCnt + -1);
+				ArrayGetString(g_fillerMap, mapKey, mapName, 31);
+				dbg_log(8, "[%i] choiceIdx: %i   allowedCnt: %i   mapKey: %i   mapName: %s", groupIdx, choiceIdx, allowedCnt, mapKey, mapName);
+				unsuccessfulCnt = 0;
+				while ((map_isInMenu(mapName) || equal(3212, mapName, 0) || map_isTooRecent(mapName) || prefix_isInMenu(mapName)) && unsuccessfulCnt < mapCnt)
+				{
+					unsuccessfulCnt++;
+					mapKey++;
+					if (mapCnt == mapKey)
+					{
+						mapKey = 0;
+					}
+					ArrayGetString(g_fillerMap, mapKey, mapName, 31);
+				}
+				if (!(mapCnt == unsuccessfulCnt))
+				{
+					g_choiceCnt += 1;
+					copy(g_mapChoice[g_choiceCnt], 31, mapName);
+					dbg_log(8, "[%i] mapName: %s   unsuccessfulCnt: %i   mapCnt: %i   g_choiceCnt: %i", groupIdx, mapName, unsuccessfulCnt, mapCnt, g_choiceCnt);
+					choiceIdx++;
+				}
+			}
+		}
+		groupIdx++;
+	}
+	return 0;
+}
+
+vote_loadChoices()
+{
+	vote_addNominations();
+	vote_addFiller();
+	return g_choiceCnt;
+}
+
+vote_loadRunoffChoices()
+{
+	new choiceCnt;
+	new runoffChoice[2][32] = {8,132};
+	copy(runoffChoice[0][runoffChoice], 31, g_mapChoice[g_runoffChoice[0]]);
+	copy(runoffChoice[1], 31, g_mapChoice[g_runoffChoice[1]]);
+	new mapIdx;
+	if (g_choiceCnt != g_runoffChoice[0])
+	{
+		mapIdx++;
+		copy(g_mapChoice[mapIdx], 31, runoffChoice[0][runoffChoice]);
+		choiceCnt++;
+	}
+	if (g_choiceCnt != g_runoffChoice[1])
+	{
+		choiceCnt++;
+	}
+	copy(g_mapChoice[mapIdx], 31, runoffChoice[1]);
+	g_choiceCnt = choiceCnt;
+	return choiceCnt;
+}
+
+public vote_handleDisplay()
+{
+	if (!get_pcvar_num(cvar_soundsMute) & 4)
+	{
+		client_cmd(0, 28380, random_num(1, 2));
+	}
+	if (g_voteStatus & 4)
+	{
+		g_voteDuration = get_pcvar_num(cvar_runoffDuration);
+	}
+	else
+	{
+		g_voteDuration = get_pcvar_num(cvar_voteDuration);
+	}
+	new var1;
+	if (get_pcvar_num(cvar_voteStatus) && get_pcvar_num(cvar_voteStatusType) == 2)
+	{
+		copy(10252, 2, 28472);
+	}
+	if (get_cvar_num(28480) & 4)
+	{
+		set_task(1073741824, 28520, 0, 16944, 0, 16948, 0);
+	}
+	g_refreshVoteStatus = 1;
+	g_voteStatus = g_voteStatus & -33;
+	new arg[3];
+	arg[0] = 1;
+	arg[1] = 0;
+	arg[2] = 0;
+	if (get_pcvar_num(cvar_voteStatus) == 1)
+	{
+		set_task(1065353216, 28576, 0, arg, 3, 28628, g_voteDuration);
+	}
+	else
+	{
+		set_task(1065353216, 28636, 0, arg, 3, 16948, 0);
+	}
+	return 0;
+}
+
+public vote_display(arg[3])
+{
+	static allKeys = 1023;
+	static voteTally[16];
+	static voteStatus[512];
+	static keys;
+	new updateTimeRemaining = arg[0];
+	new id = arg[1];
+	if (get_realplayersnum())
+	{
+		decl snuff;
+		new var1;
+		if (id > 0)
+		{
+			var1 = g_snuffDisplay[id];
+		}
+		else
+		{
+			var1 = -1;
+		}
+		snuff = var1;
+		dbg_log(4, "   [votedisplay()] id: %i  updateTimeRemaining: %i  unsnuffDisplay: %i  g_snuffDisplay: %i  g_refreshVoteStatus: %i  g_choiceCnt: %i  len(g_vote): %i  len(voteStatus): %i", arg[1], arg, arg[2], snuff, g_refreshVoteStatus, g_choiceCnt, strlen(8196), strlen(28696));
+	}
+	new var2;
+	if (id > 0 && g_snuffDisplay[id])
+	{
+		new unsnuffDisplay = arg[2];
+		if (unsnuffDisplay)
+		{
+			g_snuffDisplay[id] = 0;
+		}
+		return 0;
+	}
+	decl isVoteOver;
+	new var3;
+	isVoteOver = updateTimeRemaining == -1 && id == -1;
+	new charCnt;
+	new var4;
+	if (g_refreshVoteStatus || isVoteOver)
+	{
+		voteStatus[0] = 0;
+		keys = 512;
+		new voteCnt;
+		new allowStay = g_voteStatus & 16;
+		new isRunoff = g_voteStatus & 4;
+		decl bool:allowExtend;
+		new var8;
+		allowExtend = !allowStay && ((isRunoff && g_choiceCnt == 1) || (!g_voteStatus & 2 && !isRunoff && get_cvar_float(31492) < get_pcvar_float(cvar_extendmapMax)));
+		if (get_cvar_num(31544) & 4)
+		{
+			new var12;
+			if (!allowStay && ((isRunoff && g_choiceCnt == 1) || (!isRunoff && get_cvar_float(31584) < get_pcvar_float(cvar_extendmapMax))))
+			{
+			}
+		}
+		if (isVoteOver)
+		{
+			charCnt = formatex(28696, 511, 31636, 1004, 0, 31660);
+		}
+		else
+		{
+			charCnt = formatex(28696, 511, 31704, 1004, 0, 31728);
+		}
+		new choiceIdx;
+		while (choiceIdx < g_choiceCnt)
+		{
+			voteCnt = g_mapVote[choiceIdx];
+			vote_getTallyStr(voteTally, 15, voteCnt);
+			charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31772, 980, choiceIdx + 1, 992, g_mapChoice[choiceIdx], 30744) + charCnt;
+			keys = 1 << choiceIdx | keys;
+			choiceIdx++;
+		}
+		new var13;
+		if (allowExtend || allowStay)
+		{
+			if (!(g_voteStatus & 4))
+			{
+				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31828) + charCnt;
+			}
+			vote_getTallyStr(voteTally, 15, g_mapVote[g_choiceCnt]);
+			if (allowExtend)
+			{
+				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31836, 980, g_choiceCnt + 1, 992, 0, 31892, 3212, floatround(get_pcvar_float(cvar_extendmapStep), 0), 30744) + charCnt;
+			}
+			else
+			{
+				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31964, 980, g_choiceCnt + 1, 992, 0, 32020, 30744) + charCnt;
+			}
+			keys = 1 << g_choiceCnt | keys;
+		}
+		if (!g_vote[0])
+		{
+			new cleanCharCnt = copy(8196, 511, 28696);
+			formatex(g_vote[cleanCharCnt], 511 - cleanCharCnt, 32084, 980, 992, 0, 32132);
+		}
+		charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 32196) + charCnt;
+		g_refreshVoteStatus = 0;
+	}
+	static voteFooter[32];
+	new var14;
+	if (updateTimeRemaining && get_pcvar_num(cvar_voteExpCountdown))
+	{
+		charCnt = copy(32208, 31, 32336);
+		g_voteDuration -= 1;
+		if (g_voteDuration <= 10)
+		{
+			formatex(voteFooter[charCnt], 31 - charCnt, 32348, 1016, 0, 32392, 980, 8180);
+		}
+	}
+	static menuDirty[512];
+	static menuClean[512];
+	menuClean[0] = 0;
+	menuDirty[0] = 0;
+	formatex(32444, 511, 36540, 8196, 32208);
+	if (!isVoteOver)
+	{
+		formatex(34492, 511, 36560, 28696, 32208);
+	}
+	else
+	{
+		formatex(34492, 511, 36580, 28696, 1004, 0, 36616);
+	}
+	new menuid;
+	new menukeys;
+	new showStatus = get_pcvar_num(cvar_voteStatus);
+	if (0 < id)
+	{
+		if (showStatus == 1)
+		{
+			new name[32];
+			get_user_name(id, name, 31);
+			dbg_log(4, "    [%s (dirty, just voted)]", name);
+			dbg_log(4, "        %s", menuDirty);
+			get_user_menu(id, menuid, menukeys);
+			new var15;
+			if (menuid && g_menuChooseMap != menuid)
+			{
+				show_menu(id, allKeys, 34492, max(1, g_voteDuration), 396);
+			}
+		}
+	}
+	else
+	{
+		new players[32];
+		new playerCnt;
+		get_players(players, playerCnt, 36836, 25644);
+		new playerIdx;
+		while (playerIdx < playerCnt)
+		{
+			id = players[playerIdx];
+			new var16;
+			if (g_voted[id] && !isVoteOver)
+			{
+				if (!playerIdx)
+				{
+					new name[32];
+					get_user_name(id, name, 31);
+					dbg_log(4, "    [%s (clean)]", name);
+					dbg_log(4, "        %s", menuClean);
+				}
+				get_user_menu(id, menuid, menukeys);
+				new var17;
+				if (menuid && g_menuChooseMap != menuid)
+				{
+					show_menu(id, keys, 32444, g_voteDuration, 396);
+				}
+			}
+			else
+			{
+				new var18;
+				if ((isVoteOver && showStatus) || (showStatus == 1 && g_voted[id]))
+				{
+					if (!playerIdx)
+					{
+						new name[32];
+						get_user_name(id, name, 31);
+						dbg_log(4, "    [%s (dirty)]", name);
+						dbg_log(4, "        %s", menuDirty);
+					}
+					get_user_menu(id, menuid, menukeys);
+					new var21;
+					if (menuid && g_menuChooseMap != menuid)
+					{
+						new var22;
+						if (isVoteOver)
+						{
+							var22 = 5;
+						}
+						else
+						{
+							var22 = max(1, g_voteDuration);
+						}
+						show_menu(id, allKeys, 34492, var22, 396);
+					}
+				}
+			}
+			if (id == 1)
+			{
+				dbg_log(4, 37072);
+			}
+			playerIdx++;
+		}
+	}
+	return 0;
+}
+
+vote_getTallyStr(voteTally[], voteTallyLen, voteCnt)
+{
+	new var1;
+	if (voteCnt && get_pcvar_num(cvar_voteStatusType) == 2)
+	{
+		voteCnt = percent(voteCnt, g_votesCast);
+	}
+	new var2;
+	if (get_pcvar_num(cvar_voteStatus) && voteCnt)
+	{
+		formatex(voteTally, voteTallyLen, 37076, 1016, voteCnt, 10252);
+	}
+	else
+	{
+		voteTally[0] = 0;
+	}
+	return 0;
+}
+
+public vote_expire()
+{
+	g_voteStatus = g_voteStatus | 32;
+	if (get_realplayersnum())
+	{
+		dbg_log(4, 37116);
+		dbg_log(4, 37120);
+		new voteTally[16];
+		new idxChoice;
+		while (idxChoice <= g_choiceCnt)
+		{
+			vote_getTallyStr(voteTally, 15, g_mapVote[idxChoice]);
+			dbg_log(4, "      %2i/%3i  %i. %s", g_mapVote[idxChoice], voteTally, idxChoice, g_mapChoice[idxChoice]);
+			idxChoice++;
+		}
+		dbg_log(4, 37276);
+	}
+	g_vote[0] = 0;
+	new firstPlaceVoteCnt;
+	new secondPlaceVoteCnt;
+	new totalVotes;
+	new idxChoice;
+	while (idxChoice <= g_choiceCnt)
+	{
+		totalVotes = g_mapVote[idxChoice][totalVotes];
+		if (g_mapVote[idxChoice] > firstPlaceVoteCnt)
+		{
+			secondPlaceVoteCnt = firstPlaceVoteCnt;
+			firstPlaceVoteCnt = g_mapVote[idxChoice];
+		}
+		else
+		{
+			if (g_mapVote[idxChoice] > secondPlaceVoteCnt)
+			{
+				secondPlaceVoteCnt = g_mapVote[idxChoice];
+			}
+		}
+		idxChoice++;
+	}
+	new firstPlace[9];
+	new firstPlaceCnt;
+	new secondPlace[9];
+	new secondPlaceCnt;
+	new idxChoice;
+	while (idxChoice <= g_choiceCnt)
+	{
+		if (firstPlaceVoteCnt == g_mapVote[idxChoice])
+		{
+			firstPlaceCnt++;
+			firstPlace[firstPlaceCnt] = idxChoice;
+		}
+		else
+		{
+			if (secondPlaceVoteCnt == g_mapVote[idxChoice])
+			{
+				secondPlaceCnt++;
+				secondPlace[secondPlaceCnt] = idxChoice;
+			}
+		}
+		idxChoice++;
+	}
+	new idxWinner;
+	if (firstPlaceVoteCnt)
+	{
+		new var1;
+		if (get_pcvar_num(cvar_runoffEnabled) && !g_voteStatus & 4)
+		{
+			if (totalVotes / 2 >= firstPlaceVoteCnt)
+			{
+				client_print(0, 3, 37280, -1, 37292);
+				if (!get_pcvar_num(cvar_soundsMute) & 8)
+				{
+					client_cmd(0, 37372);
+				}
+				g_voteStatus = g_voteStatus | 4;
+				new choice1Idx;
+				new choice2Idx;
+				if (firstPlaceCnt > 2)
+				{
+					choice1Idx = random_num(0, firstPlaceCnt + -1);
+					choice2Idx = random_num(0, firstPlaceCnt + -1);
+					if (choice1Idx == choice2Idx)
+					{
+						new var2;
+						if (firstPlaceCnt + -1 == choice2Idx)
+						{
+							var2 = 0;
+						}
+						else
+						{
+							choice2Idx++;
+							var2 = choice2Idx;
+						}
+						choice2Idx = var2;
+					}
+					g_runoffChoice[0] = firstPlace[choice1Idx];
+					g_runoffChoice[1] = firstPlace[choice2Idx];
+					client_print(0, 3, 37636, -1, 37648, firstPlaceCnt);
+				}
+				else
+				{
+					if (firstPlaceCnt == 2)
+					{
+						g_runoffChoice[0] = firstPlace[0];
+						g_runoffChoice[1] = firstPlace[1];
+					}
+					if (secondPlaceCnt == 1)
+					{
+						g_runoffChoice[0] = firstPlace[0];
+						g_runoffChoice[1] = secondPlace[0];
+					}
+					g_runoffChoice[0] = firstPlace[0];
+					g_runoffChoice[1] = secondPlace[random_num(0, secondPlaceCnt + -1)];
+					client_print(0, 3, 37716, -1, 37728, secondPlaceCnt);
+				}
+				vote_resetStats();
+				set_task(1084227584, 37796, 0, 16944, 0, 16948, 0);
+				return 0;
+			}
+		}
+		if (firstPlaceCnt > 1)
+		{
+			idxWinner = firstPlace[random_num(0, firstPlaceCnt + -1)];
+			client_print(0, 3, 37872, -1, 37884, firstPlaceCnt);
+		}
+		else
+		{
+			idxWinner = firstPlace[0];
+		}
+		if (g_choiceCnt == idxWinner)
+		{
+			if (get_pcvar_num(cvar_endOfMapVote))
+			{
+				new nextMap[32];
+				formatex(nextMap, 31, 37948, 0, 37960);
+				map_setNext(nextMap);
+			}
+			g_pauseMapEndVoteTask = 0;
+			if (g_voteStatus & 16)
+			{
+				client_print(0, 3, 38040, -1, 38052);
+				vote_resetStats();
+				g_voteStatus = g_voteStatus & -17;
+			}
+			else
+			{
+				client_print(0, 3, 38116, -1, 38128, floatround(get_pcvar_float(cvar_extendmapStep), 0));
+				map_extend();
+			}
+		}
+		else
+		{
+			map_setNext(g_mapChoice[idxWinner]);
+			server_exec();
+			client_print(0, 3, 38200, -1, 38212, g_mapChoice[idxWinner]);
+			g_voteStatus = g_voteStatus | 8;
+		}
+	}
+	else
+	{
+		idxWinner = random_num(0, g_choiceCnt + -1);
+		map_setNext(g_mapChoice[idxWinner]);
+		client_print(0, 3, 38260, -1, 38272, g_mapChoice[idxWinner]);
+		g_voteStatus = g_voteStatus | 8;
+	}
+	g_refreshVoteStatus = 1;
+	new playerCnt = get_realplayersnum();
+	g_voteStatus = g_voteStatus & -2;
+	if (g_handleMapChange)
+	{
+		new var4;
+		if ((g_voteStatus & 2 || (playerCnt == 1 && idxWinner < g_choiceCnt) || playerCnt) && !get_cvar_num(38344) & 4)
+		{
+			set_task(1073741824, 38384, 0, 16944, 0, 16948, 0);
+		}
+		g_pauseMapEndManagerTask = 0;
+	}
+	return 0;
+}
+
+map_extend()
+{
+	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(in)", get_cvar_float(38724), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
+	if (g_rtvWait)
+	{
+		g_rtvWait = floatadd(get_cvar_float(38776), g_rtvWait);
+	}
+	set_cvar_float(38828, floatadd(get_cvar_float(38880), get_pcvar_float(cvar_extendmapStep)));
+	server_exec();
+	vote_resetStats();
+	g_voteStatus = g_voteStatus & -5;
+	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(out)", get_cvar_float(39220), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
+	return 0;
+}
+
+vote_resetStats()
+{
+	g_votesCast = 0;
+	arrayset(8140, 0, 9);
+	arrayset(6676, 0, 33);
+	g_rockedVoteCnt = 0;
+	return 0;
+}
+
+map_isInMenu(map[])
+{
+	new idxChoice;
+	while (idxChoice < g_choiceCnt)
+	{
+		if (equal(map, g_mapChoice[idxChoice], 0))
+		{
+			return 1;
+		}
+		idxChoice++;
+	}
+	return 0;
+}
+
+prefix_isInMenu(map[])
+{
+	if (get_pcvar_num(cvar_voteUniquePrefixes))
+	{
+		new tentativePrefix[8];
+		new existingPrefix[8];
+		new junk[8];
+		strtok(map, tentativePrefix, 7, junk, 7, 95, 1);
+		new idxChoice;
+		while (idxChoice < g_choiceCnt)
+		{
+			strtok(g_mapChoice[idxChoice], existingPrefix, 7, junk, 7, 95, 1);
+			if (equal(tentativePrefix, existingPrefix, 0))
+			{
+				return 1;
+			}
+			idxChoice++;
+		}
+	}
+	return 0;
+}
+
+map_isTooRecent(map[])
+{
+	if (get_pcvar_num(cvar_banRecent))
+	{
+		new idxBannedMap;
+		while (idxBannedMap < g_cntRecentMap)
+		{
+			if (equal(map, g_recentMap[idxBannedMap], 0))
+			{
+				return 1;
+			}
+			idxBannedMap++;
+		}
+	}
+	return 0;
+}
+
+public vote_handleChoice(id, key)
+{
+	if (g_voteStatus & 32)
+	{
+		client_cmd(id, 39272, key + 1);
+		return 0;
+	}
+	g_snuffDisplay[id] = 1;
+	if (g_voted[id])
+	{
+		client_cmd(id, 40124, key + 1);
+	}
+	else
+	{
+		new name[32];
+		if (get_pcvar_num(cvar_voteAnnounceChoice))
+		{
+			get_user_name(id, name, 31);
+		}
+		get_user_name(id, name, 31);
+		if (key == 9)
+		{
+			dbg_log(4, "      %-32s (none)", name);
+			if (get_pcvar_num(cvar_voteAnnounceChoice))
+			{
+				client_print(0, 3, 39384, -1, 39396, name);
+			}
+			else
+			{
+				client_print(id, 3, 39476, id, 39488);
+			}
+		}
+		else
+		{
+			g_votesCast += 1;
+			if (g_choiceCnt == key)
+			{
+				if (g_voted[id])
+				{
+				}
+				else
+				{
+					dbg_log(4, "      %-32s (extend)", name);
+					if (get_pcvar_num(cvar_voteAnnounceChoice))
+					{
+						client_print(0, 3, 39636, -1, 39648, name);
+					}
+					client_print(id, 3, 39736, id, 39748);
+				}
+			}
+			else
+			{
+				dbg_log(4, "      %-32s %s", name, g_mapChoice[key]);
+				if (get_pcvar_num(cvar_voteAnnounceChoice))
+				{
+					client_print(0, 3, 39880, -1, 39892, name, g_mapChoice[key]);
+				}
+				client_print(id, 3, 39968, id, 39980, g_mapChoice[key]);
+			}
+			new voteWeight = get_pcvar_num(cvar_voteWeight);
+			new var1;
+			if (voteWeight > 1 && has_flag(id, g_voteWeightFlags))
+			{
+				new var2 = g_mapVote[key];
+				var2 = var2[voteWeight];
+				g_votesCast = voteWeight + -1 + g_votesCast;
+				client_print(id, 3, 40040, id, 40052, voteWeight);
+			}
+			else
+			{
+				g_mapVote[key]++;
+			}
+		}
+		g_voted[id] = 1;
+		g_refreshVoteStatus = 1;
+	}
+	if (get_pcvar_num(cvar_voteStatus) == 1)
+	{
+		new arg[3];
+		arg[0] = 0;
+		arg[1] = id;
+		arg[2] = 1;
+		set_task(1036831949, 40160, 0, arg, 3, 16948, 0);
+	}
+	return 0;
+}
+
+public map_change()
+{
+	map_restoreOriginalTimeLimit();
+	new map[32];
+	get_cvar_string(40212, map, 31);
+	if (!is_map_valid(map))
+	{
+		copy(map, 31, 3212);
+	}
+	server_cmd(40260, map);
+	return 0;
+}
+
+Float:map_getMinutesElapsed()
+{
+	dbg_log(2, "%32s mp_timelimit: %f", "map_getMinutesElapsed(in/out)", get_cvar_float(40528));
+	return floatsub(get_cvar_float(40580), floatdiv(float(get_timeleft()), 1114636288));
+}
+
+public vote_rock(id)
+{
+	if (g_voteStatus & 16)
+	{
+		client_print(id, 3, 40632, id, 40644);
+		return 0;
+	}
+	new Float:minutesElapsed = map_getMinutesElapsed();
+	new var1;
+	if (get_realplayersnum() == 1 && minutesElapsed > floatmin(2.0, g_rtvWait))
+	{
+		vote_startDirector(true);
+		return 0;
+	}
+	if (g_rtvWait)
+	{
+		if (minutesElapsed < g_rtvWait)
+		{
+			client_print(id, 3, 40748, id, 40760, floatround(floatsub(g_rtvWait, minutesElapsed), 2));
+			return 0;
+		}
+	}
+	if (g_voteStatus & 1)
+	{
+		client_print(id, 3, 40848, id, 40860);
+		return 0;
+	}
+	if (g_voteStatus & 8)
+	{
+		client_print(id, 3, 40960, id, 40972);
+		return 0;
+	}
+	new rocksNeeded = vote_getRocksNeeded();
+	if (g_rockedVote[id])
+	{
+		client_print(id, 3, 41064, id, 41076, rocksNeeded - g_rockedVoteCnt);
+		rtv_remind(id + 52691153);
+		return 0;
+	}
+	g_rockedVote[id] = 1;
+	client_print(id, 3, 41164, id, 41176);
+	if (task_exists(52691153, 0))
+	{
+		remove_task(52691153, 0);
+	}
+	g_rockedVoteCnt += 1;
+	if (g_rockedVoteCnt >= rocksNeeded)
+	{
+		client_print(0, 3, 41244, -1, 41256);
+		vote_startDirector(true);
+	}
+	else
+	{
+		rtv_remind(52691153);
+		if (get_pcvar_num(cvar_rtvReminder))
+		{
+			set_task(floatmul(1114636288, get_pcvar_float(cvar_rtvReminder)), 41320, 52691153, 16944, 0, 41364, 0);
+		}
+	}
+	return 0;
+}
+
+vote_unrock(id)
+{
+	if (g_rockedVote[id])
+	{
+		g_rockedVote[id] = 0;
+		g_rockedVoteCnt -= 1;
+	}
+	return 0;
+}
+
+vote_getRocksNeeded()
+{
+	return floatround(floatmul(get_pcvar_float(cvar_rtvRatio), float(get_realplayersnum())), 2);
+}
+
+public rtv_remind(param)
+{
+	new who = param + -52691153;
+	client_print(who, 3, 41372, -1, 41384, vote_getRocksNeeded() - g_rockedVoteCnt);
+	return 0;
+}
+
+public cmd_listmaps(id)
+{
+	map_listAll(id);
+	return 1;
+}
+
+public cmd_HL1_votemap(id)
+{
+	if (get_pcvar_num(cvar_cmdVotemap))
+	{
+		return 0;
+	}
+	con_print(id, "%L", id, "GAL_DISABLED");
+	return 1;
+}
+
+public cmd_HL1_listmaps(id)
+{
+	switch (get_pcvar_num(cvar_cmdListmaps))
+	{
+		case 0:
+		{
+			con_print(id, "%L", id, "GAL_DISABLED");
+		}
+		case 2:
+		{
+			map_listAll(id);
+		}
+		default:
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
+map_listAll(id)
+{
+	static lastMapDisplayed[33][2];
+	new userid = get_user_userid(id);
+	if (lastMapDisplayed[id][0] != userid)
+	{
+		lastMapDisplayed[id][0] = 0;
+	}
+	new command[32];
+	read_argv(0, command, 31);
+	new arg1[8];
+	new start;
+	new mapCount = get_pcvar_num(cvar_listmapsPaginate);
+	if (mapCount)
+	{
+		if (read_argv(1, arg1, 7))
+		{
+			if (arg1[0] == 42)
+			{
+				if (lastMapDisplayed[id][0])
+				{
+					start = lastMapDisplayed[id][1] + 1;
+				}
+				else
+				{
+					start = 1;
+				}
+			}
+			else
+			{
+				start = str_to_num(arg1);
+			}
+		}
+		else
+		{
+			start = 1;
+		}
+		new var1;
+		if (id && read_argc() == 3 && read_argv(2, arg1, 7))
+		{
+			mapCount = str_to_num(arg1);
+		}
+	}
+	if (start < 1)
+	{
+		start = 1;
+	}
+	if (start >= g_nominationMapCnt)
+	{
+		start = g_nominationMapCnt + -1;
+	}
+	decl end;
+	new var2;
+	if (mapCount)
+	{
+		var2 = mapCount + start - 1;
+	}
+	else
+	{
+		var2 = g_nominationMapCnt;
+	}
+	end = var2;
+	if (end > g_nominationMapCnt)
+	{
+		end = g_nominationMapCnt;
+	}
+	lastMapDisplayed[id][0] = userid;
+	lastMapDisplayed[id][1] = end + -1;
+	con_print(id, "\n----- %L -----", id, "GAL_LISTMAPS_TITLE", g_nominationMapCnt);
+	new nominated[64];
+	new nominator_id;
+	new name[32];
+	new mapName[32];
+	new idx = start + -1;
+	while (idx < end)
+	{
+		nominator_id = nomination_getPlayer(idx);
+		if (nominator_id)
+		{
+			get_user_name(nominator_id, name, 31);
+			formatex(nominated, 63, 42120, id, 42132, name);
+		}
+		else
+		{
+			nominated[0] = 0;
+		}
+		ArrayGetString(g_nominationMap, idx, mapName, 31);
+		con_print(id, "%3i: %s  %s", idx + 1, mapName, nominated);
+		idx++;
+	}
+	new var3;
+	if (mapCount && mapCount < g_nominationMapCnt)
+	{
+		con_print(id, "----- %L -----", id, "GAL_LISTMAPS_SHOWING", start, idx, g_nominationMapCnt);
+		if (end < g_nominationMapCnt)
+		{
+			con_print(id, "----- %L -----", id, "GAL_LISTMAPS_MORE", command, end + 1, command);
+		}
+	}
+	return 0;
+}
+
+con_print(id, message[])
+{
+	new consoleMessage[256];
+	vformat(consoleMessage, 255, message, 3);
+	if (id)
+	{
+		new authid[32];
+		get_user_authid(id, authid, 31);
+		if (!equal(authid, 42520, 0))
+		{
+			console_print(id, consoleMessage);
+			return 0;
+		}
+	}
+	server_print(consoleMessage);
+	return 0;
+}
+
+public client_disconnect(id)
+{
+	g_voted[id] = 0;
+	vote_unrock(id);
+	new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
+	new nominatedMaps[256];
+	new nominationCnt;
+	new idxMap;
+	new mapName[32];
+	new idxNomination = 1;
+	while (idxNomination <= playerNominationMax)
+	{
+		idxMap = g_nomination[id][idxNomination];
+		if (0 <= idxMap)
+		{
+			ArrayGetString(g_nominationMap, idxMap, mapName, 31);
+			nominationCnt++;
+			format(nominatedMaps, 255, 42572, nominatedMaps, mapName);
+			g_nomination[id][idxNomination] = -1;
+		}
+		idxNomination++;
+	}
+	if (nominationCnt)
+	{
+		nominatedMaps[strlen(nominatedMaps) - 2] = 0;
+		nomination_announceCancellation(nominatedMaps);
+	}
+	new dbg_playerCnt = get_realplayersnum() - 1;
+	dbg_log(2, "%32s dbg_playerCnt:%i", "client_disconnect()", dbg_playerCnt);
+	if (!dbg_playerCnt)
+	{
+		srv_handleEmpty();
+	}
+	return 0;
+}
+
+public client_connect(id)
+{
+	set_pcvar_num(cvar_emptyCycle, 0);
+	vote_unrock(id);
+	return 0;
+}
+
+public client_putinserver(id)
+{
+	new var1;
+	if (g_voteStatus & 16 && !is_user_bot(id) && !is_user_hltv(id))
+	{
+		set_task(1101004800, 42768, id, 16944, 0, 16948, 0);
+	}
+	return 0;
+}
+
+srv_handleEmpty()
+{
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(in)", get_cvar_float(43124), g_originalTimelimit);
+	if (g_originalTimelimit != get_cvar_float(43176))
+	{
+		map_restoreOriginalTimeLimit();
+	}
+	new var1;
+	if (g_isUsingEmptyCycle && g_emptyMapCnt)
+	{
+		srv_startEmptyCountdown();
+	}
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(out)", get_cvar_float(43500), g_originalTimelimit);
+	return 0;
+}
+
+public srv_announceEarlyVote(id)
+{
+	if (is_user_connected(id))
+	{
+		new text[101];
+		formatex(text, 100, 43552, id, 43568);
+		print_color(id, text);
+	}
+	return 0;
+}
+
+public srv_initEmptyCheck()
+{
+	if (get_pcvar_num(cvar_emptyWait))
+	{
+		new var1;
+		if (get_realplayersnum() && !get_pcvar_num(cvar_emptyCycle))
+		{
+			srv_startEmptyCountdown();
+		}
+		g_isUsingEmptyCycle = true;
+	}
+	return 0;
+}
+
+srv_startEmptyCountdown()
+{
+	new waitMinutes = get_pcvar_num(cvar_emptyWait);
+	if (waitMinutes)
+	{
+		set_task(float(waitMinutes * 60), 43628, 98176977, 16944, 0, 16948, 0);
+	}
+	return 0;
+}
+
+public srv_startEmptyCycle()
+{
+	set_pcvar_num(cvar_emptyCycle, 1);
+	new nextMap[32];
+	new mapIdx = map_getNext(g_emptyCycleMap, g_currentMap, nextMap);
+	map_setNext(nextMap);
+	if (mapIdx == -1)
+	{
+		map_change();
+	}
+	return 0;
+}
+
+nomination_announceCancellation(nominations[])
+{
+	client_print(0, 3, 43708, -1, 43720, nominations);
+	return 0;
+}
+
+nomination_clearAll()
+{
+	new idxPlayer = 1;
+	while (idxPlayer <= 32)
+	{
+		new idxNomination = 1;
+		while (idxNomination <= 5)
+		{
+			g_nomination[idxPlayer][idxNomination] = -1;
+			idxNomination++;
+		}
+		idxPlayer++;
+	}
+	g_nominationCnt = 0;
+	return 0;
+}
+
+map_announceNomination(id, map[])
+{
+	new name[32];
+	get_user_name(id, name, 31);
+	client_print(0, 3, 43796, -1, 43808, name, map);
+	return 0;
+}
+
+public sort_stringsi(elem1[], elem2[], array[], data[], data_size)
+{
+	return strcmp(elem1, elem2, 1);
+}
+
+get_realplayersnum()
+{
+	new players[32];
+	new playerCnt;
+	get_players(players, playerCnt, 43872, 25644);
+	return playerCnt;
+}
+
+percent(is, of)
+{
+	new var1;
+	if (of)
+	{
+		var1 = floatround(floatmul(floatdiv(float(is), float(of)), 1120403456), 0);
+	}
+	else
+	{
+		var1 = 0;
+	}
+	return var1;
+}
+
+print_color(id, text[])
+{
+	message_begin(1, get_user_msgid(43884), 43916, id);
+	write_byte(id);
+	write_string(text);
+	message_end();
+	return 0;
+}
+
+map_restoreOriginalTimeLimit()
+{
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(in)", get_cvar_float(44248), g_originalTimelimit);
+	if (-1.0 != g_originalTimelimit)
+	{
+		server_cmd(44300, 3340);
+		server_exec();
+	}
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(out)", get_cvar_float(44688), g_originalTimelimit);
+	return 0;
+}
+
+dbg_log(mode, text[])
+{
+	new dbg = get_cvar_num(44740);
+	if (dbg & mode)
+	{
+		new formattedText[1024];
+		format_args(formattedText, 1023, 1);
+		new Float:gameTime = get_gametime();
+		log_to_file(44780, 44832, gameTime, formattedText);
+		new var1;
+		if (dbg & 1 && formattedText[0])
+		{
+			new isFound = 1;
+			while (isFound)
+			{
+				isFound = replace(formattedText, 1023, 44876, 44884);
+			}
+			log_message(44892, formattedText);
+		}
+	}
+	if (text[0])
+	{
+		return 0;
+	}
+	return 0;
+}
+

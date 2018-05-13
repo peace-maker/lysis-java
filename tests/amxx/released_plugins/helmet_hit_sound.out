@@ -1,0 +1,70 @@
+new MAX_PLAYERS;
+new SOUND[16] =
+{
+	109, 105, 115, 99, 47, 104, 101, 108, 109, 101, 116, 46, 119, 97, 118, 0
+};
+public __fatal_ham_error(Ham:id, HamError:err, reason[])
+{
+	new func = get_func_id(0, -1);
+	new bool:fail = 1;
+	new var1;
+	if (func != -1 && callfunc_begin_i(func, -1) == 1)
+	{
+		callfunc_push_int(id);
+		callfunc_push_int(err);
+		callfunc_push_str(reason, 0);
+		if (callfunc_end() == 1)
+		{
+			fail = false;
+		}
+	}
+	if (fail)
+	{
+		set_fail_state(reason);
+	}
+	return 0;
+}
+
+EF_EmitAmbientSound(ENTITY, Float:pos[3], SAMPLE[], Float:volume, Float:attenuation, fFlags, pitch)
+{
+	return engfunc(28, ENTITY, pos, SAMPLE, volume, attenuation, fFlags, pitch);
+}
+
+public plugin_cfg()
+{
+	MAX_PLAYERS = get_maxplayers();
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin(108, 176, 192);
+	RegisterHam(9, 220, 248, 0);
+	return 0;
+}
+
+public plugin_precache()
+{
+	precache_sound(44);
+	return 0;
+}
+
+public playerTakeDamage(victim, inflictor, attacker, Float:fDamage, bitDamage)
+{
+	new var1;
+	if (1 <= victim <= MAX_PLAYERS && 1 <= attacker <= MAX_PLAYERS && is_user_connected(victim))
+	{
+		new gun;
+		new hitZone;
+		get_user_attacker(victim, gun, hitZone);
+		new var2;
+		if (get_pdata_int(victim, 112, 5, 5) & 2 && hitZone == 1)
+		{
+			new Float:origin[3] = 0.0;
+			pev(victim, 118, origin);
+			EF_EmitAmbientSound(0, origin, SOUND, 1.0, 0.8, 0, 100);
+		}
+	}
+	return 0;
+}
+

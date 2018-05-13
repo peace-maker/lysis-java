@@ -1,0 +1,1584 @@
+new xs__ITaskId = 119;
+new xs__ITaskParam[1033] =
+{
+	119, 101, 97, 112, 111, 110, 95, 0, 97, 109, 109, 111, 95, 0, 105, 116, 101, 109, 95, 0, 116, 102, 95, 119, 101, 97, 112, 111, 110, 95, 0, 72, 97, 109, 70, 105, 108, 116, 101, 114, 0, 49, 46, 52, 98, 101, 116, 97, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 260, 388, 516, 644, 772, 900, 1028, 1156, 1284, 1412, 1540, 1668, 1796, 1924, 2052, 2180, 2308, 2436, 2564, 2692, 2820, 2948, 3076, 3204, 3332, 3460, 3588, 3716, 3844, 3972, 4100, 4228, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new xs__TaskFlags[5] =
+{
+	119, 101, 97, 112, 111
+};
+new xs__TaskFunc[48] =
+{
+	119, 101, 97, 112, 111, 110, 95, 0, 97, 109, 109, 111, 95, 0, 105, 116, 101, 109, 95, 0, 116, 102, 95, 119, 101, 97, 112, 111, 110, 95, 0, 72, 97, 109, 70, 105, 108, 116, 101, 114, 0, 49, 46, 52, 98, 101, 116, 97
+};
+new xs__TaskId = 119;
+new Float:xs__TaskInterval = 119;
+new xs__TaskParam[1033] =
+{
+	119, 101, 97, 112, 111, 110, 95, 0, 97, 109, 109, 111, 95, 0, 105, 116, 101, 109, 95, 0, 116, 102, 95, 119, 101, 97, 112, 111, 110, 95, 0, 72, 97, 109, 70, 105, 108, 116, 101, 114, 0, 49, 46, 52, 98, 101, 116, 97, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 260, 388, 516, 644, 772, 900, 1028, 1156, 1284, 1412, 1540, 1668, 1796, 1924, 2052, 2180, 2308, 2436, 2564, 2692, 2820, 2948, 3076, 3204, 3332, 3460, 3588, 3716, 3844, 3972, 4100, 4228, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new xs__TaskRepeat = 119;
+new xs__global_null = 119;
+new xs__internalseed = 119;
+new xs__logtypenames[6][0] =
+{
+	{
+		0, ...
+	},
+	{
+		1862270976, ...
+	},
+	{
+		1862270976, ...
+	},
+	{
+		72, ...
+	},
+	{
+		24832, ...
+	},
+	{
+		7143424, ...
+	}
+};
+new xs__maxnum = 119;
+new xs__replace_buf[3072] =
+{
+	119, 101, 97, 112, 111, 110, 95, 0, 97, 109, 109, 111, 95, 0, 105, 116, 101, 109, 95, 0, 116, 102, 95, 119, 101, 97, 112, 111, 110, 95, 0, 72, 97, 109, 70, 105, 108, 116, 101, 114, 0, 49, 46, 52, 98, 101, 116, 97, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 132, 260, 388, 516, 644, 772, 900, 1028, 1156, 1284, 1412, 1540, 1668, 1796, 1924, 2052, 2180, 2308, 2436, 2564, 2692, 2820, 2948, 3076, 3204, 3332, 3460, 3588, 3716, 3844, 3972, 4100, 4228, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 10, 0, 7, 0, 30, 30, 0, 15, 20, 25, 30, 35, 25, 12, 20, 10, 30, 100, 8, 30, 30, 20, 0, 7, 30, 30, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 105, 109, 98, 111, 116, 32, 68, 101, 116, 101, 99, 116, 105, 111, 110, 0, 98, 117, 103, 115, 121, 0, 97, 105, 109, 98, 111, 116, 95, 100, 101, 116, 101, 99, 116, 105, 111, 110, 0, 97, 105, 109, 98, 111, 116, 100, 101, 116, 101, 99, 116, 46, 116, 120, 116, 0, 97, 109, 120, 95, 97, 105, 109, 119, 97, 116, 99, 104, 0, 87, 97, 116, 99, 104, 80, 108, 97, 121, 101, 114, 0, 60, 112, 108, 97, 121, 101, 114, 62, 32, 60, 49, 61, 79, 110, 32, 48, 61, 79, 102, 102, 62, 32, 45, 32, 65, 100, 100, 92, 82, 101, 109, 111, 118, 101, 32, 97, 105, 109, 98, 111, 116, 32, 119, 97, 116, 99, 104, 32, 111, 110, 32, 112, 108, 97, 121, 101, 114, 46, 0, 97, 109, 120, 95, 97, 105, 109, 115, 116, 97, 116, 117, 115, 0, 83, 104, 111, 119, 83, 116, 97, 116, 117, 115, 0, 45, 32, 83, 104, 111, 119, 32, 97, 105, 109, 98, 111, 116, 32, 100, 101, 116, 101, 99, 116, 105, 111, 110, 32, 112, 108, 117, 103, 105, 110, 32, 115, 116, 97, 116, 117, 115, 46, 0, 68, 101, 97, 116, 104, 77, 115, 103, 0, 102, 119, 68, 101, 97, 116, 104, 77, 115, 103, 0, 83, 116, 97, 116, 117, 115, 86, 97, 108, 117, 101, 0, 102, 119, 83, 116, 97, 116, 117, 115, 86, 97, 108, 117, 101, 0, 112, 108, 97, 121, 101, 114, 0, 102, 119, 95, 72, 97, 109, 84, 97, 107, 101, 68, 97, 109, 97, 103, 101, 0, 112, 108, 97, 121, 101, 114, 0, 102, 119, 95, 72, 97, 109, 75, 105, 108, 108, 101, 100, 0, 97, 100, 95, 101, 110, 97, 98, 108, 101, 100, 0, 49, 0, 97, 100, 95, 97, 117, 116, 111, 119, 97, 116, 99, 104, 0, 49, 0, 97, 100, 95, 118, 101, 114, 98, 111, 115, 101, 109, 111, 100, 101, 0, 51, 0, 97, 100, 95, 100, 101, 116, 101, 99, 116, 109, 101, 116, 104, 111, 100, 0, 50, 0, 97, 100, 95, 100, 101, 116, 101, 99, 116, 115, 110, 101, 101, 100, 101, 100, 0, 49, 0, 97, 100, 95, 97, 105, 109, 97, 116, 116, 101, 109, 112, 116, 115, 0, 51, 0, 97, 100, 95, 112, 117, 110, 105, 115, 104, 109, 101, 110, 116, 0, 48, 0, 97, 100, 95, 98, 111, 116, 99, 111, 108, 111, 114, 0, 48, 32, 48, 32, 48, 0, 97, 100, 95, 98, 97, 110, 116, 105, 109, 101, 0, 48, 0, 97, 100, 95, 97, 119, 95, 97, 100, 109, 105, 110, 0, 48, 0, 97, 100, 95, 99, 117, 115, 116, 111, 109, 109, 111, 100, 0, 48, 0, 97, 100, 95, 99, 104, 101, 99, 107, 105, 110, 116, 101, 114, 118, 97, 108, 0, 49, 56, 48, 46, 48, 0, 97, 100, 95, 97, 119, 114, 95, 114, 111, 117, 110, 100, 107, 105, 108, 108, 115, 0, 48, 46, 51, 51, 0, 97, 100, 95, 97, 119, 114, 95, 107, 105, 108, 108, 100, 101, 97, 116, 104, 0, 51, 46, 48, 0, 97, 100, 95, 97, 119, 114, 95, 104, 105, 116, 115, 115, 104, 111, 116, 115, 0, 48, 46, 52, 0, 97, 100, 95, 97, 119, 114, 95, 104, 115, 107, 105, 108, 108, 0, 48, 46, 53, 0, 97, 100, 95, 97, 119, 114, 95, 104, 101, 97, 100, 98, 111, 100, 121, 0, 48, 46, 51, 51, 0, 97, 100, 95, 97, 119, 114, 95, 99, 104, 101, 115, 116, 98, 111, 100, 121, 0, 48, 46, 54, 0, 97, 100, 95, 97, 119, 112, 95, 107, 105, 108, 108, 100, 101, 97, 116, 104, 0, 49, 0, 97, 100, 95, 97, 119, 112, 95, 104, 105, 116, 115, 115, 104, 111, 116, 115, 0, 49, 0, 97, 100, 95, 97, 119, 112, 95, 104, 115, 107, 105, 108, 108, 0, 49, 0, 97, 100, 95, 97, 119, 112, 95, 104, 101, 97, 100, 98, 111, 100, 121, 0, 49, 0, 97, 100, 95, 97, 119, 112, 95, 99, 104, 101, 115, 116, 98, 111, 100, 121, 0, 49, 0, 97, 100, 95, 97, 119, 112, 95, 114, 112, 111, 105, 110, 116, 115, 110, 101, 101, 100, 101, 100, 0, 51, 0, 97, 100, 95, 97, 119, 95, 109, 97, 120, 97, 117, 116, 111, 119, 97, 116, 99, 104, 101, 115, 0, 50, 0, 97, 100, 95, 97, 119, 95, 112, 111, 105, 110, 116, 115, 110, 101, 101, 100, 101, 100, 0, 51, 0, 97, 100, 95, 97, 105, 109, 110, 117, 109, 110, 101, 101, 100, 101, 100, 0, 51, 0, 97, 100, 95, 98, 111, 116, 115, 116, 97, 121, 116, 105, 109, 101, 0, 49, 46, 53, 0, 97, 100, 95, 102, 111, 114, 99, 101, 115, 104, 111, 111, 116, 0, 49, 0, 97, 100, 95, 104, 112, 95, 104, 101, 97, 100, 0, 52, 0, 97, 100, 95, 104, 112, 95, 109, 105, 100, 98, 111, 100, 121, 0, 50, 0, 97, 100, 95, 104, 112, 95, 108, 101, 103, 115, 0, 49, 0, 97, 100, 95, 104, 112, 95, 104, 105, 116, 115, 110, 101, 101, 100, 101, 100, 0, 52, 0, 83, 97, 121, 84, 101, 120, 116, 0, 84, 101, 97, 109, 73, 110, 102, 111, 0, 101, 120, 101, 99, 32, 37, 115, 47, 97, 105, 109, 98, 111, 116, 100, 101, 116, 101, 99, 116, 105, 111, 110, 46, 99, 102, 103, 0, 102, 119, 82, 111, 117, 110, 100, 69, 110, 100, 0, 49, 61, 82, 111, 117, 110, 100, 95, 69, 110, 100, 0, 102, 119, 82, 111, 117, 110, 100, 69, 110, 100, 0, 98, 0, 0, 78, 111, 116, 105, 102, 121, 65, 100, 109, 105, 110, 0, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 83, 72, 79, 79, 84, 66, 76, 65, 78, 75, 83, 82, 69, 65, 80, 80, 76, 73, 69, 68, 0, 102, 119, 95, 84, 114, 97, 99, 101, 76, 105, 110, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 68, 73, 83, 67, 79, 78, 78, 69, 67, 84, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 78, 79, 84, 73, 70, 89, 65, 68, 77, 73, 78, 0, 101, 0, 84, 69, 82, 82, 79, 82, 73, 83, 84, 0, 101, 0, 67, 84, 0, 99, 0, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 65, 87, 78, 79, 87, 87, 65, 84, 67, 72, 73, 78, 71, 0, 120, 121, 122, 37, 50, 100, 0, 49, 50, 55, 46, 48, 46, 48, 46, 49, 0, 106, 111, 105, 110, 116, 101, 97, 109, 0, 0, 106, 111, 105, 110, 99, 108, 97, 115, 115, 0, 49, 0, 48, 32, 48, 32, 48, 0, 0, 0, 0, 83, 80, 69, 67, 84, 65, 84, 79, 82, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 80, 65, 83, 83, 69, 68, 65, 76, 76, 0, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 78, 79, 65, 85, 84, 79, 87, 65, 84, 67, 72, 0, 107, 105, 99, 107, 32, 35, 37, 100, 0, 91, 65, 105, 109, 98, 111, 116, 32, 68, 101, 116, 101, 99, 116, 111, 114, 93, 32, 37, 76, 0, 65, 73, 77, 66, 79, 84, 68, 69, 84, 69, 67, 84, 95, 68, 73, 83, 65, 66, 76, 69, 68, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 116, 109, 112, 83, 116, 97, 116, 117, 115, 46, 116, 120, 116, 0, 116, 109, 112, 83, 116, 97, 116, 117, 115, 46, 116, 120, 116, 0, 116, 109, 112, 83, 116, 97, 116, 117, 115, 46, 116, 120, 116, 0, 60, 104, 116, 109, 108
+};
+new Version[9] =
+{
+	49, 46, 52, 98, 101, 116, 97, 50, 0
+};
+new g_PlayerToWatch;
+new g_BotID;
+new g_MaxClients;
+new g_HitPoints;
+new g_AimPoints;
+new g_AimChecks;
+new g_AimPasses;
+new g_Detected;
+new bool:g_bModSet;
+new g_Admins;
+new g_msgTeamInfo;
+new g_msgSayText;
+new g_PassedWatch[33];
+new g_Detections[33];
+new bool:g_bPunished[33];
+new g_AutoWatchPts[33];
+new g_AutoWatched[33];
+new g_RoundKills[33];
+new g_HeadshotKills[33];
+new bool:g_bAdminNotify[33];
+new bool:g_bShootsBlanks[33];
+new g_NumShootsBlanks;
+new g_BodyHits[33][33];
+new MaxClipAmmo[31] =
+{
+	0, 13, 0, 10, 0, 7, 0, 30, 30, 0, 15, 20, 25, 30, 35, 25, 12, 20, 10, 30, 100, 8, 30, 30, 20, 0, 7, 30, 30, 0, 50
+};
+new HamHook:g_Ham_TakeDamage;
+new HamHook:g_Ham_Killed_Player;
+new g_FM_TraceLine;
+new g_pAimAttempts;
+new g_pAutoWatch;
+new g_pEnabled;
+new g_pVerboseMode;
+new g_pPunishment;
+new g_pBotColor;
+new g_pDetectsNeeded;
+new g_pBanTime;
+new g_pDetectMethod;
+new g_pBotStayTime;
+new g_pForceShoot;
+new g_pCustomMod;
+new g_pAWAdmin;
+new g_pCheckInterval;
+new g_pAWRRoundKills;
+new g_pAWRKillDeath;
+new g_pAWRHitsShots;
+new g_pAWRHSKill;
+new g_pAWRHeadBody;
+new g_pAWRChestBody;
+new g_pAWPKillDeath;
+new g_pAWPHitsShots;
+new g_pAWPHSKill;
+new g_pAWPHeadBody;
+new g_pAWPChestBody;
+new g_pAWPRPointsNeeded;
+new g_pAWPointsNeeded;
+new g_pAWMaxAutoWatches;
+new g_pAimNumNeeded;
+new g_pHPHead;
+new g_pHPMidBody;
+new g_pHPLegs;
+new g_pHPHitsNeeded;
+Float:operator-(Float:)(Float:oper)
+{
+	return oper ^ -2147483648;
+}
+
+bool:operator==(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return floatcmp(oper1, oper2) == 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 < floatcmp(oper1, oper2);
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 <= floatcmp(oper1, oper2);
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 > floatcmp(oper1, oper2);
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 >= floatcmp(oper1, oper2);
+}
+
+Float:floatclamp(Float:Value, Float:MinValue, Float:MaxValue)
+{
+	if (Value <= MinValue)
+	{
+		return MinValue;
+	}
+	if (Value >= MaxValue)
+	{
+		return MaxValue;
+	}
+	return Value;
+}
+
+is_user_admin(id)
+{
+	new __flags = get_user_flags(id, 0);
+	new var1;
+	return __flags > 0 && !__flags & 33554432;
+}
+
+cmd_access(id, level, cid, num, bool:accesssilent)
+{
+	new has_access;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == id)
+	{
+		has_access = 1;
+	}
+	else
+	{
+		if (level == 16777216)
+		{
+			if (is_user_admin(id))
+			{
+				has_access = 1;
+			}
+		}
+		if (level & get_user_flags(id, 0))
+		{
+			has_access = 1;
+		}
+		if (!level)
+		{
+			has_access = 1;
+		}
+	}
+	if (has_access)
+	{
+		if (num > read_argc())
+		{
+			new hcmd[32];
+			new hinfo[128];
+			new hflag;
+			get_concmd(cid, hcmd, 31, hflag, hinfo, 127, level, -1);
+			console_print(id, 56, id, 100, hcmd, hinfo);
+			return 0;
+		}
+		return 1;
+	}
+	if (!accesssilent)
+	{
+		console_print(id, 0, id, 12);
+	}
+	return 0;
+}
+
+cmd_target(id, arg[], flags)
+{
+	new player = find_player(124, arg);
+	if (player)
+	{
+		if (find_player(136, arg) != player)
+		{
+			console_print(id, 152, id, 164);
+			return 0;
+		}
+	}
+	else
+	{
+		new var1;
+		if ((player = find_player(224, arg)) && arg[0] == 35 && arg[1])
+		{
+			player = find_player(232, str_to_num(arg[1]));
+		}
+	}
+	if (!player)
+	{
+		console_print(id, 240, id, 252);
+		return 0;
+	}
+	if (flags & 1)
+	{
+		new var3;
+		if (get_user_flags(player, 0) & 1 && flags & 2)
+		{
+			new imname[32];
+			get_user_name(player, imname, 31);
+			console_print(id, 304, id, 316, imname);
+			return 0;
+		}
+	}
+	if (flags & 4)
+	{
+		if (!is_user_alive(player))
+		{
+			new imname[32];
+			get_user_name(player, imname, 31);
+			console_print(id, 360, id, 372, imname);
+			return 0;
+		}
+	}
+	if (flags & 8)
+	{
+		if (is_user_bot(player))
+		{
+			new imname[32];
+			get_user_name(player, imname, 31);
+			console_print(id, 432, id, 444, imname);
+			return 0;
+		}
+	}
+	return player;
+}
+
+get_configsdir(name[], len)
+{
+	return get_localinfo(500, name, len);
+}
+
+xs_vec_add(Float:in1[], Float:in2[], Float:out[])
+{
+	out[0] = floatadd(in1[0], in2[0]);
+	out[1] = floatadd(in1[1], in2[1]);
+	out[2] = floatadd(in1[2], in2[2]);
+	return 0;
+}
+
+xs_vec_sub(Float:in1[], Float:in2[], Float:out[])
+{
+	out[0] = floatsub(in1[0], in2[0]);
+	out[1] = floatsub(in1[1], in2[1]);
+	out[2] = floatsub(in1[2], in2[2]);
+	return 0;
+}
+
+xs_vec_mul_scalar(Float:vec[], Float:scalar, Float:out[])
+{
+	out[0] = floatmul(vec[0], scalar);
+	out[1] = floatmul(vec[1], scalar);
+	out[2] = floatmul(vec[2], scalar);
+	return 0;
+}
+
+fm_entity_set_origin(index, Float:origin[3])
+{
+	new Float:mins[3] = 0.0;
+	new Float:maxs[3] = 0.0;
+	pev(index, 131, mins);
+	pev(index, 132, maxs);
+	engfunc(5, index, mins, maxs);
+	return engfunc(26, index, origin);
+}
+
+fm_set_rendering(entity, fx, r, g, b, render, amount)
+{
+	new Float:RenderColor[3] = 0.0;
+	RenderColor[0] = float(r);
+	RenderColor[1] = float(g);
+	RenderColor[2] = float(b);
+	set_pev(entity, 78, fx);
+	set_pev(entity, 134, RenderColor);
+	set_pev(entity, 77, render);
+	set_pev(entity, 40, float(amount));
+	return 1;
+}
+
+fm_set_user_rendering(index, fx, r, g, b, render, amount)
+{
+	return fm_set_rendering(index, fx, r, g, b, render, amount);
+}
+
+fm_give_item(index, item[])
+{
+	new var1;
+	if (!equal(item, 564, 7) && !equal(item, 596, 5) && !equal(item, 620, 5) && !equal(item, 644, 10))
+	{
+		return 0;
+	}
+	new ent = engfunc(21, engfunc(43, item));
+	if (!pev_valid(ent))
+	{
+		return 0;
+	}
+	new Float:origin[3] = 0.0;
+	pev(index, 118, origin);
+	set_pev(ent, 118, origin);
+	set_pev(ent, 83, pev(ent, 83) | 1073741824);
+	dllfunc(1, ent);
+	new save = pev(ent, 70);
+	dllfunc(4, ent, index);
+	if (save != pev(ent, 70))
+	{
+		return ent;
+	}
+	engfunc(20, ent);
+	return -1;
+}
+
+public __fatal_ham_error(Ham:id, HamError:err, reason[])
+{
+	new func = get_func_id(688, -1);
+	new bool:fail = 1;
+	new var1;
+	if (func != -1 && callfunc_begin_i(func, -1) == 1)
+	{
+		callfunc_push_int(id);
+		callfunc_push_int(err);
+		callfunc_push_str(reason, 0);
+		if (callfunc_end() == 1)
+		{
+			fail = false;
+		}
+	}
+	if (fail)
+	{
+		set_fail_state(reason);
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin(6760, 728, 6828);
+	register_cvar(6852, 728, 4, 0);
+	register_dictionary(6920);
+	register_concmd(6988, 7040, 2048, 7088, -1);
+	register_concmd(7324, 7380, 2048, 7424, -1);
+	register_message(get_user_msgid(7580), 7616);
+	register_message(get_user_msgid(7660), 7708);
+	g_Ham_TakeDamage = RegisterHam(9, 7764, 7792, 0);
+	g_Ham_Killed_Player = RegisterHam(11, 7860, 7888, 0);
+	DisableHamForward(g_Ham_TakeDamage);
+	DisableHamForward(g_Ham_Killed_Player);
+	g_pEnabled = register_cvar(7940, 7984, 0, 0);
+	g_pAutoWatch = register_cvar(7992, 8044, 0, 0);
+	g_pVerboseMode = register_cvar(8052, 8112, 0, 0);
+	g_pDetectMethod = register_cvar(8120, 8184, 0, 0);
+	g_pDetectsNeeded = register_cvar(8192, 8260, 0, 0);
+	g_pAimAttempts = register_cvar(8268, 8328, 0, 0);
+	g_pPunishment = register_cvar(8336, 8392, 0, 0);
+	g_pBotColor = register_cvar(8400, 8448, 0, 0);
+	g_pBanTime = register_cvar(8472, 8516, 0, 0);
+	g_pAWAdmin = register_cvar(8524, 8572, 0, 0);
+	g_pCustomMod = register_cvar(8580, 8632, 0, 0);
+	g_pCheckInterval = register_cvar(8640, 8708, 0, 0);
+	g_pAWRRoundKills = register_cvar(8732, 8804, 0, 0);
+	g_pAWRKillDeath = register_cvar(8824, 8892, 0, 0);
+	g_pAWRHitsShots = register_cvar(8908, 8976, 0, 0);
+	g_pAWRHSKill = register_cvar(8992, 9048, 0, 0);
+	g_pAWRHeadBody = register_cvar(9064, 9128, 0, 0);
+	g_pAWRChestBody = register_cvar(9148, 9216, 0, 0);
+	g_pAWPKillDeath = register_cvar(9232, 9300, 0, 0);
+	g_pAWPHitsShots = register_cvar(9308, 9376, 0, 0);
+	g_pAWPHSKill = register_cvar(9384, 9440, 0, 0);
+	g_pAWPHeadBody = register_cvar(9448, 9512, 0, 0);
+	g_pAWPChestBody = register_cvar(9520, 9588, 0, 0);
+	g_pAWPRPointsNeeded = register_cvar(9596, 9680, 0, 0);
+	g_pAWMaxAutoWatches = register_cvar(9688, 9772, 0, 0);
+	g_pAWPointsNeeded = register_cvar(9780, 9856, 0, 0);
+	g_pAimNumNeeded = register_cvar(9864, 9928, 0, 0);
+	g_pBotStayTime = register_cvar(9936, 9996, 0, 0);
+	g_pForceShoot = register_cvar(10012, 10068, 0, 0);
+	g_pHPHead = register_cvar(10076, 10120, 0, 0);
+	g_pHPMidBody = register_cvar(10128, 10184, 0, 0);
+	g_pHPLegs = register_cvar(10192, 10236, 0, 0);
+	g_pHPHitsNeeded = register_cvar(10244, 10312, 0, 0);
+	g_MaxClients = get_maxplayers();
+	g_msgSayText = get_user_msgid(10320);
+	g_msgTeamInfo = get_user_msgid(10352);
+	return 0;
+}
+
+public plugin_cfg()
+{
+	new szConfigDir[64];
+	get_configsdir(szConfigDir, 63);
+	server_cmd(10388, szConfigDir);
+	server_exec();
+	return 0;
+}
+
+public client_putinserver(id)
+{
+	new var1;
+	if (!get_pcvar_num(g_pEnabled) || is_user_bot(id))
+	{
+		return 0;
+	}
+	new var2;
+	if (!g_bModSet && get_pcvar_num(g_pAutoWatch))
+	{
+		g_bModSet = true;
+		if (!get_pcvar_num(g_pCustomMod))
+		{
+			register_logevent(10500, 2, 10544);
+		}
+		set_task(get_pcvar_float(g_pCheckInterval), 10592, 0, 10644, 0, 10636, 0);
+	}
+	if (is_user_admin(id))
+	{
+		g_Admins = 1 << id & 31 | g_Admins;
+		g_bAdminNotify[id] = !!get_user_flags(id, 0) & 2048;
+		new var3;
+		if (g_PlayerToWatch && g_bAdminNotify[id] && get_pcvar_num(g_pVerboseMode) >= 2)
+		{
+			set_task(1088421888, 10648, id, 10644, 0, 10696, 0);
+		}
+	}
+	new var4;
+	if (get_pcvar_num(g_pPunishment) >= 5 && ShootsBlanks(id))
+	{
+		g_bPunished[id] = 1;
+		if (get_pcvar_num(g_pVerboseMode) == 3)
+		{
+			new szName[33];
+			get_user_name(id, szName, 32);
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_SHOOTBLANKSREAPPLIED", szName);
+		}
+		if (!g_FM_TraceLine)
+		{
+			g_FM_TraceLine = register_forward(30, 10848, 1);
+		}
+		g_NumShootsBlanks += 1;
+		g_bShootsBlanks[id] = 1;
+		fm_set_user_hitzones(id, 0, 0);
+	}
+	return 0;
+}
+
+public client_disconnect(id)
+{
+	new var1;
+	if (!get_pcvar_num(g_pEnabled) || is_user_bot(id))
+	{
+		return 0;
+	}
+	static szName[33];
+	g_Admins = ~1 << id & 31 & g_Admins;
+	g_bPunished[id] = 0;
+	g_AutoWatchPts[id] = 0;
+	g_AutoWatched[id] = 0;
+	g_PassedWatch[id] = 0;
+	g_Detections[id] = 0;
+	g_RoundKills[id] = 0;
+	g_HeadshotKills[id] = 0;
+	g_bAdminNotify[id] = 0;
+	fm_hitzones_reset(id);
+	new var2;
+	if (g_bShootsBlanks[id] && get_pcvar_num(g_pPunishment) >= 5)
+	{
+		g_NumShootsBlanks -= 1;
+		g_bShootsBlanks[id] = 0;
+		new var3;
+		if (!g_NumShootsBlanks && g_FM_TraceLine)
+		{
+			unregister_forward(30, g_FM_TraceLine, 0);
+			g_FM_TraceLine = 0;
+		}
+	}
+	if (g_PlayerToWatch == id)
+	{
+		if (get_pcvar_num(g_pVerboseMode) == 3)
+		{
+			get_user_name(id, 10900, 32);
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_DISCONNECT", szName);
+		}
+		DisableHamForward(g_Ham_Killed_Player);
+		g_PlayerToWatch = 0;
+	}
+	return 0;
+}
+
+public NotifyAdmin(id)
+{
+	new var1;
+	if (is_user_connected(id) && is_user_connected(g_PlayerToWatch))
+	{
+		static szName[33];
+		get_user_name(g_PlayerToWatch, 11140, 32);
+		PrintColorMsg(id, 0, "%L", -1, "AIMBOTDETECT_NOTIFYADMIN", szName);
+	}
+	return 0;
+}
+
+public fwRoundEnd()
+{
+	new iAdminVal = get_pcvar_num(g_pAWAdmin);
+	new var2;
+	if (!get_pcvar_num(g_pEnabled) || !get_pcvar_num(g_pAutoWatch) || (g_Admins && iAdminVal == 2))
+	{
+		return 1;
+	}
+	new iPlayers[32];
+	new iPlayer;
+	new iT;
+	new iCT;
+	new iNum;
+	new iTeam;
+	get_players(iPlayers, iT, 11384, 11392);
+	get_players(iPlayers, iCT, 11432, 11440);
+	get_players(iPlayers, iNum, 11452, 11460);
+	new i;
+	while (i < iNum)
+	{
+		iPlayer = iPlayers[i];
+		iTeam = get_pdata_int(iPlayer, 114, 5, 5);
+		new var4;
+		if (g_PlayerToWatch != iPlayer && !g_bPunished[iPlayer] && 1 <= iTeam <= 2 && (1 << iPlayer & 31 & g_Admins && iAdminVal == 1) && g_PassedWatch[iPlayer] < get_pcvar_num(g_pAWMaxAutoWatches))
+		{
+			new var5;
+			if (iTeam == 1)
+			{
+				var5 = iT;
+			}
+			else
+			{
+				var5 = iCT;
+			}
+			AutoWatchCheck(iPlayer, var5);
+			g_RoundKills[iPlayer] = 0;
+			g_HeadshotKills[iPlayer] = 0;
+		}
+		i++;
+	}
+	if (g_PlayerToWatch)
+	{
+		return 0;
+	}
+	new szName[33];
+	new iPassedWatch;
+	while (iPassedWatch <= 1)
+	{
+		new i;
+		while (i < iNum)
+		{
+			iPlayer = iPlayers[i];
+			new var6;
+			if (((!iPassedWatch && !g_PassedWatch[iPlayer]) || (iPassedWatch && g_PassedWatch[iPlayer])) && g_AutoWatchPts[iPlayer] >= get_pcvar_num(g_pAWPointsNeeded))
+			{
+				g_PlayerToWatch = iPlayer;
+				EnableHamForward(g_Ham_Killed_Player);
+				g_AimPasses = 0;
+				g_Detected = 0;
+				g_AutoWatched[g_PlayerToWatch]++;
+				g_AutoWatchPts[g_PlayerToWatch] = 0;
+				if (2 <= get_pcvar_num(g_pVerboseMode))
+				{
+					get_user_name(g_PlayerToWatch, szName, 32);
+					PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_AWNOWWATCHING", szName);
+				}
+				return 0;
+			}
+			i++;
+		}
+		iPassedWatch++;
+	}
+	return 0;
+}
+
+public AddBot()
+{
+	new szTeam[2];
+	new szName[6];
+	new szRejectReason[128];
+	formatex(szName, 5, 11584, random_num(10, 99));
+	g_BotID = engfunc(53, szName);
+	if (!g_BotID)
+	{
+		return 1;
+	}
+	engfunc(41, 768);
+	dllfunc(8, 768, szName, 11612, szRejectReason);
+	dllfunc(11, 768);
+	set_pev(g_BotID, 83, pev(g_BotID, 83) | 8192);
+	set_pev(g_BotID, 84, pev(g_BotID, 84) | 8192);
+	new var1;
+	if (get_pdata_int(g_PlayerToWatch, 114, 5, 5) == 1)
+	{
+		var1 = 2;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	num_to_str(var1, szTeam, 1);
+	engclient_cmd(g_BotID, 11652, szTeam, 11688);
+	engclient_cmd(g_BotID, 11692, 11732, 11688);
+	fm_user_spawn(g_BotID);
+	new szRGB[12];
+	new szRed[4];
+	new szGreen[4];
+	new szBlue[4];
+	new bool:bInvisible;
+	get_pcvar_string(g_pBotColor, szRGB, 11);
+	trim(szRGB);
+	parse(szRGB, szRed, 3, szGreen, 3, szBlue, 3);
+	bInvisible = equal(szRGB, 11740, 0);
+	new var2;
+	if (bInvisible)
+	{
+		var2 = 0;
+	}
+	else
+	{
+		var2 = 16;
+	}
+	new var3;
+	if (bInvisible)
+	{
+		var3 = 4;
+	}
+	else
+	{
+		var3 = 0;
+	}
+	fm_set_rendering(g_BotID, 0, clamp(str_to_num(szRed), 0, 255), clamp(str_to_num(szGreen), 0, 255), clamp(str_to_num(szBlue), 0, 255), var3, var2);
+	message_begin(2, g_msgTeamInfo, 11764, 0);
+	write_byte(g_BotID);
+	write_string(11776);
+	message_end();
+	EnableHamForward(g_Ham_TakeDamage);
+	return 1;
+}
+
+public RemoveBot()
+{
+	if (!g_BotID)
+	{
+		return 1;
+	}
+	new iDetectMethod = get_pcvar_num(g_pDetectMethod);
+	new Float:fTotalDetectPoints = 0.0;
+	remove_task(8581, 0);
+	remove_task(1218, 0);
+	new var1;
+	if (!g_HitPoints && !g_AimPoints)
+	{
+		g_AimPasses += 1;
+		if (get_pcvar_num(g_pAimAttempts) == g_AimPasses)
+		{
+			new szName[33];
+			g_PassedWatch[g_PlayerToWatch]++;
+			get_user_name(g_PlayerToWatch, szName, 32);
+			if (2 <= get_pcvar_num(g_pVerboseMode))
+			{
+				PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_PASSEDALL", szName);
+				new var2;
+				if (g_PassedWatch[g_PlayerToWatch] >= get_pcvar_num(g_pAWMaxAutoWatches) && get_pcvar_num(g_pAutoWatch))
+				{
+					PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_NOAUTOWATCH", szName, g_PassedWatch[g_PlayerToWatch]);
+				}
+			}
+			DisableHamForward(g_Ham_Killed_Player);
+			g_PlayerToWatch = 0;
+		}
+	}
+	else
+	{
+		if (iDetectMethod == 2)
+		{
+			fTotalDetectPoints = floatdiv(float(g_HitPoints), get_pcvar_float(g_pHPHitsNeeded));
+			fTotalDetectPoints = floatadd(fTotalDetectPoints, floatdiv(float(g_AimPoints), get_pcvar_float(g_pAimNumNeeded)));
+			if (fTotalDetectPoints >= 1.0)
+			{
+				AddDetection();
+			}
+		}
+	}
+	DisableHamForward(g_Ham_TakeDamage);
+	fm_set_user_rendering(g_BotID, 0, 255, 255, 255, 0, 16);
+	server_cmd(12032, get_user_userid(g_BotID));
+	g_BotID = 0;
+	return 1;
+}
+
+public ShowStatus(id, level, cid)
+{
+	if (!cmd_access(id, level, cid, 1, false))
+	{
+		return 1;
+	}
+	if (!get_pcvar_num(g_pEnabled))
+	{
+		console_print(id, 12068, -1, 12152);
+		return 1;
+	}
+	static szMOTD[106];
+	new iPlayers[32];
+	new iPlayersNum;
+	new iPlayer;
+	new szName[33];
+	if (file_exists(12664))
+	{
+		delete_file(12720);
+	}
+	write_file(12776, 12832, -1);
+	formatex(12240, 105, 13020, 13256, 13264, 13284, 13336, 13380);
+	write_file(13416, 12240, -1);
+	get_players(iPlayers, iPlayersNum, 13472, 11460);
+	new i;
+	while (i < iPlayersNum)
+	{
+		iPlayer = iPlayers[i];
+		get_user_name(iPlayer, szName, 32);
+		new var1;
+		if (g_bPunished[iPlayer])
+		{
+			var1 = 13744;
+		}
+		else
+		{
+			var1 = 13760;
+		}
+		formatex(12240, 105, 13480, i + 1, szName, g_AutoWatched[iPlayer], g_Detections[iPlayer], var1);
+		write_file(13772, 12240, -1);
+		i++;
+	}
+	formatex(12240, 105, 13828);
+	write_file(13940, 12240, -1);
+	show_motd(id, 13996, 14052);
+	return 1;
+}
+
+public WatchPlayer(id, level, cid)
+{
+	if (!cmd_access(id, level, cid, 1, false))
+	{
+		return 1;
+	}
+	if (!get_pcvar_num(g_pEnabled))
+	{
+		console_print(id, 14148, -1, 14232);
+		return 1;
+	}
+	new szName[33];
+	new iArgs = read_argc();
+	if (iArgs == 1)
+	{
+		if (g_PlayerToWatch)
+		{
+			get_user_name(g_PlayerToWatch, szName, 32);
+			console_print(id, 14320, -1, 14404, szName);
+		}
+		else
+		{
+			console_print(id, 14508, -1, 14592);
+		}
+		return 1;
+	}
+	new var1;
+	if (iArgs != 1 && read_argc() != 3)
+	{
+		console_print(id, 14700, -1, 14784);
+		return 1;
+	}
+	new szVal[2];
+	read_argv(1, szName, 32);
+	read_argv(2, szVal, 1);
+	new iPlayer = cmd_target(id, szName, 8);
+	new var2;
+	if (!iPlayer || !is_user_connected(iPlayer))
+	{
+		return 1;
+	}
+	get_user_name(iPlayer, szName, 32);
+	if (szVal[0] == 49)
+	{
+		if (g_PlayerToWatch)
+		{
+			if (g_PlayerToWatch == iPlayer)
+			{
+				console_print(id, 14884, -1, 14968, szName);
+				return 1;
+			}
+			new szWatchName[33];
+			get_user_name(g_PlayerToWatch, szWatchName, 32);
+			console_print(id, 15084, -1, 15168, szWatchName);
+			if (2 <= get_pcvar_num(g_pVerboseMode))
+			{
+				PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_MONITORINGSTOPPED", szWatchName);
+			}
+		}
+		console_print(id, 15428, -1, 15512, szName);
+		if (2 <= get_pcvar_num(g_pVerboseMode))
+		{
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_NOWMONITORING", szName);
+		}
+		g_PlayerToWatch = iPlayer;
+		EnableHamForward(g_Ham_Killed_Player);
+	}
+	else
+	{
+		if (szVal[0] == 48)
+		{
+			if (!g_PlayerToWatch)
+			{
+				console_print(id, 15740, -1, 15824);
+				return 1;
+			}
+			if (g_PlayerToWatch != iPlayer)
+			{
+				console_print(id, 15932, -1, 16016, szName);
+				return 1;
+			}
+			console_print(id, 16116, -1, 16200, szName);
+			if (2 <= get_pcvar_num(g_pVerboseMode))
+			{
+				PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_NOLONGERMONITOR", szName);
+			}
+			DisableHamForward(g_Ham_Killed_Player);
+			g_PlayerToWatch = 0;
+		}
+	}
+	g_RoundKills[iPlayer] = 0;
+	g_HeadshotKills[iPlayer] = 0;
+	g_AutoWatchPts[iPlayer] = 0;
+	g_Detected = 0;
+	g_AimPasses = 0;
+	return 1;
+}
+
+public AddDetection()
+{
+	new szName[33];
+	get_user_name(g_PlayerToWatch, szName, 32);
+	g_HitPoints = -100;
+	g_Detected += 1;
+	g_Detections[g_PlayerToWatch]++;
+	if (get_pcvar_num(g_pDetectsNeeded) <= g_Detected)
+	{
+		if (get_pcvar_num(g_pVerboseMode))
+		{
+			PrintColorMsg(0, 1, "%L", -1, "AIMBOTDETECT_ISUSINGAIMBOT", szName);
+		}
+		Punish(g_PlayerToWatch);
+		DisableHamForward(g_Ham_Killed_Player);
+		g_PlayerToWatch = 0;
+	}
+	else
+	{
+		if (get_pcvar_num(g_pVerboseMode))
+		{
+			PrintColorMsg(0, 1, "%L", -1, "AIMBOTDETECT_PLR_DETECTED", szName);
+			new var1;
+			if (get_pcvar_num(g_pDetectsNeeded) - g_Detected > 1)
+			{
+				var1 = 16804;
+			}
+			else
+			{
+				var1 = 16812;
+			}
+			PrintColorMsg(0, 1, "%L", -1, "AIMBOTDETECT_MOREDETECTIONS", get_pcvar_num(g_pDetectsNeeded) - g_Detected, var1);
+		}
+	}
+	return 0;
+}
+
+public AutoWatchCheck(id, iNumEnemies)
+{
+	new iPoints;
+	new iBodyHits;
+	new iStats[8];
+	new iBHits[8];
+	new iKills;
+	new iDeaths;
+	new i;
+	get_user_rstats(id, iStats, iBHits);
+	iKills = get_user_frags(id);
+	iDeaths = get_user_deaths(id);
+	if (iKills >= 10)
+	{
+		if (iDeaths)
+		{
+			if (floatdiv(float(iKills), float(iDeaths)) >= get_pcvar_float(g_pAWRKillDeath))
+			{
+				iPoints = get_pcvar_num(g_pAWPKillDeath) + iPoints;
+			}
+		}
+		iPoints = get_pcvar_num(g_pAWPKillDeath) + iPoints;
+	}
+	new Float:fRoundKills = 0.0;
+	if (iNumEnemies <= 2)
+	{
+		fRoundKills = 1.0;
+	}
+	else
+	{
+		new var1;
+		if (iNumEnemies > 2 && iNumEnemies <= 4)
+		{
+			fRoundKills = 0.5;
+		}
+		fRoundKills = get_pcvar_float(g_pAWRRoundKills);
+	}
+	if (float(g_RoundKills[id]) >= floatmul(float(iNumEnemies), fRoundKills))
+	{
+		if (floatdiv(float(iStats[5]), float(iStats[4])) >= get_pcvar_float(g_pAWRHitsShots))
+		{
+			iPoints = get_pcvar_num(g_pAWPHitsShots) + iPoints;
+		}
+		if (g_HeadshotKills[id])
+		{
+			if (floatdiv(float(g_HeadshotKills[id]), float(g_RoundKills[id])) >= get_pcvar_float(g_pAWRHSKill))
+			{
+				iPoints = get_pcvar_num(g_pAWPHSKill) + iPoints;
+			}
+		}
+		i = 0;
+		while (i < 8)
+		{
+			iBodyHits = iBHits[i][iBodyHits];
+			i++;
+		}
+		if (iBodyHits >= 5)
+		{
+			if (iBHits[1])
+			{
+				if (floatdiv(float(iBHits[1]), float(iBodyHits)) >= get_pcvar_float(g_pAWRHeadBody))
+				{
+					iPoints = get_pcvar_num(g_pAWPHeadBody) + iPoints;
+				}
+			}
+			if (iBHits[2])
+			{
+				if (floatdiv(float(iBHits[2]), float(iBodyHits)) >= get_pcvar_float(g_pAWRChestBody))
+				{
+					iPoints = get_pcvar_num(g_pAWPChestBody) + iPoints;
+				}
+			}
+		}
+	}
+	if (get_pcvar_num(g_pAWPRPointsNeeded) <= iPoints)
+	{
+		g_AutoWatchPts[id]++;
+	}
+	return 1;
+}
+
+public fw_HamTakeDamage(victim, inflictor, attacker, Float:fDamage, bitDamage)
+{
+	new iDetectMethod = get_pcvar_num(g_pDetectMethod);
+	new var1;
+	if (!1 <= g_MaxClients >= attacker || !g_BotID || g_BotID == victim)
+	{
+		return 1;
+	}
+	new var2;
+	if (iDetectMethod == 1 || g_PlayerToWatch == attacker || !bitDamage & 2)
+	{
+		return 4;
+	}
+	new iHitzone = get_pdata_int(g_BotID, 75, 5, 5);
+	new iGun = get_user_weapon(g_PlayerToWatch, 0, 0);
+	switch (iGun)
+	{
+		case 1, 3, 10, 11, 13, 16, 17, 18, 24, 26:
+		{
+			g_HitPoints = get_pcvar_num(g_pHPHitsNeeded) + g_HitPoints;
+		}
+		default:
+		{
+			switch (iHitzone)
+			{
+				case 1:
+				{
+					g_HitPoints = get_pcvar_num(g_pHPHead) + g_HitPoints;
+				}
+				case 2, 3, 4, 5:
+				{
+					g_HitPoints = get_pcvar_num(g_pHPMidBody) + g_HitPoints;
+				}
+				case 6, 7:
+				{
+					g_HitPoints = get_pcvar_num(g_pHPLegs) + g_HitPoints;
+				}
+				default:
+				{
+				}
+			}
+		}
+	}
+	if (iDetectMethod == 2)
+	{
+		return 1;
+	}
+	g_AimPasses = 0;
+	if (get_pcvar_num(g_pHPHitsNeeded) <= g_HitPoints)
+	{
+		AddDetection();
+	}
+	return 4;
+}
+
+public fw_HamKilled(victim, killer, shouldgib)
+{
+	new var1;
+	if (!g_PlayerToWatch || g_PlayerToWatch == killer || g_PlayerToWatch != victim)
+	{
+		return 1;
+	}
+	new var2;
+	if (g_BotID || !get_pdata_int(victim, 76, 5, 5) & 2 || get_user_weapon(killer, 0, 0) == 29)
+	{
+		return 1;
+	}
+	if (g_MaxClients == get_playersnum(0))
+	{
+		if (get_pcvar_num(g_pVerboseMode) == 3)
+		{
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_SERVERFULL");
+		}
+		return 1;
+	}
+	new Float:fHeight = Calculate_Z(g_PlayerToWatch, victim, 100.0, 300.0, 3000.0);
+	if (0.0 == fHeight)
+	{
+		if (get_pcvar_num(g_pVerboseMode))
+		{
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_VICTIMLOCATION");
+		}
+		return 1;
+	}
+	new Float:fVictimOrigin[3] = 0.0;
+	new Float:fWatchedOrigin[3] = 0.0;
+	new iDetectMethod;
+	pev(victim, 118, fVictimOrigin);
+	pev(g_PlayerToWatch, 118, fWatchedOrigin);
+	fVictimOrigin[2] = fHeight;
+	new Float:fAngle = GetAngleOrigins(fWatchedOrigin, fVictimOrigin);
+	new var3;
+	if (fAngle > 50.0 || fAngle < 5.0)
+	{
+		if (get_pcvar_num(g_pVerboseMode) == 3)
+		{
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_VICTIMLOCATION");
+		}
+		return 1;
+	}
+	AddBot();
+	if (!g_BotID)
+	{
+		if (get_pcvar_num(g_pVerboseMode) == 3)
+		{
+			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_ERRORBOT");
+		}
+		return 1;
+	}
+	g_HitPoints = 0;
+	g_AimPoints = 0;
+	g_AimChecks = 0;
+	fm_entity_set_origin(g_BotID, fVictimOrigin);
+	new var4;
+	if (random(2))
+	{
+		var4[0] = 17272;
+	}
+	else
+	{
+		var4[0] = 17328;
+	}
+	fm_give_item(g_BotID, var4);
+	iDetectMethod = get_pcvar_num(g_pDetectMethod);
+	new var5;
+	if (iDetectMethod && iDetectMethod == 2)
+	{
+		if (get_pcvar_num(g_pForceShoot))
+		{
+			new iWeaponID;
+			new iClip;
+			new rparam[3];
+			iWeaponID = get_user_weapon(g_PlayerToWatch, iClip, 0);
+			rparam[0] = g_PlayerToWatch;
+			rparam[1] = iWeaponID;
+			rparam[2] = MaxClipAmmo[iWeaponID];
+			set_task(1036831949, 17376, 0, rparam, 3, 10696, 0);
+			set_task(floatdiv(get_pcvar_float(g_pBotStayTime), 1077936128), 17420, 8581, 10644, 0, 10696, 0);
+			rparam[2] = iClip;
+			set_task(floatadd(1036831949, get_pcvar_float(g_pBotStayTime)), 17464, 0, rparam, 3, 10696, 0);
+		}
+		set_task(get_pcvar_float(g_pBotStayTime), 17508, 1812, 10644, 0, 10696, 0);
+	}
+	new var6;
+	if (iDetectMethod == 1 || iDetectMethod == 2)
+	{
+		set_task(1048576000, 17548, 1218, 10644, 0, 17596, get_pcvar_num(g_pAimNumNeeded));
+	}
+	return 1;
+}
+
+public Punish(id)
+{
+	new szName[33];
+	new szAuthID[35];
+	new szIP[16];
+	new szMap[21];
+	get_user_name(id, szName, 32);
+	get_user_authid(id, szAuthID, 34);
+	get_user_ip(id, szIP, 15, 1);
+	get_mapname(szMap, 20);
+	log_to_file(17604, 17688, szName, szAuthID, szIP, szMap);
+	g_bPunished[id] = 1;
+	switch (get_pcvar_num(g_pPunishment))
+	{
+		case 1:
+		{
+			KickPlayer(id, 17864, 17936, 18092);
+		}
+		case 2:
+		{
+			server_cmd(18176, get_user_userid(id), get_pcvar_num(g_pBanTime));
+		}
+		case 3:
+		{
+			server_cmd(18308, get_user_userid(id), get_pcvar_num(g_pBanTime));
+		}
+		case 4:
+		{
+			server_cmd(18448, get_pcvar_num(g_pBanTime), get_user_userid(id));
+		}
+		case 5, 6:
+		{
+			if (!g_FM_TraceLine)
+			{
+				g_FM_TraceLine = register_forward(30, 18580, 1);
+			}
+			g_NumShootsBlanks += 1;
+			g_bShootsBlanks[id] = 1;
+			fm_set_user_hitzones(id, 0, 0);
+			if (!ShootsBlanks(id))
+			{
+				AddShootBlanks(id);
+			}
+			if (get_pcvar_num(g_pVerboseMode) == 3)
+			{
+				PrintColorMsg(0, 1, "%L", -1, "AIMBOTDETECT_NOWSHOOTBLANKS", szName);
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public CheckAiming()
+{
+	new iDetectMethod = get_pcvar_num(g_pDetectMethod);
+	g_AimChecks += 1;
+	new var1;
+	if (g_PlayerToWatch && g_BotID)
+	{
+		if (fm_is_aiming_at_player(g_PlayerToWatch, g_BotID))
+		{
+			g_AimPoints += 1;
+			g_AimPasses = 0;
+			if (iDetectMethod == 2)
+			{
+				return 1;
+			}
+			if (get_pcvar_num(g_pAimNumNeeded) == g_AimPoints)
+			{
+				AddDetection();
+			}
+		}
+	}
+	new var2;
+	if (iDetectMethod != 2 && g_AimChecks >= get_pcvar_num(g_pAimNumNeeded))
+	{
+		RemoveBot();
+	}
+	return 1;
+}
+
+public ForceShoot()
+{
+	new var1;
+	if (g_BotID && g_PlayerToWatch && is_user_connected(g_PlayerToWatch))
+	{
+		client_cmd(g_PlayerToWatch, 18756);
+	}
+	return 0;
+}
+
+public ReloadClip(param[3])
+{
+	new id = param[0];
+	new iWeaponID = param[1];
+	new szWeapon[32];
+	new iWeaponIdx = -1;
+	new var1;
+	if (!iWeaponID || iWeaponID == 6 || iWeaponID == 29)
+	{
+		return 1;
+	}
+	get_weaponname(iWeaponID, szWeapon, 31);
+	while ((iWeaponIdx = engfunc(12, iWeaponIdx, 19484, szWeapon)))
+	{
+		if (pev(iWeaponIdx, 18) == id)
+		{
+			set_pdata_int(iWeaponIdx, 51, param[2], 4, 5);
+			return 1;
+		}
+	}
+	return 1;
+}
+
+public fwDeathMsg(msg_id, msg_dest, msg_entity)
+{
+	if (!get_pcvar_num(g_pEnabled))
+	{
+		return 0;
+	}
+	new var1;
+	if (g_BotID && g_BotID == get_msg_arg_int(2))
+	{
+		return 1;
+	}
+	new iKiller = get_msg_arg_int(1);
+	new var2;
+	if (!get_pcvar_num(g_pAutoWatch) || is_user_bot(iKiller))
+	{
+		return 0;
+	}
+	g_RoundKills[iKiller]++;
+	new var3 = g_HeadshotKills[iKiller];
+	var3 = var3[get_msg_arg_int(3)];
+	return 0;
+}
+
+public fwStatusValue()
+{
+	new var1;
+	if (!get_pcvar_num(g_pEnabled) || !g_BotID)
+	{
+		return 0;
+	}
+	new var2;
+	if (g_BotID == get_msg_arg_int(2) && get_msg_arg_int(1) == 2)
+	{
+		set_msg_arg_int(1, get_msg_argtype(1), 1);
+		set_msg_arg_int(2, get_msg_argtype(2), 0);
+	}
+	return 0;
+}
+
+public Float:Calculate_Z(killer, victim, Float:fMinHeight, Float:fMaxHeight, Float:fMaxDistance)
+{
+	new Float:fVictimOrigin[3] = 0.0;
+	new Float:fKillerOrigin[3] = 0.0;
+	new Float:fVictimZ = 0.0;
+	pev(victim, 118, fVictimOrigin);
+	pev(killer, 118, fKillerOrigin);
+	fVictimZ = fVictimOrigin[2];
+	fKillerOrigin[2] = 0.0;
+	fVictimOrigin[2] = 0.0;
+	new Float:fDistance = get_distance_f(fKillerOrigin, fVictimOrigin);
+	fDistance = floatclamp(fDistance, 1.0, fMaxDistance);
+	fMaxHeight = floatsub(fMaxHeight, fMinHeight);
+	new Float:fSpawnHeight = floatadd(fMinHeight, floatmul(floatdiv(fDistance, fMaxDistance), fMaxHeight));
+	fVictimOrigin[2] = floatadd(fVictimZ, fSpawnHeight);
+	new var1;
+	if (engfunc(40, fVictimOrigin) == -2)
+	{
+		var1 = 0.0;
+	}
+	else
+	{
+		var1 = fVictimOrigin[2];
+	}
+	return var1;
+}
+
+public Float:GetAngleOrigins(Float:fOrigin1[3], Float:fOrigin2[3])
+{
+	new Float:fVector[3] = 0.0;
+	new Float:fAngle[3] = 0.0;
+	xs_vec_sub(fOrigin2, fOrigin1, fVector);
+	vector_to_angle(fVector, fAngle);
+	new var1;
+	if (fAngle[0] > 90.0)
+	{
+		var1 = -floatsub(1135869952, fAngle[0]);
+	}
+	else
+	{
+		var1 = fAngle[0];
+	}
+	return var1;
+}
+
+public KickPlayer(target, szReason[], szLine2[], szLine3[])
+{
+	static msg_content[80];
+	formatex(19524, 79, 19844, szReason, szLine2, szLine3);
+	message_begin(8, 2, 11764, target);
+	write_string(19524);
+	message_end();
+	return 0;
+}
+
+public PrintColorMsg(id, iColor, szMsg[])
+{
+	static iLen;
+	static szMessage[256];
+	new var1;
+	if (iColor == 1)
+	{
+		var1 = 20908;
+	}
+	else
+	{
+		var1 = 20944;
+	}
+	iLen = formatex(19880, 255, var1, 21020);
+	vformat(szMessage[iLen], 255 - iLen, szMsg, 4);
+	if (id)
+	{
+		emessage_begin(8, g_msgSayText, 21084, id);
+		ewrite_byte(id);
+		ewrite_string(19880);
+		emessage_end();
+	}
+	else
+	{
+		static iPlayer;
+		static iPlayersNum;
+		static iPlayers[32];
+		get_players(21096, 21224, 21232, 11460);
+		new i;
+		while (i < iPlayersNum)
+		{
+			iPlayer = iPlayers[i];
+			if (g_bAdminNotify[iPlayer])
+			{
+				emessage_begin(8, g_msgSayText, 21084, iPlayer);
+				ewrite_byte(iPlayer);
+				ewrite_string(19880);
+				emessage_end();
+			}
+			i++;
+		}
+	}
+	return 1;
+}
+
+public ShootsBlanks(id)
+{
+	new szBlanksFile[64];
+	new szItem[35];
+	new szAuthID[35];
+	new iItems;
+	new iLen;
+	switch (get_pcvar_num(g_pPunishment))
+	{
+		case 5:
+		{
+			get_user_authid(id, szAuthID, 34);
+		}
+		case 6:
+		{
+			get_user_ip(id, szAuthID, 34, 1);
+		}
+		default:
+		{
+		}
+	}
+	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, 21240);
+	iItems = file_size(szBlanksFile, 1);
+	if (iItems != -1)
+	{
+		if (file_size(szBlanksFile, 2) == 1)
+		{
+			iItems--;
+		}
+		if (!iItems)
+		{
+			return 0;
+		}
+		new i;
+		while (i < iItems)
+		{
+			read_file(szBlanksFile, i, szItem, 34, iLen);
+			if (equal(szAuthID, szItem, iLen))
+			{
+				return 1;
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+public AddShootBlanks(id)
+{
+	new szBlanksFile[64];
+	new szAuthID[35];
+	switch (get_pcvar_num(g_pPunishment))
+	{
+		case 5:
+		{
+			get_user_authid(id, szAuthID, 34);
+		}
+		case 6:
+		{
+			get_user_ip(id, szAuthID, 34, 1);
+		}
+		default:
+		{
+		}
+	}
+	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, 21324);
+	write_file(szBlanksFile, szAuthID, -1);
+	return 0;
+}
+
+public fm_is_aiming_at_player(index, index2)
+{
+	new Float:start[3] = 0.0;
+	new Float:view_ofs[3] = 0.0;
+	pev(index, 118, start);
+	pev(index, 135, view_ofs);
+	xs_vec_add(start, view_ofs, start);
+	new Float:dest[3] = 0.0;
+	pev(index, 126, dest);
+	engfunc(17, dest);
+	global_get(28, dest);
+	xs_vec_mul_scalar(dest, 9999.0, dest);
+	xs_vec_add(start, dest, dest);
+	engfunc(29, start, dest, 0, index, 0);
+	return index2 == get_tr2(0, 8);
+}
+
+public fw_TraceLine(Float:v1[3], Float:v2[3], NoMonsters, shooter, ptr)
+{
+	if (!1 <= g_MaxClients >= shooter)
+	{
+		return 1;
+	}
+	static iPlayerHit;
+	iPlayerHit = get_tr2(ptr, 8);
+	if (!1 <= g_MaxClients >= iPlayerHit)
+	{
+		return 1;
+	}
+	static iHitzone;
+	iHitzone = get_tr2(ptr, 9);
+	if (!1 << iHitzone & g_BodyHits[shooter][iPlayerHit])
+	{
+		set_tr2(ptr, 4, 1065353216);
+	}
+	return 1;
+}
+
+public fm_set_user_hitzones(index, target, body)
+{
+	new var1;
+	if (!index && !target)
+	{
+		new i = 1;
+		while (i <= g_MaxClients)
+		{
+			new j = 1;
+			while (j <= g_MaxClients)
+			{
+				g_BodyHits[i][j] = body;
+				j++;
+			}
+			i++;
+		}
+	}
+	else
+	{
+		new var2;
+		if (!index && target)
+		{
+			new i = 1;
+			while (i <= g_MaxClients)
+			{
+				g_BodyHits[i][target] = body;
+				i++;
+			}
+		}
+		new var3;
+		if (index && !target)
+		{
+			new i = 1;
+			while (i <= g_MaxClients)
+			{
+				g_BodyHits[index][i] = body;
+				i++;
+			}
+		}
+		new var4;
+		if (index && target)
+		{
+			g_BodyHits[index][target] = body;
+		}
+	}
+	return 0;
+}
+
+public fm_hitzones_reset(index)
+{
+	new i = 1;
+	while (i <= g_MaxClients)
+	{
+		g_BodyHits[index][i] = 255;
+		i++;
+	}
+	return 0;
+}
+
+public fm_user_spawn(id)
+{
+	set_pev(id, 80, 3);
+	dllfunc(1, id);
+	set_pev(id, 100, 0);
+	return 0;
+}
+

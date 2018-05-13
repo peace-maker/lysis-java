@@ -1,0 +1,274 @@
+new Float:_pg_ftmp;
+new _human;
+new _alive;
+new g_max_players;
+new g_msg_saytext;
+new Float:g_t_origin[3];
+new Float:g_b_origin[3];
+new bool:g_valid_origin;
+new bool:g_ml;
+Float:operator-(Float:)(Float:oper)
+{
+	return oper ^ -2147483648;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return floatmul(oper1, float(oper2));
+}
+
+Float:operator+(Float:,_:)(Float:oper1, oper2)
+{
+	return floatadd(oper1, float(oper2));
+}
+
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return floatcmp(oper1, oper2) != 0;
+}
+
+bool:operator<(Float:,_:)(Float:oper1, oper2)
+{
+	return 0 > floatcmp(oper1, float(oper2));
+}
+
+get_datadir(name[], len)
+{
+	return get_localinfo(0, name, len);
+}
+
+public __fatal_ham_error(Ham:id, HamError:err, reason[])
+{
+	new func = get_func_id(52, -1);
+	new bool:fail = 1;
+	new var1;
+	if (func != -1 && callfunc_begin_i(func, -1) == 1)
+	{
+		callfunc_push_int(id);
+		callfunc_push_int(err);
+		callfunc_push_str(reason, 0);
+		if (callfunc_end() == 1)
+		{
+			fail = false;
+		}
+	}
+	if (fail)
+	{
+		set_fail_state(reason);
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin(144, 236, 252);
+	RegisterHam(43, 292, 340, 1);
+	RegisterHam(0, 396, 424, 1);
+	RegisterHam(11, 476, 504, 1);
+	g_max_players = get_maxplayers();
+	g_msg_saytext = get_user_msgid(560);
+	new path[128];
+	get_datadir(path, 127);
+	add(path, 127, 592, 0);
+	if (file_exists(path))
+	{
+		register_dictionary(724);
+		g_ml = true;
+	}
+	return 0;
+}
+
+public button_pushed(ent, idcaller, idactivator, use_type, Float:value)
+{
+	new var1;
+	if (!1 <= g_max_players >= idcaller || !1 << idcaller & _alive || !pev_valid(ent) || cs_get_user_team(idcaller, 0) == 1)
+	{
+		return 0;
+	}
+	new Float:ftmp[3] = 0.0;
+	pev(ent, 131, 124);
+	pev(ent, 132, ftmp);
+	new var2 = g_b_origin;
+	var2[0] = floatadd(var2[0], ftmp[0]);
+	new var3 = g_b_origin[1];
+	var3 = floatadd(var3, ftmp[1]);
+	new var4 = g_b_origin[2];
+	var4 = floatadd(var4, ftmp[2]);
+	new var5 = g_b_origin;
+	var5[0] = floatmul(1056964608, var5[0]);
+	new var6 = g_b_origin[1];
+	var6 = floatmul(1056964608, var6);
+	new var7 = g_b_origin[2];
+	var7 = floatmul(1056964608, var7);
+	pev(idcaller, 118, 112);
+	if (pev(idcaller, 84) & 16384)
+	{
+		g_t_origin[2] += 19;
+	}
+	g_valid_origin = true;
+	return 0;
+}
+
+public Player_Killed(id)
+{
+	_alive = ~1 << id & _alive;
+	return 0;
+}
+
+public Player_Spawn(id)
+{
+	if (!is_user_alive(id))
+	{
+		return 0;
+	}
+	_alive = 1 << id | _alive;
+	if (cs_get_user_team(id, 0) != 1)
+	{
+		return 0;
+	}
+	g_valid_origin = false;
+	return 0;
+}
+
+public client_putinserver(id)
+{
+	new var1;
+	if (is_user_bot(id) || is_user_hltv(id))
+	{
+		return 0;
+	}
+	_human = 1 << id | _human;
+	return 0;
+}
+
+public announce_t_change(newid, oldid)
+{
+	new msg[160];
+	new otname[32];
+	new ntname[32];
+	get_user_name(oldid, otname, 31);
+	get_user_name(newid, ntname, 31);
+	if (!g_ml)
+	{
+		formatex(msg, 159, 832, otname, ntname);
+		message_begin(2, g_msg_saytext, 1092, 0);
+		write_byte(oldid);
+		write_string(msg);
+		message_end();
+		return 0;
+	}
+	new i = 1;
+	while (i <= g_max_players)
+	{
+		if (1 << i & _human)
+		{
+			formatex(msg, 159, 1104, i, 1116, otname, ntname);
+			message_begin(1, g_msg_saytext, 1092, i);
+			write_byte(oldid);
+			write_string(msg);
+			message_end();
+		}
+		i++;
+	}
+	return 0;
+}
+
+public client_disconnect(id)
+{
+	_human = ~1 << id & _human;
+	_alive = ~1 << id & _alive;
+	new players[32];
+	new pnum;
+	new i = 1;
+	while (i <= g_max_players)
+	{
+		if (1 << i & _human)
+		{
+			if (cs_get_user_team(i, 0) == 1)
+			{
+				return 0;
+			}
+			pnum++;
+			players[pnum] = i;
+		}
+		i++;
+	}
+	if (0 >= pnum)
+	{
+		return 0;
+	}
+	new new_terr = players[random(pnum)];
+	cs_set_user_team(new_terr, 1, 0);
+	announce_t_change(new_terr, id);
+	if (!g_valid_origin)
+	{
+		ExecuteHamB(98, new_terr);
+		return 0;
+	}
+	ExecuteHamB(98, new_terr);
+	g_valid_origin = true;
+	new param[2];
+	param[0] = new_terr;
+	param[1] = 10;
+	restore_origin(param);
+	return 0;
+}
+
+public restore_origin(param[])
+{
+	new var1;
+	if (!g_valid_origin || var3 < 0 || !1 << param[0] & _alive)
+	{
+		return 0;
+	}
+	new tr;
+	new Float:ftmp[3] = 0.0;
+	ftmp[0] = g_t_origin[0];
+	ftmp[1] = g_t_origin[1];
+	ftmp[2] = g_t_origin[2];
+	new i;
+	while (i < 100)
+	{
+		engfunc(32, ftmp, ftmp, 0, 1, 0, tr);
+		new var2;
+		if (get_tr2(tr, 1) || get_tr2(tr, 0))
+		{
+			ftmp[0] = floatadd(ftmp[0], random_float(-1054867456, 1092616192));
+			new var4 = ftmp[1];
+			var4 = floatadd(var4, random_float(-1054867456, 1092616192));
+			new var5 = ftmp[2];
+			var5 = floatadd(var5, random_float(-1054867456, 1092616192));
+			i++;
+		}
+		engfunc(29, 112, ftmp, 0, 0, tr);
+		new Float:fraction = 0.0;
+		get_tr2(tr, 4, fraction);
+		if (!(1.0 != fraction))
+		{
+			g_t_origin[0] = ftmp[0];
+			g_t_origin[1] = ftmp[1];
+			g_t_origin[2] = ftmp[2];
+			set_pev(param[0], 118, 112);
+			ftmp[0] = -g_t_origin[0];
+			ftmp[1] = -g_t_origin[1];
+			ftmp[2] = -g_t_origin[2];
+			ftmp[0] = floatadd(ftmp[0], g_b_origin[0]);
+			new var6 = ftmp[1];
+			var6 = floatadd(var6, g_b_origin[1]);
+			new var7 = ftmp[2];
+			var7 = floatadd(var7, g_b_origin[2]);
+			_pg_ftmp = floatsqroot(floatadd(floatmul(ftmp[0], ftmp[0]), floatmul(ftmp[1], ftmp[1])));
+			ftmp[1] = floatacos(floatdiv(ftmp[0], _pg_ftmp), 1) * 1 - ftmp[1] < 0 * 2;
+			ftmp[0] = -floatatan(floatdiv(ftmp[2], _pg_ftmp), 1);
+			ftmp[2] = 0.0;
+			set_pev(param[0], 124, ftmp);
+			set_pev(param[0], 65, 1);
+			return 0;
+		}
+		set_task(1036831949, 1160, param[0] + 457547, param, 2, 1220, 0);
+		return 0;
+	}
+	set_task(1036831949, 1160, param[0] + 457547, param, 2, 1220, 0);
+	return 0;
+}
+

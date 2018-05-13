@@ -41,7 +41,7 @@ public class LysisTest {
 				if (file.isDirectory())
 					return true;
 				
-				return file.getName().endsWith(".smx");
+				return file.getName().endsWith(".smx") || file.getName().endsWith(".amxx");
 			}
 		});
 
@@ -69,7 +69,7 @@ public class LysisTest {
 
 		System.out.println("Running test file: " + path);
 		// Get the matching file containing the expected output.
-		File outFile = new File(path.replaceFirst("\\.smx$", ".out"));
+		File outFile = new File(path.replaceFirst("\\.(smx|amxx)$", ".out"));
 		assertTrue("Out-file missing.", outFile.exists() || outFile.canRead());
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();

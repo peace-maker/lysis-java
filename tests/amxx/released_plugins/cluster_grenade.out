@@ -1,0 +1,282 @@
+new explosion1;
+new explosion2;
+new grenade[32];
+new last;
+new bool:enabled = 1;
+new bool:catchdeath;
+public death_msg()
+{
+	if (catchdeath)
+	{
+		catchdeath = false;
+		return 1;
+	}
+	return 0;
+}
+
+public grenade_throw()
+{
+	if (2 > get_msg_args())
+	{
+		return 2;
+	}
+	new var1;
+	if (get_msg_arg_int(1) == 12 && get_msg_arg_int(2))
+	{
+		add_grenade_owner(last);
+	}
+	return 0;
+}
+
+public fire_in_the_hole(id, dest, ent)
+{
+	if (get_msg_args() != 5)
+	{
+		return 0;
+	}
+	new temp[17];
+	get_msg_arg_string(5, temp, 17);
+	if (equali(temp, 148, 0))
+	{
+		new name[32];
+		entity_get_string(ent, 5, name, 32);
+		last = find_player(220, name);
+	}
+	return 0;
+}
+
+public pfn_touch(ptr, ptd)
+{
+	new identify[15] = {119,111,114,108,100,0};
+	new compare[15] = {119,111,114,108,100,0};
+	new Float:origin[3] = 0.0;
+	if (ptr)
+	{
+		entity_get_string(ptr, 0, identify, 15);
+	}
+	if (ptd)
+	{
+		if (is_valid_ent(ptd))
+		{
+			entity_get_string(ptd, 0, compare, 15);
+		}
+	}
+	new var1;
+	if (ptr && equali(compare, 276, 0))
+	{
+		return 1;
+	}
+	if (equali(identify, 340, 0))
+	{
+		entity_get_vector(ptr, 0, origin);
+		new player[32];
+		new players;
+		new location[3];
+		new origin2[3];
+		new distance;
+		new Float:multiplier = 0.0;
+		new owner;
+		origin2[0] = floatround(origin[0], 0);
+		origin2[1] = floatround(origin[1], 0);
+		origin2[2] = floatround(origin[2], 0);
+		owner = entity_get_edict(ptr, 4);
+		get_players(player, players, 404, 412);
+		new i;
+		while (i < players)
+		{
+			get_user_origin(player[i], location, 0);
+			distance = get_distance(origin2, location);
+			if (distance < 300)
+			{
+				multiplier = floatdiv(float(300 - distance), float(300));
+				deal_grenade_damage(player[i], owner, floatmul(multiplier, float(20)));
+			}
+			i++;
+		}
+		message_begin(0, 23, 416, 0);
+		write_byte(3);
+		write_coord(floatround(origin[0], 0));
+		write_coord(floatround(origin[1], 0));
+		write_coord(floatround(origin[2], 0));
+		write_short(explosion1);
+		write_byte(50);
+		write_byte(15);
+		write_byte(0);
+		message_end();
+		message_begin(0, 23, 416, 0);
+		write_byte(3);
+		write_coord(floatround(origin[0], 0));
+		write_coord(floatround(origin[1], 0));
+		write_coord(floatround(origin[2], 0));
+		write_short(explosion2);
+		write_byte(50);
+		write_byte(15);
+		write_byte(0);
+		message_end();
+		if (!ptd)
+		{
+			message_begin(0, 23, 416, 0);
+			write_byte(116);
+			write_coord(floatround(origin[0], 0));
+			write_coord(floatround(origin[1], 0));
+			write_coord(floatround(origin[2], 0));
+			write_byte(47);
+			message_end();
+		}
+		remove_entity(ptr);
+		return 1;
+	}
+	return 0;
+}
+
+public grenade_explosion()
+{
+	new var1;
+	if (get_msg_arg_int(1) == 3 && get_msg_arg_int(6) == 25 && get_msg_arg_int(7) == 30 && enabled)
+	{
+		new pos[3];
+		pos[0] = floatround(get_msg_arg_float(2), 0);
+		pos[1] = floatround(get_msg_arg_float(3), 0);
+		pos[2] = floatround(get_msg_arg_float(4), 0);
+		new cluster;
+		new Float:vAngle[3] = 0.0;
+		new Float:angles[3] = 0.0;
+		new Float:velocity[3] = 0.0;
+		new Rvelocity[3];
+		new Float:distance = 0.0;
+		new Float:actualDistance = 0.0;
+		new Float:multiplier = 0.0;
+		new Float:origin[3] = 0.0;
+		origin[0] = float(pos[0]);
+		origin[1] = float(pos[1]);
+		origin[2] = float(pos[2]);
+		decl Float:minBox[3];
+		decl Float:maxBox[3];
+		new i;
+		while (i < 5)
+		{
+			velocity[0] = random_float(float(200), float(400));
+			if (random_num(0, 1) == 1)
+			{
+				velocity[0] = floatmul(velocity[0], -1082130432);
+			}
+			velocity[1] = random_float(float(200), float(400));
+			if (random_num(0, 1) == 1)
+			{
+				velocity[1] = floatmul(velocity[1], -1082130432);
+			}
+			velocity[2] = float(200);
+			Rvelocity[0] = floatround(velocity[0], 0) + pos[0];
+			Rvelocity[1] = floatround(velocity[1], 0) + pos[1];
+			Rvelocity[2] = floatround(velocity[2], 0) + pos[2];
+			distance = random_float(float(200), float(400));
+			actualDistance = float(get_distance(pos, Rvelocity));
+			multiplier = floatdiv(distance, actualDistance);
+			velocity[0] = floatmul(velocity[0], multiplier);
+			velocity[1] = floatmul(velocity[1], multiplier);
+			velocity[2] = floatmul(velocity[2], multiplier);
+			vector_to_angle(velocity, angles);
+			vector_to_angle(velocity, vAngle);
+			cluster = create_entity(428);
+			entity_set_string(cluster, 0, 476);
+			entity_set_model(cluster, 540);
+			entity_set_vector(cluster, 14, minBox);
+			entity_set_vector(cluster, 15, maxBox);
+			entity_set_origin(cluster, origin);
+			entity_set_vector(cluster, 6, angles);
+			entity_set_vector(cluster, 9, vAngle);
+			entity_set_int(cluster, 14, 6);
+			entity_set_int(cluster, 15, 1);
+			entity_set_edict(cluster, 4, get_grenade_owner());
+			entity_set_vector(cluster, 2, velocity);
+			i++;
+		}
+	}
+	return 0;
+}
+
+public enable_cluster_grenade(id)
+{
+	new argument[1];
+	new number;
+	read_argv(1, argument, 1);
+	number = str_to_num(argument);
+	if (!number)
+	{
+		enabled = false;
+	}
+	if (number == 1)
+	{
+		enabled = true;
+	}
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin(616, 684, 716);
+	register_concmd(740, 848, 4, 940, -1);
+	register_message(23, 1176);
+	register_message(77, 1248);
+	register_message(83, 1316);
+	register_message(99, 1356);
+	return 0;
+}
+
+public plugin_precachce()
+{
+	precache_sound(1412);
+	explosion1 = precache_model(1520);
+	explosion2 = precache_model(1616);
+	return 0;
+}
+
+deal_grenade_damage(attacked, attacker, Float:damage)
+{
+	if (0 >= get_user_health(attacked) - floatround(damage, 0))
+	{
+		catchdeath = true;
+		user_kill(attacked, 0);
+		message_begin(2, 83, 416, 0);
+		write_byte(attacker);
+		write_byte(attacked);
+		write_byte(0);
+		write_string(1700);
+		message_end();
+		set_user_frags(attacker, get_user_frags(attacker) + 1);
+	}
+	else
+	{
+		set_user_health(attacked, get_user_health(attacked) - floatround(damage, 0));
+	}
+	return 0;
+}
+
+add_grenade_owner(owner)
+{
+	new i;
+	while (i < 32)
+	{
+		if (!grenade[i])
+		{
+			grenade[i] = owner;
+			return 0;
+		}
+		i++;
+	}
+	return 0;
+}
+
+get_grenade_owner()
+{
+	new which = grenade[0];
+	new i = 1;
+	while (i < 32)
+	{
+		grenade[i + -1] = grenade[i];
+		i++;
+	}
+	grenade[31] = 0;
+	return which;
+}
+

@@ -1,0 +1,53 @@
+new MaxClients;
+new NULL_STRING[1];
+new Float:NULL_VECTOR[3];
+new Array:gSpawnPoints;
+public plugin_init()
+{
+	register_plugin(24, 100, 124);
+	RequestFrame(152, 0);
+	OrpheuRegisterHook(OrpheuGetFunction(268, 348), 352, 0);
+	return 0;
+}
+
+public @FrameRequest_FixSpawnPoints()
+{
+	gSpawnPoints = GetCTSpawnPoints();
+	if (ArraySize(gSpawnPoints))
+	{
+		RemoveTSpawnPoints();
+		set_gamerules_int(608, 684, 0, 0);
+		set_gamerules_int(800, 876, 32, 0);
+		return 0;
+	}
+	set_fail_state(484);
+	return 0;
+}
+
+public OrpheuHookReturn:@CBasePlayer_EntSelectSpawnPoint(this)
+{
+	OrpheuSetReturn(ArrayGetCell(gSpawnPoints, random(ArraySize(gSpawnPoints)), 0, 0));
+	return OrpheuHookReturn:2;
+}
+
+Array:GetCTSpawnPoints()
+{
+	new Array:spawnPoints = ArrayCreate(1, 32);
+	new ent = MaxClients;
+	while (0 < (ent = engfunc(12, ent, 964, 1004)))
+	{
+		ArrayPushCell(spawnPoints, ent);
+	}
+	return spawnPoints;
+}
+
+RemoveTSpawnPoints()
+{
+	new ent = MaxClients;
+	while (0 < (ent = engfunc(12, ent, 1076, 1116)))
+	{
+		set_pev(ent, 84, pev(ent, 84) | 1073741824);
+	}
+	return 0;
+}
+
