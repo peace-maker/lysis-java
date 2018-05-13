@@ -832,4 +832,14 @@ public class SourcePawnFile extends PawnFile {
 		return false;
 	}
 
+	@Override
+	public Automation lookupAutomation(long automation_id) {
+		return null;
+	}
+
+	@Override
+	public String lookupState(short state_id, short automation_id) {
+		return null;
+	}
+
 }

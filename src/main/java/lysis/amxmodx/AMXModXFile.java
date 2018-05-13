@@ -90,6 +90,8 @@ public class AMXModXFile extends PawnFile {
 	private byte[] DAT_;
 	private Variable[] allvars_;
 	private Tag stringTag;
+	private Automation[] automations_;
+	private State[] states_;
 
 	public AMXModXFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -199,7 +201,7 @@ public class AMXModXFile extends PawnFile {
 			ExtendedDataInputStream r = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, amx.natives, count * DEFSIZE));
 			for (int i = 0; i < count; i++) {
-				long address = r.ReadUInt32();
+				r.ReadUInt32(); // Address
 				int nameoffset = r.ReadInt32();
 				String name = ReadName(binary, nameoffset);
 				natives_[i] = new Native(name, i);
@@ -342,13 +344,35 @@ public class AMXModXFile extends PawnFile {
 			allvars_ = allvars.toArray(new Variable[0]);
 
 			// Find tags.
-			tags_ = new Tag[dbg.tags+1];
+			tags_ = new Tag[dbg.tags + 1];
 			for (short i = 0; i < dbg.tags; i++) {
 				int tag_id = r.ReadUInt16();
 				String name = ReadName(r);
 				tags_[i] = new Tag(name, tag_id);
 
 				// System.out.printf("%d: %s%n", i, tags_[i]);
+			}
+
+			// Automations
+			automations_ = new Automation[dbg.automatons];
+			for (short i = 0; i < dbg.automatons; i++) {
+				short automation_id = r.ReadInt16();
+				int addr = r.ReadInt32(); // address of state variable
+				String name = ReadName(r);
+				automations_[i] = new Automation(automation_id, addr, name);
+
+				// System.out.printf("%d: %s%n", i, automations_[i]);
+			}
+
+			// States.
+			states_ = new State[dbg.states];
+			for (short i = 0; i < dbg.states; i++) {
+				short state_id = r.ReadInt16();
+				short automation_id = r.ReadInt16();
+				String name = ReadName(r);
+				states_[i] = new State(state_id, automation_id, name);
+
+				// System.out.printf("%d: %s%n", i, states_[i]);
 			}
 
 			stringTag = new Tag("String", Q_USER_TAG_STRING);
@@ -523,27 +547,27 @@ public class AMXModXFile extends PawnFile {
 			// last string not detected
 			if (size <= 0)
 				return null;
-			
+
 			int end = (int) (var.address() + size - 1);
-			
+
 			if (DAT_[end] != 0)
 				return null;
-			
+
 			// See if it contains only valid characters.
-			int addr = (int)var.address();
+			int addr = (int) var.address();
 			for (; addr < DAT_.length && addr < end && DAT_[addr] != 0; addr += 4) {
 				int cell = BitConverter.ToInt32(DAT_, addr);
 				if (!Character.isValidCodePoint(cell))
 					return null;
 			}
-			
+
 			// Null character in the middle of the string.
 			if (addr != end)
 				return null;
-			
+
 			return stringTag;
 		}
-		
+
 		return null;
 	}
 
@@ -574,10 +598,28 @@ public class AMXModXFile extends PawnFile {
 	public byte[] DAT() {
 		return DAT_;
 	}
-	
+
 	@Override
 	public boolean PassArgCountAsSize() {
 		return true;
+	}
+
+	@Override
+	public Automation lookupAutomation(long state_addr) {
+		for (Automation auto : automations_) {
+			if (auto.address() == state_addr)
+				return auto;
+		}
+		return null;
+	}
+
+	@Override
+	public String lookupState(short state_id, short automation_id) {
+		for (State state : states_) {
+			if (state.automation_id() == automation_id && state.state_id() == state_id)
+				return state.name();
+		}
+		return null;
 	}
 
 }

@@ -18,7 +18,6 @@ import lysis.nodes.NodeBuilder;
 import lysis.nodes.NodeGraph;
 import lysis.nodes.NodeRenamer;
 import lysis.nodes.NodeRewriter;
-import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.BackwardTypePropagation;
 import lysis.types.ForwardTypePropagation;
 
@@ -28,11 +27,13 @@ public class Lysis {
 
     public static void PreprocessMethod(PawnFile file, Function func) throws Exception
     {
-        MethodParser mp = new MethodParser(file, func.address());
+        MethodParser mp = new MethodParser(file, func);
         LGraph graph = mp.parse();
+        if (graph == null)
+        	return;
         
         // This function had no debug info attached :(
-        if (func.codeEnd() == file.code().bytes().length)
+        if (func.codeEnd() == file.code().bytes().length+1)
         	func.setCodeEnd(mp.getExitPC()-4);
         
         // No argument information for this function :(
@@ -59,10 +60,13 @@ public class Lysis {
         }
     }
     
-    public static void DumpMethod(PawnFile file, SourceBuilder source, long addr) throws Exception
+    public static void DumpMethod(PawnFile file, SourceBuilder source, Function func) throws Exception
     {
-        MethodParser mp = new MethodParser(file, addr);
+        MethodParser mp = new MethodParser(file, func);
         LGraph graph = mp.parse();
+        if (graph == null)
+        	return;
+
         //DebugSpew.DumpGraph(graph.blocks, new DataOutputStream(System.out));
 
         NodeBuilder nb = new NodeBuilder(file, graph);
@@ -125,16 +129,6 @@ public class Lysis {
 
         //System.in.read();
         //System.in.read();
-    }
-	
-	static Function FunctionByName(SourcePawnFile file, String name)
-    {
-        for (int i = 0; i < file.functions().length; i++)
-        {
-            if (file.functions()[i].name() == name)
-                return file.functions()[i];
-        }
-        return null;
     }
 	
 	/**
@@ -202,7 +196,7 @@ public class Lysis {
 //#if 
             try
             {
-                DumpMethod(file, source, fun.address());
+                DumpMethod(file, source, fun);
                 System.out.println("");
             }
             catch (Throwable e)

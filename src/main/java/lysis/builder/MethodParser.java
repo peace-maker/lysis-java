@@ -66,9 +66,11 @@ import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
 import lysis.instructions.SwitchCase;
+import lysis.lstructure.Function;
 import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
 import lysis.lstructure.Register;
+import lysis.lstructure.Variable;
 import lysis.sourcepawn.SPOpcode;
 
 public class MethodParser {
@@ -96,6 +98,7 @@ public class MethodParser {
     }
 
     private PawnFile file_;
+    private Function func_;
     private long pc_;
     private long current_pc_;
     private LIR lir_ = new LIR();
@@ -115,6 +118,13 @@ public class MethodParser {
     private SPOpcode readOp()
     {
         return SPOpcode.values()[(int) readUInt32()];
+    }
+    
+    private SPOpcode peekOp()
+    {
+    	long op = readUInt32();
+    	pc_ -= 4;
+    	return SPOpcode.values()[(int) op];
     }
 
     private LInstruction add(LInstruction ins)
@@ -695,6 +705,67 @@ public class MethodParser {
 
         lir_.exit_pc = pc_;
     }
+    
+    private void readStateTable() throws Exception
+    {
+    	lir_.entry_pc = pc_;
+    	
+    	// Load the state variable.
+    	current_pc_ = pc_;
+    	SPOpcode op = readOp();
+    	assert(op == SPOpcode.load_pri);
+    	add(readInstruction(op));
+    	
+    	// Get the method implementation list for different states.
+    	current_pc_ = pc_;
+    	op = readOp();
+    	assert(op == SPOpcode.switch_);
+    	add(readInstruction(op));
+    	
+    	// Skip the casetbl entries too.
+    	while (pc_ < (long)file_.code().bytes().length)
+        {
+            current_pc_ = pc_;
+            op = readOp();
+            if (op != SPOpcode.casetbl)
+                break;
+            add(readInstruction(op));
+        }
+    	
+    	lir_.exit_pc = current_pc_;
+    	
+    	LLoadGlobal state_var = (LLoadGlobal) lir_.instructions.get(0);
+    	// Rename global state variable.
+    	Variable var = file_.lookupGlobal(state_var.address());
+    	var.setName("g_statevar_" + var.address());
+    	// Remember this is a state variable, so we can print it correctly.
+    	var.markAsStateVariable();
+    	
+    	LSwitch function_list = (LSwitch) lir_.instructions.get(1);
+    	
+    	// Parse the default/error state <>
+    	Function default_func = file_.addFunction(function_list.defaultCase().pc());
+    	default_func.setName(func_.name());
+    	default_func.setStateAddr(state_var.address());
+    	default_func.setTag(func_.returnType());
+    	default_func.setTagId(func_.tag_id());
+    	
+    	// Parse all implementations for different states.
+    	for (int i = 0; i < function_list.numCases(); i++)
+    	{
+    		SwitchCase case_ = function_list.getCase(i);
+    		assert(case_.numValues() == 1);
+    		long state_id = case_.value(0);
+    		long start_addr = case_.target.pc();
+    		
+    		Function state_func = file_.addFunction(start_addr);
+    		state_func.setName(func_.name());
+    		state_func.setStateId((short)state_id);
+    		state_func.setStateAddr(state_var.address());
+    		state_func.setTag(func_.returnType());
+    		state_func.setTagId(func_.tag_id());
+    	}
+    }
 
     private class BlockBuilder
     {
@@ -868,18 +939,27 @@ public class MethodParser {
         return graph;
     }
 
-    public MethodParser(PawnFile file, long addr)
+    public MethodParser(PawnFile file, Function func)
     {
         file_ = file;
-        pc_ = addr;
+        func_ = func;
+        pc_ = func.address();
     }
 
     public LGraph parse() throws Exception
     {
         //assert(BitConverter.IsLittleEndian);
 
-        readAll();
-        return buildBlocks();
+    	SPOpcode op = peekOp();
+    	if (op == SPOpcode.load_pri)
+    	{
+    		readStateTable();
+    		func_.setCodeEnd(getExitPC());
+    		return null;
+    	}
+
+    	readAll();
+    	return buildBlocks();
     }
     
     public long getExitPC()

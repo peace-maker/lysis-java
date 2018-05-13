@@ -10,6 +10,7 @@ public class Variable {
     Scope scope_;
     String name_;
     Dimension[] dims_;
+    boolean statevar_;
 
     public Variable(long addr, int tag_id, Tag tag, long codeStart,
     				long codeEnd, VariableType type, Scope scope,
@@ -24,6 +25,7 @@ public class Variable {
         scope_ = scope;
         name_ = name;
         dims_ = dims;
+        statevar_ = false;
     }
     
     public Variable(long addr, int tag_id, Tag tag, long codeStart,
@@ -69,6 +71,10 @@ public class Variable {
     {
         return dims_;
     }
+    public boolean isStateVariable()
+    {
+    	return statevar_;
+    }
     public void setTag(Tag tag)
     {
         tag_ = tag;
@@ -77,4 +83,10 @@ public class Variable {
     public void setTagId(long tag_id) {
     	tag_id_ = tag_id;
     }
+	public void setName(String name) {
+		name_ = name;
+	}
+	public void markAsStateVariable() {
+		statevar_ = true;
+	}
 }

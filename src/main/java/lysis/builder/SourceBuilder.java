@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import lysis.PawnFile;
+import lysis.PawnFile.Automation;
 import lysis.Public;
 import lysis.builder.structure.BlockAnalysis;
 import lysis.builder.structure.ControlBlock;
@@ -175,14 +176,7 @@ public class SourceBuilder {
         if (pub != null && !pub.name().matches("\\.\\d+\\..+"))
             out_.print("public ");
 
-        if (f != null)
-        {
-            out_.print(buildTag(f.returnType()) + f.name());
-        }
-        /*else
-        {
-            out_.writeBytes("function" + f.address());
-        }*/
+        out_.print(buildTag(f.returnType()) + f.name());
 
         out_.print("(");
         if (f.args() != null)
@@ -195,7 +189,38 @@ public class SourceBuilder {
             }
         }
 
-        out_.println(")");
+        out_.print(")");
+        
+        // Print the state and automation this blob belongs to.
+        out_.println(buildStateSignature(f));
+    }
+    
+    private String buildStateSignature(Function func)
+    {
+    	if (func.stateAddr() == -1)
+    		return "";
+    	
+    	// See if we have debug info about this automation.
+    	Automation automation = file_.lookupAutomation(func.stateAddr());
+    	if (automation == null)
+    		return String.format("<%x:%d>", func.stateAddr(), func.stateId());
+    	
+    	String ret = " <";
+    	if (automation.automation_id() > 0)
+    		ret += automation.name() + ":";
+    	
+    	// Try to lookup the name of the state for non-default states.
+    	if (func.stateId() != -1)
+    	{
+	    	String stateName = file_.lookupState(func.stateId(), automation.automation_id());
+	    	if (stateName != null)
+	    		ret += stateName;
+	    	else
+	    		ret += func.stateId();
+    	}
+    	
+    	ret += ">";
+    	return ret;
     }
 
     private String buildConstant(DConstant node)
@@ -358,8 +383,43 @@ public class SourceBuilder {
         return call.function().name() + "(" + args + ")";
     }
     
+    private String buildStateChange(DStore store) throws Exception
+    {
+    	if (store.getOperand(0).type() != NodeType.Global)
+    		return null;
+    	
+    	DGlobal glob = (DGlobal)store.getOperand(0);
+    	if (!glob.var().isStateVariable())
+    		return null;
+    	
+    	assert(store.getOperand(1).type() == NodeType.Constant);
+    	DConstant state = (DConstant)store.getOperand(1);
+    	
+    	Automation automation = file_.lookupAutomation(glob.var().address());
+    	// No debug info for this stuff.
+    	if (automation == null)
+    		return "state " + state.value();
+    	
+    	String expr = "state ";
+    	if (automation.automation_id() > 0)
+    		expr += automation.name() + ":";
+    	
+    	String stateName = file_.lookupState((short)state.value(), automation.automation_id());
+    	if (stateName != null)
+    		expr += stateName;
+    	else
+    		expr += state.value();
+    	
+    	return expr;
+    }
+    
     private String buildStore(DStore store) throws Exception
     {
+    	// See if this is a state change in an automation (AMXX only)
+    	String stateChange = buildStateChange(store);
+    	if (stateChange != null)
+    		return stateChange;
+    	
         String lhs = buildLoadStoreRef(store.getOperand(0));
         String rhs;
         if(store.logic() != null)
@@ -1265,7 +1325,15 @@ public class SourceBuilder {
             {
                 text += " = " + value;
             }
-            outputLine(text + ";");
+            
+            text += ";";
+            
+            // Add comment about this automation implementation detail,
+            // since it's not visible in the original source code.
+            if (var.isStateVariable())
+            	text += buildStateVarComment(var);
+            
+            outputLine(text);
         }
         else if (isArrayEmpty(var))
         {
@@ -1292,6 +1360,21 @@ public class SourceBuilder {
             decreaseIndent();
             outputLine("};");
         }
+    }
+    
+    private String buildStateVarComment(Variable var)
+    {
+    	Automation automation = file_.lookupAutomation(var.address());
+    	if (automation == null)
+    		return " // Internal state variable";
+    	
+    	String comment = " // Internal state variable for ";
+    	if (automation.automation_id() > 0)
+    		comment += "automation " + automation.name();
+    	else
+    		comment += "default automation";
+
+    	return comment;
     }
 
     public void writeGlobals() throws IOException

@@ -1,19 +1,3 @@
-java.lang.Exception: invalid method, first op must be PROC
-	at lysis.builder.MethodParser.readAll(MethodParser.java:685)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.PreprocessMethod(Lysis.java:32)
-	at lysis.Lysis.main(Lysis.java:180)
-
-java.lang.Exception: invalid method, first op must be PROC
-	at lysis.builder.MethodParser.readAll(MethodParser.java:685)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.PreprocessMethod(Lysis.java:32)
-	at lysis.Lysis.main(Lysis.java:180)
-/* ERROR PREPROCESSING! invalid method, first op must be PROC */
- function "DisablePlugin" (number 0)
-
-/* ERROR PREPROCESSING! invalid method, first op must be PROC */
- function "EnablePlugin" (number 1)
 new pluginName[22] =
 {
 	83, 101, 114, 118, 101, 114, 32, 67, 118, 97, 114, 115, 32, 85, 110, 108, 111, 99, 107, 101, 114, 0
@@ -29,36 +13,22 @@ new pluginAuhtor[9] =
 new OrpheuHook:handleHookReadMultiplayCvars;
 new OrpheuHook:handleHookCVarSetFloat;
 new currentPluginState;
-new g_var0;
-java.lang.Exception: invalid method, first op must be PROC
-	at lysis.builder.MethodParser.readAll(MethodParser.java:685)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.DumpMethod(Lysis.java:65)
-	at lysis.Lysis.main(Lysis.java:205)
+new g_statevar_0; // Internal state variable for default automation
 
-/* ERROR! invalid method, first op must be PROC */
- function "DisablePlugin" (number 0)
-java.lang.Exception: invalid method, first op must be PROC
-	at lysis.builder.MethodParser.readAll(MethodParser.java:685)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.DumpMethod(Lysis.java:65)
-	at lysis.Lysis.main(Lysis.java:205)
 
-/* ERROR! invalid method, first op must be PROC */
- function "EnablePlugin" (number 1)
-DisablePlugin()
+Float:operator/(_:,Float:)(oper1, Float:oper2)
 {
 	return floatdiv(float(oper1), oper2);
 }
 
-DisablePlugin()
+is_user_admin(id)
 {
 	new __flags = get_user_flags(id, 0);
 	new var1;
 	return __flags > 0 && !__flags & 33554432;
 }
 
-DisablePlugin()
+cmd_access(id, level, cid, num, bool:accesssilent)
 {
 	new has_access;
 	new var1;
@@ -78,7 +48,7 @@ DisablePlugin()
 	{
 		if (level == 16777216)
 		{
-			if (DisablePlugin(id))
+			if (is_user_admin(id))
 			{
 				has_access = 1;
 			}
@@ -112,7 +82,7 @@ DisablePlugin()
 	return 0;
 }
 
-DisablePlugin()
+OrpheuFunction:OrpheuGetEngineFunction(memberName[], libFunctionName[])
 {
 	static OrpheuStruct:engineFunctions;
 	if (!engineFunctions)
@@ -122,30 +92,30 @@ DisablePlugin()
 	return OrpheuCreateFunction(OrpheuGetStructMember(engineFunctions, memberName), libFunctionName, 132);
 }
 
-public DisablePlugin()
+public plugin_precache()
 {
 	register_plugin(136, 224, 248);
 	register_cvar(296, 224, 68, 0);
 	register_concmd(384, 428, 2048, 540, -1);
 	set_cvar_num(652, 5);
 	set_cvar_num(708, 75);
-	g_var0 = 1;
-	DisablePlugin(0, 1);
+	state disabled;
+	TogglePluginState(0, 1);
 	return 0;
 }
 
-public DisablePlugin()
+public ConsoleCommand_TogglePlugin(player, level, cid)
 {
-	if (DisablePlugin(player, level, cid, 2, 0))
+	if (cmd_access(player, level, cid, 2, false))
 	{
 		new newPluginState[2];
 		read_argv(1, newPluginState, 1);
-		DisablePlugin(player, clamp(str_to_num(newPluginState), 0, 1));
+		TogglePluginState(player, clamp(str_to_num(newPluginState), 0, 1));
 	}
 	return 1;
 }
 
-DisablePlugin()
+TogglePluginState(player, stateWanted)
 {
 	if (stateWanted == currentPluginState)
 	{
@@ -183,7 +153,7 @@ DisablePlugin()
 		}
 		case 1:
 		{
-			DisablePlugin();
+			EnablePlugin();
 		}
 		default:
 		{
@@ -192,9 +162,9 @@ DisablePlugin()
 	return 0;
 }
 
-public DisablePlugin()
+public plugin_end()
 {
-	DisablePlugin(0, 0);
+	TogglePluginState(0, 0);
 	return 0;
 }
 
@@ -224,10 +194,10 @@ public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 		value = ClampOOB(floatround(floatmul(get_pcvar_float(cvarsHandle[cvar]), entriesNewValues[cvar][2]), 0), entriesNewValues[cvar][0], entriesNewValues[cvar][1], shouldSetCvar);
 		if (shouldSetCvar)
 		{
-			set_pcvar_float(cvarsHandle[cvar], DisablePlugin(value, entriesNewValues[cvar][2]));
+			set_pcvar_float(cvarsHandle[cvar], value / entriesNewValues[cvar][2]);
 		}
 		OrpheuMemorySetAtAddress(handleGameRules, entriesIdentifiers[cvar], 1, value);
-		server_print(2408, cvarsName[cvar], DisablePlugin(value, entriesNewValues[cvar][2]));
+		server_print(2408, cvarsName[cvar], value / entriesNewValues[cvar][2]);
 		cvar++;
 	}
 	server_print(2464);
@@ -268,7 +238,7 @@ TogglePatchMemory()
 	{
 		server_print(2796, 136);
 	}
-	PatchMe(2992, 15, 0, 3172, 15, 0, 3344, DisablePlugin(15, 1114636288), float(0));
+	PatchMe(2992, 15, 0, 3172, 15, 0, 3344, 15 / 1114636288, float(0));
 	PatchMe(3532, float(800), float(0), 3692, float(16000), float(2147483583), 3852, float(800), float(0), 4020, float(16000), float(2147483583), 4188, float(800), float(0), 4372, float(16000), float(2147483583), 4556, 800, 0, 4708, 16000, 2147483583, 4860, 800, 0, 5020, 16000, 2147483583, 5180, 800, 0, 5356, 16000, 2147483583, 5532, 16000, 2147483583, 5716, 16000, 2147483583, 5892, 16000, 2147483583, 6084, 16000, 2147483583, 6268, 16000, 2147483583, 6432, 16000, 2147483583, 6588, 16000, 2147483583, 6800, 16000, 2147483583);
 	if (currentPluginState == 1)
 	{
@@ -476,5 +446,33 @@ ClampOOB(value, minimum, maximum, &bool:wasOOB)
 		}
 	}
 	return value;
+}
+
+DisablePlugin() <>
+{
+	return 0;
+}
+
+DisablePlugin() <enabled>
+{
+	OrpheuUnregisterHook(handleHookReadMultiplayCvars);
+	OrpheuUnregisterHook(handleHookCVarSetFloat);
+	TogglePatchMemory();
+	state disabled;
+	return 0;
+}
+
+EnablePlugin() <>
+{
+	return 0;
+}
+
+EnablePlugin() <disabled>
+{
+	handleHookReadMultiplayCvars = OrpheuRegisterHook(OrpheuGetFunction(1224, 1300), 1304, 0);
+	handleHookCVarSetFloat = OrpheuRegisterHook(OrpheuGetEngineFunction(1380, 1444), 1496, 0);
+	TogglePatchMemory();
+	state enabled;
+	return 0;
 }
 

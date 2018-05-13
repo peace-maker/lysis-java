@@ -93,7 +93,7 @@ public class LysisTest {
 		// Go through all functions and try to print them.
 		for (int i = 0; i < file.functions().length; i++) {
 			Function fun = file.functions()[i];
-			Lysis.DumpMethod(file, source, fun.address());
+			Lysis.DumpMethod(file, source, fun);
 			// System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
 			out.println("");
 		}

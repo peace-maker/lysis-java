@@ -31,4 +31,12 @@ public class Signature {
     {
         tag_ = tag;
     }
+    public void setTagId(long tag_id)
+    {
+    	tag_id_ = tag_id;
+    }
+    public void setName(String name)
+    {
+    	name_ = name;
+    }
 }

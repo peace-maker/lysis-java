@@ -208,17 +208,19 @@ public abstract class PawnFile {
         return null;
     }
     
-    public void addFunction(long addr)
+    public Function addFunction(long addr)
     {
         for (int i = 0; i < functions_.length; i++)
         {
             // This function already exists.
             if (functions_[i].address() == addr)
-                return;
+                return functions_[i];
         }
         
         functions_ = Arrays.copyOf(functions_, functions_.length + 1);
-        functions_[functions_.length-1] = new Function(addr, addr, code().bytes().length, "sub_" + Long.toHexString(addr), 0);
+        Function f = new Function(addr, addr, code().bytes().length+1, "sub_" + Long.toHexString(addr), 0);
+        functions_[functions_.length-1] = f;
+        return f;
     }
     
     public void addArgumentVar(Function func, int num)
@@ -284,6 +286,8 @@ public abstract class PawnFile {
     }
     public abstract byte[] DAT();
     public abstract boolean PassArgCountAsSize();
+    public abstract Automation lookupAutomation(long state_addr);
+    public abstract String lookupState(short state_id, short automation_id);
     
     protected static byte[] Slice(byte[] bytes, int offset, int length)
     {
@@ -432,4 +436,62 @@ public abstract class PawnFile {
 			return String.format("Line %d @ %x", line_, address_);
 		}
     }
+    
+    public class Automation {
+		private short automation_id_;
+		private long address_;
+		private String name_;
+		
+		public Automation(short automation_id, long address, String name) {
+			this.automation_id_ = automation_id;
+			this.address_ = address;
+			this.name_ = name;
+		}
+		
+		public short automation_id() {
+			return automation_id_;
+		}
+
+		public long address() {
+			return address_;
+		}
+
+		public String name() {
+			return name_;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Automation %d @ %x : %s", automation_id_, address_, name_);
+		}
+	}
+	
+	public class State {
+		private short state_id_;
+		private short automation_id_;
+		private String name_;
+		
+		public State(short state_id, short automation_id, String name) {
+			this.state_id_ = state_id;
+			this.automation_id_ = automation_id;
+			this.name_ = name;
+		}
+		
+		public short state_id() {
+			return state_id_;
+		}
+
+		public short automation_id() {
+			return automation_id_;
+		}
+
+		public String name() {
+			return name_;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("State %d of automation %d : %s", state_id_, automation_id_, name_);
+		}
+	}
 }
