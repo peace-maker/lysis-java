@@ -134,48 +134,51 @@ public class NodeRenamer {
                         DBinary connector = (DBinary)firstUse.node().uses().get(0).node();
                         if (connector.spop() == SPOpcode.and)
                         {
-                            assert(firstUse.index() == 1 && secondUse.index() == 1);
+                            assert(firstUse.index() == 1);
                             // Replace with a "ternary" comparison chain
                             DBinary leftSide = (DBinary)connector.rhs();
                             DBinary rightSide = (DBinary)connector.lhs();
                             
                             leftSide.replaceOperand(1, rightSide);
                             
-                            // Turn the operands around
-                            SPOpcode invertedOP = rightSide.spop();
-                            switch(rightSide.spop())
+                            // Turn the operands around if the second comparison is MaxClients >= %var.
+                            if (secondUse.index() == 1)
                             {
-                            case jsleq: // <=
-                                invertedOP = SPOpcode.jsgeq; // >=
-                                break;
-                            case jsless: // <
-                                invertedOP = SPOpcode.jsgrtr; // >
-                                break;
-                            case jsgrtr: // >
-                                invertedOP = SPOpcode.jsless; // <
-                                break;
-                            case jsgeq: // >=
-                                invertedOP = SPOpcode.jsleq; // <=
-                                break;
-                            case sleq: // <=
-                                invertedOP = SPOpcode.sgeq; // >=
-                                break;
-                            case sless: // <
-                                invertedOP = SPOpcode.sgrtr; // >
-                                break;
-                            case sgrtr: // >
-                                invertedOP = SPOpcode.sless; // <
-                                break;
-                            case sgeq: // >=
-                                invertedOP = SPOpcode.sleq; // <=
-                                break;
-                            default:
-                                break;
+	                            SPOpcode invertedOP = rightSide.spop();
+	                            switch(rightSide.spop())
+	                            {
+	                            case jsleq: // <=
+	                                invertedOP = SPOpcode.jsgeq; // >=
+	                                break;
+	                            case jsless: // <
+	                                invertedOP = SPOpcode.jsgrtr; // >
+	                                break;
+	                            case jsgrtr: // >
+	                                invertedOP = SPOpcode.jsless; // <
+	                                break;
+	                            case jsgeq: // >=
+	                                invertedOP = SPOpcode.jsleq; // <=
+	                                break;
+	                            case sleq: // <=
+	                                invertedOP = SPOpcode.sgeq; // >=
+	                                break;
+	                            case sless: // <
+	                                invertedOP = SPOpcode.sgrtr; // >
+	                                break;
+	                            case sgrtr: // >
+	                                invertedOP = SPOpcode.sless; // <
+	                                break;
+	                            case sgeq: // >=
+	                                invertedOP = SPOpcode.sleq; // <=
+	                                break;
+	                            default:
+	                                break;
+	                            }
+	                            
+	                            DBinary rightInverted = new DBinary(invertedOP, rightSide.rhs(), rightSide.lhs());
+	                            rightSide.replaceAllUsesWith(rightInverted);
+	                            rightSide.removeFromUseChains();
                             }
-                            
-                            DBinary rightInverted = new DBinary(invertedOP, rightSide.rhs(), rightSide.lhs());
-                            rightSide.replaceAllUsesWith(rightInverted);
-                            rightSide.removeFromUseChains();
                             
                             // Hide that |and| expression
                             connector.replaceAllUsesWith(leftSide);
