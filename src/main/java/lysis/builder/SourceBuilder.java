@@ -434,8 +434,20 @@ public class SourceBuilder {
 
     private String buildInlineArray(DInlineArray ia)
     {
-        assert(ia.typeSet().numTypes() == 1);
-        TypeUnit tu = ia.typeSet().types(0);
+    	TypeUnit tu;
+    	// If we don't have type information, just assume a one-dimensional integer array.
+    	// AMXX natives don't have debug information attached, so still print something 
+    	// in native calls with default arguments.
+    	if (ia.typeSet().numTypes() == 0)
+    	{
+    		tu = new TypeUnit(new PawnType(CellType.None), 1);
+    	}
+    	else
+    	{
+    		assert(ia.typeSet().numTypes() == 1);
+    		tu = ia.typeSet().types(0);
+    	}
+    	
 
         assert(tu.kind() == TypeUnit.Kind.Array);
         assert(tu.dims() == 1);

@@ -611,8 +611,11 @@ public class NodeAnalysis {
 
                 // Give the inline array some type information.
                 Signature signature = SignatureOf(lastUse.node());
-                TypeUnit tu = TypeUnit.FromArgument(signature.args()[lastUse.index()]);
-                ia.addType(tu);
+                if (signature.args() != null)
+                {
+	                TypeUnit tu = TypeUnit.FromArgument(signature.args()[lastUse.index()]);
+	                ia.addType(tu);
+                }
                 return true;
             }
             

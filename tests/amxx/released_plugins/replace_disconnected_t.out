@@ -81,7 +81,7 @@ public plugin_init()
 public button_pushed(ent, idcaller, idactivator, use_type, Float:value)
 {
 	new var1;
-	if (!1 <= g_max_players >= idcaller || !1 << idcaller & _alive || !pev_valid(ent) || cs_get_user_team(idcaller, 0) == 1)
+	if (!1 <= idcaller <= g_max_players || !1 << idcaller & _alive || !pev_valid(ent) || cs_get_user_team(idcaller, 0) == 1)
 	{
 		return 0;
 	}
