@@ -1,0 +1,816 @@
+new g_iJustJoined;
+new g_iConnected;
+new g_iAlive;
+new g_iUpdateData;
+new g_iInNvg;
+new g_iMsgId_SayText;
+new g_iMsgId_NVGToggle;
+new g_iMsgId_HostagePos;
+new g_iMsgId_HostageK;
+new g_iMsgId_Flashlight;
+new g_iCvarHotVisionEnabled;
+new g_iCvarHotVisionRadar;
+new g_iCvarHotVisionRadarRange;
+new g_iCvarHotVisionModels;
+new g_iCvarHotVisionWalls;
+new g_iCvarHotVisionEffectFix;
+new g_iCvarHotVisionObjectGlow;
+new g_iCvarHotVisionBrightness;
+new g_iDefaultBrightness[32];
+new g_iCustomBrightness[32];
+new Float:g_fRadarRange;
+new bool:g_bCustomEffect;
+new bool:g_bEffectFix;
+new bool:g_bPlrGlow;
+new bool:g_bModelGlow;
+new bool:g_bHotVisionPlayers;
+new g_iMaxPlayers;
+new g_iFwdFM_AddToFullPack;
+new g_iFwdFM_LightStyle;
+new g_statevar_0; // Internal state variable for default automation
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 < floatcmp(oper1, oper2);
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 <= floatcmp(oper1, oper2);
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 > floatcmp(oper1, oper2);
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return 0 >= floatcmp(oper1, oper2);
+}
+
+Float:floatclamp(Float:Value, Float:MinValue, Float:MaxValue)
+{
+	if (Value <= MinValue)
+	{
+		return MinValue;
+	}
+	if (Value >= MaxValue)
+	{
+		return MaxValue;
+	}
+	return Value;
+}
+
+public __fatal_ham_error(Ham:id, HamError:err, reason[])
+{
+	new func = get_func_id(4, -1);
+	new bool:fail = 1;
+	new var1;
+	if (func != -1 && callfunc_begin_i(func, -1) == 1)
+	{
+		callfunc_push_int(id);
+		callfunc_push_int(err);
+		callfunc_push_str(reason, 0);
+		if (callfunc_end() == 1)
+		{
+			fail = false;
+		}
+	}
+	if (fail)
+	{
+		set_fail_state(reason);
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin(408, 448, 464);
+	register_cvar(484, 524, 68, 0);
+	RegisterHam(0, 540, 568, 1);
+	RegisterHam(11, 656, 684, 1);
+	unregister_forward(39, g_iFwdFM_LightStyle, 0);
+	register_forward(106, 776, 0);
+	register_impulse(100, 848);
+	register_event(952, 988, 1048, 1060);
+	register_event(1064, 1084, 1144, 1152, 1168);
+	g_iMsgId_HostagePos = get_user_msgid(1184);
+	g_iMsgId_HostageK = get_user_msgid(1228);
+	g_iMsgId_NVGToggle = get_user_msgid(1264);
+	g_iMsgId_SayText = get_user_msgid(1304);
+	g_iMsgId_Flashlight = get_user_msgid(1336);
+	register_message(g_iMsgId_NVGToggle, 1380);
+	g_iCvarHotVisionEnabled = register_cvar(1452, 1524, 0, 0);
+	g_iCvarHotVisionRadar = register_cvar(1532, 1596, 0, 0);
+	g_iCvarHotVisionRadarRange = register_cvar(1604, 1692, 0, 0);
+	g_iCvarHotVisionModels = register_cvar(1720, 1788, 0, 0);
+	g_iCvarHotVisionWalls = register_cvar(1796, 1860, 0, 0);
+	g_iCvarHotVisionEffectFix = register_cvar(1868, 1952, 0, 0);
+	g_iCvarHotVisionObjectGlow = register_cvar(1960, 2048, 0, 0);
+	g_iCvarHotVisionBrightness = register_cvar(2056, 2140, 0, 0);
+	if (!g_iDefaultBrightness[0])
+	{
+		g_iDefaultBrightness[0] = 109;
+	}
+	g_iMaxPlayers = clamp(get_maxplayers(), 1, 32);
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_iFwdFM_LightStyle = register_forward(39, 2148, 0);
+	return 0;
+}
+
+public plugin_cfg()
+{
+	Event_NewRound();
+	return 0;
+}
+
+public plugin_pause()
+{
+	message_begin(2, 12, 2220, 0);
+	write_byte(0);
+	write_string(116);
+	message_end();
+	return 0;
+}
+
+public plugin_unpause()
+{
+	g_iConnected = 0;
+	g_iAlive = 0;
+	g_iUpdateData = 0;
+	g_iInNvg = 0;
+	new iPlrId = 1;
+	while (iPlrId <= g_iMaxPlayers)
+	{
+		if (is_user_alive(iPlrId))
+		{
+			g_iConnected = 1 << iPlrId & 31 | g_iConnected;
+			g_iAlive = 1 << iPlrId & 31 | g_iAlive;
+		}
+		else
+		{
+			if (is_user_connected(iPlrId))
+			{
+				g_iConnected = 1 << iPlrId & 31 | g_iConnected;
+			}
+		}
+		iPlrId++;
+	}
+	return 0;
+}
+
+public Event_NewRound()
+{
+	new iPluginState = clamp(get_pcvar_num(g_iCvarHotVisionEnabled), 0, 2);
+	if (iPluginState)
+	{
+		if (iPluginState == 2)
+		{
+			g_bHotVisionPlayers = true;
+		}
+		else
+		{
+			g_bHotVisionPlayers = false;
+		}
+		if (clamp(get_pcvar_num(g_iCvarHotVisionModels), 0, 1))
+		{
+			if (clamp(get_pcvar_num(g_iCvarHotVisionWalls), 0, 1))
+			{
+				state AllEnabled;
+			}
+			else
+			{
+				state ModelsOnly;
+			}
+		}
+		else
+		{
+			if (clamp(get_pcvar_num(g_iCvarHotVisionWalls), 0, 1))
+			{
+				state WallsOnly;
+			}
+			state Default;
+		}
+		switch (clamp(get_pcvar_num(g_iCvarHotVisionRadar), 0, 2))
+		{
+			case 1:
+			{
+				g_fRadarRange = floatclamp(get_pcvar_float(g_iCvarHotVisionRadarRange), 128.0, 14189.0);
+			}
+			case 2:
+			{
+				g_fRadarRange = -1.0;
+			}
+			default:
+			{
+				g_fRadarRange = 0.0;
+			}
+		}
+		if (!g_iFwdFM_AddToFullPack)
+		{
+			g_iFwdFM_AddToFullPack = register_forward(124, 2232, 1);
+		}
+		get_pcvar_string(g_iCvarHotVisionBrightness, 244, 31);
+	}
+	else
+	{
+		if (g_iFwdFM_AddToFullPack)
+		{
+			unregister_forward(g_iFwdFM_AddToFullPack, 1, 0);
+			g_iFwdFM_AddToFullPack = 0;
+		}
+		state Default;
+	}
+	switch (clamp(get_pcvar_num(g_iCvarHotVisionEffectFix), 0, 3))
+	{
+		case 1:
+		{
+			g_bCustomEffect = false;
+			g_bEffectFix = true;
+		}
+		case 2:
+		{
+			g_bCustomEffect = true;
+			g_bEffectFix = false;
+		}
+		case 3:
+		{
+			g_bCustomEffect = true;
+			g_bEffectFix = true;
+		}
+		default:
+		{
+			g_bCustomEffect = false;
+			g_bEffectFix = false;
+		}
+	}
+	switch (clamp(get_pcvar_num(g_iCvarHotVisionObjectGlow), 0, 3))
+	{
+		case 1:
+		{
+			g_bPlrGlow = true;
+			g_bModelGlow = false;
+		}
+		case 2:
+		{
+			g_bPlrGlow = false;
+			g_bModelGlow = true;
+		}
+		case 3:
+		{
+			g_bPlrGlow = true;
+			g_bModelGlow = true;
+		}
+		default:
+		{
+			g_bPlrGlow = false;
+			g_bModelGlow = false;
+		}
+	}
+	return 0;
+}
+
+public Event_ResetHUD(iPlrId)
+{
+	new var1;
+	if (g_bEffectFix && g_iFwdFM_AddToFullPack)
+	{
+		if (1 << iPlrId & 31 & g_iAlive)
+		{
+			if (get_pdata_int(iPlrId, 129, 5, 5) & 256)
+			{
+				new iTaskId = iPlrId + 32;
+				remove_task(iTaskId, 0);
+				set_task(1036831949, 2320, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				remove_task(iTaskId, 0);
+				set_task(1045220557, 2380, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				remove_task(iTaskId, 0);
+				set_task(1050253722, 2432, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				if (task_exists(iTaskId, 0))
+				{
+					send_nvg_msg(iTaskId);
+					remove_task(iTaskId, 0);
+				}
+				set_task(1053609165, 2484, iTaskId, 2372, 0, 2376, 0);
+			}
+		}
+		if (pev(iPlrId, 100) == 4)
+		{
+			new iSpectatedPerson = pev(iPlrId, 101);
+			new var2;
+			if (iSpectatedPerson > g_iMaxPlayers || iSpectatedPerson <= 0)
+			{
+				return 0;
+			}
+			if (!1 << iSpectatedPerson & 31 & g_iAlive)
+			{
+				return 0;
+			}
+			if (get_pdata_int(iSpectatedPerson, 129, 5, 5) & 256)
+			{
+				new iTaskId = iPlrId + 32;
+				remove_task(iTaskId, 0);
+				set_task(1036831949, 2536, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				remove_task(iTaskId, 0);
+				set_task(1045220557, 2588, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				remove_task(iTaskId, 0);
+				set_task(1050253722, 2640, iTaskId, 2372, 0, 2376, 0);
+				iTaskId += 32;
+				if (task_exists(iTaskId, 0))
+				{
+					send_nvg_msg(iTaskId);
+					remove_task(iTaskId, 0);
+				}
+				set_task(1053609165, 2692, iTaskId, 2372, 0, 2376, 0);
+			}
+		}
+	}
+	return 0;
+}
+
+public Message_NVGToggle(iMsgId, iMsgType, iPlrId)
+{
+	if (g_iFwdFM_AddToFullPack)
+	{
+		new var1;
+		if (get_msg_arg_int(1) && g_fRadarRange)
+		{
+			if (!task_exists(iPlrId, 0))
+			{
+				set_task(1073741824, 2744, iPlrId, 2800, 0, 2804, 0);
+			}
+		}
+		else
+		{
+			remove_task(iPlrId, 0);
+		}
+		if (g_bCustomEffect)
+		{
+			set_pev(iPlrId, 73, pev(iPlrId, 73) & -9);
+			message_begin(1, g_iMsgId_Flashlight, 2220, iPlrId);
+			write_byte(0);
+			write_byte(get_pdata_int(iPlrId, 244, 5, 5));
+			message_end();
+			if (!g_bEffectFix)
+			{
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		remove_task(iPlrId, 0);
+	}
+	return 0;
+}
+
+public client_putinserver(iPlrId)
+{
+	g_iConnected = 1 << iPlrId & 31 | g_iConnected;
+	g_iJustJoined = 1 << iPlrId & 31 | g_iJustJoined;
+	return 0;
+}
+
+public client_disconnect(iPlrId)
+{
+	g_iConnected = ~1 << iPlrId & 31 & g_iConnected;
+	g_iAlive = ~1 << iPlrId & 31 & g_iAlive;
+	g_iJustJoined = ~1 << iPlrId & 31 & g_iJustJoined;
+	new iTaskId = iPlrId;
+	while (iTaskId <= 160)
+	{
+		remove_task(iTaskId, 0);
+		iTaskId += 32;
+	}
+	return 0;
+}
+
+public Ham_Spawn_player_Post(iPlrId)
+{
+	new var1;
+	if (is_user_alive(iPlrId) && 1 << iPlrId & 31 & g_iConnected)
+	{
+		g_iAlive = 1 << iPlrId & 31 | g_iAlive;
+	}
+	if (1 << iPlrId & 31 & g_iJustJoined)
+	{
+		g_iJustJoined = ~1 << iPlrId & 31 & g_iJustJoined;
+		message_begin(1, g_iMsgId_SayText, 2220, iPlrId);
+		write_byte(iPlrId);
+		write_string(2812);
+		message_end();
+	}
+	return 0;
+}
+
+public Ham_Killed_player_Post(iPlrId)
+{
+	if (!is_user_alive(iPlrId))
+	{
+		g_iAlive = ~1 << iPlrId & 31 & g_iAlive;
+	}
+	new iTaskId = iPlrId;
+	while (iTaskId <= 160)
+	{
+		remove_task(iTaskId, 0);
+		iTaskId += 32;
+	}
+	return 0;
+}
+
+public client_impulse_flashlight(iPlrId)
+{
+	new var1;
+	if (g_iFwdFM_AddToFullPack && g_bCustomEffect && 1 << iPlrId & 31 & g_iConnected && 1 << iPlrId & 31 & g_iAlive)
+	{
+		if (get_pdata_int(iPlrId, 129, 5, 5) & 256)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+public FM_LightStyle_Pre(iStyle, iVal[])
+{
+	if (!iStyle)
+	{
+		copy(116, 31, iVal);
+	}
+	return 0;
+}
+
+public FM_StartFrame_Pre()
+{
+	g_iUpdateData = -1;
+	return 0;
+}
+
+public send_nvg_msg(iTaskId)
+{
+	if (!g_bEffectFix)
+	{
+		return 0;
+	}
+	new iPlrId = iTaskId + -1 % 32 + 1;
+	if (1 << iPlrId & 31 & g_iAlive)
+	{
+		if (!get_pdata_int(iPlrId, 129, 5, 5) & 256)
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		if (pev(iPlrId, 100) == 4)
+		{
+			new iSpectated = pev(iPlrId, 101);
+			new var1;
+			if (iSpectated > g_iMaxPlayers || iSpectated <= 0)
+			{
+				return 0;
+			}
+			new var2;
+			if (!1 << iSpectated & 31 & g_iAlive || !get_pdata_int(iSpectated, 129, 5, 5) & 256)
+			{
+				return 0;
+			}
+		}
+		return 0;
+	}
+	message_begin(1, g_iMsgId_NVGToggle, 2220, iPlrId);
+	write_byte(1);
+	message_end();
+	return 0;
+}
+
+public refresh_radar(iPlrId)
+{
+	new var1;
+	if (1 << iPlrId & 31 & g_iConnected && 1 << iPlrId & 31 & g_iAlive)
+	{
+		if (get_pdata_int(iPlrId, 129, 5, 5) & 256)
+		{
+			new iTeam = get_user_team(iPlrId, {0}, 0);
+			new Float:fOrigin[3] = 0.0;
+			new iOffsetId;
+			if (g_fRadarRange < 0.0)
+			{
+				new iEnemyId = 1;
+				while (iEnemyId <= g_iMaxPlayers)
+				{
+					new var2;
+					if (iPlrId != iEnemyId && 1 << iEnemyId & 31 & g_iConnected && 1 << iEnemyId & 31 & g_iAlive && get_user_team(iEnemyId, {0}, 0) != iTeam)
+					{
+						pev(iEnemyId, 118, fOrigin);
+						iOffsetId = iEnemyId + 16;
+						message_begin(1, g_iMsgId_HostagePos, 2220, iPlrId);
+						write_byte(1);
+						write_byte(iOffsetId);
+						engfunc(71, fOrigin);
+						engfunc(71, fOrigin[1]);
+						engfunc(71, fOrigin[2]);
+						message_end();
+						message_begin(1, g_iMsgId_HostageK, 2220, iPlrId);
+						write_byte(iOffsetId);
+						message_end();
+					}
+					iEnemyId++;
+				}
+			}
+			else
+			{
+				new Float:fMainOrigin[3] = 0.0;
+				pev(iPlrId, 118, fMainOrigin);
+				new iEnemyId = 1;
+				while (iEnemyId <= g_iMaxPlayers)
+				{
+					new var3;
+					if (iPlrId != iEnemyId && 1 << iEnemyId & 31 & g_iConnected && 1 << iEnemyId & 31 & g_iAlive && get_user_team(iEnemyId, {0}, 0) != iTeam)
+					{
+						pev(iEnemyId, 118, fOrigin);
+						if (!(get_distance_f(fMainOrigin, fOrigin) > g_fRadarRange))
+						{
+							iOffsetId = iEnemyId + 16;
+							message_begin(1, g_iMsgId_HostagePos, 2220, iPlrId);
+							write_byte(1);
+							write_byte(iOffsetId);
+							engfunc(71, fOrigin);
+							engfunc(71, fOrigin[1]);
+							engfunc(71, fOrigin[2]);
+							message_end();
+							message_begin(1, g_iMsgId_HostageK, 2220, iPlrId);
+							write_byte(iOffsetId);
+							message_end();
+						}
+						iEnemyId++;
+					}
+					iEnemyId++;
+				}
+			}
+			return 0;
+		}
+	}
+	remove_task(iPlrId, 0);
+	return 0;
+}
+
+set_hotvision_plr(iEsHandle, bool:bNotSelfUpdate)
+{
+	if (g_bHotVisionPlayers)
+	{
+		set_es(iEsHandle, 15, 5);
+		set_es(iEsHandle, 16, 255);
+		set_es(iEsHandle, 18, 5);
+		set_es(iEsHandle, 17, 3120);
+	}
+	if (bNotSelfUpdate)
+	{
+		if (g_bPlrGlow)
+		{
+			set_es(iEsHandle, 12, get_es(iEsHandle, 12) | 8);
+		}
+	}
+	else
+	{
+		if (g_bCustomEffect)
+		{
+			set_es(iEsHandle, 12, get_es(iEsHandle, 12) | 4);
+		}
+	}
+	return 0;
+}
+
+set_hotvision_object(iEsHandle)
+{
+	set_es(iEsHandle, 15, 5);
+	set_es(iEsHandle, 16, 255);
+	set_es(iEsHandle, 18, 15);
+	set_es(iEsHandle, 17, 3132);
+	if (g_bModelGlow)
+	{
+		set_es(iEsHandle, 12, get_es(iEsHandle, 12) | 8);
+	}
+	return 0;
+}
+
+set_hotvision_walls(iEsHandle)
+{
+	set_es(iEsHandle, 15, 2);
+	set_es(iEsHandle, 16, 95);
+	set_es(iEsHandle, 18, 0);
+	set_es(iEsHandle, 17, 3144);
+	return 0;
+}
+
+bool:frame_nvg_update(iPlrId, iUpdatingPlayer, iEsHandle, iEnt)
+{
+	if (1 << iPlrId & 31 & g_iConnected)
+	{
+		static s_iSpectatedPerson[33];
+		if (1 << iPlrId & 31 & g_iUpdateData)
+		{
+			static bool:s_bOldNvg;
+			new var1;
+			if (1 << iPlrId & 31 & g_iInNvg)
+			{
+				var1 = 1;
+			}
+			else
+			{
+				var1 = 0;
+			}
+			s_bOldNvg = var1;
+			g_iUpdateData = ~1 << iPlrId & 31 & g_iUpdateData;
+			if (1 << iPlrId & 31 & g_iAlive)
+			{
+				s_iSpectatedPerson[iPlrId] = iPlrId;
+				if (get_pdata_int(iPlrId, 129, 5, 5) & 256)
+				{
+					g_iInNvg = 1 << iPlrId & 31 | g_iInNvg;
+				}
+				else
+				{
+					g_iInNvg = ~1 << iPlrId & 31 & g_iInNvg;
+				}
+			}
+			else
+			{
+				if (pev(iPlrId, 100) == 4)
+				{
+					s_iSpectatedPerson[iPlrId] = pev(iPlrId, 101);
+					new var2;
+					if (s_iSpectatedPerson[iPlrId] > g_iMaxPlayers || s_iSpectatedPerson[iPlrId] <= 0)
+					{
+						g_iInNvg = ~1 << iPlrId & 31 & g_iInNvg;
+					}
+					else
+					{
+						if (1 << s_iSpectatedPerson[iPlrId] & 31 & g_iAlive)
+						{
+							if (get_pdata_int(s_iSpectatedPerson[iPlrId], 129, 5, 5) & 256)
+							{
+								g_iInNvg = 1 << iPlrId & 31 | g_iInNvg;
+							}
+							else
+							{
+								g_iInNvg = ~1 << iPlrId & 31 & g_iInNvg;
+							}
+						}
+						g_iInNvg = ~1 << iPlrId & 31 & g_iInNvg;
+					}
+				}
+				s_iSpectatedPerson[iPlrId] = 0;
+				g_iInNvg = ~1 << iPlrId & 31 & g_iInNvg;
+			}
+			if (s_bOldNvg)
+			{
+				if (!1 << iPlrId & 31 & g_iInNvg)
+				{
+					message_begin(1, 12, 2220, iPlrId);
+					write_byte(0);
+					write_string(116);
+					message_end();
+				}
+			}
+			new var3;
+			if (1 << iPlrId & 31 & g_iInNvg && g_iCustomBrightness[0])
+			{
+				message_begin(1, 12, 2220, iPlrId);
+				write_byte(0);
+				write_string(244);
+				message_end();
+			}
+		}
+		if (1 << iPlrId & 31 & g_iInNvg)
+		{
+			if (iUpdatingPlayer)
+			{
+				new var4;
+				if (s_iSpectatedPerson[iPlrId] != iPlrId && iEnt == iPlrId)
+				{
+					new var5;
+					if (s_iSpectatedPerson[iPlrId] != iEnt)
+					{
+						var5 = true;
+					}
+					else
+					{
+						var5 = false;
+					}
+					set_hotvision_plr(iEsHandle, var5);
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <>
+{
+	if (g_iFwdFM_AddToFullPack)
+	{
+		unregister_forward(g_iFwdFM_AddToFullPack, 1, 0);
+		g_iFwdFM_AddToFullPack = 0;
+	}
+	return 1;
+}
+
+FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <AllEnabled>
+{
+	new var1;
+	if (1 <= iHost <= g_iMaxPlayers && get_orig_retval())
+	{
+		if (frame_nvg_update(iHost, iPlayer, iEsHandle, iEnt))
+		{
+			new var2;
+			if (get_es(iEsHandle, 15) || !pev_valid(iEnt))
+			{
+				return 1;
+			}
+			static s_iModel[2];
+			pev(iEnt, 3, 3092, 1);
+			if (s_iModel[0] == 109)
+			{
+				set_hotvision_object(iEsHandle);
+				return 1;
+			}
+			if (s_iModel[0] == 42)
+			{
+				set_hotvision_walls(iEsHandle);
+				return 1;
+			}
+		}
+	}
+	return 1;
+}
+
+FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <ModelsOnly>
+{
+	new var1;
+	if (1 <= iHost <= g_iMaxPlayers && get_orig_retval())
+	{
+		if (frame_nvg_update(iHost, iPlayer, iEsHandle, iEnt))
+		{
+			new var2;
+			if (get_es(iEsHandle, 15) || !pev_valid(iEnt))
+			{
+				return 1;
+			}
+			static s_iModel[2];
+			pev(iEnt, 3, 3100, 1);
+			if (s_iModel[0] == 109)
+			{
+				set_hotvision_object(iEsHandle);
+				return 1;
+			}
+		}
+	}
+	return 1;
+}
+
+FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <WallsOnly>
+{
+	new var1;
+	if (1 <= iHost <= g_iMaxPlayers && get_orig_retval())
+	{
+		if (frame_nvg_update(iHost, iPlayer, iEsHandle, iEnt))
+		{
+			new var2;
+			if (get_es(iEsHandle, 15) || !pev_valid(iEnt))
+			{
+				return 1;
+			}
+			static s_iModel[2];
+			pev(iEnt, 3, 3108, 1);
+			if (s_iModel[0] == 42)
+			{
+				set_hotvision_walls(iEsHandle);
+				return 1;
+			}
+		}
+	}
+	return 1;
+}
+
+FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <Default>
+{
+	new var1;
+	if (1 <= iHost <= g_iMaxPlayers && get_orig_retval())
+	{
+		frame_nvg_update(iHost, iPlayer, iEsHandle, iEnt);
+	}
+	return 1;
+}
+

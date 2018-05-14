@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.util.Arrays;
 
 import lysis.amxmodx.AMXModXFile;
+import lysis.lstructure.Argument;
 import lysis.lstructure.Function;
 import lysis.lstructure.Native;
 import lysis.lstructure.Scope;
@@ -223,17 +224,28 @@ public abstract class PawnFile {
         return f;
     }
     
-    public void addArgumentVar(Function func, int num)
+    public boolean addArgumentVar(Function func, int num)
     {
         long varAddr = 12 + num*4;
 
         // Variable already exists.
         if (lookupVariable(func.address(), varAddr) != null)
-            return;
+            return false;
         
         variables_ = Arrays.copyOf(variables_, variables_.length + 1);
         variables_[variables_.length-1] = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(), VariableType.Normal, Scope.Local, "_arg" + num, null);
+        return true;
     }
+    
+    public Argument buildArgumentInfo(Function func, int argNum) {
+		int argOffset = 12 + 4 * argNum;
+
+		Variable var = lookupVariable(func.address(), argOffset);
+		if (var == null)
+			return null;
+
+		return new Argument(var.type(), var.name(), (int) var.tag().tag_id(), var.tag(), var.dims());
+	}
     
     public void addGlobal(long addr)
     {

@@ -389,28 +389,37 @@ public class AMXModXFile extends PawnFile {
 			// For every function, attempt to build argument information.
 			for (int i = 0; i < functions_.length; i++) {
 				Function fun = functions_[i];
-				int argOffset = 12;
+				int argNum = 0;
 				LinkedList<Argument> args = new LinkedList<Argument>();
 				do {
-					Variable var = lookupVariable(fun.address(), argOffset);
-					if (var == null)
+					Argument arg = buildArgumentInfo(fun, argNum);
+					if (arg == null)
 						break;
 
-					// Add string tag to possible string arguments.
-					if (var.type() == VariableType.ArrayReference && var.dims() != null && var.dims().length == 1
-							&& var.dims()[0].size() == 0 && var.tag() != null && var.tag().name() == "_") {
-						var.setTag(stringTag);
-						var.setTagId(Q_USER_TAG_STRING);
-					}
-
-					Argument arg = new Argument(var.type(), var.name(), (int) var.tag().tag_id(), var.tag(),
-							var.dims());
 					args.add(arg);
-					argOffset += 4;
+					argNum++;
 				} while (true);
 				fun.setArguments(args);
 			}
 		}
+	}
+
+	@Override
+	public Argument buildArgumentInfo(Function func, int argNum) {
+		int argOffset = 12 + 4 * argNum;
+
+		Variable var = lookupVariable(func.address(), argOffset);
+		if (var == null)
+			return null;
+
+		// Add string tag to possible string arguments.
+		if (var.type() == VariableType.ArrayReference && var.dims() != null && var.dims().length == 1
+				&& var.dims()[0].size() == 0 && var.tag() != null && var.tag().name() == "_") {
+			var.setTag(stringTag);
+			var.setTagId(Q_USER_TAG_STRING);
+		}
+
+		return new Argument(var.type(), var.name(), (int) var.tag().tag_id(), var.tag(), var.dims());
 	}
 
 	private static String ReadName(byte[] bytes, int offset) {

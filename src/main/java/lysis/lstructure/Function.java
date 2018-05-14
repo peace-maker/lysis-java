@@ -1,7 +1,5 @@
 package lysis.lstructure;
 
-import java.util.LinkedList;
-
 public class Function extends Signature {
 	long addr_;
 	long codeStart_;
@@ -32,10 +30,6 @@ public class Function extends Signature {
         state_addr_ = -1;
     }
 
-    public void setArguments(LinkedList<Argument> from)
-    {
-    	args_ = from.toArray(new Argument[0]);
-    }
     public long address()
     {
         return addr_;

@@ -1,5 +1,7 @@
 package lysis.lstructure;
 
+import java.util.List;
+
 public class Signature {
 	protected String name_;
     protected long tag_id_;
@@ -38,5 +40,9 @@ public class Signature {
     public void setName(String name)
     {
     	name_ = name;
+    }
+    public void setArguments(List<Argument> from)
+    {
+    	args_ = from.toArray(new Argument[0]);
     }
 }

@@ -1,0 +1,78 @@
+new MaxClients;
+new NULL_STRING[1];
+new Float:NULL_VECTOR[3];
+new HamHook:HamHookSpawn;
+new g_statevar_0; // Internal state variable for default automation
+
+
+public __fatal_ham_error(Ham:id, HamError:err, reason[])
+{
+	new func = get_func_id(24, -1);
+	new bool:fail = 1;
+	new var1;
+	if (func != -1 && callfunc_begin_i(func, -1) == 1)
+	{
+		callfunc_push_int(id);
+		callfunc_push_int(err);
+		callfunc_push_str(reason, 0);
+		if (callfunc_end() == 1)
+		{
+			fail = false;
+		}
+	}
+	if (fail)
+	{
+		set_fail_state(reason);
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin(68, 108, 124);
+	state unregistered;
+	return 0;
+}
+
+public playerSpawn(id)
+{
+	return 0;
+}
+
+disableHam() <>
+{
+	return 0;
+}
+
+disableHam() <enabled>
+{
+	if (!DisableHamForward(HamHookSpawn))
+	{
+		state disabled;
+	}
+	return 0;
+}
+
+enableHam() <>
+{
+	return 0;
+}
+
+enableHam() <unregistered>
+{
+	if ((HamHookSpawn = RegisterHam(0, 252, 280, 0, 0)))
+	{
+		state enabled;
+	}
+	return 0;
+}
+
+enableHam() <disabled>
+{
+	if (EnableHamForward(HamHookSpawn))
+	{
+		state enabled;
+	}
+	return 0;
+}
+

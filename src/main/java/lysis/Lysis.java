@@ -52,9 +52,22 @@ public class Lysis {
             for (int i=start; i<num; i++)
             {
                 Argument arg = new Argument(VariableType.Normal, "_arg" + i, 0, null, null);
-                args.add(arg);
                 
-                file.addArgumentVar(func, i);
+                // See if this argument is already there.
+                // Implementations of functions for different states don't have their arguments
+                // fetched when parsing the debug sections.
+                if (!file.addArgumentVar(func, i))
+                	arg = file.buildArgumentInfo(func, i);
+                
+                args.add(arg);
+            }
+            // Collect any other unused arguments that we have debug info about.
+            for (int i=num; ; i++)
+            {
+            	Argument arg = file.buildArgumentInfo(func, i);
+            	if (arg == null)
+            		break;
+            	args.add(arg);
             }
             func.setArguments(args);
         }

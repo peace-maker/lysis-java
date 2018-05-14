@@ -711,16 +711,15 @@ public class SourcePawnFile extends PawnFile {
             for (int i = 0; i < functions_.length; i++)
             {
                 Function fun = functions_[i];
-                int argOffset = 12;
+                int argNum = 0;
                 LinkedList<Argument> args = new LinkedList<Argument>();
                 do
                 {
-                    Variable var = lookupVariable(fun.address(), argOffset);
-                    if (var == null)
+                    Argument arg = buildArgumentInfo(fun, argNum);
+                    if (arg == null)
                         break;
-                    Argument arg = new Argument(var.type(), var.name(), (int)var.tag().tag_id(), var.tag(), var.dims());
                     args.add(arg);
-                    argOffset += 4;
+                    argNum++;
                 } while (true);
                 fun.setArguments(args);
             }

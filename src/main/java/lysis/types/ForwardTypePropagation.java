@@ -10,7 +10,6 @@ import lysis.nodes.NodeList;
 import lysis.nodes.NodeType;
 import lysis.nodes.NodeVisitor;
 import lysis.nodes.types.*;
-import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.TypeUnit.Kind;
 
 public class ForwardTypePropagation extends NodeVisitor {
