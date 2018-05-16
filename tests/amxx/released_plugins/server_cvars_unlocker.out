@@ -171,7 +171,20 @@ public plugin_end()
 public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 {
 	server_print(1548, 136);
-	new cvarsName[4][] = {16,64,104,156,109,112,95,114,111,117,110,100,116,105,109,101,0,109,112,95,99,52,116,105,109,101,114,0,109,112,95,102,114,101,101,122,101,116,105,109,101,0,109,112,95,108,105,109,105,116,116,101,97,109,115,0};
+	new cvarsName[4][] = {
+		{
+			109, ...
+		},
+		{
+			109, ...
+		},
+		{
+			109, ...
+		},
+		{
+			109, ...
+		}
+	};
 	static cvarsHandle[4];
 	static bool:cvarsHandleRetrieved;
 	if (!cvarsHandleRetrieved)
@@ -184,8 +197,34 @@ public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 		}
 		cvarsHandleRetrieved = true;
 	}
-	new entriesIdentifiers[4][] = {16,104,184,276,114,111,117,110,100,84,105,109,101,64,103,95,112,71,97,109,101,82,117,108,101,115,0,99,52,84,105,109,101,114,64,103,95,112,71,97,109,101,82,117,108,101,115,0,102,114,101,101,122,101,84,105,109,101,64,103,95,112,71,97,109,101,82,117,108,101,115,0,108,105,109,105,116,84,101,97,109,115,64,103,95,112,71,97,109,101,82,117,108,101,115,0};
-	new any:entriesNewValues[4][3] = {any:16,any:24,any:32,any:40,any:0,any:2147483583,any:1114636288,any:0,any:2147483583,any:1065353216,any:0,any:2147483583,any:1065353216,any:0,any:31,any:1065353216};
+	new entriesIdentifiers[4][] = {
+		{
+			114, ...
+		},
+		{
+			99, ...
+		},
+		{
+			102, ...
+		},
+		{
+			108, ...
+		}
+	};
+	new any:entriesNewValues[4][3] = {
+		{
+			0, 2147483583, 1114636288
+		},
+		{
+			0, 2147483583, 1065353216
+		},
+		{
+			0, 2147483583, 1065353216
+		},
+		{
+			0, 31, 1065353216
+		}
+	};
 	new cvar;
 	new bool:shouldSetCvar;
 	new value;
@@ -206,7 +245,17 @@ public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 
 public OrpheuHookReturn:CVarSetFloat(varName[], Float:value)
 {
-	new cvarsServerName[3][] = {12,64,108,115,118,95,97,99,99,101,108,101,114,97,116,101,0,115,118,95,102,114,105,99,116,105,111,110,0,115,118,95,115,116,111,112,115,112,101,101,100,0};
+	new cvarsServerName[3][] = {
+		{
+			115, ...
+		},
+		{
+			115, ...
+		},
+		{
+			115, ...
+		}
+	};
 	static bool:cvarsHandleRetrieved;
 	static Trie:handleTrieServerCvars;
 	if (!cvarsHandleRetrieved)

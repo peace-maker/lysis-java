@@ -78,9 +78,19 @@ public class SourceBuilder {
         indent_ = indent_.substring(0, indent_.length() - 1);
     }
 
-    private void outputLine(String text) throws IOException
+    private void outputLine(String text)
     {
         out_.println(indent_ + text);
+    }
+    
+    private String indentLine(String text)
+    {
+    	return indent_ + text;
+    }
+    
+    private String prepareOutputLine(String text)
+    {
+    	return indent_ + text + System.lineSeparator();
     }
 
     static public String spop(SPOpcode op) throws Exception
@@ -431,6 +441,32 @@ public class SourceBuilder {
                     : spop(store.spop()) + "=";
         return lhs + " " + eq + " " + rhs;
     }
+    
+    private String buildInlineArray(DInlineArray ia, TypeUnit tu, DNode use)
+    {
+    	Variable var = null;
+    	assert (use.type() == NodeType.DeclareLocal || use.type() == NodeType.DeclareStatic);
+    	if (use.type() == NodeType.DeclareLocal)
+    		var = ((DDeclareLocal)use).var();
+    	else if (use.type() == NodeType.DeclareStatic)
+    		var = ((DDeclareStatic)use).var();
+    	
+    	// No debug info, can't print the array.
+    	if (var == null)
+    		return null;
+
+    	assert(var.dims().length == tu.dims());
+    	
+    	String text = "{" + System.lineSeparator();
+        increaseIndent();
+        if (tu.type().isString())
+        	text += dumpStringArray(var, ia.address(), 0);
+        else
+        	text += dumpArray(var, ia.address(), 0);
+        decreaseIndent();
+        text += indentLine("}");
+    	return text;
+    }
 
     private String buildInlineArray(DInlineArray ia)
     {
@@ -447,9 +483,18 @@ public class SourceBuilder {
     		assert(ia.typeSet().numTypes() == 1);
     		tu = ia.typeSet().types(0);
     	}
-    	
 
         assert(tu.kind() == TypeUnit.Kind.Array);
+        
+        if (tu.dims() > 1 && ia.uses().size() > 0)
+        {
+        	assert(ia.uses().size() == 1);
+        	DNode use = ia.uses().get(0).node();
+        	String text = buildInlineArray(ia, tu, use);
+        	if (text != null)
+        		return text;
+        }
+        
         assert(tu.dims() == 1);
 
         if (tu.type().isString())
@@ -1111,49 +1156,52 @@ public class SourceBuilder {
         return isArrayEmpty(var.address(), dims, 0);
     }
 
-    private void dumpStringArray(long address, int size) throws IOException
+    private String dumpStringArray(long address, int size)
     {
+    	String text = "";
         for (int i = 0; i < size; i++)
         {
         	long abase = address + i * 4;
         	long inner = file_.int32FromData(abase);
             long finalX = abase + inner;
             String str = file_.stringFromData(finalX);
-            String text = buildString(str);
+            String printStr = buildString(str);
             if (i != size - 1)
-                text += ",";
-            outputLine(text);
+            	printStr += ",";
+			text += prepareOutputLine(printStr);
         }
+        return text;
     }
 
-    private void dumpStringArray(Variable var, long address, int level) throws IOException
+    private String dumpStringArray(Variable var, long address, int level)
     {
         if (level == var.dims().length - 2)
         {
-            dumpStringArray(address, var.dims()[level].size());
-            return;
+            return dumpStringArray(address, var.dims()[level].size());
         }
 
         // TODO: Revisit for codeversion 13 and feature DirectArrays
         // assert(false);
 
+        String text = "";
         for (int i = 0; i < var.dims()[level].size(); i++)
         {
         	long abase = address + i * 4;
         	long inner = file_.int32FromData(abase);
             long finalX = abase + inner;
-            outputLine("{");
+            text += prepareOutputLine("{");
             increaseIndent();
-            dumpStringArray(var, finalX, level + 1);
+            text += dumpStringArray(var, finalX, level + 1);
             decreaseIndent();
             if (i == var.dims()[level].size() - 1)
-                outputLine("}");
+                text += prepareOutputLine("}");
             else
-                outputLine("},");
+                text += prepareOutputLine("},");
         }
+        return text;
     }
 
-    private void dumpEntireArray(long address, int size) throws IOException
+    private String dumpEntireArray(long address, int size)
     {
         String text = "";
         for (int i = 0; i < size; i++)
@@ -1163,10 +1211,10 @@ public class SourceBuilder {
             if (i != size - 1)
                 text += ", ";
         }
-        outputLine(text);
+        return prepareOutputLine(text);
     }
 
-    private void dumpArray(long address, int size) throws IOException
+    private String dumpArray(long address, int size)
     {
     	long first = file_.int32FromData(address);
         for (int i = 1; i < size; i++)
@@ -1174,37 +1222,37 @@ public class SourceBuilder {
         	long cell = file_.int32FromData(address + i * 4);
             if (first != cell)
             {
-                dumpEntireArray(address, size);
-                return;
+                return dumpEntireArray(address, size);
             }
         }
-        outputLine(first + ", ...");
+        return prepareOutputLine(first + ", ...");
     }
 
-    private void dumpArray(Variable var, long address, int level) throws IOException
+    private String dumpArray(Variable var, long address, int level)
     {
         if (level == var.dims().length - 1)
         {
-            dumpArray(address, var.dims()[level].size());
-            return;
+            return dumpArray(address, var.dims()[level].size());
         }
 
         //assert(false);
 
+        String text = "";
         for (int i = 0; i < var.dims()[level].size(); i++)
         {
         	long abase = address + i * 4;
         	long inner = file_.int32FromData(abase);
             long finalX = abase + inner;
-            outputLine("{");
+            text += prepareOutputLine("{");
             increaseIndent();
-            dumpArray(var, finalX, level + 1);
+            text += dumpArray(var, finalX, level + 1);
             decreaseIndent();
             if (i == var.dims()[level].size() - 1)
-                outputLine("}");
+            	text += prepareOutputLine("}");
             else
-                outputLine("},");
+            	text += prepareOutputLine("},");
         }
+        return text;
     }
 
     private void writeGlobal(Variable var) throws IOException
@@ -1345,7 +1393,7 @@ public class SourceBuilder {
                 outputLine(text + " =");
                 outputLine("{");
                 increaseIndent();
-                dumpStringArray(var, var.address(), 0);
+                out_.print(dumpStringArray(var, var.address(), 0));
                 decreaseIndent();
                 outputLine("};");
             }
@@ -1390,7 +1438,7 @@ public class SourceBuilder {
             outputLine(text + " =");
             outputLine("{");
             increaseIndent();
-            dumpArray(var, var.address(), 0);
+            out_.print(dumpArray(var, var.address(), 0));
             decreaseIndent();
             outputLine("};");
         }
