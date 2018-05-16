@@ -53,6 +53,11 @@ public abstract class PawnFile {
     public abstract float floatFromData(long address);
     public abstract int int32FromData(long address);
     
+    public boolean isValidDataAddress(long address)
+    {
+    	return address >= 0 && address < DAT().length;
+    }
+    
     protected Tag findTag(long tag_id) {
 		for (int i = 0; i < tags_.length; i++) {
 			if (tags_[i].tag_id() == tag_id)

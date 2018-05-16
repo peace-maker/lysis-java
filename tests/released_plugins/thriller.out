@@ -1,0 +1,177 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.5.3",
+	date = "06/12/2014",
+	time = "06:41:34"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new Address:g_addrPatch;
+new g_iMemoryPatched;
+public Plugin:myinfo =
+{
+	name = "Thriller",
+	description = "Blocks (random) thriller taunt",
+	author = "linux_lover",
+	version = "0.2",
+	url = "https://forums.alliedmods.net/showthread.php?p=2070774"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbReadRepeatedInt");
+	MarkNativeAsOptional("PbReadRepeatedFloat");
+	MarkNativeAsOptional("PbReadRepeatedBool");
+	MarkNativeAsOptional("PbReadRepeatedString");
+	MarkNativeAsOptional("PbReadRepeatedColor");
+	MarkNativeAsOptional("PbReadRepeatedAngle");
+	MarkNativeAsOptional("PbReadRepeatedVector");
+	MarkNativeAsOptional("PbReadRepeatedVector2D");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public OnPluginStart()
+{
+	Patch_Enable();
+	return 0;
+}
+
+public OnPluginEnd()
+{
+	Patch_Disable();
+	return 0;
+}
+
+Patch_Enable()
+{
+	g_addrPatch = MissingTAG:0;
+	g_iMemoryPatched = 0;
+	decl String:strGame[12];
+	GetGameFolderName(strGame, 10);
+	if (strcmp(strGame, "tf", true))
+	{
+		LogMessage("Failed to load thriller: Can only be loaded on Team Fortress.");
+		return 0;
+	}
+	new Handle:hGamedata = LoadGameConfigFile("thriller.plugin");
+	if (hGamedata)
+	{
+		new iPatchOffset = GameConfGetOffset(hGamedata, "Offset_ThrillerTaunt");
+		if (iPatchOffset == -1)
+		{
+			LogMessage("Failed to load thriller: Failed to lookup patch offset.");
+			CloseHandle(hGamedata);
+			return 0;
+		}
+		new iPayload = GameConfGetOffset(hGamedata, "Payload_ThrillerTaunt");
+		if (iPayload == -1)
+		{
+			LogMessage("Failed to load thriller: Failed to lookup patch payload.");
+			CloseHandle(hGamedata);
+			return 0;
+		}
+		g_addrPatch = GameConfGetAddress(hGamedata, "ThrillerTaunt");
+		if (g_addrPatch)
+		{
+			CloseHandle(hGamedata);
+			g_addrPatch = iPatchOffset + g_addrPatch;
+			LogMessage("Patching ThrillerTaunt at address: 0x%.8X..", g_addrPatch);
+			g_iMemoryPatched = LoadFromAddress(g_addrPatch, NumberType:0);
+			StoreToAddress(g_addrPatch, iPayload, NumberType:0);
+			return 0;
+		}
+		LogMessage("Failed to load thriller: Failed to locate signature.");
+		CloseHandle(hGamedata);
+		return 0;
+	}
+	LogMessage("Failed to load thriller: Missing gamedata/%s.txt.", "thriller.plugin");
+	return 0;
+}
+
+Patch_Disable()
+{
+	if (g_addrPatch)
+	{
+		if (0 >= g_iMemoryPatched)
+		{
+			return 0;
+		}
+		LogMessage("Unpatching ThrillerTaunt at address: 0x%.8X..", g_addrPatch);
+		StoreToAddress(g_addrPatch, g_iMemoryPatched, NumberType:0);
+		g_addrPatch = MissingTAG:0;
+		g_iMemoryPatched = 0;
+		return 0;
+	}
+	return 0;
+}
+

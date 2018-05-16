@@ -1044,6 +1044,23 @@ public class SourceBuilder {
         return str;
     }
     
+    private boolean isArrayValid(long address, int[] dims, int level)
+    {
+    	if (level == dims.length - 1)
+    		return file_.isValidDataAddress(address);
+
+    	for (int i = 0; i < dims[level]; i++)
+    	{
+    		long abase = address + i * 4;
+    		long inner = file_.int32FromData(abase);
+    		long finalX = abase + inner;
+    		if (!isArrayValid(finalX, dims, level + 1))
+    			return false;
+    	}
+
+    	return true;
+    }
+    
     private boolean isArrayEmpty(long address, int bytes)
     {
         for (long i = address + 0; i < address + bytes; i++)
@@ -1075,17 +1092,22 @@ public class SourceBuilder {
 
     private boolean isArrayEmpty(Variable var)
     {
-    	// Initializing arrays like char arr[2][] = {"a", "b"}; 
-    	// has the last dimension undetermined, so just print
-    	// the strings as long as they are.
-    	if (var.dims().length > 0 && var.dims()[var.dims().length - 1].size() == 0)
-    		return false;
-    	
         int[] dims = new int[var.dims().length];
         for (int i = 0; i < var.dims().length; i++)
             dims[i] = var.dims()[i].size();
         if (var.tag() != null && var.tag().name().equals("String"))
             dims[dims.length - 1] /= 4;
+        
+        // Don't try to print an array with invalid indirection vectors.
+        if (!isArrayValid(var.address(), dims, 0))
+            return true;
+        
+        // Initializing arrays like char arr[2][] = {"a", "b"}; 
+        // has the last dimension undetermined, so just print
+        // the strings as long as they are.
+        if (var.dims().length > 0 && var.dims()[var.dims().length - 1].size() == 0)
+            return false;
+        
         return isArrayEmpty(var.address(), dims, 0);
     }
 

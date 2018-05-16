@@ -1,0 +1,151 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.3.8-dev",
+	date = "08/07/2011",
+	time = "12:16:05"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:TFResourceNames[18][];
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+new Handle:BleedChance;
+new Handle:BleedTime;
+public Plugin:myinfo =
+{
+	name = "[TF2] Broken Bottle Bleed",
+	description = "Broken Demo Bottles have a chance to inflict bleed.",
+	author = "DarthNinja",
+	version = "1.0.3",
+	url = "DarthNinja.com"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) >= 0;
+}
+
+public OnPluginStart()
+{
+	CreateConVar("sm_bbb_version", "1.0.3", "TF2 Player Stats", 270656, false, 0.0, false, 0.0);
+	BleedChance = CreateConVar("sm_bbb_chance", "1.00", "Chance to inflict bleed, 1.00 = 100%, 0.50 = 50%, etc", 262144, false, 0.0, false, 0.0);
+	BleedTime = CreateConVar("sm_bbb_time", "5.0", "Seconds to inflict bleed for", 262144, false, 0.0, false, 0.0);
+	RegAdminCmd("sm_break", BottleBreak, 32, "Breaks your Bottle", "", 0);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SDKHook(i, SDKHookType:2, OnTakeDamage);
+		}
+		i++;
+	}
+	LoadTranslations("common.phrases");
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	SDKHook(client, SDKHookType:2, OnTakeDamage);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	SDKUnhook(client, SDKHookType:2, OnTakeDamage);
+	return 0;
+}
+
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+	new var1;
+	if (damagetype == 4 || victim < 0 || victim > MaxClients || attacker < 0 || attacker > MaxClients)
+	{
+		return Action:0;
+	}
+	new Float:iBleedChance = GetConVarFloat(BleedChance);
+	new Float:iRoll = GetRandomFloat(0.0, 1.0);
+	if (iBleedChance >= iRoll)
+	{
+		new iWeapon = GetEntPropEnt(attacker, PropType:0, "m_hActiveWeapon");
+		new iItemID = GetEntProp(iWeapon, PropType:0, "m_iItemDefinitionIndex", 4);
+		new var2;
+		if (iItemID != 1 && iItemID != 191)
+		{
+			return Action:0;
+		}
+		new bBroken = GetEntProp(iWeapon, PropType:0, "m_bBroken", 4);
+		if (bBroken != 1)
+		{
+			return Action:0;
+		}
+		if (attacker == victim)
+		{
+			return Action:0;
+		}
+		new var3;
+		if (victim > 0 && victim < MaxClients && IsClientInGame(victim))
+		{
+			TF2_MakeBleed(victim, attacker, GetConVarFloat(BleedTime));
+		}
+	}
+	return Action:0;
+}
+
+public Action:BottleBreak(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		ReplyToCommand(client, "You must be ingame!");
+		return Action:3;
+	}
+	new iWeapon = GetPlayerWeaponSlot(client, 2);
+	new iItemID = GetEntProp(iWeapon, PropType:0, "m_iItemDefinitionIndex", 4);
+	new var1;
+	if (iItemID != 1 && iItemID != 191)
+	{
+		ReplyToCommand(client, "You do not have a bottle to break!");
+		return Action:3;
+	}
+	ReplyToCommand(client, "Your bottle has been broken!");
+	SetEntProp(iWeapon, PropType:0, "m_bBroken", any:1, 4);
+	return Action:3;
+}
+
