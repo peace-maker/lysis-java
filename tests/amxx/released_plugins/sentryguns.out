@@ -1,12 +1,3 @@
-java.lang.Exception: Unrecognized opcode: lctrl
-
-/* ERROR PREPROCESSING! Unrecognized opcode: lctrl */
- function "sentry_think" (number 46)
-	at lysis.builder.MethodParser.readInstruction(MethodParser.java:676)
-	at lysis.builder.MethodParser.readAll(MethodParser.java:693)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.PreprocessMethod(Lysis.java:32)
-	at lysis.Lysis.main(Lysis.java:180)
 new PLUGINNAME[12] =
 {
 	83, 101, 110, 116, 114, 121, 32, 103, 117, 110, 115, 0
@@ -785,7 +776,32 @@ bool:sentry_pendulum(sentry, Float:deltaTime)
 
 bool:TraceCheckCollides(Float:origin[3], Float:BOUNDS)
 {
-	new Float:traceEnds[8][3] = {1.0842022E-19,7.1054274E-15,4.656613E-10,3.0517578E-5,2.0,131072.0,8.5899346E9,5.6294995E14};
+	new Float:traceEnds[8][3] = {
+		{
+			0, ...
+		},
+		{
+			119, 101, 97
+		},
+		{
+			112, 111, 110
+		},
+		{
+			98, 111, 120
+		},
+		{
+			0, 97, 114
+		},
+		{
+			109, 111, 117
+		},
+		{
+			114, 121, 95
+		},
+		{
+			101, 110, 116
+		}
+	};
 	new Float:traceHit[3] = 0.0;
 	new hitEnt;
 	traceEnds[0][traceEnds] = floatsub(origin[0], BOUNDS);
@@ -938,101 +954,28 @@ public DelayedScoreInfoUpdate(parms[4])
 	return 0;
 }
 
-genericShock(Float:hitPointOrigin[3], Float:radius, classString[], maxEntsToFind, Float:power, OBJECTTYPE:objecttype)
-{
-	new entList[32];
-	if (maxEntsToFind > 32)
-	{
-		maxEntsToFind = 32;
-	}
-	new entsFound = find_sphere_class(0, classString, radius, entList, maxEntsToFind, hitPointOrigin);
-	new Float:entOrigin[3] = 0.0;
-	new Float:velocity[3] = 0.0;
-	new Float:cOrigin[3] = 0.0;
-	new j;
-	while (j < entsFound)
-	{
-		switch (objecttype)
-		{
-			case 1:
-			{
-				new l_model[16];
-				entity_get_string(entList[j], 2, l_model, 15);
-				if (equal(l_model, 38936, 0))
-				{
-				}
-				entity_get_vector(entList[j], 0, entOrigin);
-				new Float:distanceNadePl = vector_distance(entOrigin, hitPointOrigin);
-				new var1;
-				if (entity_is_on_ground(entList[j]) && entOrigin[2] < hitPointOrigin[2])
-				{
-					entOrigin[2] = floatadd(hitPointOrigin[2], distanceNadePl);
-				}
-				entity_get_vector(entList[j], 2, velocity);
-				cOrigin[0] = floatadd(floatdiv(floatmul(floatsub(entOrigin[0], hitPointOrigin[0]), radius), distanceNadePl), hitPointOrigin[0]);
-				cOrigin[1] = floatadd(floatdiv(floatmul(floatsub(entOrigin[1], hitPointOrigin[1]), radius), distanceNadePl), hitPointOrigin[1]);
-				cOrigin[2] = floatadd(floatdiv(floatmul(floatsub(entOrigin[2], hitPointOrigin[2]), radius), distanceNadePl), hitPointOrigin[2]);
-				velocity[0] = floatadd(velocity[0], floatmul(floatsub(cOrigin[0], entOrigin[0]), power));
-				new var2 = velocity[1];
-				var2 = floatadd(var2, floatmul(floatsub(cOrigin[1], entOrigin[1]), power));
-				new var3 = velocity[2];
-				var3 = floatadd(var3, floatmul(floatsub(cOrigin[2], entOrigin[2]), power));
-				entity_set_vector(entList[j], 2, velocity);
-			}
-			case 2:
-			{
-				if (!is_user_alive(entList[j]))
-				{
-				}
-				entity_get_vector(entList[j], 0, entOrigin);
-				new Float:distanceNadePl = vector_distance(entOrigin, hitPointOrigin);
-				new var1;
-				if (entity_is_on_ground(entList[j]) && entOrigin[2] < hitPointOrigin[2])
-				{
-					entOrigin[2] = floatadd(hitPointOrigin[2], distanceNadePl);
-				}
-				entity_get_vector(entList[j], 2, velocity);
-				cOrigin[0] = floatadd(floatdiv(floatmul(floatsub(entOrigin[0], hitPointOrigin[0]), radius), distanceNadePl), hitPointOrigin[0]);
-				cOrigin[1] = floatadd(floatdiv(floatmul(floatsub(entOrigin[1], hitPointOrigin[1]), radius), distanceNadePl), hitPointOrigin[1]);
-				cOrigin[2] = floatadd(floatdiv(floatmul(floatsub(entOrigin[2], hitPointOrigin[2]), radius), distanceNadePl), hitPointOrigin[2]);
-				velocity[0] = floatadd(velocity[0], floatmul(floatsub(cOrigin[0], entOrigin[0]), power));
-				new var2 = velocity[1];
-				var2 = floatadd(var2, floatmul(floatsub(cOrigin[1], entOrigin[1]), power));
-				new var3 = velocity[2];
-				var3 = floatadd(var3, floatmul(floatsub(cOrigin[2], entOrigin[2]), power));
-				entity_set_vector(entList[j], 2, velocity);
-			}
-			default:
-			{
-				entity_get_vector(entList[j], 0, entOrigin);
-				new Float:distanceNadePl = vector_distance(entOrigin, hitPointOrigin);
-				new var1;
-				if (entity_is_on_ground(entList[j]) && entOrigin[2] < hitPointOrigin[2])
-				{
-					entOrigin[2] = floatadd(hitPointOrigin[2], distanceNadePl);
-				}
-				entity_get_vector(entList[j], 2, velocity);
-				cOrigin[0] = floatadd(floatdiv(floatmul(floatsub(entOrigin[0], hitPointOrigin[0]), radius), distanceNadePl), hitPointOrigin[0]);
-				cOrigin[1] = floatadd(floatdiv(floatmul(floatsub(entOrigin[1], hitPointOrigin[1]), radius), distanceNadePl), hitPointOrigin[1]);
-				cOrigin[2] = floatadd(floatdiv(floatmul(floatsub(entOrigin[2], hitPointOrigin[2]), radius), distanceNadePl), hitPointOrigin[2]);
-				velocity[0] = floatadd(velocity[0], floatmul(floatsub(cOrigin[0], entOrigin[0]), power));
-				new var2 = velocity[1];
-				var2 = floatadd(var2, floatmul(floatsub(cOrigin[1], entOrigin[1]), power));
-				new var3 = velocity[2];
-				var3 = floatadd(var3, floatmul(floatsub(cOrigin[2], entOrigin[2]), power));
-				entity_set_vector(entList[j], 2, velocity);
-			}
-		}
-		j++;
-	}
-	return 0;
-}
+java.lang.AssertionError
 
+/* ERROR! null */
+ function "genericShock" (number 38)
 entity_is_on_ground(entity)
 {
 	return entity_get_int(entity, 27) & 512;
 }
 
+	at lysis.builder.structure.SourceStructureBuilder.traverseSwitch(SourceStructureBuilder.java:622)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:689)
+	at lysis.builder.structure.SourceStructureBuilder.traverseLoop(SourceStructureBuilder.java:596)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:698)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:683)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:655)
+	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:441)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.build(SourceStructureBuilder.java:705)
+	at lysis.Lysis.DumpMethod(Lysis.java:140)
+	at lysis.Lysis.main(Lysis.java:213)
 public message_tempentity()
 {
 	new var1;
@@ -1166,15 +1109,186 @@ public client_disconnect(id)
 	return 0;
 }
 
-java.lang.Exception: Unrecognized opcode: lctrl
-	at lysis.builder.MethodParser.readInstruction(MethodParser.java:676)
-	at lysis.builder.MethodParser.readAll(MethodParser.java:693)
-	at lysis.builder.MethodParser.parse(MethodParser.java:881)
-	at lysis.Lysis.DumpMethod(Lysis.java:65)
-	at lysis.Lysis.main(Lysis.java:205)
+public sentry_think(parm[1])
+{
+	if (!is_valid_ent(parm[0]))
+	{
+		client_print(0, 3, 39108, parm);
+		return 0;
+	}
+	new ent = parm[0];
+	if (GetSentryTeam(ent) != cs_get_user_team(GetSentryPeople(ent, 0), 0))
+	{
+		client_disconnect(GetSentryPeople(ent, 0));
+		return 0;
+	}
+	new Float:sentryOrigin[3] = 0.0;
+	new Float:hitOrigin[3] = 0.0;
+	new hitent;
+	entity_get_vector(ent, 0, sentryOrigin);
+	new var7 = sentryOrigin[2];
+	var7 = floatadd(1101004800, var7);
+	new target = GetSentryPeople(ent, 3);
+	new firemode = GetSentryFiremode(ent);
+	new var1;
+	if (firemode == 1 && GetSentryTeam(ent) != cs_get_user_team(target, 0))
+	{
+		if (!is_user_alive(target))
+		{
+			SetSentryFiremode(ent, 0);
+			goto Label_93F4;
+		}
+		new sentryLevel = GetSentryLevel(ent);
+		new Float:targetOrigin[3] = 0.0;
+		entity_get_vector(target, 0, targetOrigin);
+		if (entity_get_int(target, 27) & 16384)
+		{
+			new var8 = targetOrigin[2];
+			var8 = floatadd(1099956224, var8);
+		}
+		hitent = trace_line(ent, sentryOrigin, targetOrigin, hitOrigin);
+		if (entity_get_edict(ent, 7) == hitent)
+		{
+			hitent = trace_line(hitent, hitOrigin, targetOrigin, hitOrigin);
+		}
+		new var2;
+		if (target != hitent && is_user_alive(hitent) && cs_get_user_team(hitent, 0) != GetSentryTeam(ent))
+		{
+			target = hitent;
+			SetSentryPeople(ent, 3, hitent);
+		}
+		if (target == hitent)
+		{
+			sentry_turntotarget(ent, sentryOrigin, target, targetOrigin);
+			emit_sound(ent, 1, g_FIRESOUNDS[random_num(0, 1)], 1065353216, 1061997773, 0, 100);
+			new Float:hitRatio = floatsub(random_float(0, 1065353216), g_HITRATIOS[sentryLevel]);
+			new var3;
+			if (!get_user_godmode(target) && hitRatio <= 0.0)
+			{
+				sentry_damagetoplayer(ent, sentryLevel, sentryOrigin, target);
+			}
+			else
+			{
+				new Float:sentryAngle[3] = 0.0;
+				new Float:x = floatsub(hitOrigin[0], sentryOrigin[0]);
+				new Float:z = floatsub(hitOrigin[1], sentryOrigin[1]);
+				new Float:radians = floatatan(floatdiv(z, x), 0);
+				sentryAngle[1] = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
+				if (hitOrigin[0] < sentryOrigin[0])
+				{
+					new var9 = sentryAngle[1];
+					var9 = floatsub(var9, 1127481344);
+				}
+				new Float:h = floatsub(hitOrigin[2], sentryOrigin[2]);
+				new Float:b = vector_distance(sentryOrigin, hitOrigin);
+				radians = floatatan(floatdiv(h, b), 0);
+				sentryAngle[0] = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
+				sentryAngle[0] = floatadd(sentryAngle[0], random_float(floatmul(-1054867456, hitRatio), floatmul(1092616192, hitRatio)));
+				new var10 = sentryAngle[1];
+				var10 = floatadd(var10, random_float(floatmul(-1054867456, hitRatio), floatmul(1092616192, hitRatio)));
+				engfunc(17, sentryAngle);
+				new Float:vector[3] = 0.0;
+				get_global_vector(26, vector);
+				new i;
+				while (i < 3)
+				{
+					vector[i] *= 1000;
+					i++;
+				}
+				new Float:traceEnd[3] = 0.0;
+				new i;
+				while (i < 3)
+				{
+					traceEnd[i] = floatadd(vector[i], sentryOrigin[i]);
+					i++;
+				}
+				new hitEnt = ent;
+				do {
+				} while ((hitEnt = trace_line(hitEnt, hitOrigin, traceEnd, hitOrigin)));
+			}
+			tracer(sentryOrigin, hitOrigin);
+			set_task(1036831949, 39284, parm[0] + 4000, parm, 1, 38012, 0);
+			return 0;
+		}
+		SetSentryFiremode(ent, 0);
+	}
+	else
+	{
+		if (firemode == 2)
+		{
+			new hitEnt = entityviewhitpoint(ent, sentryOrigin, hitOrigin);
+			emit_sound(ent, 1, 39336, 1065353216, 1061997773, 0, 100);
+			tracer(sentryOrigin, hitOrigin);
+			new var4;
+			if (is_user_connected(hitEnt) && is_user_alive(hitEnt) && !get_user_godmode(hitEnt))
+			{
+				sentry_damagetoplayer(ent, GetSentryLevel(ent), sentryOrigin, hitEnt);
+			}
+			set_task(1036831949, 39412, parm[0] + 4000, parm, 1, 38012, 0);
+			return 0;
+		}
+	}
+	if (10 > random_num(0, 99))
+	{
+		emit_sound(ent, 0, 39464, 1065353216, 1061997773, 0, 100);
+	}
+	new closestTarget;
+	new Float:closestDistance = 0.0;
+	new Float:distance = 0.0;
+	new Float:closestOrigin[3] = 0.0;
+	new Float:playerOrigin[3] = 0.0;
+	new CsTeams:sentryTeam = GetSentryTeam(ent);
+	new i = 1;
+	while (i <= g_MAXPLAYERS)
+	{
+		new var5;
+		if (!is_user_connected(i) || !is_user_alive(i) || sentryTeam != cs_get_user_team(i, 0))
+		{
+		}
+		else
+		{
+			entity_get_vector(i, 0, playerOrigin);
+			if (entity_get_int(i, 27) & 16384)
+			{
+				new var11 = playerOrigin[2];
+				var11 = floatadd(1099956224, var11);
+			}
+			hitent = trace_line(ent, sentryOrigin, playerOrigin, hitOrigin);
+			if (entity_get_edict(ent, 7) == hitent)
+			{
+				hitent = trace_line(hitent, hitOrigin, playerOrigin, hitOrigin);
+			}
+			if (i == hitent)
+			{
+				distance = vector_distance(sentryOrigin, playerOrigin);
+				new var6;
+				if (distance < closestDistance || closestTarget)
+				{
+					closestTarget = i;
+					closestDistance = distance;
+				}
+			}
+		}
+		i++;
+	}
+	if (closestTarget)
+	{
+		emit_sound(ent, 0, 39552, 1065353216, 1061997773, 0, 100);
+		sentry_turntotarget(ent, sentryOrigin, closestTarget, closestOrigin);
+		SetSentryFiremode(ent, 1);
+		SetSentryPeople(ent, 3, closestTarget);
+		entity_set_float(ent, 36, 1123942400);
+		set_pev(ent, 109, 127);
+	}
+	else
+	{
+		SetSentryFiremode(ent, 0);
+	}
+	Label_93F4:
+	set_task(g_THINKFREQUENCIES[GetSentryLevel(ent)], 39640, parm[0] + 4000, parm, 1, 38012, 0);
+	return 0;
+}
 
-/* ERROR! Unrecognized opcode: lctrl */
- function "sentry_think" (number 46)
 sentry_damagetoplayer(sentry, sentryLevel, Float:sentryOrigin[3], target)
 {
 	new newHealth = get_user_health(target) - g_DMG[sentryLevel];

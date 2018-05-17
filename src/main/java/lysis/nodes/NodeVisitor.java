@@ -13,6 +13,7 @@ import lysis.nodes.types.DFloat;
 import lysis.nodes.types.DFunction;
 import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
+import lysis.nodes.types.DLabel;
 import lysis.nodes.types.DHeap;
 import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DInlineArray;
@@ -58,4 +59,5 @@ public abstract class NodeVisitor {
     public void visit(DInlineArray ia) { }
     public void visit(DSwitch switch_) { }
 	public void visit(DGenArray genarray) throws Exception { }
+	public void visit(DLabel gototarget) { }
 }

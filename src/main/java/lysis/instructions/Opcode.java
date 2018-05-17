@@ -52,5 +52,8 @@ public enum Opcode {
     Heap,
     MemCopy,
     Switch,
-    GenArray
+    GenArray,
+    StackAdjust,
+    LoadCtrl,
+    StoreCtrl
 }

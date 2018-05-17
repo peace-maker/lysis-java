@@ -24,6 +24,7 @@ import lysis.instructions.LIndexAddress;
 import lysis.instructions.LInstruction;
 import lysis.instructions.LJump;
 import lysis.instructions.LJumpCondition;
+import lysis.instructions.LLoadCtrl;
 import lysis.instructions.LLoadGlobal;
 import lysis.instructions.LLoadIndex;
 import lysis.instructions.LLoadLocal;
@@ -39,6 +40,8 @@ import lysis.instructions.LPushReg;
 import lysis.instructions.LPushStackAddress;
 import lysis.instructions.LStack;
 import lysis.instructions.LStackAddress;
+import lysis.instructions.LStackAdjust;
+import lysis.instructions.LStoreCtrl;
 import lysis.instructions.LStoreGlobal;
 import lysis.instructions.LStoreGlobalConstant;
 import lysis.instructions.LStoreLocal;
@@ -65,6 +68,7 @@ import lysis.nodes.types.DDeclareLocal;
 import lysis.nodes.types.DDeclareStatic;
 import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DGlobal;
+import lysis.nodes.types.DLabel;
 import lysis.nodes.types.DHeap;
 import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DJump;
@@ -741,9 +745,88 @@ public class NodeBuilder {
                 	block.add(genarray_);
                 	break;
                 }
+                
+                case StackAdjust:
+                {
+                	LStackAdjust ins = (LStackAdjust)uins;
+                	assert(ins.value() % 4 == 0);
+                	// Add the missing amount of stack slots. 
+                	if (ins.value() < block.stack().depth())
+                	{
+	                	int amt = (ins.value() - block.stack().depth()) / -4;
+	                	for (int i = 0; i < amt; i++)
+	                    {
+	                        DDeclareLocal local = new DDeclareLocal(ins.pc(), null);
+	                        block.stack().push(local);
+	                        block.add(local);
+	                    }
+                	}
+                	// Pop the exceeding ones.
+                	else
+                	{
+                		int amt = (block.stack().depth() - ins.value()) / -4;
+                		for (int i = 0; i < amt; i++)
+                			block.stack().pop();
+                	}
+                	
+                	// Older compilers - even after |goto| disabled - could still
+                	// emit this opcode with just a unused retag like
+                	// |NewTag:GetEngineTime();| -> stkadjust 0x0.
+                	// Don't mark this block as a goto target in that case.
+                	// Assume the stkadjust opcode being the first of the block.
+                	if (ins.value() > 0 || block.nodes().first() == block.nodes().last())
+                		block.add(new DLabel(ins.pc()));
+                	break;
+                }
+                
+                case LoadCtrl:
+                {
+                	// Hack in old |goto| support.
+                	LLoadCtrl ins = (LLoadCtrl)uins;
+                	assert(ins.ctrlregindex() == 5); // PRI = FRM
+                	block.stack().set(Register.Pri, new DConstant(0));
+                	break;
+                }
+                
+                case StoreCtrl:
+                {
+                	// Hack in old |goto| support.
+                	LStoreCtrl ins = (LStoreCtrl)uins;
+                	assert(ins.ctrlregindex() == 4); // STK = PRI
+                	DNode pri = block.stack().pri();
+                	assert(pri.type() == NodeType.Binary);
+                	
+                	DBinary add = (DBinary)pri;
+                	assert(add.lhs().type() == NodeType.Constant && add.rhs().type() == NodeType.Constant);
+                	DConstant frm = (DConstant)add.lhs();
+                	assert(frm.value() == 0);
+                	DConstant stkadjust = (DConstant)add.rhs();
+                	assert(stkadjust.value() <= 0);
+                	assert(stkadjust.value() % 4 == 0);
+                	// Add the missing amount of stack slots. 
+                	if (stkadjust.value() < block.stack().depth())
+                	{
+	                	long amt = (stkadjust.value() - block.stack().depth()) / -4;
+	                	for (int i = 0; i < amt; i++)
+	                    {
+	                        DDeclareLocal local = new DDeclareLocal(ins.pc(), null);
+	                        block.stack().push(local);
+	                        block.add(local);
+	                    }
+                	}
+                	// Pop the exceeding ones.
+                	else
+                	{
+                		long amt = (block.stack().depth() - stkadjust.value()) / -4;
+                		for (int i = 0; i < amt; i++)
+                			block.stack().pop();
+                	}
+                	block.add(new DLabel(ins.pc()));
+                	break;
+                }
 
                 default:
-                    throw new Exception("unhandled opcode");
+                    throw new Exception("unhandled opcode " + uins.op());
             }
         }
 

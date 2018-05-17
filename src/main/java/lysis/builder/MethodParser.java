@@ -33,6 +33,7 @@ import lysis.instructions.LInstruction;
 import lysis.instructions.LJump;
 import lysis.instructions.LJumpCondition;
 import lysis.instructions.LLoad;
+import lysis.instructions.LLoadCtrl;
 import lysis.instructions.LLoadGlobal;
 import lysis.instructions.LLoadIndex;
 import lysis.instructions.LLoadLocal;
@@ -51,6 +52,7 @@ import lysis.instructions.LStack;
 import lysis.instructions.LStackAddress;
 import lysis.instructions.LStackAdjust;
 import lysis.instructions.LStore;
+import lysis.instructions.LStoreCtrl;
 import lysis.instructions.LStoreGlobal;
 import lysis.instructions.LStoreGlobalConstant;
 import lysis.instructions.LStoreLocal;
@@ -668,6 +670,7 @@ public class MethodParser {
             case stackadjust:
             {
                 int value = readInt32();
+                assert(value <= 0);
                 return new LStackAdjust(value);
             }
             
@@ -680,6 +683,18 @@ public class MethodParser {
             {
                 readInt32();
                 return new LDebugBreak();
+            }
+            
+            case lctrl:
+            {
+            	int index = readInt32();
+            	return new LLoadCtrl(index);
+            }
+            
+            case sctrl:
+            {
+            	int index = readInt32();
+            	return new LStoreCtrl(index);
             }
 
             default:

@@ -8,6 +8,7 @@ import lysis.PawnFile.Automation;
 import lysis.Public;
 import lysis.builder.structure.BlockAnalysis;
 import lysis.builder.structure.ControlBlock;
+import lysis.builder.structure.GotoBlock;
 import lysis.builder.structure.IfBlock;
 import lysis.builder.structure.LogicChain;
 import lysis.builder.structure.LogicOperator;
@@ -41,6 +42,7 @@ import lysis.nodes.types.DIncDec;
 import lysis.nodes.types.DInlineArray;
 import lysis.nodes.types.DJump;
 import lysis.nodes.types.DJumpCondition;
+import lysis.nodes.types.DLabel;
 import lysis.nodes.types.DLoad;
 import lysis.nodes.types.DLocalRef;
 import lysis.nodes.types.DNode;
@@ -811,6 +813,10 @@ public class SourceBuilder {
             case GenArray:
             	writeGenArray((DGenArray)node);
             	break;
+            	
+            case Label:
+            	writeLabel((DLabel)node);
+            	break;
 
             default:
                 throw new Exception("unknown op (" + node.type() + ")");
@@ -1028,6 +1034,18 @@ public class SourceBuilder {
         if (switch_.join() != null)
             writeBlock(switch_.join());
     }
+    
+    private void writeLabel(DLabel label)
+    {
+    	outputLine(label.label() + ":");
+    }
+    
+    private void writeGoto(GotoBlock goto_) throws Exception
+    {
+    	writeStatements(goto_.source());
+    	DLabel label = (DLabel)goto_.target().nodes().first();
+    	outputLine(String.format("goto %s;", label.label()));
+    }
 
     private void writeStatementBlock(StatementBlock block) throws Exception
     {
@@ -1059,6 +1077,9 @@ public class SourceBuilder {
             case Switch:
                 writeSwitch((SwitchBlock)block);
                 break;
+            case Goto:
+            	writeGoto((GotoBlock)block);
+            	break;
             default:
                 assert(false);
                 break;

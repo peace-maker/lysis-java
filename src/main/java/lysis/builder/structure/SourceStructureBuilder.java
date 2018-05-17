@@ -5,6 +5,7 @@ import java.util.Stack;
 
 import lysis.builder.structure.SwitchBlock.Case;
 import lysis.instructions.LConstant;
+import lysis.instructions.LInstruction;
 import lysis.instructions.Opcode;
 import lysis.lstructure.LBlock;
 import lysis.nodes.NodeBlock;
@@ -666,6 +667,16 @@ public class SourceStructureBuilder {
             DJump jump = (DJump)last;
             //NodeBlock target = BlockAnalysis.EffectiveTarget(jump.target());
             NodeBlock target = jump.target();
+
+            // This jumps to a |goto| target.
+            if (target.nodes().first().type() == NodeType.Label)
+            {
+            	LInstruction[] ins = block.lir().instructions();
+            	// Make sure this is a jump emitted by the compiler,
+            	// not introduced when splitting up the block graph.
+            	if (ins[ins.length - 1].op() == Opcode.Jump)
+            		return new GotoBlock(block, target);
+            }
 
             ControlBlock next = null;
             if (!isJoin(target))

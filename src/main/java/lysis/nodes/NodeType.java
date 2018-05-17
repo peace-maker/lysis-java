@@ -30,5 +30,6 @@ public enum NodeType {
     MemCopy,
     InlineArray,
     Switch,
-    GenArray
+    GenArray,
+    Label
 }
