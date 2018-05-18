@@ -1,0 +1,216 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.5.3",
+	date = "06/10/2014",
+	time = "17:49:24"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Plugin:myinfo =
+{
+	name = "Zstuck",
+	description = "Unlock other players, if the antistick of ZR fails",
+	author = "SoZika",
+	version = "0.4",
+	url = "http://insanitybrasil.info"
+};
+new g_CollisionOffset;
+new intervalo[66];
+new Handle:gCvarEnabled;
+new bool:gEnabled;
+new Handle:gCvarInterval;
+new Float:gInterval;
+new Handle:gCvarNoBlock;
+new bool:gNoBlock;
+new Handle:gCvarSlap;
+new bool:gSlap;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbReadRepeatedInt");
+	MarkNativeAsOptional("PbReadRepeatedFloat");
+	MarkNativeAsOptional("PbReadRepeatedBool");
+	MarkNativeAsOptional("PbReadRepeatedString");
+	MarkNativeAsOptional("PbReadRepeatedColor");
+	MarkNativeAsOptional("PbReadRepeatedAngle");
+	MarkNativeAsOptional("PbReadRepeatedVector");
+	MarkNativeAsOptional("PbReadRepeatedVector2D");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+public OnPluginStart()
+{
+	gCvarEnabled = CreateConVar("zr_zstuck_enabled", "1", "Enable Plugin", 0, false, 0.0, false, 0.0);
+	gEnabled = GetConVarBool(gCvarEnabled);
+	HookConVarChange(gCvarEnabled, CvarChanged);
+	gCvarInterval = CreateConVar("zr_zstuck_interval", "3", "Interval to use zstuck", 0, false, 0.0, false, 0.0);
+	gInterval = GetConVarFloat(gCvarInterval);
+	HookConVarChange(gCvarInterval, CvarChanged);
+	gCvarNoBlock = CreateConVar("zr_zstuck_noblock", "1", "Give noblock", 0, false, 0.0, false, 0.0);
+	gNoBlock = GetConVarBool(gCvarNoBlock);
+	HookConVarChange(gCvarNoBlock, CvarChanged);
+	gCvarSlap = CreateConVar("zr_zstuck_slap", "1", "Give slap", 0, false, 0.0, false, 0.0);
+	gSlap = GetConVarBool(gCvarSlap);
+	HookConVarChange(gCvarSlap, CvarChanged);
+	g_CollisionOffset = FindSendPropOffs("CBaseEntity", "m_CollisionGroup");
+	RegConsoleCmd("say", ChamarStuck, "", 0);
+	AutoExecConfig(true, "zombiereloaded/zstuck", "sourcemod");
+	return 0;
+}
+
+public CvarChanged(Handle:cvar, String:oldValue[], String:newValue[])
+{
+	if (gCvarEnabled == cvar)
+	{
+		gEnabled = GetConVarBool(gCvarEnabled);
+	}
+	if (gCvarInterval == cvar)
+	{
+		gInterval = GetConVarFloat(gCvarInterval);
+	}
+	if (gCvarNoBlock == cvar)
+	{
+		gNoBlock = GetConVarBool(gCvarNoBlock);
+	}
+	if (gCvarSlap == cvar)
+	{
+		gSlap = GetConVarBool(gCvarSlap);
+	}
+	return 0;
+}
+
+public setNoblock(id)
+{
+	SetEntData(id, g_CollisionOffset, any:2, 4, true);
+	return 0;
+}
+
+public Action:tirarIntervalo(Handle:timer, any:id)
+{
+	intervalo[id] = 0;
+	return Action:0;
+}
+
+public Action:desblock(Handle:timer, any:id)
+{
+	SetEntData(GetClientOfUserId(id), g_CollisionOffset, any:5, 4, true);
+	return Action:0;
+}
+
+public Action:zstuck(id)
+{
+	if (!intervalo[id])
+	{
+		if (gNoBlock)
+		{
+			setNoblock(id);
+			CreateTimer(0.3, desblock, GetClientOfUserId(id), 0);
+		}
+		if (gSlap)
+		{
+			SlapPlayer(id, 0, false);
+		}
+		intervalo[id] = 1;
+		CreateTimer(gInterval, tirarIntervalo, id, 0);
+	}
+	return Action:0;
+}
+
+public Action:ChamarStuck(id, args)
+{
+	decl String:Said[128];
+	GetCmdArgString(Said, 127);
+	StripQuotes(Said);
+	TrimString(Said);
+	if (StrEqual(Said, "!zstuck", true))
+	{
+		if (gEnabled == true)
+		{
+			zstuck(id);
+		}
+	}
+	return Action:0;
+}
+

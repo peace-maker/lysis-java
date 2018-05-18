@@ -251,7 +251,8 @@ public class BackwardTypePropagation extends NodeVisitor {
                 }
                 
                 // Guess a string...
-                call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
+                if (graph_.file().isValidDataAddress(constNode.value()))
+                	call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
             }
         }
     }

@@ -1,0 +1,3308 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.8.0.5929",
+	date = "09/27/2016",
+	time = "18:45:20"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new localIPRanges[4] =
+{
+	1819044171, 1919248712, 1751347809, 121
+};
+new String:chatColorNames[12][] =
+{
+	"normal",
+	"orange",
+	"red",
+	"redblue",
+	"blue",
+	"bluered",
+	"team",
+	"lightgreen",
+	"gray",
+	"green",
+	"olivegreen",
+	"black"
+};
+new String:chatColorTags[12][16] =
+{
+	"normal",
+	"orange",
+	"red",
+	"redblue",
+	"blue",
+	"bluered",
+	"team",
+	"lightgreen",
+	"gray",
+	"green",
+	"olivegreen",
+	"black"
+};
+new chatColorInfo[12][4] =
+{
+	{
+		1, -1, 1, -3
+	},
+	{
+		1, 0, 1, -3
+	},
+	{
+		3, 9, 1, 2
+	},
+	{
+		3, 4, 1, 2
+	},
+	{
+		3, 9, 1, 3
+	},
+	{
+		3, 2, 1, 3
+	},
+	{
+		3, 9, 1, -2
+	},
+	{
+		3, 9, 1, 0
+	},
+	{
+		3, 9, 1, -1
+	},
+	{
+		4, 0, 1, -3
+	},
+	{
+		5, 9, 1, -3
+	},
+	{
+		6, 9, 1, -3
+	}
+};
+new bool:checkTeamPlay;
+new Handle:mp_teamplay;
+new bool:isSayText2_supported = 1;
+new chatSubject = -2;
+new Float:getPlayersInRadius_distances[66];
+new printToChat_excludeclient;
+new String:_smlib_empty_twodimstring_array[1][16];
+new base64_cFillChar = 3308130;
+new base64_decodeTable[256] =
+{
+	3308130, 1886221434, 0, 12079, 47, 1162690887, 0, 1162690887, 0, 46, 11822, 623866661, 115, 42, 46, 46, 11822, 623866661, 115, 25202, 1162690887, 0, 25207, 1095124292, 1599360085, 1414091351, 1095786309, 18516, 11822, 46, 623866661, 115, 623866661, 115, 1280136027, 542982729, 1869771333, 1226848882, 1818326638, 1679844457, 1650553953, 543519585, 1684955496, 3040620, 24, 32, 36, 48, 52, 56, 1717920891, 1953264993, 125, 1701996411, 8220261, 1734962299, 1919382632, 2104386917, 0, 1684370043, 125, 1970037371, 32101, 1768714107, 8217974, 24, 24, 24, 24, 24, 24, 1, 4, 3, 3, 3, 5, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, 0, 0, 1635151433, 543451500, 1701407843, 1763734638, 2019910766, 6563104, 1701407811, 622883950, 1936269412, 1953459744, 544106784, 1701667175, 0, 1931807489, 0, 7546113, 1987208563, 1935635045, 1853317488, 0, 1634038907, 1819239277, 8221295, 3, 1634038907, 1819239277, 8221295, 1634038907, 1819239277, 8221295, 0, 1852404565, 2004099175, 1702109295, 1663069537, 1919904879, 1852383347, 1701736224, 1936026912, 1701273971, 544434464, 544501614, 1869376609, 6579575, 1417240915, 846493797, 0, 1433691463, 1299342707, 1634956133, 2035574119, 25968, 1601465957, 7890025, 1952540771, 0, 1600615277, 1701667182, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1920234339, 6646633, 1869050723, 0, 1869050723, 0, 26228, 1952867692, 1634034740, 100, 1952867692, 1634034740, 12900, 1832021096, 112, 1952411757, 1886216549, 7954796, 6582116, 1417240915, 846493797
+};
+new String:base64_mime_chars[4] = "bz2";
+new String:base64_sTable[68] = "bz2";
+new String:base64_url_chars[4] = "bz2";
+new printToTop_excludeclient = 3308130;
+new String:CTag[6][] =
+{
+	"{default}",
+	"{green}",
+	"{lightgreen}",
+	"{red}",
+	"{blue}",
+	"{olive}"
+};
+new String:CTagCode[6][16] =
+{
+	"\x01",
+	"\x04",
+	"\x03",
+	"\x03",
+	"\x03",
+	"\x05"
+};
+new bool:CTagReqSayText2[6] =
+{
+	0, 0, 1, 1, 1, 0
+};
+new bool:CEventIsHooked;
+new bool:CSkipList[66];
+new bool:CProfile_Colors[6] =
+{
+	1, 1, 0, 0, 0, 0
+};
+new CProfile_TeamIndex[6] =
+{
+	-1, ...
+};
+new bool:CProfile_SayText2;
+new bool:CsgoFix;
+public Extension:__ext_cprefs =
+{
+	name = "Client Preferences",
+	file = "clientprefs.ext",
+	autoload = 1,
+	required = 1,
+};
+public SharedPlugin:__pl_tetris =
+{
+	name = "tetris",
+	file = "tetris.smx",
+	required = 1,
+};
+new bool:g_bCheckedEngine;
+new bool:g_bNeedsFakePrecache;
+new Handle:g_hPlayerGameThink[66];
+new bool:g_bGameField[66][16][10];
+new g_iObjectPosition[66][2];
+new TetrisObject:g_iObjectType[66];
+new TetrisObject:g_iNextObjectType[66];
+new TetrisRotation:g_iObjectRotation[66];
+new g_iTicks[66];
+new g_iButtons[66];
+new g_iButtonsPressed[66][4];
+new g_iLinesCleared[66];
+new g_iScore[66];
+new g_iLevel[66] =
+{
+	1, ...
+};
+new g_iHardDrop[66];
+new g_iCombo[66];
+new TetrisDifficulty:g_fDifficulty[66] =
+{
+	1053609165, ...
+};
+new Handle:g_hDrawInfoPanel[66];
+new Handle:g_hPlayBackgroundMusic[66];
+new Handle:g_hCookieNoSound;
+new bool:g_bEnableSound[66] =
+{
+	1, ...
+};
+new Handle:g_hCookieNoMusic;
+new bool:g_bEnableMusic[66] =
+{
+	1, ...
+};
+new Handle:g_hDatabase;
+new bool:g_bPlayerHasHighscore[66];
+new g_iPlayerHighscore[66][3];
+new Handle:g_hCVDisableHardDrop;
+new Handle:g_hCVDisableSounds;
+new Handle:g_hCVOnlyDead;
+new Handle:g_hCVDisableStats;
+new bool:g_bDisableSounds;
+new bool:g_bDisableHardDrop;
+new bool:g_bOnlyDead;
+new bool:g_bDisableStats;
+new bool:g_bIsCSGO;
+new Handle:g_hfwdOnTetrisGameEnd;
+public Plugin:myinfo =
+{
+	name = "Tetris",
+	description = "Tetris minigame in a panel",
+	author = "Jannik \"Peace-Maker\" Hartung",
+	version = "1.1",
+	url = "http://www.wcfan.de/"
+};
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.GetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return void:0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+FindCharInString(String:str[], String:c, bool:reverse)
+{
+	new len = strlen(str);
+	if (!reverse)
+	{
+		new i;
+		while (i < len)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i++;
+		}
+	}
+	else
+	{
+		new i = len + -1;
+		while (0 <= i)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i--;
+		}
+	}
+	return -1;
+}
+
+StrCat(String:buffer[], maxlength, String:source[])
+{
+	new len = strlen(buffer);
+	if (len >= maxlength)
+	{
+		return 0;
+	}
+	return Format(buffer[len], maxlength - len, "%s", source);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+void:AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return void:0;
+}
+
+Math_GetRandomInt(min, max)
+{
+	new random = GetURandomInt();
+	if (!random)
+	{
+		random++;
+	}
+	return RoundToCeil(float(random) / float(2147483647) / float(max - min + 1)) + min + -1;
+}
+
+Array_FindString(String:array[][], size, String:str[], bool:caseSensitive, start)
+{
+	if (0 > start)
+	{
+		start = 0;
+	}
+	new i = start;
+	while (i < size)
+	{
+		if (StrEqual(array[i], str, caseSensitive))
+		{
+			return i;
+		}
+		i++;
+	}
+	return -1;
+}
+
+Entity_IsValid(entity)
+{
+	return IsValidEntity(entity);
+}
+
+bool:Entity_IsPlayer(entity)
+{
+	new var1;
+	if (entity < 1 || entity > MaxClients)
+	{
+		return false;
+	}
+	return true;
+}
+
+bool:Entity_Kill(kenny, killChildren)
+{
+	if (Entity_IsPlayer(kenny))
+	{
+		ForcePlayerSuicide(kenny);
+		return true;
+	}
+	if (killChildren)
+	{
+		return AcceptEntityInput(kenny, localIPRanges, -1, -1, 0);
+	}
+	return AcceptEntityInput(kenny, "Kill", -1, -1, 0);
+}
+
+public Action:__smlib_Timer_ChangeOverTime(Handle:Timer, Handle:dataPack)
+{
+	new entity = EntRefToEntIndex(ReadPackCell(dataPack));
+	if (!Entity_IsValid(entity))
+	{
+		return Action:4;
+	}
+	new Float:interval = ReadPackFloat(dataPack);
+	new currentCall = ReadPackCell(dataPack);
+	new Function:callback = ReadPackFunction(dataPack);
+	new any:result;
+	Call_StartFunction(Handle:0, callback);
+	Call_PushCellRef(entity);
+	Call_PushFloatRef(interval);
+	Call_PushCellRef(currentCall);
+	Call_Finish(result);
+	if (result)
+	{
+		ResetPack(dataPack, true);
+		WritePackCell(dataPack, EntIndexToEntRef(entity));
+		WritePackFloat(dataPack, interval);
+		WritePackCell(dataPack, currentCall + 1);
+		WritePackFunction(dataPack, callback);
+		ResetPack(dataPack, false);
+		CreateTimer(interval, __smlib_Timer_ChangeOverTime, dataPack, 0);
+		return Action:4;
+	}
+	return Action:4;
+}
+
+Team_GetAnyClient(index)
+{
+	static client_cache[32] =
+	{
+		-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+	new client;
+	if (0 < index)
+	{
+		client = client_cache[index];
+		new var1;
+		if (client > 0 && client <= MaxClients)
+		{
+			new var2;
+			if (IsClientInGame(client) && index == GetClientTeam(client))
+			{
+				return client;
+			}
+		}
+		client = -1;
+	}
+	client = 1;
+	while (client <= MaxClients)
+	{
+		if (IsClientInGame(client))
+		{
+			if (!(index != GetClientTeam(client)))
+			{
+				client_cache[index] = client;
+				return client;
+			}
+		}
+		client++;
+	}
+	return -1;
+}
+
+Color_ChatInitialize()
+{
+	static initialized;
+	if (initialized)
+	{
+		return 0;
+	}
+	initialized = 1;
+	decl String:gameFolderName[32];
+	GetGameFolderName(gameFolderName, 32);
+	chatColorInfo[11][2] = 0;
+	new var1;
+	if (strncmp(gameFolderName, "left4dead", 9, false) && !StrEqual(gameFolderName, "cstrike", false) && !StrEqual(gameFolderName, "tf", false))
+	{
+		chatColorInfo[7][2] = 0;
+		chatColorInfo[8][2] = 0;
+	}
+	if (StrEqual(gameFolderName, "tf", false))
+	{
+		chatColorInfo[11][2] = 1;
+		chatColorInfo[8] = 1;
+		chatColorInfo[8][3] = -3;
+	}
+	else
+	{
+		if (strncmp(gameFolderName, "left4dead", 9, false))
+		{
+			if (StrEqual(gameFolderName, "hl2mp", false))
+			{
+				chatColorInfo[2][3] = 3;
+				chatColorInfo[3][3] = 3;
+				chatColorInfo[4][3] = 2;
+				chatColorInfo[5][3] = 2;
+				chatColorInfo[11][2] = 1;
+				checkTeamPlay = true;
+			}
+			if (StrEqual(gameFolderName, "dod", false))
+			{
+				chatColorInfo[8] = 1;
+				chatColorInfo[8][3] = -3;
+				chatColorInfo[11][2] = 1;
+				chatColorInfo[1][2] = 0;
+			}
+		}
+		chatColorInfo[2][3] = 3;
+		chatColorInfo[3][3] = 3;
+		chatColorInfo[4][3] = 2;
+		chatColorInfo[5][3] = 2;
+		chatColorInfo[1] = 4;
+		chatColorInfo[9] = 5;
+	}
+	if (GetUserMessageId("SayText2") == -1)
+	{
+		isSayText2_supported = false;
+	}
+	decl String:path_gamedata[256];
+	BuildPath(PathType:0, path_gamedata, 256, "gamedata/%s.txt", "smlib_colors.games");
+	if (FileExists(path_gamedata, false, "GAME"))
+	{
+		new Handle:gamedata;
+		if ((gamedata = LoadGameConfigFile("smlib_colors.games")))
+		{
+			decl String:keyName[32];
+			decl String:buffer[8];
+			new i;
+			while (i < 12)
+			{
+				Format(keyName, 32, "%s_code", chatColorNames[i]);
+				if (GameConfGetKeyValue(gamedata, keyName, buffer, 6))
+				{
+					chatColorInfo[i][0] = StringToInt(buffer, 10);
+				}
+				Format(keyName, 32, "%s_alternative", chatColorNames[i]);
+				if (GameConfGetKeyValue(gamedata, keyName, buffer, 6))
+				{
+					chatColorInfo[i][1] = buffer[0];
+				}
+				Format(keyName, 32, "%s_supported", chatColorNames[i]);
+				if (GameConfGetKeyValue(gamedata, keyName, buffer, 6))
+				{
+					chatColorInfo[i][2] = StrEqual(buffer, "true", true);
+				}
+				Format(keyName, 32, "%s_subjecttype", chatColorNames[i]);
+				if (GameConfGetKeyValue(gamedata, keyName, buffer, 6))
+				{
+					chatColorInfo[i][3] = StringToInt(buffer, 10);
+				}
+				i++;
+			}
+			if (GameConfGetKeyValue(gamedata, "checkteamplay", buffer, 6))
+			{
+				checkTeamPlay = StrEqual(buffer, "true", true);
+			}
+			CloseHandle(gamedata);
+		}
+	}
+	mp_teamplay = FindConVar("mp_teamplay");
+	return 0;
+}
+
+Color_GetChatColorInfo(&index, &subject)
+{
+	Color_ChatInitialize();
+	if (index == -1)
+	{
+		index = 0;
+	}
+	while (!chatColorInfo[index][2])
+	{
+		new alternative = chatColorInfo[index][1];
+		if (alternative == -1)
+		{
+			index = 0;
+			if (index == -1)
+			{
+				index = 0;
+			}
+			new newSubject = -2;
+			new ChatColorSubjectType:type = chatColorInfo[index][3];
+			switch (type)
+			{
+				case -3:
+				{
+				}
+				case -2:
+				{
+					newSubject = chatSubject;
+				}
+				case -1:
+				{
+					newSubject = -1;
+				}
+				case 0:
+				{
+					newSubject = 0;
+				}
+				default:
+				{
+					new var1;
+					if (!checkTeamPlay || GetConVarBool(mp_teamplay))
+					{
+						new var2;
+						if (subject > 0 && subject <= MaxClients)
+						{
+							if (type == GetClientTeam(subject))
+							{
+								newSubject = subject;
+							}
+						}
+						if (subject == -2)
+						{
+							new client = Team_GetAnyClient(type);
+							if (client != -1)
+							{
+								newSubject = client;
+							}
+						}
+					}
+				}
+			}
+			new var5;
+			if (type > ChatColorSubjectType:-3 && ((subject != -2 && newSubject != subject) || (newSubject == -2 || !isSayText2_supported)))
+			{
+				index = chatColorInfo[index][1];
+				newSubject = Color_GetChatColorInfo(index, subject);
+			}
+			if (subject == -2)
+			{
+				subject = newSubject;
+			}
+			return newSubject;
+		}
+		index = alternative;
+	}
+	if (index == -1)
+	{
+		index = 0;
+	}
+	new newSubject = -2;
+	new ChatColorSubjectType:type = chatColorInfo[index][3];
+	switch (type)
+	{
+		case -3:
+		{
+		}
+		case -2:
+		{
+			newSubject = chatSubject;
+		}
+		case -1:
+		{
+			newSubject = -1;
+		}
+		case 0:
+		{
+			newSubject = 0;
+		}
+		default:
+		{
+			new var1;
+			if (!checkTeamPlay || GetConVarBool(mp_teamplay))
+			{
+				new var2;
+				if (subject > 0 && subject <= MaxClients)
+				{
+					if (type == GetClientTeam(subject))
+					{
+						newSubject = subject;
+					}
+				}
+				if (subject == -2)
+				{
+					new client = Team_GetAnyClient(type);
+					if (client != -1)
+					{
+						newSubject = client;
+					}
+				}
+			}
+		}
+	}
+	new var5;
+	if (type > ChatColorSubjectType:-3 && ((subject != -2 && newSubject != subject) || (newSubject == -2 || !isSayText2_supported)))
+	{
+		index = chatColorInfo[index][1];
+		newSubject = Color_GetChatColorInfo(index, subject);
+	}
+	if (subject == -2)
+	{
+		subject = newSubject;
+	}
+	return newSubject;
+}
+
+bool:Client_PrintHintText(client, String:format[])
+{
+	new Handle:userMessage = StartMessageOne("HintText", client, 0);
+	if (userMessage)
+	{
+		decl String:buffer[256];
+		SetGlobalTransTarget(client);
+		VFormat(buffer, 254, format, 3);
+		new var1;
+		if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+		{
+			PbSetString(userMessage, "text", buffer, -1);
+		}
+		else
+		{
+			BfWriteByte(userMessage, 1);
+			BfWriteString(userMessage, buffer);
+		}
+		EndMessage();
+		return true;
+	}
+	return false;
+}
+
+bool:Client_PrintKeyHintText(client, String:format[])
+{
+	new Handle:userMessage = StartMessageOne("KeyHintText", client, 0);
+	if (userMessage)
+	{
+		decl String:buffer[256];
+		SetGlobalTransTarget(client);
+		VFormat(buffer, 254, format, 3);
+		new var1;
+		if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+		{
+			PbSetString(userMessage, "hints", buffer, -1);
+		}
+		else
+		{
+			BfWriteByte(userMessage, 1);
+			BfWriteString(userMessage, buffer);
+		}
+		EndMessage();
+		return true;
+	}
+	return false;
+}
+
+public bool:_smlib_TraceEntityFilter(entity, contentsMask)
+{
+	return entity == 0;
+}
+
+public __smlib_GetPlayersInRadius_Sort(player1, player2, clients[], Handle:hndl)
+{
+	return FloatCompare(getPlayersInRadius_distances[player1], getPlayersInRadius_distances[player2]);
+}
+
+public Action:_smlib_Timer_Effect_Fade(Handle:Timer, Handle:dataPack)
+{
+	new entity = ReadPackCell(dataPack);
+	new kill = ReadPackCell(dataPack);
+	new Function:callback = ReadPackFunction(dataPack);
+	new any:data = ReadPackCell(dataPack);
+	if (callback != -1)
+	{
+		Call_StartFunction(Handle:0, callback);
+		Call_PushCell(entity);
+		Call_PushCell(data);
+		Call_Finish(0);
+	}
+	new var1;
+	if (kill && IsValidEntity(entity))
+	{
+		Entity_Kill(entity, 0);
+	}
+	return Action:4;
+}
+
+bool:File_GetBaseName(String:path[], String:buffer[], size)
+{
+	if (path[0])
+	{
+		new pos_start = FindCharInString(path, String:47, true);
+		if (pos_start == -1)
+		{
+			pos_start = FindCharInString(path, String:92, true);
+		}
+		pos_start++;
+		strcopy(buffer, size, path[pos_start]);
+		return false;
+	}
+	buffer[0] = MissingTAG:0;
+	return false;
+}
+
+bool:File_GetDirName(String:path[], String:buffer[], size)
+{
+	if (path[0])
+	{
+		new pos_start = FindCharInString(path, String:47, true);
+		if (pos_start == -1)
+		{
+			pos_start = FindCharInString(path, String:92, true);
+			if (pos_start == -1)
+			{
+				buffer[0] = MissingTAG:0;
+				return false;
+			}
+		}
+		strcopy(buffer, size, path);
+		buffer[pos_start] = MissingTAG:0;
+		return false;
+	}
+	buffer[0] = MissingTAG:0;
+	return false;
+}
+
+bool:File_GetFileName(String:path[], String:buffer[], size)
+{
+	if (path[0])
+	{
+		File_GetBaseName(path, buffer, size);
+		new pos_ext = FindCharInString(buffer, String:46, true);
+		if (pos_ext != -1)
+		{
+			buffer[pos_ext] = MissingTAG:0;
+		}
+		return false;
+	}
+	buffer[0] = MissingTAG:0;
+	return false;
+}
+
+File_GetExtension(String:path[], String:buffer[], size)
+{
+	new extpos = FindCharInString(path, String:46, true);
+	if (extpos == -1)
+	{
+		buffer[0] = MissingTAG:0;
+		return 0;
+	}
+	extpos++;
+	strcopy(buffer, size, path[extpos]);
+	return 0;
+}
+
+File_AddToDownloadsTable(String:path[], bool:recursive, String:ignoreExts[][], size)
+{
+	if (path[0])
+	{
+		if (FileExists(path, false, "GAME"))
+		{
+			new String:fileExtension[8];
+			File_GetExtension(path, fileExtension, 5);
+			new var1;
+			if (StrEqual(fileExtension, _smlib_empty_twodimstring_array, false) || StrEqual(fileExtension, "ztmp", false))
+			{
+				return 0;
+			}
+			if (Array_FindString(ignoreExts, size, fileExtension, true, 0) != -1)
+			{
+				return 0;
+			}
+			decl String:path_new[256];
+			strcopy(path_new, 256, path);
+			ReplaceString(path_new, 256, "//", "/", true);
+			AddFileToDownloadsTable(path_new);
+		}
+		else
+		{
+			new var2;
+			if (recursive && DirExists(path, false, "GAME"))
+			{
+				decl String:dirEntry[256];
+				new Handle:__dir = OpenDirectory(path, false, "GAME");
+				while (ReadDirEntry(__dir, dirEntry, 256, 0))
+				{
+					new var3;
+					if (!(StrEqual(dirEntry, ".", true) || StrEqual(dirEntry, "..", true)))
+					{
+						Format(dirEntry, 256, "%s/%s", path, dirEntry);
+						File_AddToDownloadsTable(dirEntry, recursive, ignoreExts, size);
+					}
+				}
+				CloseHandle(__dir);
+			}
+			if (FindCharInString(path, String:42, true))
+			{
+				new String:fileExtension[4];
+				File_GetExtension(path, fileExtension, 4);
+				if (StrEqual(fileExtension, "*", true))
+				{
+					decl String:dirName[256];
+					decl String:fileName[256];
+					decl String:dirEntry[256];
+					File_GetDirName(path, dirName, 256);
+					File_GetFileName(path, fileName, 256);
+					StrCat(fileName, 256, ".");
+					new Handle:__dir = OpenDirectory(dirName, false, "GAME");
+					while (ReadDirEntry(__dir, dirEntry, 256, 0))
+					{
+						new var4;
+						if (!(StrEqual(dirEntry, ".", true) || StrEqual(dirEntry, "..", true)))
+						{
+							if (strncmp(dirEntry, fileName, strlen(fileName), true))
+							{
+							}
+							else
+							{
+								Format(dirEntry, 256, "%s/%s", dirName, dirEntry);
+								File_AddToDownloadsTable(dirEntry, recursive, ignoreExts, size);
+							}
+						}
+					}
+					CloseHandle(__dir);
+				}
+			}
+		}
+		return 0;
+	}
+	return 0;
+}
+
+bool:File_Copy(String:source[], String:destination[])
+{
+	new Handle:file_source = OpenFile(source, "rb", false, "GAME");
+	if (file_source)
+	{
+		new Handle:file_destination = OpenFile(destination, "wb", false, "GAME");
+		if (file_destination)
+		{
+			new buffer[32];
+			new cache;
+			while (!IsEndOfFile(file_source))
+			{
+				cache = ReadFile(file_source, buffer, 32, 1);
+				WriteFile(file_destination, buffer, cache, 1);
+			}
+			CloseHandle(file_source);
+			CloseHandle(file_destination);
+			return true;
+		}
+		CloseHandle(file_source);
+		return false;
+	}
+	return false;
+}
+
+bool:File_CopyRecursive(String:path[], String:destination[], bool:stop_on_error, dirMode)
+{
+	if (FileExists(path, false, "GAME"))
+	{
+		return File_Copy(path, destination);
+	}
+	if (DirExists(path, false, "GAME"))
+	{
+		return Sub_File_CopyRecursive(path, destination, stop_on_error, FileType:1, dirMode);
+	}
+	return false;
+}
+
+bool:Sub_File_CopyRecursive(String:path[], String:destination[], bool:stop_on_error, FileType:fileType, dirMode)
+{
+	if (fileType == FileType:2)
+	{
+		return File_Copy(path, destination);
+	}
+	if (fileType == FileType:1)
+	{
+		new var1;
+		if (!CreateDirectory(destination, dirMode, false, "DEFAULT_WRITE_PATH") && stop_on_error)
+		{
+			return false;
+		}
+		new Handle:directory = OpenDirectory(path, false, "GAME");
+		if (directory)
+		{
+			decl String:source_buffer[256];
+			decl String:destination_buffer[256];
+			new FileType:type;
+			while (ReadDirEntry(directory, source_buffer, 256, type))
+			{
+				new var2;
+				if (!(StrEqual(source_buffer, "..", true) || StrEqual(source_buffer, ".", true)))
+				{
+					Format(destination_buffer, 256, "%s/%s", destination, source_buffer);
+					Format(source_buffer, 256, "%s/%s", path, source_buffer);
+					if (type == FileType:2)
+					{
+						File_Copy(source_buffer, destination_buffer);
+					}
+					else
+					{
+						if (type == FileType:1)
+						{
+							new var3;
+							if (!File_CopyRecursive(source_buffer, destination_buffer, stop_on_error, dirMode) && stop_on_error)
+							{
+								CloseHandle(directory);
+								return false;
+							}
+						}
+					}
+				}
+			}
+			CloseHandle(directory);
+		}
+		return false;
+	}
+	else
+	{
+		if (!fileType)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+SQL_TQueryF(Handle:database, SQLTCallback:callback, any:data, DBPriority:priority, String:format[])
+{
+	if (database)
+	{
+		decl String:query[16384];
+		VFormat(query, 16384, format, 6);
+		SQL_TQuery(database, callback, query, data, priority);
+		return 0;
+	}
+	ThrowError("[SMLIB] Error: Invalid database handle.");
+	return 0;
+}
+
+CPrintToChat(client, String:szMessage[])
+{
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError("Invalid client index %d", client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %d is not in game", client);
+	}
+	decl String:szBuffer[252];
+	decl String:szCMessage[252];
+	SetGlobalTransTarget(client);
+	if (CsgoFix)
+	{
+		Format(szBuffer, 250, "\x01\x0B%s", szMessage);
+	}
+	else
+	{
+		Format(szBuffer, 250, "\x01%s", szMessage);
+	}
+	VFormat(szCMessage, 250, szBuffer, 3);
+	new index = CFormat(szCMessage, 250, -1);
+	if (index == -1)
+	{
+		PrintToChat(client, szCMessage);
+	}
+	else
+	{
+		CSayText2(client, index, szCMessage);
+	}
+	return 0;
+}
+
+CFormat(String:szMessage[], maxlength, author)
+{
+	if (!CEventIsHooked)
+	{
+		CSetupProfile();
+		HookEvent("server_spawn", CEvent_MapStart, EventHookMode:2);
+		CEventIsHooked = true;
+	}
+	new iRandomPlayer = -1;
+	if (author != -1)
+	{
+		if (CProfile_SayText2)
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", "\x03", true);
+			iRandomPlayer = author;
+		}
+		else
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", CTagCode[1], true);
+		}
+	}
+	else
+	{
+		ReplaceString(szMessage, maxlength, "{teamcolor}", "", true);
+	}
+	new i;
+	while (i < 6)
+	{
+		if (!(StrContains(szMessage, CTag[i], true) == -1))
+		{
+			if (!CProfile_Colors[i])
+			{
+				ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+			}
+			else
+			{
+				if (!CTagReqSayText2[i])
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+				}
+				if (!CProfile_SayText2)
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+				}
+				if (iRandomPlayer == -1)
+				{
+					iRandomPlayer = CFindRandomPlayerByTeam(CProfile_TeamIndex[i]);
+					if (iRandomPlayer == -2)
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+					}
+					else
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+					}
+				}
+				ThrowError("Using two team colors in one message is not allowed");
+			}
+		}
+		i++;
+	}
+	return iRandomPlayer;
+}
+
+CFindRandomPlayerByTeam(color_team)
+{
+	if (color_team)
+	{
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && color_team == GetClientTeam(i))
+			{
+				return i;
+			}
+			i++;
+		}
+		return -2;
+	}
+	return 0;
+}
+
+CSayText2(client, author, String:szMessage[])
+{
+	new Handle:hBuffer = StartMessageOne("SayText2", client, 0);
+	new var1;
+	if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+	{
+		PbSetInt(hBuffer, "ent_idx", author, -1);
+		PbSetBool(hBuffer, "chat", true, -1);
+		PbSetString(hBuffer, "msg_name", szMessage, -1);
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+	}
+	else
+	{
+		BfWriteByte(hBuffer, author);
+		BfWriteByte(hBuffer, 1);
+		BfWriteString(hBuffer, szMessage);
+	}
+	EndMessage();
+	return 0;
+}
+
+CSetupProfile()
+{
+	decl String:szGameName[32];
+	GetGameFolderName(szGameName, 30);
+	new var1;
+	if (StrEqual(szGameName, "cstrike", false) || StrEqual(szGameName, "csgo", false))
+	{
+		CsgoFix = StrEqual(szGameName, "csgo", false);
+		CProfile_Colors[2] = 1;
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_Colors[5] = 1;
+		CProfile_TeamIndex[2] = 0;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	else
+	{
+		if (StrEqual(szGameName, "tf", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 2;
+			CProfile_TeamIndex[4] = 3;
+			CProfile_SayText2 = true;
+		}
+		new var2;
+		if (StrEqual(szGameName, "left4dead", false) || StrEqual(szGameName, "left4dead2", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 3;
+			CProfile_TeamIndex[4] = 2;
+			CProfile_SayText2 = true;
+		}
+		if (StrEqual(szGameName, "hl2mp", false))
+		{
+			if (GetConVarBool(FindConVar("mp_teamplay")))
+			{
+				CProfile_Colors[3] = 1;
+				CProfile_Colors[4] = 1;
+				CProfile_Colors[5] = 1;
+				CProfile_TeamIndex[3] = 3;
+				CProfile_TeamIndex[4] = 2;
+				CProfile_SayText2 = true;
+			}
+			else
+			{
+				CProfile_SayText2 = false;
+				CProfile_Colors[5] = 1;
+			}
+		}
+		if (StrEqual(szGameName, "dod", false))
+		{
+			CProfile_Colors[5] = 1;
+			CProfile_SayText2 = false;
+		}
+		if (GetUserMessageId("SayText2") == -1)
+		{
+			CProfile_SayText2 = false;
+		}
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	return 0;
+}
+
+public Action:CEvent_MapStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	CSetupProfile();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		CSkipList[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+EmitSoundCheckEngineVersion()
+{
+	if (g_bCheckedEngine)
+	{
+		return 0;
+	}
+	new EngineVersion:engVersion = GetEngineVersion();
+	new var1;
+	if (engVersion == EngineVersion:12 || engVersion == EngineVersion:14)
+	{
+		g_bNeedsFakePrecache = true;
+	}
+	g_bCheckedEngine = true;
+	return 0;
+}
+
+bool:FakePrecacheSoundEx(String:szPath[])
+{
+	decl String:szPathStar[256];
+	Format(szPathStar, 256, "*%s", szPath);
+	AddToStringTable(FindStringTable("soundprecache"), szPathStar, "", -1);
+	return true;
+}
+
+bool:PrecacheSoundAny(String:szPath[], bool:preload)
+{
+	EmitSoundCheckEngineVersion();
+	if (g_bNeedsFakePrecache)
+	{
+		return FakePrecacheSoundEx(szPath);
+	}
+	return PrecacheSound(szPath, preload);
+}
+
+EmitSoundAny(clients[], numClients, String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	EmitSoundCheckEngineVersion();
+	decl String:szSound[256];
+	if (g_bNeedsFakePrecache)
+	{
+		Format(szSound, 256, "*%s", sample);
+	}
+	else
+	{
+		strcopy(szSound, 256, sample);
+	}
+	EmitSound(clients, numClients, szSound, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+EmitSoundToClientAny(client, String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[1];
+	clients[0] = client;
+	new var1;
+	if (entity == -2)
+	{
+		var1 = client;
+	}
+	else
+	{
+		var1 = entity;
+	}
+	entity = var1;
+	EmitSoundAny(clients, 1, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+StopSoundAny(entity, channel, String:name[])
+{
+	EmitSoundCheckEngineVersion();
+	decl String:szSound[256];
+	if (g_bNeedsFakePrecache)
+	{
+		Format(szSound, 256, "*%s", name);
+	}
+	else
+	{
+		strcopy(szSound, 256, name);
+	}
+	StopSound(entity, channel, szSound);
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	RegPluginLibrary("tetris");
+	CreateNative("IsClientInTetrisGame", Native_IsClientInTetrisGame);
+	return APLRes:0;
+}
+
+public void:OnPluginStart()
+{
+	new Handle:hVersion = CreateConVar("sm_tetris_version", "1.1", "Tetris minigame version", 139520, false, 0.0, false, 0.0);
+	if (hVersion)
+	{
+		SetConVarString(hVersion, "1.1", false, false);
+	}
+	g_hCVDisableHardDrop = CreateConVar("sm_tetris_disableharddrop", "0", "Disable hard dropping the tetrimino instantly to the floor with the spacebar?", 0, true, 0.0, true, 1.0);
+	g_hCVDisableSounds = CreateConVar("sm_tetris_disablesounds", "0", "Disable all tetris sounds?", 0, true, 0.0, true, 1.0);
+	g_hCVOnlyDead = CreateConVar("sm_tetris_onlydead", "0", "Player has to be dead to play tetris?", 0, true, 0.0, true, 1.0);
+	g_hCVDisableStats = CreateConVar("sm_tetris_disableinfopanel", "0", "Disable showing stats like score/cleared bars in a (Key)Hint panel while playing?", 0, true, 0.0, true, 1.0);
+	HookConVarChange(g_hCVDisableHardDrop, ConVar_OnChange);
+	HookConVarChange(g_hCVDisableSounds, ConVar_OnChange);
+	HookConVarChange(g_hCVOnlyDead, ConVar_OnChange);
+	HookConVarChange(g_hCVDisableStats, ConVar_OnChange);
+	RegConsoleCmd("sm_tetris", Cmd_Tetris, "Opens the tetris minigame.", 0);
+	HookEvent("player_spawn", Event_OnPlayerSpawn, EventHookMode:1);
+	g_hfwdOnTetrisGameEnd = CreateGlobalForward("OnTetrisGameEnd", ExecType:0, 2, 2, 2, 2, 2);
+	g_hCookieNoSound = RegClientCookie("tetris_nosound", "Disable sound effects in tetris?", CookieAccess:0);
+	g_hCookieNoMusic = RegClientCookie("tetris_nomusic", "Disable background music in tetris?", CookieAccess:0);
+	g_bIsCSGO = GetEngineVersion() == 12;
+	new var1;
+	if (SQL_CheckConfig("tetris"))
+	{
+		var1[0] = 59740;
+	}
+	else
+	{
+		var1[0] = 59748;
+	}
+	SQL_TConnect(SQL_OnDatabaseConnected, var1, any:0);
+	AutoExecConfig(true, "", "sourcemod");
+	return void:0;
+}
+
+public void:OnConfigsExecuted()
+{
+	g_bDisableSounds = GetConVarBool(g_hCVDisableSounds);
+	g_bDisableHardDrop = GetConVarBool(g_hCVDisableHardDrop);
+	g_bOnlyDead = GetConVarBool(g_hCVOnlyDead);
+	g_bDisableStats = GetConVarBool(g_hCVDisableStats);
+	return void:0;
+}
+
+public void:OnMapStart()
+{
+	if (g_bDisableSounds)
+	{
+		return void:0;
+	}
+	File_AddToDownloadsTable("sound/tetris", true, "", 0);
+	PrecacheSoundAny("tetris/music_a.mp3", true);
+	PrecacheSoundAny("tetris/rotate_block.mp3", true);
+	PrecacheSoundAny("tetris/place_block.mp3", true);
+	PrecacheSoundAny("tetris/full_line.mp3", true);
+	PrecacheSoundAny("tetris/level_up.mp3", true);
+	PrecacheSoundAny("tetris/tetris.mp3", true);
+	PrecacheSoundAny("tetris/game_over.mp3", true);
+	return void:0;
+}
+
+public void:OnClientPutInServer(client)
+{
+	ResetTetrisGame(client);
+	return void:0;
+}
+
+public void:OnClientAuthorized(client, String:auth[])
+{
+	if (!g_hDatabase)
+	{
+		return void:0;
+	}
+	SQL_TQueryF(g_hDatabase, SQL_GetClientHighscores, GetClientUserId(client), DBPriority:1, "SELECT score_easy, score_normal, score_hard FROM tetris_players WHERE steamid = \"%s\";", auth);
+	return void:0;
+}
+
+public void:OnClientDisconnect(client)
+{
+	ResetTetrisGame(client);
+	g_iButtons[client] = 0;
+	g_fDifficulty[client] = 1053609165;
+	g_bEnableSound[client] = 1;
+	g_bEnableMusic[client] = 1;
+	g_bPlayerHasHighscore[client] = 0;
+	new i;
+	while (i < 3)
+	{
+		g_iPlayerHighscore[client][i] = 0;
+		i++;
+	}
+	return void:0;
+}
+
+public void:OnClientCookiesCached(client)
+{
+	decl String:sBuffer[4];
+	GetClientCookie(client, g_hCookieNoSound, sBuffer, 4);
+	if (StrEqual(sBuffer, "1", true))
+	{
+		g_bEnableSound[client] = 0;
+	}
+	else
+	{
+		g_bEnableSound[client] = 1;
+	}
+	GetClientCookie(client, g_hCookieNoMusic, sBuffer, 4);
+	if (StrEqual(sBuffer, "1", true))
+	{
+		g_bEnableMusic[client] = 0;
+	}
+	else
+	{
+		g_bEnableMusic[client] = 1;
+	}
+	return void:0;
+}
+
+java.lang.ClassCastException: lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition
+	at lysis.builder.structure.SourceStructureBuilder.buildLogicChain(SourceStructureBuilder.java:195)
+	at lysis.builder.structure.SourceStructureBuilder.traverseComplexIf(SourceStructureBuilder.java:300)
+	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:395)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:437)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:655)
+	at lysis.builder.structure.SourceStructureBuilder.traverseComplexIf(SourceStructureBuilder.java:377)
+	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:395)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:437)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
+	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
+	at lysis.builder.structure.SourceStructureBuilder.build(SourceStructureBuilder.java:705)
+	at lysis.Lysis.DumpMethod(Lysis.java:140)
+	at lysis.Lysis.main(Lysis.java:213)
+
+/* ERROR! lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition */
+ function "OnPlayerRunCmd" (number 49)
+public Event_OnPlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
+	if (IsClientInTetrisGame(client))
+	{
+		new var1;
+		if (g_bOnlyDead && IsPlayerAlive(client))
+		{
+			PauseTetrisGame(client);
+			CPrintToChat(client, "%sYou have to be dead to play Tetris.", "{green}Tetris {default}> {lightgreen}");
+			return 0;
+		}
+		SetEntProp(client, PropType:0, "m_fFlags", any:192, 4, 0);
+		if (!g_bDisableSounds)
+		{
+			StopSoundAny(client, 0, "tetris/music_a.mp3");
+		}
+		new var2;
+		if (!g_bDisableSounds && g_bEnableMusic[client])
+		{
+			TriggerTimer(g_hPlayBackgroundMusic[client], true);
+		}
+	}
+	return 0;
+}
+
+public Action:Cmd_Tetris(client, args)
+{
+	if (!client)
+	{
+		ReplyToCommand(client, "Tetris: This command is ingame only.");
+		return Action:3;
+	}
+	DisplayTetrisMainMenu(client);
+	return Action:3;
+}
+
+DisplayTetrisMainMenu(client)
+{
+	new Handle:hMenu = CreateMenu(Menu_MainMenu, MenuAction:28);
+	SetMenuTitle(hMenu, "Tetris: Mainmenu");
+	SetMenuExitButton(hMenu, true);
+	if (g_iObjectType[client])
+	{
+		AddMenuItem(hMenu, "resume", "Resume current game", 0);
+	}
+	if (IsClientInTetrisGame(client))
+	{
+		PauseTetrisGame(client);
+	}
+	AddMenuItem(hMenu, "startnew", "Start new game", 0);
+	decl String:sMenu[32];
+	switch (g_fDifficulty[client])
+	{
+		case 1036831949:
+		{
+			Format(sMenu, 32, "Change difficutly: Hard");
+		}
+		case 1050253722:
+		{
+			Format(sMenu, 32, "Change difficutly: Normal");
+		}
+		case 1053609165:
+		{
+			Format(sMenu, 32, "Change difficutly: Easy");
+		}
+		default:
+		{
+		}
+	}
+	AddMenuItem(hMenu, "difficulty", sMenu, 0);
+	if (!g_bDisableSounds)
+	{
+		if (g_bEnableSound[client])
+		{
+			Format(sMenu, 32, "Enable sound effects: Yes");
+		}
+		else
+		{
+			Format(sMenu, 32, "Enable sound effects: No");
+		}
+		AddMenuItem(hMenu, "sound", sMenu, 0);
+		if (g_bEnableMusic[client])
+		{
+			Format(sMenu, 32, "Enable music: Yes");
+		}
+		else
+		{
+			Format(sMenu, 32, "Enable music: No");
+		}
+		AddMenuItem(hMenu, "music", sMenu, 0);
+	}
+	AddMenuItem(hMenu, "", "", 8);
+	AddMenuItem(hMenu, "top5", "View top 5", 0);
+	AddMenuItem(hMenu, "highscore", "Show your best scores", 0);
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_MainMenu(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:info[32];
+		GetMenuItem(menu, param2, info, 32, 0, "", 0);
+		if (StrEqual(info, "startnew", true))
+		{
+			new var1;
+			if (g_bOnlyDead && IsPlayerAlive(param1))
+			{
+				CPrintToChat(param1, "%sYou have to be dead to play Tetris.", "{green}Tetris {default}> {lightgreen}");
+				DisplayTetrisMainMenu(param1);
+				return 0;
+			}
+			ResetTetrisGame(param1);
+			SelectRandomObject(param1);
+			g_hPlayerGameThink[param1] = CreateTimer(g_fDifficulty[param1], Timer_PlayerGameThink, GetClientUserId(param1), 3);
+			TriggerTimer(g_hPlayerGameThink[param1], false);
+			if (!g_bDisableStats)
+			{
+				g_hDrawInfoPanel[param1] = CreateTimer(2.0, Timer_DrawInfoPanel, GetClientUserId(param1), 3);
+				TriggerTimer(g_hDrawInfoPanel[param1], false);
+			}
+			new var2;
+			if (!g_bDisableSounds && g_bEnableMusic[param1])
+			{
+				g_hPlayBackgroundMusic[param1] = CreateTimer(38.6, Timer_PlayBackgroundMusic, GetClientUserId(param1), 3);
+				TriggerTimer(g_hPlayBackgroundMusic[param1], true);
+			}
+			SetEntProp(param1, PropType:0, "m_fFlags", any:192, 4, 0);
+		}
+		else
+		{
+			if (StrEqual(info, "resume", true))
+			{
+				new var3;
+				if (g_bOnlyDead && IsPlayerAlive(param1))
+				{
+					DisplayTetrisMainMenu(param1);
+					CPrintToChat(param1, "%sYou have to be dead to play Tetris.", "{green}Tetris {default}> {lightgreen}");
+					return 0;
+				}
+				g_hPlayerGameThink[param1] = CreateTimer(g_fDifficulty[param1], Timer_PlayerGameThink, GetClientUserId(param1), 3);
+				TriggerTimer(g_hPlayerGameThink[param1], false);
+				if (!g_bDisableStats)
+				{
+					g_hDrawInfoPanel[param1] = CreateTimer(2.0, Timer_DrawInfoPanel, GetClientUserId(param1), 3);
+					TriggerTimer(g_hDrawInfoPanel[param1], false);
+				}
+				new var4;
+				if (!g_bDisableSounds && g_bEnableMusic[param1])
+				{
+					g_hPlayBackgroundMusic[param1] = CreateTimer(38.6, Timer_PlayBackgroundMusic, GetClientUserId(param1), 3);
+					TriggerTimer(g_hPlayBackgroundMusic[param1], true);
+				}
+				SetEntProp(param1, PropType:0, "m_fFlags", any:192, 4, 0);
+			}
+			if (StrEqual(info, "difficulty", true))
+			{
+				if (g_fDifficulty[param1] == TetrisDifficulty:1053609165)
+				{
+					g_fDifficulty[param1] = 1050253722;
+				}
+				else
+				{
+					if (g_fDifficulty[param1] == TetrisDifficulty:1050253722)
+					{
+						g_fDifficulty[param1] = 1036831949;
+					}
+					if (g_fDifficulty[param1] == TetrisDifficulty:1036831949)
+					{
+						g_fDifficulty[param1] = 1053609165;
+					}
+				}
+				ResetTetrisGame(param1);
+				DisplayTetrisMainMenu(param1);
+			}
+			if (StrEqual(info, "sound", true))
+			{
+				g_bEnableSound[param1] = !g_bEnableSound[param1];
+				if (g_bEnableSound[param1])
+				{
+					SetClientCookie(param1, g_hCookieNoSound, "0");
+				}
+				else
+				{
+					SetClientCookie(param1, g_hCookieNoSound, "1");
+				}
+				DisplayTetrisMainMenu(param1);
+			}
+			if (StrEqual(info, "music", true))
+			{
+				g_bEnableMusic[param1] = !g_bEnableMusic[param1];
+				if (g_bEnableMusic[param1])
+				{
+					SetClientCookie(param1, g_hCookieNoMusic, "0");
+				}
+				else
+				{
+					SetClientCookie(param1, g_hCookieNoMusic, "1");
+				}
+				DisplayTetrisMainMenu(param1);
+			}
+			if (StrEqual(info, "top5", true))
+			{
+				if (g_hDatabase)
+				{
+					new Handle:hDataPack = CreateDataPack();
+					WritePackCell(hDataPack, GetClientUserId(param1));
+					WritePackCell(hDataPack, any:0);
+					ResetPack(hDataPack, false);
+					SQL_TQueryF(g_hDatabase, SQL_FetchTop5, hDataPack, DBPriority:1, "SELECT name, score_easy FROM tetris_players WHERE score_easy > 0 ORDER BY score_easy DESC LIMIT 5;");
+				}
+				else
+				{
+					CPrintToChat(param1, "%sDatabase unavailable. Can't fetch the top 5.", "{green}Tetris {default}> {lightgreen}");
+					DisplayTetrisMainMenu(param1);
+				}
+			}
+			if (StrEqual(info, "highscore", true))
+			{
+				new Handle:hMenu = CreateMenu(Menu_HandleHighscore, MenuAction:28);
+				SetMenuTitle(hMenu, "Tetris: Personal Highscores");
+				SetMenuExitBackButton(hMenu, true);
+				decl String:sMenu[64];
+				Format(sMenu, 64, "Easy: %d", g_iPlayerHighscore[param1]);
+				AddMenuItem(hMenu, "", sMenu, 0);
+				Format(sMenu, 64, "Normal: %d", g_iPlayerHighscore[param1][1]);
+				AddMenuItem(hMenu, "", sMenu, 0);
+				Format(sMenu, 64, "Hard: %d", g_iPlayerHighscore[param1][2]);
+				AddMenuItem(hMenu, "", sMenu, 0);
+				DisplayMenu(hMenu, param1, 0);
+			}
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public Menu_HandleHighscore(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:4)
+	{
+		DisplayTetrisMainMenu(param1);
+	}
+	new var1;
+	if (action == MenuAction:8 && param2 == -6)
+	{
+		DisplayTetrisMainMenu(param1);
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public Menu_HandleTop5(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:info[32];
+		GetMenuItem(menu, param2, info, 32, 0, "", 0);
+		if (StrEqual(info, "easy", true))
+		{
+			new Handle:hDataPack = CreateDataPack();
+			WritePackCell(hDataPack, GetClientUserId(param1));
+			WritePackCell(hDataPack, any:0);
+			ResetPack(hDataPack, false);
+			SQL_TQueryF(g_hDatabase, SQL_FetchTop5, hDataPack, DBPriority:1, "SELECT name, score_easy FROM tetris_players WHERE score_easy > 0 ORDER BY score_easy DESC LIMIT 5;");
+		}
+		else
+		{
+			if (StrEqual(info, "normal", true))
+			{
+				new Handle:hDataPack = CreateDataPack();
+				WritePackCell(hDataPack, GetClientUserId(param1));
+				WritePackCell(hDataPack, any:1);
+				ResetPack(hDataPack, false);
+				SQL_TQueryF(g_hDatabase, SQL_FetchTop5, hDataPack, DBPriority:1, "SELECT name, score_normal FROM tetris_players WHERE score_normal > 0 ORDER BY score_normal DESC LIMIT 5;");
+			}
+			if (StrEqual(info, "hard", true))
+			{
+				new Handle:hDataPack = CreateDataPack();
+				WritePackCell(hDataPack, GetClientUserId(param1));
+				WritePackCell(hDataPack, any:2);
+				ResetPack(hDataPack, false);
+				SQL_TQueryF(g_hDatabase, SQL_FetchTop5, hDataPack, DBPriority:1, "SELECT name, score_hard FROM tetris_players WHERE score_hard > 0 ORDER BY score_hard DESC LIMIT 5;");
+			}
+			DisplayTetrisMainMenu(param1);
+		}
+	}
+	else
+	{
+		new var1;
+		if (action == MenuAction:8 && param2 == -6)
+		{
+			DisplayTetrisMainMenu(param1);
+		}
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public Panel_HandleGame(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:4)
+	{
+		new var1;
+		if (param2 == 1 || param2 == 10)
+		{
+			DisplayTetrisMainMenu(param1);
+		}
+	}
+	return 0;
+}
+
+public Action:Timer_PlayerGameThink(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	if (!client)
+	{
+		return Action:4;
+	}
+	new bool:bGameOver;
+	g_iTicks[client]++;
+	if (g_iTicks[client] > 1)
+	{
+		MoveCurrentObjectDown(client, bGameOver);
+		g_iTicks[client] = 0;
+	}
+	DrawTetrisGameField(client, bGameOver);
+	if (bGameOver)
+	{
+		g_hPlayerGameThink[client] = 0;
+		return Action:4;
+	}
+	return Action:0;
+}
+
+public Action:Timer_DrawInfoPanel(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	if (!client)
+	{
+		return Action:4;
+	}
+	new String:sNextObject[64];
+	new String:sCurrentRow[20];
+	if (!g_bIsCSGO)
+	{
+		new iMatrix[4][4] = {
+			{
+				1931834149, 0, 8951522, 1931834149
+			},
+			{
+				0, 9541346, 1931834149, 10
+			},
+			{
+				0, 1651339075, 622869103, 2660
+			},
+			{
+				1413379388, 1769108581, 1951604851, 1014199393
+			}
+		};
+		GetObjectShape(g_iNextObjectType[client], GetDefaultRotation(g_iNextObjectType[client]), iMatrix);
+		new y = 3;
+		while (0 <= y)
+		{
+			new x = 3;
+			while (0 <= x)
+			{
+				if (iMatrix[y][x] == 1)
+				{
+					Format(sCurrentRow, 17, "%s%s", "█", sCurrentRow);
+				}
+				else
+				{
+					Format(sCurrentRow, 17, "%s%s", "░", sCurrentRow);
+				}
+				x--;
+			}
+			Format(sNextObject, 64, "%s%s\n", sNextObject, sCurrentRow);
+			Format(sCurrentRow, 17, "");
+			y--;
+		}
+	}
+	new String:sCombo[32];
+	if (g_iCombo[client] > 1)
+	{
+		Format(sCombo, 32, "Combo: %d\n", g_iCombo[client]);
+	}
+	if (g_bIsCSGO)
+	{
+		Client_PrintHintText(client, "<u>Tetris Stats</u>\nLevel: <b>%d</b>\x09Lines: <b>%d</b>\x09Score: <b>%d</b>\x09%s", g_iLevel[client], g_iLinesCleared[client], g_iScore[client], sCombo);
+	}
+	else
+	{
+		Client_PrintKeyHintText(client, "Tetris Stats\n\nLevel: %d\nLines: %d\nScore: %d\n%sNext:\n\n%s", g_iLevel[client], g_iLinesCleared[client], g_iScore[client], sCombo, sNextObject);
+	}
+	return Action:0;
+}
+
+public Action:Timer_PlayBackgroundMusic(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	if (!client)
+	{
+		return Action:4;
+	}
+	EmitSoundToClientAny(client, "tetris/music_a.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	return Action:0;
+}
+
+public SQL_OnDatabaseConnected(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var1;
+	if (hndl && strlen(error) > 0)
+	{
+		LogError("Error connecting to database: %s", error);
+		return 0;
+	}
+	g_hDatabase = hndl;
+	decl String:sDriver[16];
+	SQL_ReadDriver(hndl, sDriver, 16);
+	if (StrEqual(sDriver, "sqlite", false))
+	{
+		SQL_TQuery(hndl, SQL_DoNothing, "CREATE TABLE IF NOT EXISTS tetris_players (steamid VARCHAR(64) PRIMARY KEY, name VARCHAR(64) NOT NULL, score_easy INTEGER DEFAULT '0', score_normal INTEGER DEFAULT '0', score_hard INTEGER DEFAULT '0');", any:0, DBPriority:1);
+	}
+	else
+	{
+		SQL_TQuery(hndl, SQL_DoNothing, "SET NAMES 'utf8';", any:0, DBPriority:1);
+	}
+	decl String:sAuth[32];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var2;
+		if (IsClientInGame(i) && IsClientAuthorized(i) && GetClientAuthId(i, AuthIdType:1, sAuth, 32, true))
+		{
+			OnClientAuthorized(i, sAuth);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public SQL_GetClientHighscores(Handle:owner, Handle:hndl, String:error[], any:userid)
+{
+	new var1;
+	if (hndl && strlen(error) > 0)
+	{
+		LogError("SQL query error: %s", error);
+		return 0;
+	}
+	new client = GetClientOfUserId(userid);
+	if (!client)
+	{
+		return 0;
+	}
+	while (SQL_MoreRows(hndl))
+	{
+		if (SQL_FetchRow(hndl))
+		{
+			g_bPlayerHasHighscore[client] = 1;
+			g_iPlayerHighscore[client][0] = SQL_FetchInt(hndl, 0, 0);
+			g_iPlayerHighscore[client][1] = SQL_FetchInt(hndl, 1, 0);
+			g_iPlayerHighscore[client][2] = SQL_FetchInt(hndl, 2, 0);
+		}
+	}
+	return 0;
+}
+
+public SQL_FetchTop5(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new userid;
+	new difficulty;
+	if (data)
+	{
+		ResetPack(data, false);
+		userid = ReadPackCell(data);
+		difficulty = ReadPackCell(data);
+		CloseHandle(data);
+	}
+	new var1;
+	if (hndl && strlen(error) > 0)
+	{
+		LogError("SQL query error: %s", error);
+		return 0;
+	}
+	new client = GetClientOfUserId(userid);
+	if (!client)
+	{
+		return 0;
+	}
+	new Handle:hMenu = CreateMenu(Menu_HandleTop5, MenuAction:28);
+	new var2;
+	if (difficulty)
+	{
+		if (difficulty == 1)
+		{
+			var2[0] = 62056;
+		}
+		var2[0] = 62064;
+	}
+	else
+	{
+		var2[0] = 62048;
+	}
+	SetMenuTitle(hMenu, "Tetris: Top 5 > %s", var2);
+	SetMenuExitBackButton(hMenu, true);
+	decl String:sMenu[128];
+	new iPlace = 1;
+	while (SQL_MoreRows(hndl))
+	{
+		if (SQL_FetchRow(hndl))
+		{
+			SQL_FetchString(hndl, 0, sMenu, 128, 0);
+			Format(sMenu, 128, "%d. %s: %d", iPlace, sMenu, SQL_FetchInt(hndl, 1, 0));
+			AddMenuItem(hMenu, "", sMenu, 0);
+			iPlace++;
+		}
+	}
+	new i = iPlace;
+	while (i <= 5)
+	{
+		Format(sMenu, 128, "%d. ", i);
+		AddMenuItem(hMenu, "", sMenu, 0);
+		i++;
+	}
+	if (difficulty)
+	{
+		AddMenuItem(hMenu, "easy", "View easy difficulty", 0);
+	}
+	if (difficulty != 1)
+	{
+		AddMenuItem(hMenu, "normal", "View normal difficulty", 0);
+	}
+	if (difficulty != 2)
+	{
+		AddMenuItem(hMenu, "hard", "View hard difficulty", 0);
+	}
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public SQL_DoNothing(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var1;
+	if (hndl && strlen(error) > 0)
+	{
+		LogError("SQL query error: %s", error);
+		return 0;
+	}
+	return 0;
+}
+
+PauseTetrisGame(client)
+{
+	ClearTimer(g_hPlayerGameThink[client], false);
+	ClearTimer(g_hDrawInfoPanel[client], false);
+	ClearTimer(g_hPlayBackgroundMusic[client], false);
+	if (!g_bDisableSounds)
+	{
+		StopSoundAny(client, 0, "tetris/music_a.mp3");
+	}
+	CPrintToChat(client, "%sGame paused. You're able to resume with !tetris.", "{green}Tetris {default}> {lightgreen}");
+	SetEntProp(client, PropType:0, "m_fFlags", any:131329, 4, 0);
+	return 0;
+}
+
+ResetTetrisGame(client)
+{
+	ClearTimer(g_hPlayerGameThink[client], false);
+	ClearTimer(g_hDrawInfoPanel[client], false);
+	ClearTimer(g_hPlayBackgroundMusic[client], false);
+	if (!g_bDisableSounds)
+	{
+		StopSoundAny(client, 0, "tetris/music_a.mp3");
+	}
+	ResetGameField(g_bGameField[client]);
+	g_iObjectPosition[client][0] = -1;
+	g_iObjectPosition[client][1] = -1;
+	g_iObjectType[client] = 0;
+	g_iNextObjectType[client] = 0;
+	g_iObjectRotation[client] = 0;
+	g_iTicks[client] = 0;
+	g_iLinesCleared[client] = 0;
+	g_iScore[client] = 0;
+	g_iLevel[client] = 1;
+	g_iHardDrop[client] = 0;
+	g_iCombo[client] = 0;
+	new i;
+	while (i < 4)
+	{
+		g_iButtonsPressed[client][i] = 0;
+		i++;
+	}
+	return 0;
+}
+
+SelectRandomObject(client)
+{
+	if (g_iNextObjectType[client])
+	{
+		g_iObjectType[client] = g_iNextObjectType[client];
+	}
+	else
+	{
+		g_iObjectType[client] = Math_GetRandomInt(1, 7);
+	}
+	g_iNextObjectType[client] = Math_GetRandomInt(1, 7);
+	g_iObjectRotation[client] = GetDefaultRotation(g_iObjectType[client]);
+	new iMinMax[2];
+	GetObjectMinMax(g_iObjectType[client], g_iObjectRotation[client], iMinMax);
+	g_iObjectPosition[client][0] = 5 - iMinMax[0] + -1 / 2;
+	g_iObjectPosition[client][1] = 15 - iMinMax[1] + 1;
+	g_iHardDrop[client] = 0;
+	return 0;
+}
+
+GetObjectShape(TetrisObject:iObject, TetrisRotation:iRotation, iMatrix[4][4])
+{
+	Reset4x4(iMatrix);
+	switch (iObject)
+	{
+		case 1:
+		{
+			iMatrix[0][0] = 1;
+			iMatrix[0][1] = 1;
+			iMatrix[1] = 1;
+			iMatrix[1][1] = 1;
+		}
+		case 2:
+		{
+			switch (iRotation)
+			{
+				case 1:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[0][2] = 1;
+					iMatrix[1][1] = 1;
+				}
+				case 2:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2] = 1;
+				}
+				case 3:
+				{
+					iMatrix[0][1] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[1][2] = 1;
+				}
+				case 4:
+				{
+					iMatrix[0][1] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2][1] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 3:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[1][2] = 1;
+				}
+				case 2, 4:
+				{
+					iMatrix[0][1] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 4:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMatrix[0][1] = 1;
+					iMatrix[0][2] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+				}
+				case 2, 4:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2][1] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 5:
+		{
+			switch (iRotation)
+			{
+				case 1:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[1] = 1;
+					iMatrix[2] = 1;
+				}
+				case 2:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[1][2] = 1;
+				}
+				case 3:
+				{
+					iMatrix[0][1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2] = 1;
+					iMatrix[2][1] = 1;
+				}
+				case 4:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[0][2] = 1;
+					iMatrix[1][2] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 6:
+		{
+			switch (iRotation)
+			{
+				case 1:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[2][1] = 1;
+				}
+				case 2:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[0][2] = 1;
+					iMatrix[1] = 1;
+				}
+				case 3:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[1] = 1;
+					iMatrix[2] = 1;
+					iMatrix[2][1] = 1;
+				}
+				case 4:
+				{
+					iMatrix[0][2] = 1;
+					iMatrix[1] = 1;
+					iMatrix[1][1] = 1;
+					iMatrix[1][2] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 7:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[1] = 1;
+					iMatrix[2] = 1;
+					iMatrix[3] = 1;
+				}
+				case 2, 4:
+				{
+					iMatrix[0][0] = 1;
+					iMatrix[0][1] = 1;
+					iMatrix[0][2] = 1;
+					iMatrix[0][3] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+PutObjectOnGameField(TetrisObject:iObject, TetrisRotation:iRotation, iObjectPosition[2], bool:bGameField[16][10])
+{
+	new iMatrix[4][4] = {
+		{
+			64, 100, 136, 172
+		},
+		{
+			208, 244, 280, 316
+		},
+		{
+			352, 388, 424, 460
+		},
+		{
+			496, 532, 568, 604
+		}
+	};
+	GetObjectShape(iObject, iRotation, iMatrix);
+	new x;
+	while (x < 4)
+	{
+		new y = 3;
+		while (0 <= y)
+		{
+			if (iMatrix[y][x] == 1)
+			{
+				bGameField[iObjectPosition[1] + y][iObjectPosition[0] + x] = iMatrix[y][x] == 1;
+			}
+			y--;
+		}
+		x++;
+	}
+	return 0;
+}
+
+GetObjectMinMax(TetrisObject:iObject, TetrisRotation:iRotation, iMinMax[2])
+{
+	switch (iObject)
+	{
+		case 1:
+		{
+			iMinMax[0] = 2;
+			iMinMax[1] = 2;
+		}
+		case 2, 3, 4:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMinMax[0] = 3;
+					iMinMax[1] = 2;
+				}
+				case 2, 4:
+				{
+					iMinMax[0] = 2;
+					iMinMax[1] = 3;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 5, 6:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMinMax[0] = 2;
+					iMinMax[1] = 3;
+				}
+				case 2, 4:
+				{
+					iMinMax[0] = 3;
+					iMinMax[1] = 2;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 7:
+		{
+			switch (iRotation)
+			{
+				case 1, 3:
+				{
+					iMinMax[0] = 1;
+					iMinMax[1] = 4;
+				}
+				case 2, 4:
+				{
+					iMinMax[0] = 4;
+					iMinMax[1] = 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+TetrisRotation:GetDefaultRotation(TetrisObject:iObject)
+{
+	switch (iObject)
+	{
+		case 1, 3, 4:
+		{
+			return TetrisRotation:1;
+		}
+		case 2:
+		{
+			return TetrisRotation:3;
+		}
+		case 5, 7:
+		{
+			return TetrisRotation:2;
+		}
+		case 6:
+		{
+			return TetrisRotation:4;
+		}
+		default:
+		{
+			return TetrisRotation:0;
+		}
+	}
+}
+
+bool:RotateObject(client)
+{
+	new TetrisRotation:iTempRotation = g_iObjectRotation[client];
+	iTempRotation++;
+	if (iTempRotation > TetrisRotation:4)
+	{
+		iTempRotation = MissingTAG:1;
+	}
+	new iTempPosition[2];
+	new var1 = g_iObjectPosition[client];
+	iTempPosition = var1;
+	switch (g_iObjectType[client])
+	{
+		case 2:
+		{
+			switch (iTempRotation)
+			{
+				case 1:
+				{
+					iTempPosition[1] += 1;
+				}
+				case 2:
+				{
+					iTempPosition[0] = iTempPosition[0] + 1;
+					iTempPosition[1] += -1;
+				}
+				case 3:
+				{
+					iTempPosition[0] = iTempPosition[0] + -1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 3, 4:
+		{
+			switch (iTempRotation)
+			{
+				case 1, 3:
+				{
+					iTempPosition[0] = iTempPosition[0] + -1;
+					iTempPosition[1] += 1;
+				}
+				case 2, 4:
+				{
+					iTempPosition[0] = iTempPosition[0] + 1;
+					iTempPosition[1] += -1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 5:
+		{
+			switch (iTempRotation)
+			{
+				case 1:
+				{
+					iTempPosition[0] = iTempPosition[0] + 1;
+					iTempPosition[1] += -1;
+				}
+				case 2:
+				{
+					iTempPosition[0] = iTempPosition[0] + -1;
+					iTempPosition[1] += 1;
+				}
+				case 3:
+				{
+					iTempPosition[1] += -1;
+				}
+				case 4:
+				{
+					iTempPosition[1] += 1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 6:
+		{
+			switch (iTempRotation)
+			{
+				case 1:
+				{
+					iTempPosition[1] += 1;
+				}
+				case 2:
+				{
+					iTempPosition[0] = iTempPosition[0] + 1;
+					iTempPosition[1] += -1;
+				}
+				case 3:
+				{
+					iTempPosition[0] = iTempPosition[0] + -1;
+					iTempPosition[1] += 1;
+				}
+				case 4:
+				{
+					iTempPosition[1] += -1;
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 7:
+		{
+			switch (iTempRotation)
+			{
+				case 1, 3:
+				{
+					iTempPosition[0] = iTempPosition[0] + 1;
+					iTempPosition[1] += -2;
+				}
+				case 2, 4:
+				{
+					iTempPosition[0] = iTempPosition[0] + -1;
+					iTempPosition[1] += 2;
+				}
+				default:
+				{
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	if (0 > iTempPosition[0])
+	{
+		return false;
+	}
+	if (0 > iTempPosition[1])
+	{
+		return false;
+	}
+	new iMinMax[2];
+	GetObjectMinMax(g_iObjectType[client], iTempRotation, iMinMax);
+	if (iMinMax[0] + iTempPosition[0] + -1 >= 10)
+	{
+		return false;
+	}
+	if (iMinMax[1] + iTempPosition[1] + -1 >= 16)
+	{
+		return false;
+	}
+	new bool:bGameField[16][10] = {
+		{
+			64, 100, 136, 172, 208, 244, 280, 316, 352, 388
+		},
+		{
+			424, 460, 496, 532, 568, 604, 1931834149, 0, 8951522, 1931834149
+		},
+		{
+			0, 8951522, 1931834149, 0, 9541346, 0, 1801675074, 0, 1095201573, 1327514957
+		},
+		{
+			559039830, 1970231584, 1668489330, 543519343, 540701545, 3040293, 1701996411, 1417506405, 1769108581, 1685790835
+		},
+		{
+			1969317477, 1048409196, 1768717088, 1735682151, 1852138866, 125, 1920230772, 1731162985, 1600482657, 1919252079
+		},
+		{
+			863005998, 0, 1181114221, 1936154988, 0, 1699640101, 1701847159, 1852797810, 1746955361, 1936222057
+		},
+		{
+			1701998435, 33, 1701996411, 1417506405, 1769108581, 1685790835, 1969317477, 1048409196, 1768717088, 1735682151
+		},
+		{
+			1852138866, 125, 1094996053, 1948271956, 1769108581, 1819303795, 1919252833, 1163075699, 1634607188, 1025533293
+		},
+		{
+			1931814688, 1931488295, 1701998435, 1935762783, 540876921, 539780133, 1919902579, 1869504357, 1818324338, 622869792
+		},
+		{
+			1931488356, 1701998435, 1918986335, 540876900, 1461740581, 1163019592, 1702130464, 1684630881, 656424224, 992441125
+		},
+		{
+			0, 1163087433, 1226855506, 542069838, 1920230772, 1885303657, 1702453612, 673215346, 1701667182, 1953701932
+		},
+		{
+			1768776037, 1931488356, 1701998435, 1935762783, 1931488377, 1701998435, 1919905375, 745300333, 1868788512, 1751082354
+		},
+		{
+			694448737, 1279350304, 676545877, 661857575, 623321132, 539764595, 539780133, 539780133, 992568357, 0
+		},
+		{
+			64, 100, 136, 172, 208, 244, 280, 316, 352, 388
+		},
+		{
+			424, 460, 496, 532, 568, 604, 64, 100, 136, 172
+		},
+		{
+			208, 244, 280, 316, 352, 388, 424, 460, 496, 532
+		}
+	};
+	PutObjectOnGameField(g_iObjectType[client], iTempRotation, iTempPosition, bGameField);
+	if (IsObjectColliding(g_bGameField[client], bGameField))
+	{
+		return false;
+	}
+	g_iObjectRotation[client] = iTempRotation;
+	return true;
+}
+
+DrawTetrisGameField(client, bool:bGameOver)
+{
+	new Handle:hPanel = CreatePanel(Handle:0);
+	new String:sGameLine[44];
+	new bool:bGameField[16][10] = {
+		{
+			1931834149, 0, 8951522, 1931834149, 0, 8951522, 1931834149, 0, 9541346, 0
+		},
+		{
+			1801675074, 0, 1095201573, 1327514957, 559039830, 1970231584, 1668489330, 543519343, 540701545, 3040293
+		},
+		{
+			1701996411, 1417506405, 1769108581, 1685790835, 1969317477, 1048409196, 1768717088, 1735682151, 1852138866, 125
+		},
+		{
+			1920230772, 1731162985, 1600482657, 1919252079, 863005998, 0, 1181114221, 1936154988, 0, 1699640101
+		},
+		{
+			1701847159, 1852797810, 1746955361, 1936222057, 1701998435, 33, 1701996411, 1417506405, 1769108581, 1685790835
+		},
+		{
+			1969317477, 1048409196, 1768717088, 1735682151, 1852138866, 125, 1094996053, 1948271956, 1769108581, 1819303795
+		},
+		{
+			1919252833, 1163075699, 1634607188, 1025533293, 1931814688, 1931488295, 1701998435, 1935762783, 540876921, 539780133
+		},
+		{
+			1919902579, 1869504357, 1818324338, 622869792, 1931488356, 1701998435, 1918986335, 540876900, 1461740581, 1163019592
+		},
+		{
+			1702130464, 1684630881, 656424224, 992441125, 0, 1163087433, 1226855506, 542069838, 1920230772, 1885303657
+		},
+		{
+			1702453612, 673215346, 1701667182, 1953701932, 1768776037, 1931488356, 1701998435, 1935762783, 1931488377, 1701998435
+		},
+		{
+			1919905375, 745300333, 1868788512, 1751082354, 694448737, 1279350304, 676545877, 661857575, 623321132, 539764595
+		},
+		{
+			539780133, 539780133, 992568357, 0, 64, 100, 136, 172, 208, 244
+		},
+		{
+			280, 316, 352, 388, 424, 460, 496, 532, 568, 604
+		},
+		{
+			64, 100, 136, 172, 208, 244, 280, 316, 352, 388
+		},
+		{
+			424, 460, 496, 532, 568, 604, 1920230772, 1949266793, 1769108581, 1886203507
+		},
+		{
+			51, 1920230772, 1714385769, 1600941173, 1701734764, 863005998, 0, 1920230772, 1882157929, 1701011820
+		}
+	};
+	PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
+	new y = 15;
+	while (0 <= y)
+	{
+		new x;
+		while (x < 10)
+		{
+			if (g_bGameField[client][y][x])
+			{
+				Format(sGameLine, 41, "%s%s", sGameLine, "█");
+			}
+			else
+			{
+				if (bGameField[y][x])
+				{
+					Format(sGameLine, 41, "%s%s", sGameLine, "█");
+				}
+				Format(sGameLine, 41, "%s%s", sGameLine, "░");
+			}
+			x++;
+		}
+		DrawPanelText(hPanel, sGameLine);
+		Format(sGameLine, 41, "");
+		y--;
+	}
+	DrawPanelItem(hPanel, "Back", 0);
+	SetPanelKeys(hPanel, 513);
+	new var1;
+	if (bGameOver)
+	{
+		var1 = 10;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	SendPanelToClient(hPanel, client, Panel_HandleGame, var1);
+	CloseHandle(hPanel);
+	if (bGameOver)
+	{
+		CPrintToChat(client, "%sGAME OVER! Your score is: %d.", "{green}Tetris {default}> {lightgreen}", g_iScore[client]);
+		new var2;
+		if (!g_bDisableSounds && g_bEnableSound[client])
+		{
+			EmitSoundToClientAny(client, "tetris/game_over.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+		SetEntProp(client, PropType:0, "m_fFlags", any:131329, 4, 0);
+		new bool:bNewHighscore;
+		switch (g_fDifficulty[client])
+		{
+			case 1036831949:
+			{
+				if (g_iScore[client] > g_iPlayerHighscore[client][2])
+				{
+					bNewHighscore = true;
+					g_iPlayerHighscore[client][2] = g_iScore[client];
+				}
+			}
+			case 1050253722:
+			{
+				if (g_iScore[client] > g_iPlayerHighscore[client][1])
+				{
+					bNewHighscore = true;
+					g_iPlayerHighscore[client][1] = g_iScore[client];
+				}
+			}
+			case 1053609165:
+			{
+				if (g_iScore[client] > g_iPlayerHighscore[client][0])
+				{
+					bNewHighscore = true;
+					g_iPlayerHighscore[client][0] = g_iScore[client];
+				}
+			}
+			default:
+			{
+			}
+		}
+		if (bNewHighscore)
+		{
+			CPrintToChat(client, "%sNew personal highscore!", "{green}Tetris {default}> {lightgreen}");
+		}
+		Call_StartForward(g_hfwdOnTetrisGameEnd);
+		Call_PushCell(client);
+		Call_PushCell(g_iLevel[client]);
+		Call_PushCell(g_iLinesCleared[client]);
+		Call_PushCell(g_iScore[client]);
+		Call_PushCell(bNewHighscore);
+		Call_Finish(0);
+		new var3;
+		if (g_hDatabase && bNewHighscore)
+		{
+			decl String:sName[32];
+			decl String:sEscapedName[68];
+			decl String:sAuth[32];
+			if (GetClientAuthId(client, AuthIdType:1, sAuth, 32, true))
+			{
+				GetClientName(client, sName, 32);
+				SQL_EscapeString(g_hDatabase, sName, sEscapedName, 65, 0);
+				if (g_bPlayerHasHighscore[client])
+				{
+					SQL_TQueryF(g_hDatabase, SQL_DoNothing, any:0, DBPriority:1, "UPDATE tetris_players SET name = '%s', score_easy = %d, score_normal = %d, score_hard = %d WHERE steamid = '%s';", sEscapedName, g_iPlayerHighscore[client], g_iPlayerHighscore[client][1], g_iPlayerHighscore[client][2], sAuth);
+				}
+				else
+				{
+					SQL_TQueryF(g_hDatabase, SQL_DoNothing, any:0, DBPriority:1, "INSERT INTO tetris_players (name, steamid, score_easy, score_normal, score_hard) VALUES('%s', '%s', %d, %d, %d);", sEscapedName, sAuth, g_iPlayerHighscore[client], g_iPlayerHighscore[client][1], g_iPlayerHighscore[client][2]);
+				}
+				g_bPlayerHasHighscore[client] = 1;
+			}
+		}
+		ResetTetrisGame(client);
+	}
+	return 0;
+}
+
+bool:MoveCurrentObjectDown(client, &bool:bGameOver)
+{
+	new bool:bGameField[16][10] = {
+		{
+			64, 100, 136, 172, 208, 244, 280, 316, 352, 388
+		},
+		{
+			424, 460, 496, 532, 568, 604, 1920230772, 1949266793, 1769108581, 1886203507
+		},
+		{
+			51, 1920230772, 1714385769, 1600941173, 1701734764, 863005998, 0, 1920230772, 1882157929, 1701011820
+		},
+		{
+			1869374047, 1831758691, 13168, 1920230772, 1815049065, 1818588773, 779122015, 3371117, 49, 49
+		},
+		{
+			49, 49, 1635151433, 543451500, 1701407843, 1763734638, 2019910766, 1680156704, 41, 0
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		}
+	};
+	new iTempPosition2[2];
+	new var1 = g_iObjectPosition[client];
+	iTempPosition2 = var1;
+	iTempPosition2[1]--;
+	if (0 > iTempPosition2[1])
+	{
+		SaveCurrentObject(client);
+		if (g_hDrawInfoPanel[client])
+		{
+			TriggerTimer(g_hDrawInfoPanel[client], false);
+		}
+		ResetGameField(bGameField);
+		PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
+		if (IsObjectColliding(g_bGameField[client], bGameField))
+		{
+			bGameOver = 1;
+		}
+		return false;
+	}
+	PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], iTempPosition2, bGameField);
+	if (IsObjectColliding(g_bGameField[client], bGameField))
+	{
+		SaveCurrentObject(client);
+		if (g_hDrawInfoPanel[client])
+		{
+			TriggerTimer(g_hDrawInfoPanel[client], false);
+		}
+		ResetGameField(bGameField);
+		PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
+		if (IsObjectColliding(g_bGameField[client], bGameField))
+		{
+			bGameOver = 1;
+		}
+		return false;
+	}
+	return true;
+}
+
+bool:IsObjectColliding(bool:bGameField1[16][10], bool:bGameField2[16][10])
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			new var1;
+			if (bGameField1[y][x] && bGameField2[y][x])
+			{
+				return true;
+			}
+			x++;
+		}
+		y++;
+	}
+	return false;
+}
+
+MergeGameFields(bool:bGameField[16][10], bool:bGameFieldAdd[16][10])
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			new var1;
+			if (!bGameField[y][x] && bGameFieldAdd[y][x])
+			{
+				bGameField[y][x] = true;
+			}
+			x++;
+		}
+		y++;
+	}
+	return 0;
+}
+
+RemoveFullLines(bool:bGameField[16][10])
+{
+	new iRemovedLines;
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			if (bGameField[y][x])
+			{
+				if (x == 9)
+				{
+					iRemovedLines++;
+					new y2 = y;
+					while (y2 < 15)
+					{
+						new x2;
+						while (x2 < 10)
+						{
+							bGameField[y2][x2] = bGameField[y2 + 1][x2];
+							bGameField[y2 + 1][x2] = false;
+							x2++;
+						}
+						y2++;
+					}
+					y--;
+				}
+				x++;
+			}
+			y++;
+		}
+		y++;
+	}
+	return iRemovedLines;
+}
+
+SaveCurrentObject(client)
+{
+	new bool:bGameField[16][10] = {
+		{
+			1920230772, 1949266793, 1769108581, 1886203507, 51, 1920230772, 1714385769, 1600941173, 1701734764, 863005998
+		},
+		{
+			0, 1920230772, 1882157929, 1701011820, 1869374047, 1831758691, 13168, 1920230772, 1815049065, 1818588773
+		},
+		{
+			779122015, 3371117, 49, 49, 49, 49, 1635151433, 543451500, 1701407843, 1763734638
+		},
+		{
+			2019910766, 1680156704, 41, 0, 0, 0, 0, 0, 0, 0
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		}
+	};
+	PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
+	MergeGameFields(g_bGameField[client], bGameField);
+	new iLinesCleared = RemoveFullLines(g_bGameField[client]);
+	new var1;
+	if (!g_bDisableSounds && g_bEnableSound[client])
+	{
+		if (iLinesCleared == 4)
+		{
+			EmitSoundToClientAny(client, "tetris/tetris.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+		if (0 < iLinesCleared)
+		{
+			EmitSoundToClientAny(client, "tetris/full_line.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+		EmitSoundToClientAny(client, "tetris/place_block.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	}
+	new var2;
+	if (g_iCombo[client] > 0 && iLinesCleared)
+	{
+		new var4 = g_iScore[client];
+		var4 = var4[g_iLevel[client] * g_iCombo[client] * 50];
+		g_iCombo[client] = 0;
+	}
+	else
+	{
+		if (0 < iLinesCleared)
+		{
+			g_iCombo[client]++;
+		}
+	}
+	switch (iLinesCleared)
+	{
+		case 1:
+		{
+			new var8 = g_iScore[client];
+			var8 = var8[g_iLevel[client] * 100];
+			g_iLinesCleared[client] += 1;
+		}
+		case 2:
+		{
+			new var7 = g_iScore[client];
+			var7 = var7[g_iLevel[client] * 300];
+			g_iLinesCleared[client] += 3;
+		}
+		case 3:
+		{
+			new var6 = g_iScore[client];
+			var6 = var6[g_iLevel[client] * 500];
+			g_iLinesCleared[client] += 5;
+		}
+		case 4:
+		{
+			new var5 = g_iScore[client];
+			var5 = var5[g_iLevel[client] * 800];
+			g_iLinesCleared[client] += 8;
+		}
+		default:
+		{
+		}
+	}
+	new var9 = g_iScore[client];
+	var9 = var9[g_iHardDrop[client][0] * 2];
+	while (g_iLinesCleared[client] >= g_iLevel[client] * 5)
+	{
+		g_iLevel[client]++;
+		new var3;
+		if (!g_bDisableSounds && g_bEnableSound[client])
+		{
+			EmitSoundToClientAny(client, "tetris/level_up.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+	}
+	if (g_hDrawInfoPanel[client])
+	{
+		TriggerTimer(g_hDrawInfoPanel[client], false);
+	}
+	SelectRandomObject(client);
+	return 0;
+}
+
+public ConVar_OnChange(Handle:convar, String:oldValue[], String:newValue[])
+{
+	if (StrEqual(newValue, oldValue, true))
+	{
+		return 0;
+	}
+	if (g_hCVDisableHardDrop == convar)
+	{
+		if (StrEqual(newValue, "1", true))
+		{
+			g_bDisableHardDrop = true;
+		}
+		else
+		{
+			g_bDisableHardDrop = false;
+		}
+	}
+	else
+	{
+		if (g_hCVDisableSounds == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bDisableSounds = true;
+			}
+			else
+			{
+				g_bDisableSounds = false;
+			}
+		}
+		if (g_hCVOnlyDead == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bOnlyDead = true;
+			}
+			else
+			{
+				g_bOnlyDead = false;
+			}
+		}
+		if (g_hCVDisableStats == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bDisableStats = true;
+			}
+			g_bDisableStats = false;
+		}
+	}
+	return 0;
+}
+
+public Native_IsClientInTetrisGame(Handle:plugin, numParams)
+{
+	new client = GetNativeCell(1);
+	new var1;
+	if (client < 1 || client > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index (%d)", client);
+	}
+	return g_hPlayerGameThink[client] != 0;
+}
+
+ResetGameField(bool:bGameField[16][10])
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			bGameField[y][x] = false;
+			x++;
+		}
+		y++;
+	}
+	return 0;
+}
+
+Reset4x4(iMatrix[4][4])
+{
+	new x;
+	while (x < 4)
+	{
+		new y;
+		while (y < 4)
+		{
+			iMatrix[x][y] = -1;
+			y++;
+		}
+		x++;
+	}
+	return 0;
+}
+
+ClearTimer(&Handle:timer, bool:autoClose)
+{
+	if (timer)
+	{
+		KillTimer(timer, autoClose);
+	}
+	timer = 0;
+	return 0;
+}
+

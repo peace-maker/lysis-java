@@ -1,0 +1,436 @@
+public PlVers:__version =
+{
+	version = 3,
+	filevers = "1.0.4",
+	date = "06/10/2014",
+	time = "02:50:55"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new gObj[65];
+new Float:gThrow[65];
+new Handle:gTimer;
+new String:gSound[256];
+new Handle:cvSpeed;
+new Handle:cvDistance;
+new Handle:cvTeamRestrict;
+new Handle:cvSound;
+new Handle:cvGround;
+new Handle:cvThrowTime;
+new Handle:cvThrowSpeed;
+new Handle:cvMaxDistance;
+new Handle:cvSteal;
+new Handle:cvDropOnJump;
+public Plugin:myinfo =
+{
+	name = "Grabber:SM",
+	description = "grabber (gravgun)",
+	author = "L. Duke",
+	version = "1.0.0.3",
+	url = "http://www.lduke.com/"
+};
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+SubtractVectors(Float:vec1[3], Float:vec2[3], Float:result[3])
+{
+	result[0] = vec1[0] - vec2[0];
+	result[1] = vec1[1] - vec2[1];
+	result[2] = vec1[2] - vec2[2];
+	return 0;
+}
+
+ScaleVector(Float:vec[3], Float:scale)
+{
+	new var1 = vec;
+	var1[0] = var1[0] * scale;
+	vec[1] *= scale;
+	vec[2] *= scale;
+	return 0;
+}
+
+GetClientButtons(client)
+{
+	return GetEntProp(client, 1, 64, 4);
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new maxClients = GetMaxClients();
+	new clients[maxClients];
+	new total;
+	new i = 1;
+	while (i <= maxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+public OnPluginStart()
+{
+	HookEvent(1032, 23, 1);
+	HookEvent(1048, 25, 1);
+	CreateConVar(1064, 1084, 1092, 270656, 0, 0, 0, 0);
+	cvSpeed = CreateConVar(1112, 1132, 1140, 0, 0, 0, 0, 0);
+	cvDistance = CreateConVar(1144, 1164, 1140, 0, 0, 0, 0, 0);
+	cvTeamRestrict = CreateConVar(1172, 1200, 1204, 0, 0, 0, 0, 0);
+	cvSound = CreateConVar(1264, 1284, 1320, 0, 0, 0, 0, 0);
+	cvGround = CreateConVar(1372, 1396, 1400, 0, 0, 0, 0, 0);
+	cvThrowTime = CreateConVar(1432, 1456, 1460, 0, 0, 0, 0, 0);
+	cvThrowSpeed = CreateConVar(1500, 1524, 1532, 0, 0, 0, 0, 0);
+	cvMaxDistance = CreateConVar(1568, 1592, 1600, 0, 0, 0, 0, 0);
+	cvSteal = CreateConVar(1652, 1672, 1676, 0, 0, 0, 0, 0);
+	cvDropOnJump = CreateConVar(1732, 1756, 1760, 0, 0, 0, 0, 0);
+	RegConsoleCmd(1860, 1, 1868, 0);
+	RegConsoleCmd(1872, 7, 1868, 0);
+	RegConsoleCmd(1880, 3, 1868, 0);
+	RegConsoleCmd(1888, 9, 1868, 0);
+	return 0;
+}
+
+public OnEventShutdown()
+{
+	UnhookEvent(1896, 23, 1);
+	UnhookEvent(1912, 25, 1);
+	return 0;
+}
+
+public OnMapStart()
+{
+	new i;
+	while (i <= 64)
+	{
+		gObj[i] = -1;
+		gThrow[i] = 0;
+		i++;
+	}
+	gTimer = CreateTimer(1036831949, 31, 0, 1);
+	GetConVarString(cvSound, 644, 256);
+	PrecacheSound(644, 1);
+	return 0;
+}
+
+public OnMapEnd()
+{
+	CloseHandle(gTimer);
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	new var1;
+	if (client && !IsFakeClient(client))
+	{
+		gThrow[client] = 0;
+		gObj[client] = -1;
+	}
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	if (0 < gObj[client])
+	{
+		Command_UnGrab(client, 0);
+	}
+	return 0;
+}
+
+public Action:PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, 1928));
+	gThrow[client] = 0;
+	gObj[client] = -1;
+	StopSound(client, 0, 644);
+	return Action:0;
+}
+
+public Action:PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, 1936));
+	gThrow[client] = 0;
+	gObj[client] = -1;
+	StopSound(client, 0, 644);
+	return Action:0;
+}
+
+public Action:Command_Grab(client, args)
+{
+	if (0 < gObj[client])
+	{
+		return Command_UnGrab(client, args);
+	}
+	if (!IsPlayerAlive(client))
+	{
+		return Action:3;
+	}
+	new restrict = GetConVarInt(cvTeamRestrict);
+	if (0 < restrict)
+	{
+		if (GetClientTeam(client) == restrict)
+		{
+			return Action:3;
+		}
+	}
+	new ent = TraceToEntity(client);
+	if (ent == -1)
+	{
+		return Action:3;
+	}
+	new String:edictname[128];
+	GetEdictClassname(ent, edictname, 128);
+	if (!(strncmp(1944, edictname, 5, 0)))
+	{
+		new j = 1;
+		while (j <= 64)
+		{
+			if (ent == gObj[j])
+			{
+				if (GetConVarInt(cvSteal) == 1)
+				{
+					Command_UnGrab(j, args);
+				}
+				return Action:3;
+			}
+			j++;
+		}
+		gObj[client] = ent;
+		gThrow[client] = 0;
+		if (GetConVarInt(cvGround) != 1)
+		{
+			EmitSoundToAll(gSound, client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+	}
+	return Action:3;
+}
+
+public Action:Command_UnGrab(client, args)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return Action:3;
+	}
+	if (GetConVarInt(cvGround) != 1)
+	{
+		StopSound(client, 0, 644);
+	}
+	if (gThrow[client] > 0.0)
+	{
+		PrintHintText(client, 1952);
+	}
+	gThrow[client] = 0;
+	gObj[client] = -1;
+	return Action:3;
+}
+
+public Action:Command_Throw(client, args)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return Action:3;
+	}
+	if (gObj[client] < 1)
+	{
+		return Action:3;
+	}
+	gThrow[client] = GetEngineTime();
+	return Action:3;
+}
+
+public Action:Command_UnGrab2(client, args)
+{
+	return Action:3;
+}
+
+public Action:Command_UnThrow(client, args)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return Action:3;
+	}
+	if (gObj[client] < 1)
+	{
+		return Action:3;
+	}
+	new Float:throwtime = GetConVarFloat(cvThrowTime);
+	new Float:throwspeed = GetConVarFloat(cvThrowSpeed);
+	new Float:time = GetEngineTime();
+	new Float:percent = 0.0;
+	time -= gThrow[client];
+	if (time > throwtime)
+	{
+		percent = 1.0;
+	}
+	else
+	{
+		percent = time / throwtime;
+	}
+	throwspeed *= percent;
+	new Float:start[3] = 0.0;
+	GetClientEyePosition(client, start);
+	new Float:angle[3] = 0.0;
+	new Float:speed[3] = 0.0;
+	GetClientEyeAngles(client, angle);
+	GetAngleVectors(angle, speed, 48, 48);
+	speed[0] = speed[0] * throwspeed;
+	speed[1] *= throwspeed;
+	speed[2] *= throwspeed;
+	TeleportEntity(gObj[client], 48, 48, speed);
+	Command_UnGrab(client, args);
+	PrintHintText(client, 1956);
+	return Action:3;
+}
+
+public Action:UpdateObjects(Handle:timer)
+{
+	new Float:vecDir[3] = 0.0;
+	new Float:vecPos[3] = 0.0;
+	new Float:vecVel[3] = 0.0;
+	new Float:viewang[3] = 0.0;
+	new i;
+	new Float:speed = GetConVarFloat(cvSpeed);
+	new Float:distance = GetConVarFloat(cvDistance);
+	new groundmode = GetConVarInt(cvGround);
+	new Float:throwtime = GetConVarFloat(cvThrowTime);
+	new Float:time = GetEngineTime();
+	new bool:DropInJump;
+	i = 0;
+	while (i <= 64)
+	{
+		if (0 < gObj[i])
+		{
+			if (GetConVarBool(cvDropOnJump))
+			{
+				new var1;
+				if (GetClientButtons(i) & 2)
+				{
+					var1 = 1;
+				}
+				else
+				{
+					var1 = 0;
+				}
+				DropInJump = var1;
+			}
+			new var2;
+			if (IsValidEdict(gObj[i]) && IsValidEntity(gObj[i]) && !DropInJump)
+			{
+				GetClientEyeAngles(i, viewang);
+				GetAngleVectors(viewang, vecDir, 48, 48);
+				if (groundmode == 1)
+				{
+					GetClientAbsOrigin(i, vecPos);
+				}
+				else
+				{
+					GetClientEyePosition(i, vecPos);
+				}
+				vecPos[0] = vecPos[0] + vecDir[0] * distance;
+				vecPos[1] += vecDir[1] * distance;
+				if (groundmode != 1)
+				{
+					vecPos[2] += vecDir[2] * distance;
+				}
+				GetEntPropVector(gObj[i], 0, 1960, vecDir);
+				SubtractVectors(vecPos, vecDir, vecVel);
+				ScaleVector(vecVel, speed);
+				if (groundmode == 1)
+				{
+					vecVel[2] = 0.0;
+				}
+				TeleportEntity(gObj[i], 48, 48, vecVel);
+				if (gThrow[i] > 0.0)
+				{
+					ShowBar(i, time - gThrow[i], throwtime);
+				}
+			}
+			gObj[i] = -1;
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public TraceToEntity(client)
+{
+	new Float:vecClientEyePos[3] = 0.0;
+	new Float:vecClientEyeAng[3] = 0.0;
+	GetClientEyePosition(client, vecClientEyePos);
+	GetClientEyeAngles(client, vecClientEyeAng);
+	TR_TraceRayFilter(vecClientEyePos, vecClientEyeAng, 33570827, 1, 27, client);
+	if (TR_DidHit(0))
+	{
+		new TRIndex = TR_GetEntityIndex(0);
+		new Float:pos[3] = 0.0;
+		GetEntPropVector(TRIndex, 0, 1972, pos);
+		if (GetVectorDistance(vecClientEyePos, pos, 0) > GetConVarFloat(cvMaxDistance))
+		{
+			return -1;
+		}
+		return TRIndex;
+	}
+	return -1;
+}
+
+public bool:TraceRayDontHitSelf(entity, mask, any:data)
+{
+	if (data == entity)
+	{
+		return false;
+	}
+	return true;
+}
+
+ShowBar(client, Float:curTime, Float:totTime)
+{
+	new i;
+	new String:output[128];
+	if (curTime > totTime)
+	{
+		Format(output, 128, 1984);
+	}
+	else
+	{
+		new Float:fl = 1.0;
+		output[0] = MissingTAG:91;
+		i = 1;
+		while (i < 21)
+		{
+			if (fl / 20.0 > curTime / totTime)
+			{
+				output[i] = MissingTAG:45;
+			}
+			else
+			{
+				output[i] = MissingTAG:88;
+			}
+			fl += 1.0;
+			i++;
+		}
+		output[5] = MissingTAG:93;
+		output[5] = MissingTAG:0;
+	}
+	PrintHintText(client, output);
+	return 0;
+}
+

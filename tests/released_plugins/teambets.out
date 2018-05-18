@@ -1,0 +1,534 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.3.9-dev",
+	date = "06/10/2014",
+	time = "07:40:16"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Plugin:myinfo =
+{
+	name = "Team Bets",
+	description = "Bet on Team to Win",
+	author = "GrimReaper - Original by ferret",
+	version = "2.6",
+	url = "http://forums.alliedmods.net/showthread.php?t=85914"
+};
+new g_iLifeState = -1;
+new g_iAccount = -1;
+new g_bEnabled;
+new g_bHooked;
+new g_iPlayerBetData[66][3];
+new bool:g_bPlayerBet[66];
+new bool:g_bBombPlanted;
+new bool:g_bOneVsMany;
+new g_iOneVsManyPot;
+new g_iOneVsManyTeam;
+new Handle:g_hSmBet;
+new Handle:g_hSmBetDeadOnly;
+new Handle:g_hSmBetOneVsMany;
+new Handle:g_hSmBetAnnounce;
+new Handle:g_hSmBetAdvert;
+new Handle:g_hSmBetPlanted;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		if (text[reloc_idx])
+		{
+			total++;
+			if (total >= maxStrings)
+			{
+				return total;
+			}
+		}
+		new var2;
+		if (text[reloc_idx] && total <= maxStrings + -1)
+		{
+			total++;
+			strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+		}
+		return total;
+	}
+	new var2;
+	if (text[reloc_idx] && total <= maxStrings + -1)
+	{
+		total++;
+		strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	}
+	return total;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public OnPluginStart()
+{
+	g_iAccount = FindSendPropOffs("CCSPlayer", "m_iAccount");
+	g_iLifeState = FindSendPropOffs("CBasePlayer", "m_lifeState");
+	new var1;
+	if (g_iAccount == -1 || g_iLifeState == -1)
+	{
+		g_bEnabled = 0;
+		PrintToServer("[TeamBets] - Unable to start, cannot find necessary send prop offsets.");
+		return 0;
+	}
+	LoadTranslations("common.phrases");
+	LoadTranslations("plugin.teambets");
+	CreateConVar("sm_teambets_version", "2.6", "TeamBets Version", 270656, false, 0.0, false, 0.0);
+	RegConsoleCmd("say", Command_Say, "", 0);
+	RegConsoleCmd("say_team", Command_Say, "", 0);
+	g_hSmBet = CreateConVar("sm_bet", "1", "Enable team betting? (0 off, 1 on, def. 1)", 0, false, 0.0, false, 0.0);
+	g_hSmBetDeadOnly = CreateConVar("sm_bet_deadonly", "1", "Only dead players can bet. (0 off, 1 on, def. 1)", 0, false, 0.0, false, 0.0);
+	g_hSmBetOneVsMany = CreateConVar("sm_bet_onevsmany", "0", "The winner of a 1 vs X fight gets the losing pot (def. 0)", 0, false, 0.0, false, 0.0);
+	g_hSmBetAnnounce = CreateConVar("sm_bet_announce", "0", "Announce 1 vs 1 situations (0 off, 1 on, def. 0)", 0, false, 0.0, false, 0.0);
+	g_hSmBetAdvert = CreateConVar("sm_bet_advert", "1", "Advertise plugin instructions on client connect? (0 off, 1 on, def. 1)", 0, false, 0.0, false, 0.0);
+	g_hSmBetPlanted = CreateConVar("sm_bet_planted", "0", "Prevent betting if the bomb has been planted. (0 off, 1 on, def. 0)", 0, false, 0.0, false, 0.0);
+	HookConVarChange(g_hSmBet, ConVarChange_SmBet);
+	g_bEnabled = 1;
+	CreateTimer(5.0, Timer_DelayedHooks, any:0, 0);
+	AutoExecConfig(true, "teambets", "sourcemod");
+	return 0;
+}
+
+public Action:Timer_DelayedHooks(Handle:timer)
+{
+	if (g_bEnabled)
+	{
+		HookEvent("round_end", Event_RoundEnd, EventHookMode:1);
+		HookEvent("player_death", Event_PlayerDeath, EventHookMode:1);
+		HookEvent("bomb_planted", Event_Planted, EventHookMode:2);
+		g_bHooked = 1;
+		PrintToServer("[TeamBets] - Loaded");
+	}
+	return Action:0;
+}
+
+public ConVarChange_SmBet(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new iNewVal = StringToInt(newValue, 10);
+	new var1;
+	if (g_bEnabled && iNewVal != 1)
+	{
+		if (g_bHooked)
+		{
+			UnhookEvent("round_end", Event_RoundEnd, EventHookMode:1);
+			UnhookEvent("player_death", Event_PlayerDeath, EventHookMode:1);
+			UnhookEvent("bomb_planted", Event_Planted, EventHookMode:1);
+			g_bHooked = 0;
+		}
+		g_bEnabled = 0;
+	}
+	else
+	{
+		new var2;
+		if (!g_bEnabled && iNewVal == 1)
+		{
+			if (!g_bHooked)
+			{
+				HookEvent("round_end", Event_RoundEnd, EventHookMode:1);
+				HookEvent("player_death", Event_PlayerDeath, EventHookMode:1);
+				HookEvent("bomb_planted", Event_Planted, EventHookMode:2);
+				g_bHooked = 1;
+			}
+			g_bEnabled = 1;
+		}
+	}
+	return 0;
+}
+
+public Event_Planted(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (!g_bEnabled)
+	{
+		return 0;
+	}
+	if (GetConVarInt(g_hSmBetPlanted) == 1)
+	{
+		g_bBombPlanted = true;
+	}
+	return 0;
+}
+
+public Action:Command_Say(client, args)
+{
+	if (!g_bEnabled)
+	{
+		return Action:0;
+	}
+	new String:szText[192];
+	GetCmdArgString(szText, 192);
+	new startarg;
+	if (szText[0] == '"')
+	{
+		startarg = 1;
+		new szTextlen = strlen(szText);
+		if (szText[szTextlen + -1] == '"')
+		{
+			szText[szTextlen + -1] = MissingTAG:0;
+		}
+	}
+	new String:szParts[3][16] = {
+		" ",
+		"ts]\x01 %t",
+		"after bomb planted"
+	};
+	ExplodeString(szText[startarg], " ", szParts, 3, 16);
+	if (!(strcmp(szParts[0][szParts], "bet", false)))
+	{
+		if (g_bBombPlanted == true)
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "No bets after bomb planted");
+			return Action:3;
+		}
+		if (GetClientTeam(client) <= 1)
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "Must Be On A Team To Vote");
+			return Action:3;
+		}
+		if (g_bPlayerBet[client])
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "Already Betted");
+			return Action:3;
+		}
+		new var1;
+		if (GetConVarInt(g_hSmBetDeadOnly) == 1 && IsAlive(client))
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "Must Be Dead To Vote");
+			return Action:3;
+		}
+		new var2;
+		if (strcmp(szParts[1], "ct", false) && strcmp(szParts[1], "t", false))
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "Invalid Team for Bet");
+			return Action:3;
+		}
+		new var3;
+		if (strcmp(szParts[1], "ct", false) && strcmp(szParts[1], "t", false))
+		{
+			new iAmount;
+			new iBank = GetMoney(client);
+			if (IsCharNumeric(szParts[2]))
+			{
+				iAmount = StringToInt(szParts[2], 10);
+			}
+			else
+			{
+				if (!(strcmp(szParts[2], "all", false)))
+				{
+					iAmount = iBank;
+				}
+			}
+			if (!(strcmp(szParts[2], "half", false)))
+			{
+				iAmount = iBank / 2 + 1;
+			}
+			if (!(strcmp(szParts[2], "third", false)))
+			{
+				iAmount = iBank / 3 + 1;
+			}
+			if (iAmount < 1)
+			{
+				PrintToChat(client, "\x04[TeamBets]\x01 %t", "Invalid Bet Amount");
+				return Action:3;
+			}
+			new var4;
+			if (iAmount > iBank || iBank < 1)
+			{
+				PrintToChat(client, "\x04[TeamBets]\x01 %t", "Not Enough Money");
+				return Action:3;
+			}
+			new iOdds[2];
+			new iTeam;
+			new iMaxClients = GetMaxClients();
+			new i = 1;
+			while (i <= iMaxClients)
+			{
+				new var5;
+				if (IsClientInGame(i) && IsAlive(i))
+				{
+					iTeam = GetClientTeam(i);
+					if (iTeam == 2)
+					{
+						iOdds++;
+					}
+					if (iTeam == 3)
+					{
+						iOdds[1]++;
+					}
+				}
+				i++;
+			}
+			new var6;
+			if (iOdds[0] < 1 || iOdds[1] < 1)
+			{
+				PrintToChat(client, "\x04[TeamBets]\x01 %t", "Players Are Dead");
+				return Action:0;
+			}
+			g_iPlayerBetData[client][0] = iAmount;
+			new var7;
+			if (strcmp(szParts[1], "t", false))
+			{
+				var7 = 3;
+			}
+			else
+			{
+				var7 = 2;
+			}
+			g_iPlayerBetData[client][2] = var7;
+			new iWin;
+			if (g_iPlayerBetData[client][2] == 2)
+			{
+				iWin = RoundToNearest(float(iOdds[1]) / float(iOdds[0]) * float(iAmount));
+				PrintToChat(client, "\x04[TeamBets]\x01 %t", "Bet Made", iOdds[1], iOdds, iWin, g_iPlayerBetData[client]);
+			}
+			else
+			{
+				iWin = RoundToNearest(float(iOdds[0]) / float(iOdds[1]) * float(iAmount));
+				PrintToChat(client, "\x04[TeamBets]\x01 %t", "Bet Made", iOdds, iOdds[1], iWin, g_iPlayerBetData[client]);
+			}
+			g_iPlayerBetData[client][1] = iWin;
+			g_bPlayerBet[client] = 1;
+			new var8;
+			if (g_bOneVsMany && g_iPlayerBetData[client][2] != g_iOneVsManyTeam)
+			{
+				g_iOneVsManyPot = iAmount + g_iOneVsManyPot;
+			}
+			SetMoney(client, iBank - iAmount);
+			return Action:3;
+		}
+	}
+	return Action:0;
+}
+
+public bool:OnClientConnect(client, String:rejectmsg[], maxlen)
+{
+	if (!g_bEnabled)
+	{
+		return true;
+	}
+	g_iPlayerBetData[client][0] = 0;
+	g_iPlayerBetData[client][2] = 0;
+	g_iPlayerBetData[client][1] = 0;
+	g_bPlayerBet[client] = 0;
+	CreateTimer(15.0, Timer_Advertise, client, 0);
+	return true;
+}
+
+public Event_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (!g_bEnabled)
+	{
+		return 0;
+	}
+	new var1;
+	if (GetConVarInt(g_hSmBetAnnounce) && GetConVarInt(g_hSmBetOneVsMany) < 2)
+	{
+		return 0;
+	}
+	new iMaxClients = GetMaxClients();
+	new iTeam;
+	new iTeams[2];
+	new iTPlayer;
+	new iCTPlayer;
+	new i = 1;
+	while (i <= iMaxClients)
+	{
+		new var2;
+		if (IsClientInGame(i) && IsAlive(i))
+		{
+			iTeam = GetClientTeam(i);
+			if (iTeam == 2)
+			{
+				iTeams++;
+				if (iTPlayer)
+				{
+				}
+				else
+				{
+					iTPlayer = i;
+				}
+			}
+			if (iTeam == 3)
+			{
+				iTeams[1]++;
+				if (!iCTPlayer)
+				{
+					iCTPlayer = i;
+				}
+			}
+		}
+		i++;
+	}
+	new var3;
+	if (iTeams[0] == 1 && iTeams[1] == 1 && !g_bOneVsMany && GetConVarInt(g_hSmBetAnnounce) > 0)
+	{
+		PrintToChatAll("\x04[TeamBets]\x01 %T", "One Vs One", 0);
+		return 0;
+	}
+	if (GetConVarInt(g_hSmBetOneVsMany) > 1)
+	{
+		new String:pname[64];
+		new var4;
+		if ((iTeams[0] == 1 && iTeams[1] > GetConVarInt(g_hSmBetOneVsMany)) || ((iTeams[1] == 1 && iTeams[0] > GetConVarInt(g_hSmBetOneVsMany)) && !g_bOneVsMany))
+		{
+			g_bOneVsMany = true;
+			g_iOneVsManyPot = 0;
+			if (iTeams[0] == 1)
+			{
+				GetClientName(iTPlayer, pname, 64);
+				g_iOneVsManyTeam = 2;
+			}
+			else
+			{
+				GetClientName(iCTPlayer, pname, 64);
+				g_iOneVsManyTeam = 3;
+			}
+			new var8;
+			if (iTeams[1] == 1)
+			{
+				var8 = 3048;
+			}
+			else
+			{
+				var8 = 3060;
+			}
+			PrintToChatAll("\x04[TeamBets]\x01 %T", "One Vs Many Start", 0, pname, var8);
+		}
+		else
+		{
+			new var9;
+			if (iTeams[0] == 1 && iTeams[1] && g_bOneVsMany && g_iOneVsManyTeam == 2)
+			{
+				GetClientName(iTPlayer, pname, 64);
+				PrintToChatAll("\x04[TeamBets]\x01 %T", "One Vs Many Winner", 0, pname, g_iOneVsManyPot);
+				SetMoney(iTPlayer, GetMoney(iTPlayer) + g_iOneVsManyPot);
+			}
+			new var10;
+			if (iTeams[1] == 1 && iTeams[0] && g_bOneVsMany && g_iOneVsManyTeam == 3)
+			{
+				GetClientName(iCTPlayer, pname, 64);
+				PrintToChatAll("\x04[TeamBets]\x01 %T", "One Vs Many Winner", 0, pname, g_iOneVsManyPot);
+				SetMoney(iCTPlayer, GetMoney(iCTPlayer) + g_iOneVsManyPot);
+			}
+		}
+	}
+	return 0;
+}
+
+public Event_RoundEnd(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (!g_bEnabled)
+	{
+		return 0;
+	}
+	new iMaxClients = GetMaxClients();
+	new iWinner = GetEventInt(event, "winner");
+	new i = 1;
+	while (i <= iMaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && g_bPlayerBet[i])
+		{
+			if (g_iPlayerBetData[i][2] == iWinner)
+			{
+				SetMoney(i, g_iPlayerBetData[i][1][g_iPlayerBetData[i][0] + GetMoney(i)]);
+				PrintToChat(i, "\x04[TeamBets]\x01 %t", "Bet Won", g_iPlayerBetData[i][1], g_iPlayerBetData[i]);
+			}
+			PrintToChat(i, "\x04[TeamBets]\x01 %t", "Bet Lost", g_iPlayerBetData[i]);
+		}
+		g_bPlayerBet[i] = 0;
+		i++;
+	}
+	g_bOneVsMany = false;
+	g_iOneVsManyPot = 0;
+	g_bBombPlanted = false;
+	return 0;
+}
+
+public Action:Timer_Advertise(Handle:timer, any:client)
+{
+	if (GetConVarInt(g_hSmBetAdvert) == 1)
+	{
+		if (IsClientInGame(client))
+		{
+			PrintToChat(client, "\x04[TeamBets]\x01 %t", "Advertise Bets");
+		}
+		if (IsClientConnected(client))
+		{
+			CreateTimer(15.0, Timer_Advertise, client, 0);
+		}
+	}
+	return Action:0;
+}
+
+public bool:IsAlive(client)
+{
+	new var1;
+	if (g_iLifeState != -1 && GetEntData(client, g_iLifeState, 1))
+	{
+		return true;
+	}
+	return false;
+}
+
+public SetMoney(client, amount)
+{
+	if (g_iAccount != -1)
+	{
+		SetEntData(client, g_iAccount, amount, 4, false);
+	}
+	return 0;
+}
+
+public GetMoney(client)
+{
+	if (g_iAccount != -1)
+	{
+		return GetEntData(client, g_iAccount, 4);
+	}
+	return 0;
+}
+

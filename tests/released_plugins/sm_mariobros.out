@@ -1,0 +1,3500 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.4-dev+4616",
+	date = "01/15/2015",
+	time = "18:47:14"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:TFResourceNames[18][];
+public Extension:__ext_regex =
+{
+	name = "Regex Extension",
+	file = "regex.ext",
+	autoload = 1,
+	required = 1,
+};
+new bool:CSkipList[66];
+new Handle:CTrie;
+new CTeamColors[1][3] =
+{
+	{
+		13421772, 5077314, 16728128
+	}
+};
+public Extension:__ext_tf2items =
+{
+	name = "TF2Items",
+	file = "tf2items.ext.2.ep2v",
+	autoload = 0,
+	required = 1,
+};
+public SharedPlugin:__pl_tf2items_giveweapon =
+{
+	name = "tf2items_giveweapon",
+	file = "tf2items_giveweapon.smx",
+	required = 1,
+};
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_SteamTools =
+{
+	name = "SteamTools",
+	file = "steamtools.ext",
+	autoload = 1,
+	required = 0,
+};
+public Plugin:myinfo =
+{
+	name = "[TF2]Mario Bros.",
+	description = "Jump, Stomp, and Power Up to defeat your opponents!",
+	author = "X Kirby",
+	version = "1.0.6d",
+	url = "http://www.sourcemod.net/"
+};
+new Handle:mb_Version;
+new Handle:mb_JumpHeight;
+new Handle:mb_JumpDamage;
+new Handle:mb_FireFlowerDamage;
+new Handle:mb_PowerTime;
+new Handle:mb_PowBlockDamage;
+new Handle:mb_SpeedBoostBonus;
+new Handle:mb_LeafFall;
+new Handle:mb_MushroomHP;
+new Handle:mb_StarmanSpeed;
+new Handle:mb_LightningDamage;
+new Handle:mb_BowserHP;
+new Handle:mb_PowerDistance;
+new Handle:mb_PickupDelay;
+new Handle:mb_HUD;
+new Handle:mb_HUD2;
+new Handle:mb_HUD3;
+new Handle:mb_HUD4;
+new Handle:mb_RespawnMax;
+new Handle:mb_MoveSpeed;
+new Handle:mb_GameMode;
+new Handle:mb_CoinTimeLimit;
+new Handle:mb_CoinLimitGlow;
+new Handle:mb_RoundLimit;
+new Handle:mb_RoundWait;
+new Handle:mb_ArenaTimeLimit;
+new Handle:mb_SpawnProtection;
+new Handle:mb_HUDLogo;
+new Handle:mb_HUD_X;
+new Handle:mb_HUD_Y;
+new Handle:mb_HUDLogo_Red;
+new Handle:mb_HUDLogo_Grn;
+new Handle:mb_HUDLogo_Blu;
+new Handle:PowerUpShuffler;
+new Handle:HelpMenu;
+new i_RoundCount;
+new i_PowerUp[66];
+new i_UsingPower[66];
+new i_SpawnProtect[66];
+new bool:i_Hints[66] =
+{
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new i_HUDSprite[66] =
+{
+	-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new RoundWaitTime;
+new Time[2];
+new FrameCount;
+new String:Powers[15][128] =
+{
+	"Fire Flower",
+	"POW Block",
+	"P Wing",
+	"Goomba's Shoe",
+	"Super Leaf",
+	"Boo Thief",
+	"Mushroom",
+	"Starman",
+	"Hammer",
+	"Thunderbolt",
+	"Golden Mushroom",
+	"Ice Flower",
+	"Lazy Shell Armor",
+	"1-Up Mushroom",
+	"Bowser Suit"
+};
+new bool:Hooked[66];
+new bool:Jumping[66];
+new bool:JumpHold[66];
+new JumpTicks[66];
+new bool:AirJumping[66];
+new bool:IsBounce[66];
+new bool:IsShocked[66];
+new CheckSprint[66];
+new bool:IsSprint[66];
+new SteppedOn[66] =
+{
+	-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new Float:BounceVec[66][3];
+new bool:Floating[66];
+new Frozen[66];
+new Lives[66];
+new Coins[66];
+new TotalCoins[2];
+new Respawns[66];
+new bool:Invincible[66];
+new bool:LazyShellArmor[66] =
+{
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new Common[5] =
+{
+	2, 3, 4, 5, 7
+};
+new Uncommon[5] =
+{
+	1, 6, 10, 11, 12
+};
+new Rare[5] =
+{
+	8, 9, 13, 14, 15
+};
+new String:PowModels[15][256] =
+{
+	"models/e-spowerups/ma_fireflower",
+	"models/e-spowerups/ma_powblock",
+	"models/e-spowerups/ma_pwing",
+	"models/e-spowerups/ma_kuriboshoe",
+	"models/e-spowerups/ma_powerleaf",
+	"models/e-spowerups/ma_boothief",
+	"models/e-spowerups/ma_redmushroom",
+	"models/e-spowerups/ma_starman",
+	"models/e-spowerups/ma_superhammer",
+	"models/e-spowerups/ma_lightningbolt",
+	"models/e-spowerups/ma_goldmushroom",
+	"models/e-spowerups/ma_iceflower",
+	"models/e-spowerups/ma_lazyshell",
+	"models/e-spowerups/ma_greenmushroom",
+	"models/e-spowerups/ma_bowsersuit"
+};
+new String:PowMaterials[14][256] =
+{
+	"materials/e-spowerups/fireflower",
+	"materials/e-spowerups/powblock",
+	"materials/e-spowerups/pbox",
+	"materials/e-spowerups/kuriboshoe",
+	"materials/e-spowerups/powerleaf",
+	"materials/e-spowerups/booface",
+	"materials/e-spowerups/redmushroom",
+	"materials/e-spowerups/starman",
+	"materials/e-spowerups/superhammer",
+	"materials/e-spowerups/goldenmushroom",
+	"materials/e-spowerups/iceflower",
+	"materials/e-spowerups/blueshell",
+	"materials/e-spowerups/greenmushroom",
+	"materials/e-spowerups/bowsershell"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+bool:operator>(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 > float(oper2);
+}
+
+bool:operator>=(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 >= float(oper2);
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+CharToLower(chr)
+{
+	if (IsCharUpper(chr))
+	{
+		return chr | 32;
+	}
+	return chr;
+}
+
+Handle:CreateDataTimer(Float:interval, Timer:func, &Handle:datapack, flags)
+{
+	datapack = CreateDataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+bool:VoteMenuToAll(Handle:menu, time, flags)
+{
+	new total;
+	decl players[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (!IsClientInGame(i) || IsFakeClient(i))
+		{
+		}
+		else
+		{
+			total++;
+			players[total] = i;
+		}
+		i++;
+	}
+	return VoteMenu(menu, players, total, time, flags);
+}
+
+PrintHintTextToAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintHintText(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
+{
+	decl String:cls[64];
+	if (!GetEntityNetClass(ent, cls, 64))
+	{
+		return -1;
+	}
+	if (actual)
+	{
+		return FindSendPropInfo(cls, prop, 0, 0, 0);
+	}
+	return FindSendPropOffs(cls, prop);
+}
+
+bool:GetEntityClassname(entity, String:clsname[], maxlength)
+{
+	return !!GetEntPropString(entity, PropType:1, "m_iClassname", clsname, maxlength, 0);
+}
+
+SetEntityMoveType(entity, MoveType:mt)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_MoveType");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:1, datamap, mt, 4, 0);
+	return 0;
+}
+
+SetEntityRenderColor(entity, r, g, b, a)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_clrRender", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_clrRender");
+		}
+		gotconfig = true;
+	}
+	new offset = GetEntSendPropOffs(entity, prop, false);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityRenderColor not supported by this mod");
+	}
+	SetEntData(entity, offset, r, 1, true);
+	SetEntData(entity, offset + 1, g, 1, true);
+	SetEntData(entity, offset + 2, b, 1, true);
+	SetEntData(entity, offset + 3, a, 1, true);
+	return 0;
+}
+
+SetEntityHealth(entity, amount)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_iHealth", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_iHealth");
+		}
+		gotconfig = true;
+	}
+	decl String:cls[64];
+	new PropFieldType:type;
+	new offset;
+	if (!GetEntityNetClass(entity, cls, 64))
+	{
+		ThrowError("SetEntityHealth not supported by this mod: Could not get serverclass name");
+		return 0;
+	}
+	offset = FindSendPropInfo(cls, prop, type, 0, 0);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityHealth not supported by this mod");
+		return 0;
+	}
+	if (type == PropFieldType:2)
+	{
+		SetEntDataFloat(entity, offset, float(amount), false);
+	}
+	else
+	{
+		SetEntProp(entity, PropType:0, prop, amount, 4, 0);
+	}
+	return 0;
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[MaxClients];
+	new total;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+TF2_SetPlayerClass(client, TFClassType:class, bool:weapons, bool:persistent)
+{
+	SetEntProp(client, PropType:0, TFResourceNames, class, 4, 0);
+	if (persistent)
+	{
+		SetEntProp(client, PropType:0, "m_iDesiredPlayerClass", class, 4, 0);
+	}
+	return 0;
+}
+
+TF2_RemoveWeaponSlot(client, slot)
+{
+	new weaponIndex;
+	while ((weaponIndex = GetPlayerWeaponSlot(client, slot)) != -1)
+	{
+		new extraWearable = GetEntPropEnt(weaponIndex, PropType:0, "m_hExtraWearable", 0);
+		if (extraWearable != -1)
+		{
+			TF2_RemoveWearable(client, extraWearable);
+		}
+		extraWearable = GetEntPropEnt(weaponIndex, PropType:0, "m_hExtraWearableViewModel", 0);
+		if (extraWearable != -1)
+		{
+			TF2_RemoveWearable(client, extraWearable);
+		}
+		RemovePlayerItem(client, weaponIndex);
+		AcceptEntityInput(weaponIndex, "Kill", -1, -1, 0);
+	}
+	return 0;
+}
+
+TF2_RemoveAllWeapons(client)
+{
+	new i;
+	while (i <= 5)
+	{
+		TF2_RemoveWeaponSlot(client, i);
+		i++;
+	}
+	return 0;
+}
+
+bool:TF2_IsPlayerInCondition(client, TFCond:cond)
+{
+	if (cond < TFCond:32)
+	{
+		new bit = 1 << cond;
+		if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCond", 4, 0))
+		{
+			return true;
+		}
+		if (bit == bit & GetEntProp(client, PropType:0, "_condition_bits", 4, 0))
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (cond < TFCond:64)
+		{
+			new bit = 1 << cond + -32;
+			if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCondEx", 4, 0))
+			{
+				return true;
+			}
+		}
+		if (cond < TFCond:96)
+		{
+			new bit = 1 << cond + -64;
+			if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCondEx2", 4, 0))
+			{
+				return true;
+			}
+		}
+		new bit = 1 << cond + -96;
+		if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCondEx3", 4, 0))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+CPrintToChat(client, String:message[])
+{
+	CCheckTrie();
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError("Invalid client index %i", client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %i is not in game", client);
+	}
+	decl String:buffer[1024];
+	decl String:buffer2[1024];
+	SetGlobalTransTarget(client);
+	Format(buffer, 1024, "\x01%s", message);
+	VFormat(buffer2, 1024, buffer, 3);
+	CReplaceColorCodes(buffer2, 0, false, 1024);
+	CSendMessage(client, buffer2, 0);
+	return 0;
+}
+
+CPrintToChatAll(String:message[])
+{
+	CCheckTrie();
+	decl String:buffer[1024];
+	decl String:buffer2[1024];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (!IsClientInGame(i) || CSkipList[i])
+		{
+			CSkipList[i] = 0;
+		}
+		else
+		{
+			SetGlobalTransTarget(i);
+			Format(buffer, 1024, "\x01%s", message);
+			VFormat(buffer2, 1024, buffer, 2);
+			CReplaceColorCodes(buffer2, 0, false, 1024);
+			CSendMessage(i, buffer2, 0);
+		}
+		i++;
+	}
+	return 0;
+}
+
+CSendMessage(client, String:message[], author)
+{
+	if (!author)
+	{
+		author = client;
+	}
+	decl String:buffer[256];
+	decl String:game[16];
+	GetGameFolderName(game, 16);
+	strcopy(buffer, 256, message);
+	new UserMsg:index = GetUserMessageId("SayText2");
+	if (index == UserMsg:-1)
+	{
+		if (StrEqual(game, "dod", true))
+		{
+			new team = GetClientTeam(author);
+			if (team)
+			{
+				decl String:temp[16];
+				new var2 = CTeamColors;
+				Format(temp, 16, "\x07%06X", var2[0][var2][team + -1]);
+				ReplaceString(buffer, 256, "\x03", temp, false);
+			}
+			else
+			{
+				ReplaceString(buffer, 256, "\x03", "\x04", false);
+			}
+		}
+		PrintToChat(client, "%s", buffer);
+		return 0;
+	}
+	new Handle:buf = StartMessageOne("SayText2", client, 132);
+	new var1;
+	if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+	{
+		PbSetInt(buf, "ent_idx", author, -1);
+		PbSetBool(buf, "chat", true, -1);
+		PbSetString(buf, "msg_name", buffer, -1);
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+	}
+	else
+	{
+		BfWriteByte(buf, author);
+		BfWriteByte(buf, 1);
+		BfWriteString(buf, buffer);
+	}
+	EndMessage();
+	return 0;
+}
+
+CCheckTrie()
+{
+	if (!CTrie)
+	{
+		CTrie = InitColorTrie();
+	}
+	return 0;
+}
+
+CReplaceColorCodes(String:buffer[], author, bool:removeTags, maxlen)
+{
+	CCheckTrie();
+	if (!removeTags)
+	{
+		ReplaceString(buffer, maxlen, "{default}", "\x01", false);
+	}
+	else
+	{
+		ReplaceString(buffer, maxlen, "{default}", "", false);
+		ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
+	}
+	new var1;
+	if (author && !removeTags)
+	{
+		new var2;
+		if (author < 0 || author > MaxClients)
+		{
+			ThrowError("Invalid client index %i", author);
+		}
+		if (!IsClientInGame(author))
+		{
+			ThrowError("Client %i is not in game", author);
+		}
+		ReplaceString(buffer, maxlen, "{teamcolor}", "\x03", false);
+	}
+	new cursor;
+	new value;
+	decl String:tag[32];
+	decl String:buff[32];
+	decl output[maxlen];
+	strcopy(output, maxlen, buffer);
+	new Handle:regex = CompileRegex("{[a-zA-Z0-9]+}", 0, "", 0, 0);
+	new i;
+	while (i < 1000)
+	{
+		if (MatchRegex(regex, buffer[cursor], 0) < 1)
+		{
+			CloseHandle(regex);
+			strcopy(buffer, maxlen, output);
+			return 0;
+		}
+		GetRegexSubString(regex, 0, tag, 32);
+		CStrToLower(tag);
+		cursor = StrContains(buffer[cursor], tag, false) + cursor + 1;
+		strcopy(buff, 32, tag);
+		ReplaceString(buff, 32, "{", "", true);
+		ReplaceString(buff, 32, "}", "", true);
+		if (GetTrieValue(CTrie, buff, value))
+		{
+			if (removeTags)
+			{
+				ReplaceString(output, maxlen, tag, "", false);
+			}
+			else
+			{
+				Format(buff, 32, "\x07%06X", value);
+				ReplaceString(output, maxlen, tag, buff, false);
+			}
+		}
+		i++;
+	}
+	LogError("[MORE COLORS] Infinite loop broken.");
+	return 0;
+}
+
+CStrToLower(String:buffer[])
+{
+	new len = strlen(buffer);
+	new i;
+	while (i < len)
+	{
+		buffer[i] = CharToLower(buffer[i]);
+		i++;
+	}
+	return 0;
+}
+
+Handle:InitColorTrie()
+{
+	new Handle:hTrie = CreateTrie();
+	SetTrieValue(hTrie, "aliceblue", any:15792383, true);
+	SetTrieValue(hTrie, "allies", any:5077314, true);
+	SetTrieValue(hTrie, "ancient", any:15420235, true);
+	SetTrieValue(hTrie, "antiquewhite", any:16444375, true);
+	SetTrieValue(hTrie, "aqua", any:65535, true);
+	SetTrieValue(hTrie, "aquamarine", any:8388564, true);
+	SetTrieValue(hTrie, "arcana", any:11396444, true);
+	SetTrieValue(hTrie, "axis", any:16728128, true);
+	SetTrieValue(hTrie, "azure", any:32767, true);
+	SetTrieValue(hTrie, "beige", any:16119260, true);
+	SetTrieValue(hTrie, "bisque", any:16770244, true);
+	SetTrieValue(hTrie, "black", any:0, true);
+	SetTrieValue(hTrie, "blanchedalmond", any:16772045, true);
+	SetTrieValue(hTrie, "blue", any:10079487, true);
+	SetTrieValue(hTrie, "blueviolet", any:9055202, true);
+	SetTrieValue(hTrie, "brown", any:10824234, true);
+	SetTrieValue(hTrie, "burlywood", any:14596231, true);
+	SetTrieValue(hTrie, "cadetblue", any:6266528, true);
+	SetTrieValue(hTrie, "chartreuse", any:8388352, true);
+	SetTrieValue(hTrie, "chocolate", any:13789470, true);
+	SetTrieValue(hTrie, "collectors", any:11141120, true);
+	SetTrieValue(hTrie, "common", any:11584473, true);
+	SetTrieValue(hTrie, "community", any:7385162, true);
+	SetTrieValue(hTrie, "coral", any:16744272, true);
+	SetTrieValue(hTrie, "cornflowerblue", any:6591981, true);
+	SetTrieValue(hTrie, "cornsilk", any:16775388, true);
+	SetTrieValue(hTrie, "corrupted", any:10693678, true);
+	SetTrieValue(hTrie, "crimson", any:14423100, true);
+	SetTrieValue(hTrie, "cyan", any:65535, true);
+	SetTrieValue(hTrie, "darkblue", any:139, true);
+	SetTrieValue(hTrie, "darkcyan", any:35723, true);
+	SetTrieValue(hTrie, "darkgoldenrod", any:12092939, true);
+	SetTrieValue(hTrie, "darkgray", any:11119017, true);
+	SetTrieValue(hTrie, "darkgrey", any:11119017, true);
+	SetTrieValue(hTrie, "darkgreen", any:25600, true);
+	SetTrieValue(hTrie, "darkkhaki", any:12433259, true);
+	SetTrieValue(hTrie, "darkmagenta", any:9109643, true);
+	SetTrieValue(hTrie, "darkolivegreen", any:5597999, true);
+	SetTrieValue(hTrie, "darkorange", any:16747520, true);
+	SetTrieValue(hTrie, "darkorchid", any:10040012, true);
+	SetTrieValue(hTrie, "darkred", any:9109504, true);
+	SetTrieValue(hTrie, "darksalmon", any:15308410, true);
+	SetTrieValue(hTrie, "darkseagreen", any:9419919, true);
+	SetTrieValue(hTrie, "darkslateblue", any:4734347, true);
+	SetTrieValue(hTrie, "darkslategray", any:3100495, true);
+	SetTrieValue(hTrie, "darkslategrey", any:3100495, true);
+	SetTrieValue(hTrie, "darkturquoise", any:52945, true);
+	SetTrieValue(hTrie, "darkviolet", any:9699539, true);
+	SetTrieValue(hTrie, "deeppink", any:16716947, true);
+	SetTrieValue(hTrie, "deepskyblue", any:49151, true);
+	SetTrieValue(hTrie, "dimgray", any:6908265, true);
+	SetTrieValue(hTrie, "dimgrey", any:6908265, true);
+	SetTrieValue(hTrie, "dodgerblue", any:2003199, true);
+	SetTrieValue(hTrie, "exalted", any:13421773, true);
+	SetTrieValue(hTrie, "firebrick", any:11674146, true);
+	SetTrieValue(hTrie, "floralwhite", any:16775920, true);
+	SetTrieValue(hTrie, "forestgreen", any:2263842, true);
+	SetTrieValue(hTrie, "frozen", any:4817843, true);
+	SetTrieValue(hTrie, "fuchsia", any:16711935, true);
+	SetTrieValue(hTrie, "fullblue", any:255, true);
+	SetTrieValue(hTrie, "fullred", any:16711680, true);
+	SetTrieValue(hTrie, "gainsboro", any:14474460, true);
+	SetTrieValue(hTrie, "genuine", any:5076053, true);
+	SetTrieValue(hTrie, "ghostwhite", any:16316671, true);
+	SetTrieValue(hTrie, "gold", any:16766720, true);
+	SetTrieValue(hTrie, "goldenrod", any:14329120, true);
+	SetTrieValue(hTrie, "gray", any:13421772, true);
+	SetTrieValue(hTrie, "grey", any:13421772, true);
+	SetTrieValue(hTrie, "green", any:4128574, true);
+	SetTrieValue(hTrie, "greenyellow", any:11403055, true);
+	SetTrieValue(hTrie, "haunted", any:3732395, true);
+	SetTrieValue(hTrie, "honeydew", any:15794160, true);
+	SetTrieValue(hTrie, "hotpink", any:16738740, true);
+	SetTrieValue(hTrie, "immortal", any:14986803, true);
+	SetTrieValue(hTrie, "indianred", any:13458524, true);
+	SetTrieValue(hTrie, "indigo", any:4915330, true);
+	SetTrieValue(hTrie, "ivory", any:16777200, true);
+	SetTrieValue(hTrie, "khaki", any:15787660, true);
+	SetTrieValue(hTrie, "lavender", any:15132410, true);
+	SetTrieValue(hTrie, "lavenderblush", any:16773365, true);
+	SetTrieValue(hTrie, "lawngreen", any:8190976, true);
+	SetTrieValue(hTrie, "legendary", any:13839590, true);
+	SetTrieValue(hTrie, "lemonchiffon", any:16775885, true);
+	SetTrieValue(hTrie, "lightblue", any:11393254, true);
+	SetTrieValue(hTrie, "lightcoral", any:15761536, true);
+	SetTrieValue(hTrie, "lightcyan", any:14745599, true);
+	SetTrieValue(hTrie, "lightgoldenrodyellow", any:16448210, true);
+	SetTrieValue(hTrie, "lightgray", any:13882323, true);
+	SetTrieValue(hTrie, "lightgrey", any:13882323, true);
+	SetTrieValue(hTrie, "lightgreen", any:10092441, true);
+	SetTrieValue(hTrie, "lightpink", any:16758465, true);
+	SetTrieValue(hTrie, "lightsalmon", any:16752762, true);
+	SetTrieValue(hTrie, "lightseagreen", any:2142890, true);
+	SetTrieValue(hTrie, "lightskyblue", any:8900346, true);
+	SetTrieValue(hTrie, "lightslategray", any:7833753, true);
+	SetTrieValue(hTrie, "lightslategrey", any:7833753, true);
+	SetTrieValue(hTrie, "lightsteelblue", any:11584734, true);
+	SetTrieValue(hTrie, "lightyellow", any:16777184, true);
+	SetTrieValue(hTrie, "lime", any:65280, true);
+	SetTrieValue(hTrie, "limegreen", any:3329330, true);
+	SetTrieValue(hTrie, "linen", any:16445670, true);
+	SetTrieValue(hTrie, "magenta", any:16711935, true);
+	SetTrieValue(hTrie, "maroon", any:8388608, true);
+	SetTrieValue(hTrie, "mediumaquamarine", any:6737322, true);
+	SetTrieValue(hTrie, "mediumblue", any:205, true);
+	SetTrieValue(hTrie, "mediumorchid", any:12211667, true);
+	SetTrieValue(hTrie, "mediumpurple", any:9662680, true);
+	SetTrieValue(hTrie, "mediumseagreen", any:3978097, true);
+	SetTrieValue(hTrie, "mediumslateblue", any:8087790, true);
+	SetTrieValue(hTrie, "mediumspringgreen", any:64154, true);
+	SetTrieValue(hTrie, "mediumturquoise", any:4772300, true);
+	SetTrieValue(hTrie, "mediumvioletred", any:13047173, true);
+	SetTrieValue(hTrie, "midnightblue", any:1644912, true);
+	SetTrieValue(hTrie, "mintcream", any:16121850, true);
+	SetTrieValue(hTrie, "mistyrose", any:16770273, true);
+	SetTrieValue(hTrie, "moccasin", any:16770229, true);
+	SetTrieValue(hTrie, "mythical", any:8931327, true);
+	SetTrieValue(hTrie, "navajowhite", any:16768685, true);
+	SetTrieValue(hTrie, "navy", any:128, true);
+	SetTrieValue(hTrie, "normal", any:11711154, true);
+	SetTrieValue(hTrie, "oldlace", any:16643558, true);
+	SetTrieValue(hTrie, "olive", any:10404687, true);
+	SetTrieValue(hTrie, "olivedrab", any:7048739, true);
+	SetTrieValue(hTrie, "orange", any:16753920, true);
+	SetTrieValue(hTrie, "orangered", any:16729344, true);
+	SetTrieValue(hTrie, "orchid", any:14315734, true);
+	SetTrieValue(hTrie, "palegoldenrod", any:15657130, true);
+	SetTrieValue(hTrie, "palegreen", any:10025880, true);
+	SetTrieValue(hTrie, "paleturquoise", any:11529966, true);
+	SetTrieValue(hTrie, "palevioletred", any:14184595, true);
+	SetTrieValue(hTrie, "papayawhip", any:16773077, true);
+	SetTrieValue(hTrie, "peachpuff", any:16767673, true);
+	SetTrieValue(hTrie, "peru", any:13468991, true);
+	SetTrieValue(hTrie, "pink", any:16761035, true);
+	SetTrieValue(hTrie, "plum", any:14524637, true);
+	SetTrieValue(hTrie, "powderblue", any:11591910, true);
+	SetTrieValue(hTrie, "purple", any:8388736, true);
+	SetTrieValue(hTrie, "rare", any:4942335, true);
+	SetTrieValue(hTrie, "red", any:16728128, true);
+	SetTrieValue(hTrie, "rosybrown", any:12357519, true);
+	SetTrieValue(hTrie, "royalblue", any:4286945, true);
+	SetTrieValue(hTrie, "saddlebrown", any:9127187, true);
+	SetTrieValue(hTrie, "salmon", any:16416882, true);
+	SetTrieValue(hTrie, "sandybrown", any:16032864, true);
+	SetTrieValue(hTrie, "seagreen", any:3050327, true);
+	SetTrieValue(hTrie, "seashell", any:16774638, true);
+	SetTrieValue(hTrie, "selfmade", any:7385162, true);
+	SetTrieValue(hTrie, "sienna", any:10506797, true);
+	SetTrieValue(hTrie, "silver", any:12632256, true);
+	SetTrieValue(hTrie, "skyblue", any:8900331, true);
+	SetTrieValue(hTrie, "slateblue", any:6970061, true);
+	SetTrieValue(hTrie, "slategray", any:7372944, true);
+	SetTrieValue(hTrie, "slategrey", any:7372944, true);
+	SetTrieValue(hTrie, "snow", any:16775930, true);
+	SetTrieValue(hTrie, "springgreen", any:65407, true);
+	SetTrieValue(hTrie, "steelblue", any:4620980, true);
+	SetTrieValue(hTrie, "strange", any:13593138, true);
+	SetTrieValue(hTrie, "tan", any:13808780, true);
+	SetTrieValue(hTrie, "teal", any:32896, true);
+	SetTrieValue(hTrie, "thistle", any:14204888, true);
+	SetTrieValue(hTrie, "tomato", any:16737095, true);
+	SetTrieValue(hTrie, "turquoise", any:4251856, true);
+	SetTrieValue(hTrie, "uncommon", any:11584473, true);
+	SetTrieValue(hTrie, "unique", any:16766720, true);
+	SetTrieValue(hTrie, "unusual", any:8802476, true);
+	SetTrieValue(hTrie, "valve", any:10817401, true);
+	SetTrieValue(hTrie, "vintage", any:4678289, true);
+	SetTrieValue(hTrie, "violet", any:15631086, true);
+	SetTrieValue(hTrie, "wheat", any:16113331, true);
+	SetTrieValue(hTrie, "white", any:16777215, true);
+	SetTrieValue(hTrie, "whitesmoke", any:16119285, true);
+	SetTrieValue(hTrie, "yellow", any:16776960, true);
+	SetTrieValue(hTrie, "yellowgreen", any:10145074, true);
+	return hTrie;
+}
+
+public OnPluginStart()
+{
+	mb_Version = CreateConVar("mb_version", "1.0.6d", "Version Number.", 256, false, 0.0, false, 0.0);
+	SetConVarString(mb_Version, "1.0.6d", false, false);
+	if (LibraryExists("SteamTools"))
+	{
+		new String:GameDesc[256];
+		Format(GameDesc, 255, "[TF2]Mario Bros. (v%s)", "1.0.6d");
+		Steam_SetGameDescription(GameDesc);
+		PrintToServer("[MB] SteamTools detected, changing game description.");
+	}
+	mb_JumpHeight = CreateConVar("sm_mb_jumpheight", "450.0", "Sets the jump height for every player.", 0, false, 0.0, false, 0.0);
+	mb_JumpDamage = CreateConVar("sm_mb_jumpdamage", "150.0", "Sets the damage for landing on another player", 0, false, 0.0, false, 0.0);
+	mb_FireFlowerDamage = CreateConVar("sm_mb_fireflowerdamage", "50.0", "Sets the damage that fireballs deal.", 0, false, 0.0, false, 0.0);
+	mb_PowBlockDamage = CreateConVar("sm_mb_powblockdamage", "40.0", "Sets the damage that POW Blocks deal.", 0, false, 0.0, false, 0.0);
+	mb_SpeedBoostBonus = CreateConVar("sm_mb_speedboostpwing", "1.5", "Multiplies your speed by this number.", 0, false, 0.0, false, 0.0);
+	mb_PowerTime = CreateConVar("sm_mb_poweruptimer", "10.0", "Sets the amount of time until your Power Up ends.", 0, false, 0.0, false, 0.0);
+	mb_LeafFall = CreateConVar("sm_mb_leaffallspeed", "-120.0", "Sets the terminal velocity while using the Tanooki Leaf.", 0, false, 0.0, false, 0.0);
+	mb_MushroomHP = CreateConVar("sm_mb_mushroomhealth", "300.0", "Sets the amount of health a Mushroom gives you.", 0, false, 0.0, false, 0.0);
+	mb_StarmanSpeed = CreateConVar("sm_mb_speedbooststar", "1.5", "Sets the speed boost you get from a Starman.", 0, false, 0.0, false, 0.0);
+	mb_LightningDamage = CreateConVar("sm_mb_thunderboltdamage", "0.25", "Sets the percentage of damage that Lightning deals.", 0, false, 0.0, false, 0.0);
+	mb_BowserHP = CreateConVar("sm_mb_bowsersuithealth", "2000.0", "Sets the amount of health a Bowser Suit gives you.", 0, false, 0.0, false, 0.0);
+	mb_PowerDistance = CreateConVar("sm_mb_powerdistance", "2500.0", "The distance between the player and anyone else for certain powers to affect.", 0, false, 0.0, false, 0.0);
+	mb_PickupDelay = CreateConVar("sm_mb_packspawndelay", "16.0", "How long the maximum time is before ammo packs respawn.", 0, false, 0.0, false, 0.0);
+	mb_RespawnMax = CreateConVar("sm_mb_maxrespawns", "5", "How many times you're allowed to respawn during a round of Team Battle Arena.", 0, false, 0.0, false, 0.0);
+	mb_MoveSpeed = CreateConVar("sm_mb_movespeed", "300.0", "How fast you can move normally.", 0, false, 0.0, false, 0.0);
+	mb_GameMode = CreateConVar("sm_mb_gamemode", "0", "Special Game Mode Setting. <0 = None, 1 = Team Battle Arena, 2 = Team Coin Rush>", 0, false, 0.0, false, 0.0);
+	mb_CoinTimeLimit = CreateConVar("sm_mb_coinrushtime", "180", "How much time in seconds you have to collect coins during Coin Rush.", 0, false, 0.0, false, 0.0);
+	mb_ArenaTimeLimit = CreateConVar("sm_mb_arenatime", "900", "How much time in seconds you have until the round ends.", 0, false, 0.0, false, 0.0);
+	mb_CoinLimitGlow = CreateConVar("sm_mb_coinrushglow", "20", "How many coins you're carrying before you start to glow.", 0, false, 0.0, false, 0.0);
+	mb_RoundLimit = CreateConVar("sm_mb_roundlimit", "3", "How many rounds can pass before a Game Mode vote occurs.", 0, false, 0.0, false, 0.0);
+	mb_RoundWait = CreateConVar("sm_mb_roundwait", "30", "How many seconds before the round waiting period ends at the start of the round.", 0, false, 0.0, false, 0.0);
+	mb_SpawnProtection = CreateConVar("sm_mb_spawnprotection", "2", "How many seconds of spawn protection you have.", 0, false, 0.0, false, 0.0);
+	mb_HUDLogo = CreateConVar("sm_mb_hudlogomsg", "", "A generic logo which can be used for advertising and such.", 0, false, 0.0, false, 0.0);
+	mb_HUDLogo_Red = CreateConVar("sm_mb_hudlogor", "0", "The logo's color. (Red)", 0, false, 0.0, false, 0.0);
+	mb_HUDLogo_Grn = CreateConVar("sm_mb_hudlogog", "200", "The logo's color. (Green)", 0, false, 0.0, false, 0.0);
+	mb_HUDLogo_Blu = CreateConVar("sm_mb_hudlogob", "100", "The logo's color. (Blue)", 0, false, 0.0, false, 0.0);
+	mb_HUD_X = CreateConVar("sm_mb_hudlogox", "0.2", "The logo's X position.", 0, false, 0.0, false, 0.0);
+	mb_HUD_Y = CreateConVar("sm_mb_hudlogoy", "0.92", "The logo's Y position.", 0, false, 0.0, false, 0.0);
+	RegAdminCmd("sm_mb_setpowerup", Command_SetPower, 8192, "Gives a player a specific power-up. Usage: sm_mb_setpowerup <client> <0-15>", "", 0);
+	RegConsoleCmd("sm_mb_powerhints", Command_ToggleHints, "Toggles Power-Up Hintboxes appearing on your HUD.", 0);
+	RegConsoleCmd("sm_mariohelp", Command_MarioHelp, "Gives you a Help Menu for the gamemode mechanics.", 0);
+	RegConsoleCmd("sm_marioayuda", Command_MarioHelp, "Te da un Menu de Ayuda sobre las mecánicas del Gamemode.", 0);
+	HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode:1);
+	HookEvent("teamplay_waiting_ends", Event_RoundStart, EventHookMode:1);
+	HookEvent("teamplay_round_win", Event_RoundWin, EventHookMode:1);
+	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode:1);
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode:1);
+	HookEvent("post_inventory_application", Event_PlayerLocker, EventHookMode:1);
+	HookEvent("player_death", Event_BeforePlayerDeath, EventHookMode:0);
+	HookConVarChange(mb_GameMode, OnGameModeChange);
+	TF2Items_CreateWeapon(50000, "tf_weapon_rocketlauncher_directhit", 127, 0, 6, 50, "1 ; 0.5 ; 103 ; 2 ; 303 ; -1 ; 280 ; 6 ; 74 ; 0.0 ; 215 ; 300 ; 216 ; 350", 50, "", true);
+	TF2Items_CreateWeapon(50001, "tf_weapon_shovel", 6, 2, 6, 1, "1 ; 0.2 ; 5 ; 1.25", 0, "", true);
+	TF2Items_CreateWeapon(50002, "tf_weapon_shovel", 153, 2, 6, 100, "2 ; 100 ; 6 ; 0.5", 0, "", true);
+	TF2Items_CreateWeapon(50003, "tf_weapon_rocketlauncher", 658, 0, 6, 50, "1 ; 0.25 ; 6 ; 0.8 ; 103 ; 2 ; 303 ; -1 ; 280 ; 6 ; 74 ; 0.0 ", 50, "", true);
+	TF2Items_CreateWeapon(50004, "tf_weapon_rocketlauncher_directhit", 127, 0, 6, 50, "1 ; 0.5 ; 103 ; 2 ; 303 ; -1 ; 280 ; 6 ; 74 ; 0.0 ; 215 ; 300 ; 216 ; 350 ; 134 ; 2", 50, "", true);
+	LoadTranslations("sm_mariobros.phrases.txt");
+	new i = 1;
+	while (i <= 65)
+	{
+		InitVars(i);
+		if (IsValidEntity(i))
+		{
+			SDKHook(i, SDKHookType:2, OnTakeDamage);
+			SDKHook(i, SDKHookType:8, OnStartTouch);
+			SDKHook(i, SDKHookType:26, OnTouch);
+			Hooked[i] = 1;
+			CreateTimer(0.1, t_CheckPlayer, i, 0);
+		}
+		i++;
+	}
+	mb_HUD = CreateHudSynchronizer();
+	mb_HUD2 = CreateHudSynchronizer();
+	mb_HUD3 = CreateHudSynchronizer();
+	mb_HUD4 = CreateHudSynchronizer();
+	if (!PowerUpShuffler)
+	{
+		PowerUpShuffler = CreateTimer(0.1, t_ShufflePowers, any:0, 1);
+	}
+	if (!HelpMenu)
+	{
+		HelpMenu = BuildHelpMenu();
+	}
+	PrecacheAll();
+	return 0;
+}
+
+public OnPluginEnd()
+{
+	if (PowerUpShuffler)
+	{
+		KillTimer(PowerUpShuffler, false);
+		PowerUpShuffler = MissingTAG:0;
+	}
+	new i = 1;
+	while (i <= 65)
+	{
+		SDKUnhook(i, SDKHookType:2, OnTakeDamage);
+		SDKUnhook(i, SDKHookType:8, OnStartTouch);
+		SDKUnhook(i, SDKHookType:26, OnTouch);
+		Hooked[i] = 0;
+		InitVars(i);
+		i++;
+	}
+	if (HelpMenu)
+	{
+		CloseHandle(HelpMenu);
+		HelpMenu = MissingTAG:0;
+	}
+	if (LibraryExists("SteamTools"))
+	{
+		new String:GameDesc[256];
+		Format(GameDesc, 255, "Team Fortress");
+		Steam_SetGameDescription(GameDesc);
+		PrintToServer("[MB] SteamTools detected, changing game description back.");
+	}
+	return 0;
+}
+
+public OnMapStart()
+{
+	PrecacheAll();
+	ServerCommand("sv_hudhint_sound 0");
+	ServerCommand("tf_weapon_criticals 0");
+	new i = 1;
+	while (i <= 65)
+	{
+		if (IsValidEntity(i))
+		{
+			InitVars(i);
+			if (Hooked[i] == true)
+			{
+				SDKUnhook(i, SDKHookType:2, OnTakeDamage);
+				SDKUnhook(i, SDKHookType:8, OnStartTouch);
+				SDKUnhook(i, SDKHookType:26, OnTouch);
+			}
+			SDKHook(i, SDKHookType:2, OnTakeDamage);
+			SDKHook(i, SDKHookType:8, OnStartTouch);
+			SDKHook(i, SDKHookType:26, OnTouch);
+		}
+		i++;
+	}
+	i_RoundCount = 0;
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (Hooked[client] == true)
+	{
+		SDKUnhook(client, SDKHookType:2, OnTakeDamage);
+		SDKUnhook(client, SDKHookType:8, OnStartTouch);
+		SDKUnhook(client, SDKHookType:26, OnTouch);
+	}
+	SDKHook(client, SDKHookType:2, OnTakeDamage);
+	SDKHook(client, SDKHookType:8, OnStartTouch);
+	SDKHook(client, SDKHookType:26, OnTouch);
+	InitVars(client);
+	new var1;
+	if (GetConVarInt(mb_GameMode) == 1 && RoundWaitTime <= 0)
+	{
+		Respawns[client] = GetConVarInt(mb_RespawnMax);
+	}
+	CreateTimer(0.5, t_HUD, client, 0);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	if (Hooked[client] == true)
+	{
+		SDKUnhook(client, SDKHookType:2, OnTakeDamage);
+		SDKUnhook(client, SDKHookType:8, OnStartTouch);
+		SDKUnhook(client, SDKHookType:26, OnTouch);
+		Hooked[client] = 0;
+	}
+	new var1;
+	if (GetConVarInt(mb_GameMode) == 2 && Coins[client] > 0)
+	{
+		new entity;
+		new Float:pos[3] = 0.0;
+		new String:value[16];
+		new String:path[128];
+		entity = CreateEntityByName("item_ammopack_small", -1);
+		if (entity != -1)
+		{
+			GetEntPropVector(client, PropType:1, "m_vecOrigin", pos, 0);
+			Format(path, 128, "models/%s.mdl", "mariobros/goldcoin");
+			DispatchKeyValue(entity, "powerup_model", path);
+			DispatchKeyValue(entity, "targetname", "mb_coin");
+			IntToString(Coins[client], value, 16);
+			DispatchKeyValue(entity, "max_health", value);
+			DispatchSpawn(entity);
+			TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+			SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
+			Coins[client] = 0;
+		}
+	}
+	InitVars(client);
+	return 0;
+}
+
+public Action:Command_ToggleHints(client, args)
+{
+	i_Hints[client] = !i_Hints[client];
+	switch (i_Hints[client])
+	{
+		case 0:
+		{
+			CPrintToChat(client, "{crimson}[MB]%t", "mbHintsDisable");
+		}
+		case 1:
+		{
+			CPrintToChat(client, "{crimson}[MB]%t", "mbHintsEnable");
+		}
+		default:
+		{
+		}
+	}
+	return Action:3;
+}
+
+public Action:Command_MarioHelp(client, args)
+{
+	if (HelpMenu)
+	{
+		DisplayMenu(HelpMenu, client, 0);
+		return Action:3;
+	}
+	PrintToConsole(client, "[MB]HelpMenu unavailable.");
+	return Action:3;
+}
+
+public Action:Command_SetPower(client, args)
+{
+	if (args < 2)
+	{
+		PrintToConsole(client, "Power-Up List");
+		PrintToConsole(client, "0: No Power");
+		new i;
+		while (i < 15)
+		{
+			PrintToConsole(client, "%i: %t", i + 1, Powers[i]);
+			i++;
+		}
+		return Action:3;
+	}
+	new String:name[32];
+	new String:Num[8];
+	GetCmdArg(1, name, 32);
+	GetCmdArg(2, Num, 8);
+	new String:target_name[64];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(name, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
+	{
+		return Action:3;
+	}
+	new i;
+	while (i < target_count)
+	{
+		new var1;
+		if (StringToInt(Num, 10) >= 0 && StringToInt(Num, 10) <= 15)
+		{
+			i_PowerUp[target_list[i]] = StringToInt(Num, 10);
+			if (0 < i_PowerUp[target_list[i]])
+			{
+				CPrintToChatAll("{crimson}[MB]%t", "mbGivePowerUp", target_name[i], Powers[i_PowerUp[target_list[i]][0]]);
+			}
+			CPrintToChatAll("{crimson}[MB]%t", "mbLosePowerUp", target_name[i]);
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+public Action:Command_AddSpawn(client, args)
+{
+	new Float:pos[3] = 0.0;
+	new ent;
+	new String:Power[4] = "x";
+	if (args >= 1)
+	{
+		GetCmdArg(1, Power, 4);
+		new var1;
+		if (StringToInt(Power, 10) < 1 || StringToInt(Power, 10) > 15)
+		{
+		}
+	}
+	GetClientAbsOrigin(client, pos);
+	ent = CreateEntityByName("info_target", -1);
+	if (ent != -1)
+	{
+		new String:entname[32];
+		Format(entname, 32, "mb_powerspawn %s", Power);
+		SetEntPropVector(ent, PropType:1, "m_vecOrigin", pos, 0);
+		DispatchKeyValue(ent, "targetname", entname);
+		TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
+		DispatchSpawn(ent);
+		PrintToConsole(client, "Entity Created Successfully.");
+	}
+	return Action:3;
+}
+
+public Action:Command_SpawnPowerUps(client, args)
+{
+	SpawnFixedPowerUps();
+	return Action:3;
+}
+
+public Action:Command_AddCoin(client, args)
+{
+	new Float:pos[3] = 0.0;
+	new ent;
+	GetClientAbsOrigin(client, pos);
+	ent = CreateEntityByName("info_target", -1);
+	if (ent != -1)
+	{
+		SetEntPropVector(ent, PropType:1, "m_vecOrigin", pos, 0);
+		DispatchKeyValue(ent, "max_health", "1");
+		DispatchKeyValue(ent, "targetname", "mb_coinspawn");
+		TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
+		DispatchSpawn(ent);
+		PrintToConsole(client, "Entity Created Successfully.");
+	}
+	return Action:3;
+}
+
+public Action:Command_AmmoGone(client, args)
+{
+	new ent = -1;
+	while ((ent = FindEntityByClassname(ent, "item_ammopack_full")) != -1)
+	{
+		AcceptEntityInput(ent, "Disable", -1, -1, 0);
+	}
+	while ((ent = FindEntityByClassname(ent, "item_ammopack_medium")) != -1)
+	{
+		AcceptEntityInput(ent, "Disable", -1, -1, 0);
+	}
+	while ((ent = FindEntityByClassname(ent, "item_ammopack_small")) != -1)
+	{
+		AcceptEntityInput(ent, "Disable", -1, -1, 0);
+	}
+	return Action:3;
+}
+
+public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
+{
+	if (IsPlayerAlive(client))
+	{
+		if (!buttons & 2)
+		{
+			if (GetEntityFlags(client) & 1)
+			{
+				JumpHold[client] = 0;
+			}
+			JumpTicks[client] = 33;
+		}
+		else
+		{
+			JumpTicks[client]++;
+		}
+		if (GetEntityFlags(client) & 1)
+		{
+			Jumping[client] = 0;
+			if (!buttons & 2)
+			{
+				JumpTicks[client] = 0;
+			}
+		}
+		else
+		{
+			Jumping[client] = 1;
+		}
+		new var4;
+		if (buttons & 2 && ((GetEntityFlags(client) & 1 && Jumping[client] && JumpHold[client]) || (JumpHold[client] && JumpTicks[client] < 33)))
+		{
+			new Float:force[3] = 0.0;
+			new Float:vs[3] = 0.0;
+			GetEntPropVector(client, PropType:1, "m_vecVelocity", vs, 0);
+			new var5;
+			if (FloatAbs(vs[0]) > GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0))
+			{
+				var5 = vs[0] / FloatAbs(vs[0]) * GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0);
+			}
+			else
+			{
+				var5 = vs[0];
+			}
+			force[0] = var5;
+			new var6;
+			if (FloatAbs(vs[1]) > GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0))
+			{
+				var6 = vs[1] / FloatAbs(vs[1]) * GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0);
+			}
+			else
+			{
+				var6 = vs[1];
+			}
+			force[1] = var6;
+			force[2] = GetConVarFloat(mb_JumpHeight);
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, force);
+			Jumping[client] = 1;
+			AirJumping[client] = 1;
+			if (JumpTicks[client] >= 33)
+			{
+				JumpHold[client] = 1;
+			}
+		}
+		new var7;
+		if (buttons & 2 && JumpTicks[client] >= 33)
+		{
+			JumpHold[client] = 1;
+		}
+		else
+		{
+			if (!buttons & 2)
+			{
+				if (GetEntityFlags(client) & 1)
+				{
+					JumpHold[client] = 0;
+				}
+				else
+				{
+					JumpHold[client] = 1;
+				}
+				JumpTicks[client] = 33;
+			}
+		}
+		if (GetEntityFlags(client) & 1)
+		{
+			Jumping[client] = 0;
+			if (!buttons & 2)
+			{
+				JumpTicks[client] = 0;
+			}
+		}
+		else
+		{
+			Jumping[client] = 1;
+		}
+		new var8;
+		if (buttons & 4 && !GetEntityFlags(client) & 1)
+		{
+			new Float:force[3] = 0.0;
+			new Float:vs[3] = 0.0;
+			GetEntPropVector(client, PropType:1, "m_vecVelocity", vs, 0);
+			new var9;
+			if (vs[2] <= 40.0 && vs[2] > -600.0)
+			{
+				new var10;
+				if (FloatAbs(vs[0]) > GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0))
+				{
+					var10 = vs[0] / FloatAbs(vs[0]) * GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0);
+				}
+				else
+				{
+					var10 = vs[0];
+				}
+				force[0] = var10;
+				new var11;
+				if (FloatAbs(vs[1]) > GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0))
+				{
+					var11 = vs[1] / FloatAbs(vs[1]) * GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0);
+				}
+				else
+				{
+					var11 = vs[1];
+				}
+				force[1] = var11;
+				force[2] = -600.0;
+				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, force);
+			}
+		}
+		new var12;
+		if (!buttons & 2 && !GetEntityFlags(client) & 1)
+		{
+			AirJumping[client] = 0;
+		}
+		new var13;
+		if (Floating[client] == true && buttons & 2 && !GetEntityFlags(client) & 1)
+		{
+			new Float:vels[3] = 0.0;
+			GetEntPropVector(client, PropType:1, "m_vecVelocity", vels, 0);
+			if (AirJumping[client])
+			{
+				if (vels[2] < GetConVarFloat(mb_LeafFall))
+				{
+					vels[2] = GetConVarFloat(mb_LeafFall);
+				}
+			}
+			else
+			{
+				vels[2] = GetConVarFloat(mb_JumpHeight) * 0.66;
+			}
+			AirJumping[client] = 1;
+			JumpHold[client] = 1;
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vels);
+		}
+		new var14;
+		if (buttons & 8 && CheckSprint[client] == 2)
+		{
+			IsSprint[client] = 1;
+			CheckSprint[client] = 3;
+		}
+		else
+		{
+			new var15;
+			if (buttons & 8 && !IsSprint[client] && CheckSprint[client])
+			{
+				CheckSprint[client] = 1;
+				CreateTimer(0.3, t_SprintSet, client, 0);
+			}
+		}
+		if (!buttons & 8)
+		{
+			IsSprint[client] = 0;
+			if (CheckSprint[client] == 1)
+			{
+				CheckSprint[client] = 2;
+				CreateTimer(0.3, t_SprintSet, client, 0);
+			}
+			if (CheckSprint[client] >= 3)
+			{
+				CheckSprint[client] = 0;
+			}
+		}
+		new var16;
+		if (buttons & 16 || buttons & 512 || buttons & 1024 || IsShocked[client] || Frozen[client] > 0 || i_UsingPower[client] == 3 || i_UsingPower[client] == 8 || i_UsingPower[client] == 15)
+		{
+			IsSprint[client] = 0;
+			CheckSprint[client] = 0;
+			new var17;
+			if (GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0) >= GetConVarFloat(mb_MoveSpeed) * 1.3 && i_UsingPower[client] != 3 && i_UsingPower[client] != 8 && i_UsingPower[client] != 15 && !IsShocked[client] && Frozen[client] <= 0)
+			{
+				SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+			}
+		}
+		new var18;
+		if (GetEntityFlags(client) & 1 && IsSprint[client])
+		{
+			if (GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0) <= GetConVarFloat(mb_MoveSpeed) * 1.3)
+			{
+				new Float:spd = GetConVarFloat(mb_MoveSpeed) * 1.3;
+				SetEntPropFloat(client, PropType:0, "m_flMaxspeed", spd, 0);
+			}
+		}
+		new var19;
+		if (i_UsingPower[client] == 3 && Frozen[client] < 1)
+		{
+			SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * GetConVarFloat(mb_SpeedBoostBonus), 0);
+		}
+		new var20;
+		if (buttons & 2048 && i_UsingPower[client] && i_PowerUp[client] > 0)
+		{
+			new String:powername[128];
+			new Handle:panel;
+			new String:Hint[1024];
+			strcopy(powername, 128, Powers[i_PowerUp[client][0]]);
+			i_UsingPower[client] = i_PowerUp[client];
+			i_PowerUp[client] = 0;
+			panel = CreatePanel(Handle:0);
+			SetPanelTitle(panel, powername, false);
+			DrawPanelText(panel, " ");
+			switch (i_UsingPower[client])
+			{
+				case 1:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					TF2Items_GiveWeapon(client, 50000);
+					TF2_RemoveWeaponSlot(client, 2);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_FireFlower", client);
+				}
+				case 2:
+				{
+					EmitSoundToAll("mariobros/pow-lightning.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					new i = 1;
+					while (MaxClients + 1 > i)
+					{
+						if (IsClientInGame(i))
+						{
+							new Float:uservec[3] = 0.0;
+							new Float:targvec[3] = 0.0;
+							GetClientAbsOrigin(client, uservec);
+							GetClientAbsOrigin(i, targvec);
+							new var24;
+							if (GetEntityFlags(i) & 1 && client != i && GetClientTeam(client) != GetClientTeam(i) && LazyShellArmor[i] != true && i_UsingPower[i] != 8 && i_SpawnProtect[i] <= 0 && GetVectorDistance(uservec, targvec, false) <= GetConVarFloat(mb_PowerDistance))
+							{
+								new Float:force[3] = 0.0;
+								new Float:damage = GetConVarFloat(mb_PowBlockDamage);
+								force[0] = 0.0;
+								force[1] = 0.0;
+								force[2] = 2000.0;
+								if (i_UsingPower[i] == 15)
+								{
+									damage *= 10.0;
+								}
+								new var25;
+								if (Lives[i] > 0 && damage >= GetEntProp(i, PropType:0, "m_iHealth", 4, 0))
+								{
+									damage *= 0.0;
+									Lives[i] += -1;
+									SetEntityHealth(i, 200);
+									Invincible[i] = 1;
+									CreateTimer(3.0, t_EndInv, i, 0);
+									CPrintToChat(i, "{crimson}[MB]{default}You have {orange}%i {default}Lives left!", Lives[i]);
+								}
+								if (damage > 0.0)
+								{
+									if (0 < Coins[i])
+									{
+										new c = RoundToCeil(float(Coins[i]) * 0.1);
+										Coins[i] -= c;
+										new var26 = Coins[client];
+										var26 = var26[c];
+									}
+								}
+								SDKHooks_TakeDamage(i, client, client, damage, 0, -1, NULL_VECTOR, NULL_VECTOR);
+								TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, force);
+							}
+						}
+						i++;
+					}
+					CreateTimer(1.0, t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_POWBlock", client);
+				}
+				case 3:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * GetConVarFloat(mb_SpeedBoostBonus), 0);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_PWing", client);
+				}
+				case 4:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_GoombaShoe", client);
+				}
+				case 5:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					Floating[client] = 1;
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_SuperLeaf", client);
+				}
+				case 6:
+				{
+					EmitSoundToAll("mariobros/boo.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					new PlayerList[MaxClients + 1];
+					new j;
+					new p = -1;
+					new i = 1;
+					while (MaxClients + 1 > i)
+					{
+						if (IsClientInGame(i))
+						{
+							new var22;
+							if (IsPlayerAlive(i) && GetClientTeam(client) != GetClientTeam(i) && client != i && i_PowerUp[i] > 0)
+							{
+								PlayerList[j] = i;
+								j++;
+							}
+						}
+						i++;
+					}
+					if (j >= 1)
+					{
+						p = GetRandomInt(0, j + -1);
+						i_PowerUp[client] = i_PowerUp[PlayerList[p]];
+						i_PowerUp[PlayerList[p]] = 0;
+						CPrintToChat(PlayerList[p], "{crimson}[MB]%t", "mbStolenPowerUp");
+						new String:newpower[128];
+						strcopy(newpower, 128, Powers[i_PowerUp[client][0]]);
+						CPrintToChat(client, "{crimson}[MB]%t", "mbStealPowerUp", newpower);
+					}
+					CreateTimer(GetConVarFloat(mb_PowerTime) * 0.5, t_EndPowerUp, client, 0);
+					TF2_AddCondition(client, TFCond:64, GetConVarFloat(mb_PowerTime) * 0.5, 0);
+					new var23;
+					if (!IsShocked[client] && Frozen[client] <= 0)
+					{
+						SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+					}
+					Format(Hint, 1024, "%t", "mbHint_BooTheif", client);
+				}
+				case 7:
+				{
+					new Health = GetEntProp(client, PropType:0, "m_iHealth", 4, 0);
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					SetEntityHealth(client, GetConVarInt(mb_MushroomHP) + Health);
+					if (GetConVarInt(mb_MushroomHP) * 3 < GetConVarInt(mb_MushroomHP) + Health)
+					{
+						SetEntityHealth(client, GetConVarInt(mb_MushroomHP) * 3);
+					}
+					CreateTimer(1.0, t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_Mushroom", client);
+				}
+				case 8:
+				{
+					EmitSoundToAll("mariobros/starman.wav", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					new Float:i = 0.1;
+					while (i <= GetConVarFloat(mb_PowerTime) - 0.1)
+					{
+						CreateTimer(i, t_FlashColors, client, 0);
+						i += 0.1;
+					}
+					SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * GetConVarFloat(mb_StarmanSpeed), 0);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_Starman", client);
+				}
+				case 9:
+				{
+					EmitSoundToAll("mariobros/hammer.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					TF2Items_GiveWeapon(client, 50002);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_Hammer", client);
+				}
+				case 10:
+				{
+					EmitSoundToAll("mariobros/pow-lightning.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					new i = 1;
+					while (MaxClients + 1 > i)
+					{
+						if (IsClientInGame(i))
+						{
+							new Float:uservec[3] = 0.0;
+							new Float:targvec[3] = 0.0;
+							GetClientAbsOrigin(client, uservec);
+							GetClientAbsOrigin(i, targvec);
+							new var21;
+							if (client != i && GetClientTeam(client) != GetClientTeam(i) && LazyShellArmor[client] != true && GetVectorDistance(uservec, targvec, false) <= GetConVarFloat(mb_PowerDistance))
+							{
+								new CurrentHealth = GetEntProp(i, PropType:0, "m_iHealth", 4, 0);
+								CurrentHealth = RoundToFloor(float(CurrentHealth) * 1.0 - GetConVarFloat(mb_LightningDamage));
+								SetEntityHealth(i, CurrentHealth);
+								SetEntPropFloat(i, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * 0.5, 0);
+								IsShocked[i] = 1;
+								CreateTimer(GetConVarFloat(mb_PowerTime), t_FixSpeed, i, 0);
+							}
+						}
+						i++;
+					}
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_Thunderbolt", client);
+				}
+				case 11:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					SetEntityHealth(client, GetConVarInt(mb_MushroomHP) * 3);
+					CreateTimer(1.0, t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_GoldenMushroom", client);
+				}
+				case 12:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					TF2Items_GiveWeapon(client, 50003);
+					TF2_RemoveWeaponSlot(client, 2);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_IceFlower", client);
+				}
+				case 13:
+				{
+					EmitSoundToAll("mariobros/mushroom.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					LazyShellArmor[client] = 1;
+					CreateTimer(1.0, t_EndPowerUp, client, 0);
+					CreateTimer(GetConVarFloat(mb_PowerTime), t_EndArmor, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_LazyShellArmor", client);
+				}
+				case 14:
+				{
+					EmitSoundToAll("mariobros/1up.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					Lives[client] += 1;
+					if (Lives[client] > 3)
+					{
+						Lives[client] = 3;
+					}
+					CreateTimer(1.0, t_EndPowerUp, client, 0);
+					CPrintToChat(client, "{crimson}[MB]%t", "mbLivesCount", Lives[client]);
+					Format(Hint, 1024, "%t", "mbHint_1UpMushroom", client);
+				}
+				case 15:
+				{
+					EmitSoundToAll("mariobros/bowser.mp3", client, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					TF2Items_GiveWeapon(client, 50004);
+					TF2_RemoveWeaponSlot(client, 2);
+					SetEntityHealth(client, GetConVarInt(mb_BowserHP));
+					SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * 0.66, 0);
+					CreateTimer(GetConVarFloat(mb_PowerTime) * 3.0, t_FixSpeed, client, 0);
+					CreateTimer(GetConVarFloat(mb_PowerTime) * 3.0, t_EndPowerUp, client, 0);
+					Format(Hint, 1024, "%t", "mbHint_BowserSuit", client);
+				}
+				default:
+				{
+				}
+			}
+			new String:username[64];
+			GetClientName(client, username, 64);
+			PrintHintTextToAll("%s used %s!", username, powername);
+			if (i_Hints[client])
+			{
+				DrawPanelText(panel, Hint);
+				SendPanelToClient(panel, client, Panel_PowerDetails, 5);
+			}
+			CloseHandle(panel);
+		}
+	}
+	return Action:0;
+}
+
+public Panel_PowerDetails(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:8)
+	{
+		return 0;
+	}
+	return 0;
+}
+
+public Panel_HelpMenu(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:16)
+	{
+		DisplayMenu(HelpMenu, param1, 0);
+		return 0;
+	}
+	return 0;
+}
+
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3], damagecustom)
+{
+	if (damagecustom == 8)
+	{
+		if (i_UsingPower[attacker] == 1)
+		{
+			damage = GetConVarFloat(mb_FireFlowerDamage);
+		}
+		if (i_UsingPower[attacker] == 12)
+		{
+			damage = GetConVarFloat(mb_FireFlowerDamage) * 0.5;
+			Frozen[victim] += 132;
+			if (Frozen[victim] > 396)
+			{
+				Frozen[victim] = 396;
+			}
+		}
+	}
+	new var1;
+	if (damagecustom == 45 || damagecustom == 3)
+	{
+		damage = 0;
+	}
+	if (damagetype == 32)
+	{
+		damage = damage * 0.0;
+	}
+	new var2;
+	if (i_UsingPower[victim] == 8 || Invincible[victim] == true || i_SpawnProtect[victim] > 0)
+	{
+		damage = damage * 0.0;
+		Frozen[victim] = 0;
+	}
+	if (LazyShellArmor[victim] == true)
+	{
+		damage = damage * 0.25;
+		Frozen[victim] = 0;
+	}
+	new var3;
+	if (Lives[victim] > 0 && damage >= GetEntProp(victim, PropType:0, "m_iHealth", 4, 0))
+	{
+		damage = damage * 0.0;
+		Lives[victim] += -1;
+		SetEntityHealth(victim, 200);
+		Invincible[victim] = 1;
+		CreateTimer(3.0, t_EndInv, victim, 0);
+		CPrintToChat(victim, "{crimson}[MB]{default}You have {orange}%i {default}Lives left!", Lives[victim]);
+	}
+	new var4;
+	if (GetConVarInt(mb_GameMode) == 2 && damage > 0)
+	{
+		new var5;
+		if (attacker > 0 && attacker <= MaxClients)
+		{
+			new var6;
+			if (IsPlayerAlive(attacker) && attacker != victim && Coins[victim] > 0)
+			{
+				new c = RoundToCeil(float(Coins[victim]) * 0.1);
+				Coins[victim] -= c;
+				new var7 = Coins[attacker];
+				var7 = var7[c];
+			}
+		}
+	}
+	return Action:1;
+}
+
+public Event_PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (IsValidEntity(client))
+	{
+		if (IsClientInGame(client))
+		{
+			if (!i_PowerUp[client])
+			{
+				new R = GetRandomInt(1, 100);
+				new String:powername[128];
+				if (R <= 100)
+				{
+					i_PowerUp[client] = Common[GetRandomInt(1, 5) + -1];
+				}
+				if (R <= 50)
+				{
+					i_PowerUp[client] = Uncommon[GetRandomInt(1, 5) + -1];
+				}
+				if (R <= 20)
+				{
+					i_PowerUp[client] = Rare[GetRandomInt(1, 5) + -1];
+				}
+				new var1 = Powers[i_PowerUp[client][0]];
+				powername = var1;
+				CPrintToChat(client, "{crimson}[MB]%t", "mbSpawnWithPowerUp", powername);
+			}
+			i_UsingPower[client] = 0;
+			Jumping[client] = 0;
+			IsBounce[client] = 0;
+			SteppedOn[client] = -1;
+			Frozen[client] = 0;
+			IsShocked[client] = 0;
+			Floating[client] = 0;
+			LazyShellArmor[client] = 0;
+			JumpTicks[client] = 0;
+			IsSprint[client] = 0;
+			CheckSprint[client] = 0;
+			Lives[client] = 0;
+			i_SpawnProtect[client] = GetConVarInt(mb_SpawnProtection) * 66;
+			SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+			CreateTimer(0.1, t_ForceDefaultSpeed, client, 0);
+			TF2_SetPlayerClass(client, TFClassType:3, false, true);
+			TF2_RemoveAllWeapons(client);
+			TF2Items_GiveWeapon(client, 50001);
+			SetEntityRenderColor(client, 255, 255, 255, 255);
+			SetEntProp(client, PropType:0, "m_bGlowEnabled", any:0, 4, 0);
+			StopSound(client, 0, "mariobros/starman.wav");
+			StopSound(client, 0, "mariobros/hammer.mp3");
+			if (GetConVarInt(mb_GameMode) == 1)
+			{
+				if (GetConVarInt(mb_RespawnMax) >= Respawns[client])
+				{
+					CPrintToChat(client, "{crimson}[MB]%t", "mbRespawnCount", GetConVarInt(mb_RespawnMax) - Respawns[client]);
+				}
+				if (GetConVarInt(mb_RespawnMax) < Respawns[client])
+				{
+					Respawns[client] = GetConVarInt(mb_RespawnMax) + 1;
+					ChangeClientTeam(client, 1);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+public Action:Event_BeforePlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new var1;
+	if (attacker > 0 && attacker <= MaxClients)
+	{
+		if (client == SteppedOn[attacker])
+		{
+			SetEventInt(event, "customkill", 45);
+			SetEventString(event, "weapon_logclassname", "mbstomp");
+			SetEventString(event, "weapon", "mantreads");
+		}
+	}
+	return Action:0;
+}
+
+public Event_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (IsValidEntity(client))
+	{
+		i_PowerUp[client] = 0;
+		switch (GetConVarInt(mb_GameMode))
+		{
+			case 1:
+			{
+				if (0 >= RoundWaitTime)
+				{
+					Respawns[client]++;
+					if (GetConVarInt(mb_RespawnMax) < Respawns[client])
+					{
+						Respawns[client] = GetConVarInt(mb_RespawnMax) + 1;
+						ChangeClientTeam(client, 1);
+					}
+				}
+			}
+			case 2:
+			{
+				if (0 < Coins[client])
+				{
+					new entity;
+					new Float:pos[3] = 0.0;
+					new String:value[16];
+					new String:path[128];
+					entity = CreateEntityByName("item_ammopack_small", -1);
+					if (entity != -1)
+					{
+						GetEntPropVector(client, PropType:1, "m_vecOrigin", pos, 0);
+						Format(path, 128, "models/%s.mdl", "mariobros/goldcoin");
+						DispatchKeyValue(entity, "powerup_model", path);
+						DispatchKeyValue(entity, "targetname", "mb_coin");
+						IntToString(Coins[client], value, 16);
+						DispatchKeyValue(entity, "max_health", value);
+						DispatchSpawn(entity);
+						TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+						SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
+						Coins[client] = 0;
+					}
+				}
+			}
+			default:
+			{
+			}
+		}
+	}
+	return 0;
+}
+
+public Event_RoundStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsValidEntity(i))
+		{
+			new var1;
+			if (GetConVarInt(mb_GameMode) == 1 && GetClientTeam(i) == 1)
+			{
+				if (GetTeamClientCount(3) <= GetTeamClientCount(2))
+				{
+					ChangeClientTeam(i, 3);
+				}
+				ChangeClientTeam(i, 2);
+			}
+			Respawns[i] = 0;
+			Coins[i] = 0;
+		}
+		i++;
+	}
+	RoundWaitTime = GetConVarInt(mb_RoundWait) * 66;
+	if (GetConVarInt(mb_GameMode) == 2)
+	{
+		Time[0] = GetConVarInt(mb_CoinTimeLimit);
+		Time[1] = GetConVarInt(mb_CoinTimeLimit);
+	}
+	else
+	{
+		if (GetConVarInt(mb_GameMode) == 1)
+		{
+			Time[0] = GetConVarInt(mb_ArenaTimeLimit);
+		}
+	}
+	new ent;
+	while ((ent = FindEntityByClassname(ent, "env_sprite")) != -1)
+	{
+		new String:modelname[128];
+		new String:spr[128];
+		Format(spr, 128, "%s.vmt", "materials/mariobros/coin");
+		GetEntPropString(ent, PropType:1, "m_ModelName", modelname, 128, 0);
+		if (StrEqual(modelname, spr, true))
+		{
+			AcceptEntityInput(ent, "Kill", -1, -1, 0);
+		}
+	}
+	if (0 < GetConVarInt(mb_GameMode))
+	{
+		ToggleCaps(false);
+	}
+	else
+	{
+		ToggleCaps(true);
+	}
+	SpawnFixedPowerUps();
+	return 0;
+}
+
+public Event_RoundWin(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		IsValidEntity(i);
+		Coins[i] = 0;
+		i++;
+	}
+	i_RoundCount += 1;
+	if (GetConVarInt(mb_RoundLimit) <= i_RoundCount)
+	{
+		i_RoundCount = 0;
+		if (0 < GetConVarInt(mb_RoundLimit))
+		{
+			VoteGameMode();
+		}
+	}
+	return 0;
+}
+
+public Event_PlayerLocker(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (IsValidEntity(client))
+	{
+		TF2_SetPlayerClass(client, TFClassType:3, false, true);
+		TF2_RemoveAllWeapons(client);
+		TF2Items_GiveWeapon(client, 50001);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+	}
+	return 0;
+}
+
+public OnTouch(entity, other)
+{
+	new String:entclass[256];
+	new String:powername[128];
+	GetEntityClassname(entity, entclass, 256);
+	if (StrEqual(entclass, "player", true))
+	{
+		GetEntityClassname(other, entclass, 256);
+		if (StrContains(entclass, "item_ammopack", false) > -1)
+		{
+			if (GetEntProp(other, PropType:1, "m_bDisabled", 4, 0))
+			{
+				return 0;
+			}
+			if (FixedPowerUpCheck(entity, other))
+			{
+				return 0;
+			}
+			if (!i_PowerUp[entity])
+			{
+				new i;
+				while (i < 15)
+				{
+					new String:path[256];
+					GetEntPropString(other, PropType:1, "m_iszModel", path, 255, 0);
+					if (StrContains(path, PowModels[i], false) > -1)
+					{
+						i_PowerUp[entity] = i + 1;
+						if (0 < i_PowerUp[entity])
+						{
+							new var1 = Powers[i_PowerUp[entity][0]];
+							powername = var1;
+							CPrintToChat(entity, "{crimson}[MB]%t", "mbGetPowerUp", powername);
+							new Float:newpos[3] = 0.0;
+							new Handle:pack;
+							GetEntPropVector(other, PropType:1, "m_vecOrigin", newpos, 0);
+							CreateDataTimer(GetConVarFloat(mb_PickupDelay) / SquareRoot(float(GetClientCount(true) + 1)), DTimer_RespawnAmmo, pack, 0);
+							WritePackCell(pack, other);
+							WritePackFloat(pack, newpos[0]);
+							WritePackFloat(pack, newpos[1]);
+							WritePackFloat(pack, newpos[2]);
+							newpos[0] = -9999.0;
+							newpos[1] = -9999.0;
+							newpos[2] = -9999.0;
+							TeleportEntity(other, newpos, NULL_VECTOR, NULL_VECTOR);
+						}
+					}
+					i++;
+				}
+				if (0 < i_PowerUp[entity])
+				{
+					new var1 = Powers[i_PowerUp[entity][0]];
+					powername = var1;
+					CPrintToChat(entity, "{crimson}[MB]%t", "mbGetPowerUp", powername);
+					new Float:newpos[3] = 0.0;
+					new Handle:pack;
+					GetEntPropVector(other, PropType:1, "m_vecOrigin", newpos, 0);
+					CreateDataTimer(GetConVarFloat(mb_PickupDelay) / SquareRoot(float(GetClientCount(true) + 1)), DTimer_RespawnAmmo, pack, 0);
+					WritePackCell(pack, other);
+					WritePackFloat(pack, newpos[0]);
+					WritePackFloat(pack, newpos[1]);
+					WritePackFloat(pack, newpos[2]);
+					newpos[0] = -9999.0;
+					newpos[1] = -9999.0;
+					newpos[2] = -9999.0;
+					TeleportEntity(other, newpos, NULL_VECTOR, NULL_VECTOR);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+public Action:OnStartTouch(entity, other)
+{
+	if (entity == other)
+	{
+		return Action:0;
+	}
+	new var1;
+	if (other > 0 && other <= MaxClients + 1)
+	{
+		if (IsPlayerAlive(entity))
+		{
+			decl Float:cpos[3];
+			decl Float:vpos[3];
+			decl Float:vmax[3];
+			GetClientAbsOrigin(entity, cpos);
+			GetClientAbsOrigin(other, vpos);
+			GetEntPropVector(other, PropType:0, "m_vecMaxs", vmax, 0);
+			new Float:vheight = 0.0;
+			new Float:heightdiff = 0.0;
+			vheight = vmax[2];
+			heightdiff = cpos[2] - vpos[2];
+			if (heightdiff > vheight)
+			{
+				new var2;
+				if (GetClientTeam(other) != GetClientTeam(entity) && IsBounce[entity])
+				{
+					EmitSoundToAll("mariobros/goombastomp.mp3", entity, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					new Float:force[3] = 0.0;
+					new Float:v[3] = 0.0;
+					new Float:ang[3] = 0.0;
+					GetClientEyeAngles(entity, ang);
+					GetEntPropVector(entity, PropType:1, "m_vecVelocity", v, 0);
+					force[0] = v[0];
+					force[1] = v[1];
+					force[2] = GetConVarFloat(mb_JumpHeight);
+					IsBounce[entity] = 1;
+					SteppedOn[entity] = other;
+				}
+			}
+			else
+			{
+				new var4;
+				if (i_UsingPower[entity] == 8 || (i_UsingPower[entity] == 15 && heightdiff <= vheight && i_UsingPower[other] != 4 && i_UsingPower[other] != 8))
+				{
+					new var5;
+					if (GetClientTeam(other) != GetClientTeam(entity) && IsBounce[entity])
+					{
+						EmitSoundToAll("mariobros/goombastomp.mp3", entity, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						GetEntPropVector(entity, PropType:1, "m_vecVelocity", BounceVec[entity], 0);
+						IsBounce[entity] = 1;
+						SteppedOn[entity] = other;
+					}
+				}
+			}
+		}
+	}
+	return Action:0;
+}
+
+public OnGameFrame()
+{
+	new Res[2];
+	TotalCoins[0] = 0;
+	TotalCoins[1] = 0;
+	new client = 1;
+	while (client <= MaxClients)
+	{
+		if (IsValidEntity(client))
+		{
+			new var1;
+			if (IsClientInGame(client) && IsPlayerAlive(client))
+			{
+				if (0 < RoundWaitTime)
+				{
+					SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+					RoundWaitTime -= 1;
+				}
+				new Float:pos[3] = 0.0;
+				new Float:vel[3] = 0.0;
+				new entity = i_HUDSprite[client];
+				new var2;
+				if (entity > 0 && IsValidEntity(entity))
+				{
+					GetClientEyePosition(client, pos);
+					GetEntPropVector(client, PropType:1, "m_vecVelocity", vel, 0);
+					pos[2] += 30.0;
+					TeleportEntity(entity, pos, NULL_VECTOR, vel);
+				}
+				if (0 >= RoundWaitTime)
+				{
+					new var3;
+					if (GetConVarInt(mb_RespawnMax) > 0 && GetConVarInt(mb_GameMode) == 1)
+					{
+						if (0 >= Time[0])
+						{
+							if (GetClientTeam(client) > 1)
+							{
+								new var13 = Res[GetClientTeam(client) + -2];
+								var13 = var13[GetConVarInt(mb_RespawnMax) - Respawns[client]];
+							}
+						}
+						new var4;
+						if (GetTeamClientCount(2) && GetTeamClientCount(3))
+						{
+							if (GetTeamClientCount(3) != GetTeamClientCount(2))
+							{
+								decl team;
+								new var5;
+								if (GetTeamClientCount(2) > GetTeamClientCount(3))
+								{
+									var5 = 2;
+								}
+								else
+								{
+									var5 = 3;
+								}
+								team = var5;
+								ForceTeamWin(team);
+							}
+							ForceTeamWin(0);
+						}
+					}
+				}
+				new var6;
+				if (Time[GetClientTeam(client) + -2] >= 0 && GetConVarInt(mb_GameMode) == 2 && GetClientTeam(client) > 1)
+				{
+					new var14 = TotalCoins[GetClientTeam(client) + -2];
+					var14 = Coins[client][var14];
+				}
+				if (LazyShellArmor[client] == true)
+				{
+					Frozen[client] = 0;
+					if (GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0) < GetConVarFloat(mb_MoveSpeed))
+					{
+						SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+					}
+				}
+				if (0 < Frozen[client])
+				{
+					SetEntityRenderColor(client, 0, 0, 200, 255);
+					Frozen[client]--;
+					if (Frozen[client] < 1)
+					{
+						SetEntityRenderColor(client, 255, 255, 255, 255);
+						if (GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0) < GetConVarFloat(mb_MoveSpeed))
+						{
+							SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+						}
+					}
+					else
+					{
+						SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * 0.33, 0);
+					}
+				}
+				else
+				{
+					new var7;
+					if (IsShocked[client] && i_UsingPower[client] != 3)
+					{
+						SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed) * 0.5, 0);
+					}
+				}
+				if (0 < i_SpawnProtect[client])
+				{
+					i_SpawnProtect[client]--;
+				}
+				if (IsBounce[client] == true)
+				{
+					TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, BounceVec[client]);
+					IsBounce[client] = 0;
+				}
+				if (SteppedOn[client] > -1)
+				{
+					if (IsClientInGame(SteppedOn[client]))
+					{
+						new Float:damage = GetConVarFloat(mb_JumpDamage);
+						if (i_UsingPower[client] == 4)
+						{
+							damage *= 4;
+						}
+						new var8;
+						if (i_UsingPower[SteppedOn[client]] == 15 && i_UsingPower[client] != 4 && i_UsingPower[client] != 8)
+						{
+							damage *= 0.0;
+						}
+						if (i_UsingPower[SteppedOn[client]] == 8)
+						{
+							damage *= 0.0;
+						}
+						new var9;
+						if (Invincible[SteppedOn[client]] || i_SpawnProtect[SteppedOn[client]] > 0)
+						{
+							damage *= 0.0;
+						}
+						if (LazyShellArmor[SteppedOn[client]] == true)
+						{
+							damage *= 0.25;
+						}
+						new var10;
+						if (Lives[SteppedOn[client]] && damage >= GetEntProp(SteppedOn[client], PropType:0, "m_iHealth", 4, 0))
+						{
+							Lives[SteppedOn[client]] += -1;
+							damage *= 0.0;
+							SetEntityHealth(SteppedOn[client], 200);
+							CPrintToChat(SteppedOn[client], "{crimson}[MB]{default}You have {orange}%i {default}Lives left!", Lives[SteppedOn[client]]);
+							Invincible[SteppedOn[client]] = 1;
+							CreateTimer(3.0, t_EndInv, SteppedOn[client], 0);
+						}
+						if (damage > 0.0)
+						{
+							if (0 < Coins[SteppedOn[client]])
+							{
+								new c = RoundToCeil(float(Coins[SteppedOn[client]]) * 0.2);
+								Coins[SteppedOn[client]] -= c;
+								new var15 = Coins[client];
+								var15 = var15[c];
+							}
+						}
+						SDKHooks_TakeDamage(SteppedOn[client], client, client, damage, 1, -1, NULL_VECTOR, NULL_VECTOR);
+						SteppedOn[client] = -1;
+					}
+				}
+			}
+		}
+		client++;
+	}
+	if (GetConVarInt(mb_GameMode) == 1)
+	{
+		new var11;
+		if (Time[0] > 0 && RoundWaitTime <= 0)
+		{
+			FrameCount += 1;
+		}
+		if (FrameCount >= 66)
+		{
+			6188/* ERROR unknown load Constant */--;
+			FrameCount = 0;
+			if (0 >= Time[0])
+			{
+				if (Res[1] < Res[0])
+				{
+					ForceTeamWin(2);
+				}
+				if (Res[1] > Res[0])
+				{
+					ForceTeamWin(3);
+				}
+				if (Res[1] == Res[0])
+				{
+					ForceTeamWin(0);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (TotalCoins[1] != TotalCoins[0])
+		{
+			new var12;
+			if (RoundWaitTime <= 0 && Time[0] > 0 && Time[1] > 0)
+			{
+				FrameCount += 1;
+			}
+			if (FrameCount >= 66)
+			{
+				FrameCount = 0;
+				if (TotalCoins[0] > TotalCoins[1])
+				{
+					6188/* ERROR unknown load Constant */--;
+				}
+				6188 + 4/* ERROR unknown load Binary */--;
+			}
+			if (FrameCount % 66 + 1 == 33)
+			{
+				if (TotalCoins[1] * 3 <= TotalCoins[0])
+				{
+					6188/* ERROR unknown load Constant */--;
+				}
+				if (TotalCoins[0] * 3 <= TotalCoins[1])
+				{
+					6188 + 4/* ERROR unknown load Binary */--;
+				}
+			}
+			if (0 >= Time[0])
+			{
+				ForceTeamWin(2);
+			}
+			if (0 >= Time[1])
+			{
+				ForceTeamWin(3);
+			}
+		}
+	}
+	return 0;
+}
+
+public Action:t_EndPowerUp(Handle:timer, any:client)
+{
+	if (IsClientInGame(client))
+	{
+		switch (i_UsingPower[client])
+		{
+			case 1:
+			{
+				TF2_RemoveWeaponSlot(client, 0);
+				TF2Items_GiveWeapon(client, 50001);
+			}
+			case 3, 6, 8:
+			{
+				SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+			}
+			case 5:
+			{
+				Floating[client] = 0;
+			}
+			case 9:
+			{
+				TF2Items_GiveWeapon(client, 50001);
+			}
+			case 12:
+			{
+				TF2_RemoveWeaponSlot(client, 0);
+				TF2Items_GiveWeapon(client, 50001);
+			}
+			case 15:
+			{
+				TF2_RemoveWeaponSlot(client, 0);
+				TF2Items_GiveWeapon(client, 50001);
+				SetEntityHealth(client, 200);
+			}
+			default:
+			{
+			}
+		}
+		i_UsingPower[client] = 0;
+		StopSound(client, 0, "mariobros/starman.wav");
+		StopSound(client, 0, "mariobros/hammer.mp3");
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+		CPrintToChat(client, "{crimson}[MB]%t", "mbEndPowerUp");
+	}
+	return Action:0;
+}
+
+public Action:t_FlashColors(Handle:timer, any:client)
+{
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		SetEntityRenderColor(client, GetRandomInt(0, 255), GetRandomInt(0, 255), GetRandomInt(0, 255), 255);
+	}
+	return Action:0;
+}
+
+public Action:t_FixSpeed(Handle:timer, any:client)
+{
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client) && GetEntPropFloat(client, PropType:0, "m_flMaxspeed", 0) < GetConVarFloat(mb_MoveSpeed))
+	{
+		IsShocked[client] = 0;
+		SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+	}
+	return Action:0;
+}
+
+public Action:t_ForceDefaultSpeed(Handle:timer, any:client)
+{
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		SetEntPropFloat(client, PropType:0, "m_flMaxspeed", GetConVarFloat(mb_MoveSpeed), 0);
+	}
+	return Action:0;
+}
+
+public Action:t_EndInv(Handle:timer, any:client)
+{
+	if (IsClientInGame(client))
+	{
+		Invincible[client] = 0;
+	}
+	return Action:0;
+}
+
+public Action:t_EndArmor(Handle:timer, any:client)
+{
+	if (IsClientInGame(client))
+	{
+		LazyShellArmor[client] = 0;
+	}
+	return Action:0;
+}
+
+public Handle_VoteMenu(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	else
+	{
+		if (action == MenuAction:32)
+		{
+			new String:mode[4];
+			GetMenuItem(menu, param1, mode, 4, 0, "", 0);
+			ServerCommand("sm_mb_gamemode %s", mode);
+		}
+	}
+	return 0;
+}
+
+InitVars(client)
+{
+	i_SpawnProtect[client] = 0;
+	i_PowerUp[client] = 0;
+	i_UsingPower[client] = 0;
+	i_Hints[client] = 1;
+	Jumping[client] = 0;
+	AirJumping[client] = 0;
+	JumpTicks[client] = 0;
+	IsSprint[client] = 0;
+	CheckSprint[client] = 0;
+	JumpHold[client] = 0;
+	IsBounce[client] = 0;
+	IsShocked[client] = 0;
+	SteppedOn[client] = -1;
+	Floating[client] = 0;
+	Frozen[client] = 0;
+	Lives[client] = 0;
+	Coins[client] = 0;
+	Invincible[client] = 0;
+	LazyShellArmor[client] = 0;
+	Respawns[client] = 0;
+	return 0;
+}
+
+VoteGameMode()
+{
+	if (IsVoteInProgress(Handle:0))
+	{
+		return 0;
+	}
+	new Handle:menu = CreateMenu(Handle_VoteMenu, MenuAction:28);
+	new String:translatemenu[64];
+	Format(translatemenu, 64, "%t", "Which game mode should be next?");
+	SetMenuTitle(menu, translatemenu);
+	Format(translatemenu, 64, "%t", "Map's game mode");
+	AddMenuItem(menu, "0", translatemenu, 0);
+	Format(translatemenu, 64, "%t", "Battle Arena");
+	AddMenuItem(menu, "1", translatemenu, 0);
+	Format(translatemenu, 64, "%t", "Coin Rush");
+	AddMenuItem(menu, "2", translatemenu, 0);
+	SetMenuExitButton(menu, false);
+	VoteMenuToAll(menu, 10, 1);
+	return 0;
+}
+
+Handle:BuildHelpMenu()
+{
+	new String:translatemenu[128];
+	new Handle:menu = CreateMenu(Menu_ShowHelp, MenuAction:28);
+	Format(translatemenu, 128, "%t", "Jumping");
+	AddMenuItem(menu, "Jumping", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Stomping");
+	AddMenuItem(menu, "Stomping", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Sprinting");
+	AddMenuItem(menu, "Sprinting", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Weigh Down");
+	AddMenuItem(menu, "Weigh Down", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Using Power-Ups");
+	AddMenuItem(menu, "Using Power-Ups", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Battle Arena");
+	AddMenuItem(menu, "Battle Arena", translatemenu, 0);
+	Format(translatemenu, 128, "%t", "Coin Rush");
+	AddMenuItem(menu, "Coin Rush", translatemenu, 0);
+	new i;
+	while (i < 15)
+	{
+		AddMenuItem(menu, Powers[i], Powers[i], 0);
+		i++;
+	}
+	Format(translatemenu, 128, "%t", "Mario Bros. Help");
+	SetMenuTitle(menu, translatemenu);
+	return menu;
+}
+
+public Menu_ShowHelp(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:4)
+	{
+		new String:info[64];
+		new Handle:panel;
+		new String:Hint[1024];
+		new String:transtitle[64];
+		GetMenuItem(menu, param2, info, 64, 0, "", 0);
+		panel = CreatePanel(Handle:0);
+		Format(transtitle, 64, "%t", info);
+		SetPanelTitle(panel, transtitle, false);
+		DrawPanelText(panel, " ");
+		if (StrEqual(info, "Jumping", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Jumping", param2);
+		}
+		if (StrEqual(info, "Stomping", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Stomping", param2);
+		}
+		if (StrEqual(info, "Sprinting", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Sprinting", param2);
+		}
+		if (StrEqual(info, "Weigh Down", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_WeighDown", param2);
+		}
+		if (StrEqual(info, "Using Power-Ups", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_UsingPowerUps", param2);
+		}
+		if (StrEqual(info, "Battle Arena", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_BattleArena", param2);
+		}
+		if (StrEqual(info, "Coin Rush", true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_CoinRush", param2);
+		}
+		new var1 = Powers;
+		if (StrEqual(info, var1[0][var1], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_FireFlower", param2);
+		}
+		if (StrEqual(info, Powers[1], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_POWBlock", param2);
+		}
+		if (StrEqual(info, Powers[2], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_PWing", param2);
+		}
+		if (StrEqual(info, Powers[3], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_GoombaShoe", param2);
+		}
+		if (StrEqual(info, Powers[4], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_SuperLeaf", param2);
+		}
+		if (StrEqual(info, Powers[5], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_BooTheif", param2);
+		}
+		if (StrEqual(info, Powers[6], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Mushroom", param2);
+		}
+		if (StrEqual(info, Powers[7], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Starman", param2);
+		}
+		if (StrEqual(info, Powers[8], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Hammer", param2);
+		}
+		if (StrEqual(info, Powers[9], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_Thunderbolt", param2);
+		}
+		if (StrEqual(info, Powers[10], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_GoldenMushroom", param2);
+		}
+		if (StrEqual(info, Powers[11], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_IceFlower", param2);
+		}
+		if (StrEqual(info, Powers[12], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_LazyShellArmor", param2);
+		}
+		if (StrEqual(info, Powers[13], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_1UpMushroom", param2);
+		}
+		if (StrEqual(info, Powers[14], true))
+		{
+			Format(Hint, 1024, "%t", "mbHint_BowserSuit", param2);
+		}
+		DrawPanelText(panel, Hint);
+		SendPanelToClient(panel, param1, Panel_HelpMenu, 5);
+		CloseHandle(panel);
+	}
+	return 0;
+}
+
+public PrecacheAll()
+{
+	PrecacheSound("mariobros/goombastomp.mp3", true);
+	PrecacheSound("mariobros/pow-lightning.mp3", true);
+	PrecacheSound("mariobros/mushroom.mp3", true);
+	PrecacheSound("mariobros/boo.mp3", true);
+	PrecacheSound("mariobros/hammer.mp3", true);
+	PrecacheSound("mariobros/starman.wav", true);
+	PrecacheSound("mariobros/1up.mp3", true);
+	PrecacheSound("mariobros/bowser.mp3", true);
+	PrecacheSound("mariobros/coin.mp3", true);
+	new var1;
+	new var2;
+	new var3;
+	new var4;
+	new var5;
+	new var6;
+	new var7;
+	new var8;
+	new var9;
+	new var10;
+	new var11;
+	Format(var1, 128, "sound/%s", "mariobros/goombastomp.mp3");
+	Format(var2, 128, "sound/%s", "mariobros/pow-lightning.mp3");
+	Format(var3, 128, "sound/%s", "mariobros/mushroom.mp3");
+	Format(var4, 128, "sound/%s", "mariobros/boo.mp3");
+	Format(var5, 128, "sound/%s", "mariobros/hammer.mp3");
+	Format(var6, 128, "sound/%s", "mariobros/starman.wav");
+	Format(var7, 128, "sound/%s", "mariobros/1up.mp3");
+	Format(var8, 128, "sound/%s", "mariobros/bowser.mp3");
+	Format(var9, 128, "sound/%s", "mariobros/coin.mp3");
+	AddFileToDownloadsTable(var1);
+	AddFileToDownloadsTable(var2);
+	AddFileToDownloadsTable(var3);
+	AddFileToDownloadsTable(var4);
+	AddFileToDownloadsTable(var5);
+	AddFileToDownloadsTable(var6);
+	AddFileToDownloadsTable(var7);
+	AddFileToDownloadsTable(var8);
+	AddFileToDownloadsTable(var9);
+	new var12 = 0;
+	new var13 = 0;
+	PrecacheModel("materials/e-spowerups/flatphong.vtf", true);
+	AddFileToDownloadsTable("materials/e-spowerups/flatphong.vtf");
+	Format(var10, 128, "materials/%s_norm.vtf", "mariobros/goldcoin");
+	PrecacheModel(var10, true);
+	AddFileToDownloadsTable(var10);
+	new i;
+	while (i < 2)
+	{
+		Format(var10, 128, "%s.%s", "materials/mariobros/coin", var13[i]);
+		PrecacheModel(var10, true);
+		AddFileToDownloadsTable(var10);
+		Format(var10, 128, "materials/%s.%s", "mariobros/goldcoin", var13[i]);
+		PrecacheModel(var10, true);
+		AddFileToDownloadsTable(var10);
+		new j;
+		while (j < 14)
+		{
+			Format(var10, 128, "%s.%s", PowMaterials[j], var13[i]);
+			PrecacheModel(var10, true);
+			AddFileToDownloadsTable(var10);
+			j++;
+		}
+		i++;
+	}
+	new i;
+	while (i < 6)
+	{
+		Format(var11, 128, "models/%s.%s", "mariobros/goldcoin", var12[i]);
+		PrecacheModel(var11, true);
+		AddFileToDownloadsTable(var11);
+		new j;
+		while (j < 15)
+		{
+			Format(var11, 128, "%s.%s", PowModels[j], var12[i]);
+			PrecacheModel(var11, true);
+			AddFileToDownloadsTable(var11);
+			j++;
+		}
+		i++;
+	}
+	return 0;
+}
+
+public DrawHUD(client)
+{
+	ClearSyncHud(client, mb_HUD);
+	ClearSyncHud(client, mb_HUD2);
+	ClearSyncHud(client, mb_HUD3);
+	ClearSyncHud(client, mb_HUD4);
+	new var2;
+	new Float:X = 0.0;
+	new Float:Y = 0.0;
+	new String:Logo[1024];
+	new R;
+	new G;
+	new B;
+	if (!(GetConVarInt(mb_GameMode)))
+	{
+		SetHudTextParams(0.85, 0.7, 3.0, 0, 255, 0, 255, 0, 6.0, 0.1, 0.2);
+		ShowSyncHudText(client, mb_HUD, "%t", "Lives_HUD", Lives[client]);
+	}
+	if (GetConVarInt(mb_GameMode) == 1)
+	{
+		SetHudTextParams(0.85, 0.7, 3.0, 0, 255, 0, 255, 0, 6.0, 0.1, 0.2);
+		ShowSyncHudText(client, mb_HUD, "%t", "Lives_Respawn_HUD", Lives[client], GetConVarInt(mb_RespawnMax) - Respawns[client]);
+		if (10 > Time[0] % 60)
+		{
+			Format(var2 + var2, 4, "0%i", Time[0] % 60);
+		}
+		else
+		{
+			IntToString(Time[0] % 60, var2 + var2, 4);
+		}
+		SetHudTextParams(-1.0, 0.2, 3.0, 255, 255, 0, 255, 0, 6.0, 0.1, 0.2);
+		ShowSyncHudText(client, mb_HUD3, "%t", "TimeLeft_HUD", Time[0] / 60, var2 + var2);
+	}
+	else
+	{
+		if (GetConVarInt(mb_GameMode) == 2)
+		{
+			SetHudTextParams(0.85, 0.7, 3.0, 0, 255, 0, 255, 0, 6.0, 0.1, 0.2);
+			ShowSyncHudText(client, mb_HUD, "%t", "Lives_Coins_HUD", Lives[client], Coins[client]);
+			new i;
+			while (i < 2)
+			{
+				if (10 > Time[i] % 60)
+				{
+					Format(var2[i], 4, "0%i", Time[i] % 60);
+				}
+				else
+				{
+					IntToString(Time[i] % 60, var2[i], 4);
+				}
+				i++;
+			}
+			SetHudTextParams(-1.0, 0.2, 3.0, 255, 255, 0, 255, 0, 6.0, 0.1, 0.2);
+			new var3 = var2 + 4;
+			ShowSyncHudText(client, mb_HUD3, "%t", "RED_and_BLU_Coins_HUD", TotalCoins, Time[0] / 60, var2 + var2, 12932 + 4, Time[1] / 60, var3 + var3);
+		}
+	}
+	SetHudTextParams(0.85, 0.75, 3.0, 128, 128, 128, 255, 0, 6.0, 0.1, 0.2);
+	if (0 < i_PowerUp[client])
+	{
+		ShowSyncHudText(client, mb_HUD2, "%t", "Power_Up_HUD_List", Powers[i_PowerUp[client][0]]);
+	}
+	else
+	{
+		ShowSyncHudText(client, mb_HUD2, "%t", "Power_Up_None_HUD");
+	}
+	GetConVarString(mb_HUDLogo, Logo, 1024);
+	if (0 < strlen(Logo))
+	{
+		X = GetConVarFloat(mb_HUD_X);
+		Y = GetConVarFloat(mb_HUD_Y);
+		R = GetConVarInt(mb_HUDLogo_Red);
+		G = GetConVarInt(mb_HUDLogo_Grn);
+		B = GetConVarInt(mb_HUDLogo_Blu);
+		SetHudTextParams(X, Y, 3.0, R, G, B, 255, 0, 6.0, 0.1, 0.2);
+		ShowSyncHudText(client, mb_HUD4, Logo);
+	}
+	if (IsPlayerAlive(client))
+	{
+		new String:Sprite[256];
+		new Float:pos[3] = 0.0;
+		new ent;
+		new var1;
+		if (Coins[client] > 0 && GetConVarInt(mb_GameMode) == 2 && !TF2_IsPlayerInCondition(client, TFCond:64))
+		{
+			if (GetConVarInt(mb_CoinLimitGlow) <= Coins[client])
+			{
+				SetEntProp(client, PropType:0, "m_bGlowEnabled", any:1, 1, 0);
+			}
+			else
+			{
+				SetEntProp(client, PropType:0, "m_bGlowEnabled", any:0, 1, 0);
+			}
+			GetClientEyePosition(client, pos);
+			pos[2] += 30.0;
+			ent = CreateEntityByName("env_sprite", -1);
+			SetEntProp(ent, PropType:0, "m_hOwnerEntity", client, 4, 0);
+			if (ent != -1)
+			{
+				i_HUDSprite[client] = ent;
+				Format(Sprite, 255, "%s.vmt", "materials/mariobros/coin");
+				DispatchKeyValue(ent, "model", Sprite);
+				DispatchKeyValue(ent, "classname", "env_sprite");
+				DispatchKeyValue(ent, "spawnflags", "1");
+				DispatchKeyValue(ent, "scale", "0.02");
+				DispatchKeyValue(ent, "rendermode", "1");
+				DispatchKeyValue(ent, "rendercolor", "255 255 255");
+				DispatchSpawn(ent);
+				SetEntityMoveType(ent, MoveType:8);
+				SetEntityRenderColor(ent, 255, 255, 255, 100);
+				TeleportEntity(ent, pos, NULL_VECTOR, NULL_VECTOR);
+				new String:AddOutput[100];
+				Format(AddOutput, 100, "OnUser1 !self:kill::%0.2f:-1", 1045220557);
+				SetVariantString(AddOutput);
+				AcceptEntityInput(ent, "AddOutput", -1, -1, 0);
+				AcceptEntityInput(ent, "FireUser1", -1, -1, 0);
+			}
+		}
+	}
+	return 0;
+}
+
+public ForceTeamWin(team)
+{
+	new ent = FindEntityByClassname(-1, "team_control_point_master");
+	if (ent == -1)
+	{
+		ent = CreateEntityByName("team_control_point_master", -1);
+		DispatchSpawn(ent);
+		AcceptEntityInput(ent, "Enable", -1, -1, 0);
+	}
+	SetVariantInt(team);
+	AcceptEntityInput(ent, "SetWinner", -1, -1, 0);
+	return 0;
+}
+
+public Action:DTimer_RespawnAmmo(Handle:timer, Handle:pack)
+{
+	new Float:newpos[3] = 0.0;
+	new entity;
+	new String:entclass[256];
+	new String:path[256];
+	ResetPack(pack, false);
+	entity = ReadPackCell(pack);
+	newpos[0] = ReadPackFloat(pack);
+	newpos[1] = ReadPackFloat(pack);
+	newpos[2] = ReadPackFloat(pack);
+	TeleportEntity(entity, newpos, NULL_VECTOR, NULL_VECTOR);
+	new R = GetRandomInt(1, 100);
+	GetEntityClassname(entity, entclass, 255);
+	if (StrEqual(entclass, "item_ammopack_small", true))
+	{
+		if (R <= 100)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 35)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 10)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+		}
+	}
+	if (StrEqual(entclass, "item_ammopack_medium", true))
+	{
+		if (R <= 100)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 50)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 15)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+		}
+	}
+	if (StrEqual(entclass, "item_ammopack_full", true))
+	{
+		if (R <= 100)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 65)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 20)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+		}
+	}
+	DispatchKeyValue(entity, "powerup_model", path);
+	DispatchSpawn(entity);
+	return Action:0;
+}
+
+public Action:DTimer_RespawnPowerUp(Handle:timer, Handle:pack)
+{
+	new Float:pos[3] = 0.0;
+	new entity;
+	new String:Power[16];
+	new String:ModelName[256];
+	ResetPack(pack, false);
+	entity = ReadPackCell(pack);
+	pos[0] = ReadPackFloat(pack);
+	pos[1] = ReadPackFloat(pack);
+	pos[2] = ReadPackFloat(pack);
+	ReadPackString(pack, Power, 16);
+	if (IsValidEntity(entity))
+	{
+		new var1;
+		if (StringToInt(Power, 10) > 0 && StringToInt(Power, 10) <= 15)
+		{
+			Format(ModelName, 255, "%s.mdl", PowModels[StringToInt(Power, 10) + -1]);
+			DispatchKeyValue(entity, "powerup_model", ModelName);
+		}
+		else
+		{
+			if (StringToInt(Power, 10))
+			{
+				DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+			}
+			Format(ModelName, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+			DispatchKeyValue(entity, "powerup_model", ModelName);
+		}
+		TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+	}
+	return Action:0;
+}
+
+public Action:t_HUD(Handle:timer, any:client)
+{
+	if (IsValidEntity(client))
+	{
+		if (IsClientInGame(client))
+		{
+			i_HUDSprite[client] = -1;
+			if (IsPlayerAlive(client))
+			{
+				DrawHUD(client);
+			}
+			CreateTimer(0.1, t_HUD, client, 0);
+		}
+	}
+	return Action:0;
+}
+
+public Action:t_CheckPlayer(Handle:timer, any:client)
+{
+	new var1;
+	if (client <= MaxClients && client > any:0)
+	{
+		if (IsClientInGame(client))
+		{
+			CreateTimer(0.1, t_HUD, client, 0);
+		}
+	}
+	return Action:0;
+}
+
+public OnEntityCreated(entity, String:classname[])
+{
+	if (StrEqual(classname, "item_ammopack_small", true))
+	{
+		new String:EntName[64];
+		new i;
+		new PowerUp;
+		decl String:ns[4];
+		new String:ModelName[256];
+		GetEntPropString(entity, PropType:1, "m_iName", EntName, 64, 0);
+		if (StrContains(EntName, "mb_powerspawn", false) > -1)
+		{
+			i = 15;
+			while (0 < i)
+			{
+				IntToString(i, ns, 4);
+				if (StrContains(EntName, ns, false) > -1)
+				{
+					PowerUp = i;
+					new var1;
+					if (PowerUp > 0 && PowerUp <= 15)
+					{
+						Format(ModelName, 255, "%s.mdl", PowModels[PowerUp + -1]);
+						DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+					}
+					if (PowerUp)
+					{
+						DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+					}
+					Format(ModelName, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+					DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+				}
+				i--;
+			}
+			new var1;
+			if (PowerUp > 0 && PowerUp <= 15)
+			{
+				Format(ModelName, 255, "%s.mdl", PowModels[PowerUp + -1]);
+				DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+			}
+			if (PowerUp)
+			{
+				DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+			}
+			Format(ModelName, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+			DispatchKeyValue(entity, "powerup_model", "models/props_farm/box_cluster01.mdl");
+		}
+	}
+	return 0;
+}
+
+public SpawnFixedPowerUps()
+{
+	new index = -1;
+	new String:EntName[64];
+	new String:PowerName[64];
+	new Float:pos[3] = 0.0;
+	new String:ns[16] = "x";
+	new i;
+	new String:path[256];
+	while ((index = FindEntityByClassname(index, "info_target")) != -1)
+	{
+		GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
+		if (StrContains(EntName, "mb_powerspawn", false) > -1)
+		{
+			new entity = CreateEntityByName("item_ammopack_small", -1);
+			if (entity != -1)
+			{
+				i = 15;
+				while (0 < i)
+				{
+					IntToString(i, ns, 16);
+					if (StrContains(EntName, ns, false) > -1)
+					{
+						GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
+						Format(PowerName, 64, "mb_powerup %s", ns);
+						if (StrEqual(ns, "x", true))
+						{
+							Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+							DispatchKeyValue(entity, "powerup_model", path);
+						}
+						else
+						{
+							new var1;
+							if (StringToInt(ns, 10) > 0 && StringToInt(ns, 10) <= 15)
+							{
+								Format(path, 255, "%s.mdl", PowModels[StringToInt(ns, 10) + -1]);
+								DispatchKeyValue(entity, "powerup_model", path);
+							}
+						}
+						DispatchKeyValue(entity, "targetname", PowerName);
+						DispatchSpawn(entity);
+						TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+						SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
+					}
+					i--;
+				}
+				GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
+				Format(PowerName, 64, "mb_powerup %s", ns);
+				if (StrEqual(ns, "x", true))
+				{
+					Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+					DispatchKeyValue(entity, "powerup_model", path);
+				}
+				else
+				{
+					new var1;
+					if (StringToInt(ns, 10) > 0 && StringToInt(ns, 10) <= 15)
+					{
+						Format(path, 255, "%s.mdl", PowModels[StringToInt(ns, 10) + -1]);
+						DispatchKeyValue(entity, "powerup_model", path);
+					}
+				}
+				DispatchKeyValue(entity, "targetname", PowerName);
+				DispatchSpawn(entity);
+				TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+				SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
+			}
+		}
+		new var2;
+		if (StrContains(EntName, "mb_coinspawn", false) > -1 && GetConVarInt(mb_GameMode) == 2)
+		{
+			new entity = CreateEntityByName("item_ammopack_small", -1);
+			if (entity != -1)
+			{
+				GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
+				Format(path, 255, "models/%s.mdl", "mariobros/goldcoin");
+				DispatchKeyValue(entity, "powerup_model", path);
+				DispatchKeyValue(entity, "targetname", "mb_coin");
+				DispatchKeyValue(entity, "max_health", "1");
+				DispatchSpawn(entity);
+				TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+				SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
+			}
+		}
+	}
+	while ((index = FindEntityByClassname(index, "item_ammopack_small")) != -1)
+	{
+		GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
+		new var3;
+		if (StrContains(EntName, "mb_powerup", false) == -1 && StrContains(EntName, "mb_coin", false) == -1)
+		{
+			new R = GetRandomInt(1, 100);
+			if (R <= 100)
+			{
+				Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+			}
+			if (R <= 35)
+			{
+				Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+			}
+			if (R <= 10)
+			{
+				Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+			}
+			DispatchKeyValue(index, "powerup_model", path);
+			DispatchSpawn(index);
+		}
+	}
+	while ((index = FindEntityByClassname(index, "item_ammopack_medium")) != -1)
+	{
+		new R = GetRandomInt(1, 100);
+		if (R <= 100)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 50)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 15)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+		}
+		DispatchKeyValue(index, "powerup_model", path);
+		DispatchSpawn(index);
+	}
+	while ((index = FindEntityByClassname(index, "item_ammopack_full")) != -1)
+	{
+		new R = GetRandomInt(1, 100);
+		if (R <= 100)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 65)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
+		}
+		if (R <= 20)
+		{
+			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
+		}
+		DispatchKeyValue(index, "powerup_model", path);
+		DispatchSpawn(index);
+	}
+	return 0;
+}
+
+public bool:FixedPowerUpCheck(entity, other)
+{
+	new String:entclass[128];
+	new String:powername[128];
+	new String:ns[16] = "x";
+	GetEntityClassname(other, entclass, 128);
+	if (StrEqual(entclass, "item_ammopack_small", true))
+	{
+		new String:EntName[64];
+		GetEntPropString(other, PropType:1, "m_iName", EntName, 64, 0);
+		if (StrContains(EntName, "mb_coin", false) > -1)
+		{
+			new var1 = Coins[entity];
+			var1 = var1[GetEntProp(other, PropType:1, "m_iMaxHealth", 4, 0)];
+			EmitSoundToAll("mariobros/coin.mp3", entity, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			AcceptEntityInput(other, "Kill", -1, -1, 0);
+			return true;
+		}
+		if (StrContains(EntName, "mb_powerup", false) > -1)
+		{
+			if (!i_PowerUp[entity])
+			{
+				new i = 15;
+				while (0 < i)
+				{
+					IntToString(i, ns, 16);
+					if (StrContains(EntName, ns, false) > -1)
+					{
+						i_PowerUp[entity] = i;
+						if (StrEqual(ns, "x", true))
+						{
+							i_PowerUp[entity] = GetRandomInt(1, 15);
+						}
+						if (0 < i_PowerUp[entity])
+						{
+							new var2 = Powers[i_PowerUp[entity][0]];
+							powername = var2;
+							CPrintToChat(entity, "{crimson}[MB]{default}Power Up! Obtained: {orange}%s!", powername);
+							new Float:newpos[3] = 0.0;
+							new Handle:pack;
+							GetEntPropVector(other, PropType:1, "m_vecOrigin", newpos, 0);
+							CreateDataTimer(GetConVarFloat(mb_PickupDelay) / SquareRoot(float(GetClientCount(true) + 1)), DTimer_RespawnPowerUp, pack, 0);
+							WritePackCell(pack, other);
+							WritePackFloat(pack, newpos[0]);
+							WritePackFloat(pack, newpos[1]);
+							WritePackFloat(pack, newpos[2]);
+							WritePackString(pack, ns);
+							newpos[0] = -9999.0;
+							newpos[1] = -9999.0;
+							newpos[2] = -9999.0;
+							TeleportEntity(other, newpos, NULL_VECTOR, NULL_VECTOR);
+							return true;
+						}
+					}
+					i--;
+				}
+				if (StrEqual(ns, "x", true))
+				{
+					i_PowerUp[entity] = GetRandomInt(1, 15);
+				}
+				if (0 < i_PowerUp[entity])
+				{
+					new var2 = Powers[i_PowerUp[entity][0]];
+					powername = var2;
+					CPrintToChat(entity, "{crimson}[MB]{default}Power Up! Obtained: {orange}%s!", powername);
+					new Float:newpos[3] = 0.0;
+					new Handle:pack;
+					GetEntPropVector(other, PropType:1, "m_vecOrigin", newpos, 0);
+					CreateDataTimer(GetConVarFloat(mb_PickupDelay) / SquareRoot(float(GetClientCount(true) + 1)), DTimer_RespawnPowerUp, pack, 0);
+					WritePackCell(pack, other);
+					WritePackFloat(pack, newpos[0]);
+					WritePackFloat(pack, newpos[1]);
+					WritePackFloat(pack, newpos[2]);
+					WritePackString(pack, ns);
+					newpos[0] = -9999.0;
+					newpos[1] = -9999.0;
+					newpos[2] = -9999.0;
+					TeleportEntity(other, newpos, NULL_VECTOR, NULL_VECTOR);
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+public OnGameModeChange(Handle:cvar, String:oldVal[], String:newVal[])
+{
+	switch (StringToInt(newVal, 10))
+	{
+		case 1:
+		{
+			ServerCommand("sv_hudhint_sound 0");
+			ServerCommand("tf_weapon_criticals 0");
+			ServerCommand("mp_idlemaxtime 1000000");
+			ServerCommand("mp_restartgame_immediate 1");
+			ServerCommand("mp_teams_unbalance_limit 0");
+		}
+		case 2:
+		{
+			ServerCommand("sv_hudhint_sound 0");
+			ServerCommand("tf_weapon_criticals 0");
+			ServerCommand("mp_idlemaxtime 60");
+			ServerCommand("mp_restartgame_immediate 1");
+			ServerCommand("mp_teams_unbalance_limit 1");
+		}
+		default:
+		{
+			if (StringToInt(newVal, 10))
+			{
+				SetConVarInt(cvar, 0, false, false);
+			}
+			else
+			{
+				new var1;
+				if (StringToInt(newVal, 10) && StringToInt(newVal, 10) != StringToInt(oldVal, 10))
+				{
+					ServerCommand("sv_hudhint_sound 0");
+					ServerCommand("tf_weapon_criticals 0");
+					ServerCommand("mp_idlemaxtime 60");
+					ServerCommand("mp_restartgame_immediate 1");
+					ServerCommand("mp_teams_unbalance_limit 1");
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+ToggleCaps(bool:newstate)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	if (!newstate)
+	{
+	}
+	new var4 = 0;
+	var1 = 0;
+	while (var1 < 8)
+	{
+		while ((var2 = FindEntityByClassname(var2, var4[var1])) != -1)
+		{
+			AcceptEntityInput(var2, var3, -1, -1, 0);
+		}
+		var1++;
+	}
+	return 0;
+}
+
+public Action:t_ShufflePowers(Handle:timer)
+{
+	if (timer)
+	{
+		new index = -1;
+		new String:ns[4] = "x";
+		new String:path[256];
+		new i;
+		while ((index = FindEntityByClassname(index, "item_ammopack_small")) != -1)
+		{
+			new String:EntName[64];
+			GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
+			if (StrContains(EntName, "mb_powerup", false) > -1)
+			{
+				i = 15;
+				while (0 < i)
+				{
+					IntToString(i, ns, 4);
+					if (StrContains(EntName, ns, false) > -1)
+					{
+						if (StrEqual(ns, "x", true))
+						{
+							Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+							DispatchKeyValue(index, "powerup_model", path);
+							DispatchSpawn(index);
+						}
+					}
+					i--;
+				}
+				if (StrEqual(ns, "x", true))
+				{
+					Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
+					DispatchKeyValue(index, "powerup_model", path);
+					DispatchSpawn(index);
+				}
+			}
+		}
+		return Action:0;
+	}
+	return Action:4;
+}
+
+public Action:t_SprintSet(Handle:timer, any:client)
+{
+	if (IsValidEntity(client))
+	{
+		CheckSprint[client] = 0;
+	}
+	return Action:0;
+}
+
