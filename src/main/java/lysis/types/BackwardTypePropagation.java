@@ -23,6 +23,7 @@ import lysis.nodes.types.DCall;
 import lysis.nodes.types.DCharacter;
 import lysis.nodes.types.DConstant;
 import lysis.nodes.types.DDeclareLocal;
+import lysis.nodes.types.DDeclareStatic;
 import lysis.nodes.types.DFloat;
 import lysis.nodes.types.DFunction;
 import lysis.nodes.types.DGenArray;
@@ -157,13 +158,40 @@ public class BackwardTypePropagation extends NodeVisitor {
 		// This plugin was compiled without the .dbg.natives section, so there's no info
 		// about native's arguments..
 		if (signature.args() == null) {
-			// assert(SourcePawnFile.debugUnpacked_);
+			for (int i = 0; i < call.numOperands(); i++) {
+				DNode arg = call.getOperand(i);
+				visitArgument(call, arg, i);
+			}
 			return;
 		}
+
 		for (int i = 0; i < call.numOperands() && i < signature.args().length; i++) {
 			DNode node = call.getOperand(i);
 			Argument arg = i < signature.args().length ? signature.args()[i]
 					: signature.args()[signature.args().length - 1];
+
+			// Try to detect string literals if the file is lacking debug symbols.
+			// AMXX doesn't have a String tag at all.
+			if (arg.type() == VariableType.ArrayReference && arg.dimensions() != null && arg.dimensions().length == 1
+					&& arg.tag().name().equals("_")) {
+				if (node.type() == NodeType.Constant) {
+					DConstant constNode = (DConstant) node;
+					if (graph_.file().IsMaybeString(constNode.value())) {
+						call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
+						continue;
+					}
+				}
+				else if (node.type() == NodeType.DeclareLocal) {
+					DDeclareLocal localNode = (DDeclareLocal) node;
+					if (localNode.value() != null && localNode.value().type() == NodeType.Constant) {
+						DConstant constNode = (DConstant)localNode.value();
+						if (constNode.value() > 0 && graph_.file().IsMaybeString(constNode.value())) {
+							call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
+							continue;
+						}
+					}
+				}
+			}
 
 			// A reference to a constant. See if it's a global variable.
 			// This catches cases of stock ClearHandle(&Handle:handle) called with a global
@@ -207,26 +235,72 @@ public class BackwardTypePropagation extends NodeVisitor {
 						|| signature.args().length < call.numOperands())) {
 			for (int i = signature.args().length - 1; i < call.numOperands(); i++) {
 				DNode node = call.getOperand(i);
-				if (node.type() != NodeType.DeclareLocal)
-					continue;
+				visitArgument(call, node, i);
+			}
+		}
+	}
 
-				DDeclareLocal localNode = (DDeclareLocal) node;
-				if (localNode.value().type() != NodeType.Constant)
-					continue;
+	private void visitArgument(DNode call, DNode arg, int index) throws Exception {
+		switch (arg.type()) {
+		case DeclareLocal: {
+			DDeclareLocal localNode = (DDeclareLocal) arg;
+			if (localNode.value().type() == NodeType.Constant) {
 
 				DConstant constNode = (DConstant) localNode.value();
 				Variable global = graph_.file().lookupGlobal(constNode.value());
 				if (global == null)
 					global = graph_.file().lookupVariable(localNode.pc(), constNode.value(), Scope.Static);
 				if (global != null) {
-					call.replaceOperand(i, new DGlobal(global));
-					continue;
+					// Don't print references to implicit state variables.
+					if (!global.isStateVariable())
+						call.replaceOperand(index, new DGlobal(global));
+					return;
 				}
 
 				// Guess a string...
-				if (graph_.file().isValidDataAddress(constNode.value()))
-					call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
+				if (graph_.file().IsMaybeString(constNode.value()))
+					call.replaceOperand(index, new DString(graph_.file().stringFromData(constNode.value())));
 			}
+
+			if (localNode.var() == null)
+				return;
+
+			TypeUnit tu = TypeUnit.FromVariable(localNode.var());
+			if (tu != null) {
+				arg.addType(tu);
+				return;
+			}
+			break;
+		}
+		case DeclareStatic: {
+			DDeclareStatic staticNode = (DDeclareStatic) arg;
+			if (staticNode.var() == null)
+				return;
+
+			TypeUnit tu = TypeUnit.FromVariable(staticNode.var());
+			if (tu != null) {
+				arg.addType(tu);
+				return;
+			}
+			break;
+		}
+		case Constant: {
+			DConstant constNode = (DConstant) arg;
+			/*Variable global = graph_.file().lookupGlobal(constNode.value());
+			if (global == null)
+				global = graph_.file().lookupVariable(constNode.pc(), constNode.value(), Scope.Static);
+			if (global != null) {
+				call.replaceOperand(index, new DGlobal(global));
+				return;
+			}*/
+
+			// Guess a string...
+			if (graph_.file().IsMaybeString(constNode.value()))
+				call.replaceOperand(index, new DString(graph_.file().stringFromData(constNode.value())));
+			break;
+		}
+		default:
+			break;
 		}
 	}
 

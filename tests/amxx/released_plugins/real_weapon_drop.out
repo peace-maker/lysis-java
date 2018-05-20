@@ -124,14 +124,14 @@ bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
 
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(0, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
 	{
 		callfunc_push_int(id);
 		callfunc_push_int(err);
-		callfunc_push_str(reason, 0);
+		callfunc_push_str(reason, "HamFilter");
 		if (callfunc_end() == 1)
 		{
 			fail = false;
@@ -146,36 +146,36 @@ public __fatal_ham_error(Ham:id, HamError:err, reason[])
 
 public plugin_init()
 {
-	register_plugin(7804, 7872, 7888);
-	register_event(7908, 7920, 8024, 8032);
-	register_forward(99, 8036, 0);
-	register_forward(3, 8132, 0);
-	RegisterHam(0, 8196, 8224, 1);
-	RegisterHam(11, 8312, 8340, 0);
-	RegisterHam(11, 8428, 8456, 1);
-	RegisterHam(99, 8548, 8616, 0);
-	RegisterHam(99, 8700, 8768, 0);
-	RegisterHam(99, 8852, 8932, 0);
-	RegisterHam(99, 9016, 9068, 0);
-	RegisterHam(42, 9152, 9192, 0);
-	RegisterHam(42, 9276, 9356, 0);
-	g_iHamHook_Think = RegisterHam(41, 9448, 9476, 0);
+	register_plugin(7804, "2.3", "Numb");
+	register_event("30", "Event_MapChangeScoreboard", 8024, 8032);
+	register_forward(99, "FM_ClientDisconnect_Pre", "HamFilter");
+	register_forward("", "FM_SetModel_Pre", "HamFilter");
+	RegisterHam("HamFilter", "player", "Ham_Spawn_Player_Post", 1);
+	RegisterHam(11, "player", "Ham_Killed_player_Pre", "HamFilter");
+	RegisterHam(11, "player", "Ham_Killed_player_Post", 1);
+	RegisterHam(99, "weapon_hegrenade", "Ham_Item_CanDrop_Pre", "HamFilter");
+	RegisterHam(99, "weapon_flashbang", "Ham_Item_CanDrop_Pre", "HamFilter");
+	RegisterHam(99, "weapon_smokegrenade", "Ham_Item_CanDrop_Pre", "HamFilter");
+	RegisterHam(99, "weapon_knife", "Ham_Item_CanDrop_Pre", "HamFilter");
+	RegisterHam(42, "weaponbox", "Ham_Touch_wpnbox_Pre", "HamFilter");
+	RegisterHam(42, "func_vip_safetyzone", "Ham_Touch_safezone_Pre", "HamFilter");
+	g_iHamHook_Think = RegisterHam(41, "player", "Ham_Think_player_Pre", "HamFilter");
 	DisableHamForward(g_iHamHook_Think);
-	g_iCvar_AimDrop = register_cvar(9560, 9608, 0, 0);
-	g_iCvar_GrenadeDrop = register_cvar(9616, 9680, 0, 0);
-	g_iCvar_DeathDrop = register_cvar(9688, 9744, 0, 0);
-	g_iCvar_DisconnectDrop = register_cvar(9752, 9828, 0, 0);
-	g_iCvar_ModelAngleFix = register_cvar(9836, 9908, 0, 0);
+	g_iCvar_AimDrop = register_cvar("rwd_aimdrop", 9608, "HamFilter", "HamFilter");
+	g_iCvar_GrenadeDrop = register_cvar("rwd_grenadedrop", 9680, "HamFilter", "HamFilter");
+	g_iCvar_DeathDrop = register_cvar("rwd_deathdrop", 9744, "HamFilter", "HamFilter");
+	g_iCvar_DisconnectDrop = register_cvar("rwd_disconnectdrop", 9828, "HamFilter", "HamFilter");
+	g_iCvar_ModelAngleFix = register_cvar("rwd_modelanglefix", 9908, "HamFilter", "HamFilter");
 	g_iMaxPlayers = clamp(get_maxplayers(), 1, 32);
-	g_iMsgId_AmmoPickup = get_user_msgid(9916);
-	g_iMsgId_WeapPickup = get_user_msgid(9960);
+	g_iMsgId_AmmoPickup = get_user_msgid("AmmoPickup");
+	g_iMsgId_WeapPickup = get_user_msgid("WeapPickup");
 	return 0;
 }
 
 public plugin_precache()
 {
-	precache_model(10004);
-	precache_sound(10100);
+	precache_model("models/w_357ammobox.mdl");
+	precache_sound("items/9mmclip2.wav");
 	return 0;
 }
 
@@ -256,17 +256,17 @@ public FM_ClientDisconnect_Pre(iPlrId)
 
 public FM_SetModel_Pre(iEnt, iModel[])
 {
-	if (!equal(iModel, 10184, 9))
+	if (!equal(iModel, "models/w_", 9))
 	{
 		return 1;
 	}
-	if (equal(iModel[9], 10224, 0))
+	if (equal(iModel[9], "weaponbox.mdl", "HamFilter"))
 	{
 		return 1;
 	}
 	static s_iClassName[11];
-	pev(iEnt, 1, 10280, 10);
-	if (equal(10280, 10324, 0))
+	pev(iEnt, 1, s_iClassName, 10);
+	if (equal(s_iClassName, "weaponbox", "HamFilter"))
 	{
 		static Float:s_fAngle[3];
 		static s_bAlive;
@@ -297,17 +297,17 @@ public FM_SetModel_Pre(iEnt, iModel[])
 			{
 				static Float:s_fResult[3];
 				static Float:s_fOrigin[3];
-				pev(s_iOwner, 118, 10396);
-				pev(s_iOwner, 126, 10384);
+				pev(s_iOwner, 118, s_fOrigin);
+				pev(s_iOwner, 126, s_fAngle);
 				SphereToCartesian(s_fResult, s_fOrigin, s_fAngle, 10420);
-				pev(s_iOwner, 120, 10368);
+				pev(s_iOwner, 120, s_fVelocity);
 				new var4 = s_fVelocity;
 				var4[0] = floatadd(var4[0], floatsub(s_fResult[0], s_fOrigin[0]));
 				new var5 = s_fVelocity[1];
 				var5 = floatadd(var5, floatsub(s_fResult[1], s_fOrigin[1]));
 				new var6 = s_fVelocity[2];
 				var6 = floatsub(var6, floatsub(s_fResult[2], s_fOrigin[2]));
-				set_pev(iEnt, 120, 10368);
+				set_pev(iEnt, 120, s_fVelocity);
 			}
 		}
 		else
@@ -324,7 +324,7 @@ public FM_SetModel_Pre(iEnt, iModel[])
 					}
 					else
 					{
-						pev(s_iOwner, 120, 10368);
+						pev(s_iOwner, 120, s_fVelocity);
 					}
 					new var7 = s_fVelocity;
 					var7[0] = floatadd(var7[0], random_float(-1054867456, 1092616192));
@@ -332,7 +332,7 @@ public FM_SetModel_Pre(iEnt, iModel[])
 					var8 = floatadd(var8, random_float(-1054867456, 1092616192));
 					new var9 = s_fVelocity[2];
 					var9 = floatadd(var9, random_float(-1063256064, 1084227584));
-					set_pev(iEnt, 120, 10368);
+					set_pev(iEnt, 120, s_fVelocity);
 				}
 			}
 			if (get_pcvar_num(g_iCvar_DisconnectDrop))
@@ -340,18 +340,18 @@ public FM_SetModel_Pre(iEnt, iModel[])
 				s_fVelocity[0] = random_float(-1054867456, 1092616192);
 				s_fVelocity[1] = random_float(-1054867456, 1092616192);
 				s_fVelocity[2] = random_float(-1063256064, 1084227584);
-				set_pev(iEnt, 120, 10368);
+				set_pev(iEnt, 120, s_fVelocity);
 			}
 		}
 		if (0 < s_iOwner <= g_iMaxPlayers)
 		{
 			if (!s_bAlive)
 			{
-				pev(iEnt, 124, 10384);
+				pev(iEnt, 124, s_fAngle);
 				s_fAngle[1] = g_fPlayerAngle[s_iOwner];
-				set_pev(iEnt, 124, 10384);
+				set_pev(iEnt, 124, s_fAngle);
 			}
-			if (equal(iModel[9], 10456, 0))
+			if (equal(iModel[9], "flashbang.mdl", "HamFilter"))
 			{
 				set_pdata_int(iEnt, 52, engfunc(43, g_iAmmoNames[11]), 4, 5);
 				if (s_bAlive)
@@ -361,11 +361,11 @@ public FM_SetModel_Pre(iEnt, iModel[])
 					{
 						static s_iFwdMsg_WeapPickup;
 						static s_iFwdMsg_AmmoPickup;
-						s_iFwdMsg_AmmoPickup = register_message(g_iMsgId_AmmoPickup, 10520);
-						s_iFwdMsg_WeapPickup = register_message(g_iMsgId_WeapPickup, 10576);
-						ham_give_item(s_iOwner, 10632);
+						s_iFwdMsg_AmmoPickup = register_message(g_iMsgId_AmmoPickup, "Message_Block");
+						s_iFwdMsg_WeapPickup = register_message(g_iMsgId_WeapPickup, "Message_Block");
+						ham_give_item(s_iOwner, "weapon_flashbang");
 						set_pdata_int(s_iOwner, 387, g_iBulletsDropped[s_iOwner][11], 5, 5);
-						engclient_cmd(s_iOwner, 10700, 10768, 10772);
+						engclient_cmd(s_iOwner, "weapon_flashbang", 10768, 10772);
 						unregister_message(g_iMsgId_AmmoPickup, s_iFwdMsg_AmmoPickup);
 						unregister_message(g_iMsgId_WeapPickup, s_iFwdMsg_WeapPickup);
 					}
@@ -374,39 +374,39 @@ public FM_SetModel_Pre(iEnt, iModel[])
 				{
 					set_pdata_int(iEnt, 84, g_iBulletsDropped[s_iOwner][11], 4, 5);
 				}
-				message_begin(2, 23, 10776, 0);
+				message_begin(2, 23, 10776, "HamFilter");
 				write_byte(99);
 				write_short(iEnt);
 				message_end();
 			}
-			if (equal(iModel[9], 10788, 0))
+			if (equal(iModel[9], "hegrenade.mdl", "HamFilter"))
 			{
-				message_begin(2, 23, 10776, 0);
+				message_begin(2, 23, 10776, "HamFilter");
 				write_byte(99);
 				write_short(iEnt);
 				message_end();
-				pev(iEnt, 124, 10384);
+				pev(iEnt, 124, s_fAngle);
 				new var10 = s_fAngle[1];
 				var10 = floatadd(1119092736, var10);
-				set_pev(iEnt, 124, 10384);
+				set_pev(iEnt, 124, s_fAngle);
 			}
-			if (equal(iModel[9], 10844, 0))
+			if (equal(iModel[9], "smokegrenade.mdl", "HamFilter"))
 			{
-				message_begin(2, 23, 10776, 0);
+				message_begin(2, 23, 10776, "HamFilter");
 				write_byte(99);
 				write_short(iEnt);
 				message_end();
-				pev(iEnt, 124, 10384);
+				pev(iEnt, 124, s_fAngle);
 				new var11 = s_fAngle[1];
 				var11 = floatadd(1110704128, var11);
-				set_pev(iEnt, 124, 10384);
+				set_pev(iEnt, 124, s_fAngle);
 			}
-			if (equal(iModel[9], 10912, 0))
+			if (equal(iModel[9], "knife.mdl", "HamFilter"))
 			{
-				pev(iEnt, 124, 10384);
+				pev(iEnt, 124, s_fAngle);
 				new var12 = s_fAngle[1];
 				var12 = floatadd(1127481344, var12);
-				set_pev(iEnt, 124, 10384);
+				set_pev(iEnt, 124, s_fAngle);
 				static s_iLoop;
 				s_iLoop = 1;
 				while (s_iLoop < 11)
@@ -415,131 +415,131 @@ public FM_SetModel_Pre(iEnt, iModel[])
 					set_pdata_int(iEnt, s_iLoop + 73, g_iBulletsDropped[s_iOwner][s_iLoop], 4, 5);
 					s_iLoop += 1;
 				}
-				engfunc(2, iEnt, 10956);
+				engfunc(2, iEnt, "models/w_357ammobox.mdl");
 				return 4;
 			}
 			if (get_pcvar_num(g_iCvar_ModelAngleFix))
 			{
-				pev(iEnt, 124, 10384);
-				if (equal(iModel[9], 11052, 0))
+				pev(iEnt, 124, s_fAngle);
+				if (equal(iModel[9], "glock18.mdl", "HamFilter"))
 				{
 					new var13 = s_fAngle[1];
 					var13 = floatsub(var13, 1121714176);
 				}
 				else
 				{
-					if (equal(iModel[9], 11100, 0))
+					if (equal(iModel[9], "usp.mdl", "HamFilter"))
 					{
 						new var14 = s_fAngle[1];
 						var14 = floatsub(var14, 1115815936);
 					}
-					if (equal(iModel[9], 11132, 0))
+					if (equal(iModel[9], "deagle.mdl", "HamFilter"))
 					{
 						new var15 = s_fAngle[1];
 						var15 = floatsub(var15, 1121714176);
 					}
-					if (equal(iModel[9], 11176, 0))
+					if (equal(iModel[9], "p228.mdl", "HamFilter"))
 					{
 						new var16 = s_fAngle[1];
 						var16 = floatsub(var16, 1114636288);
 					}
-					if (equal(iModel[9], 11212, 0))
+					if (equal(iModel[9], "elite.mdl", "HamFilter"))
 					{
 						new var17 = s_fAngle[1];
 						var17 = floatsub(var17, 1127481344);
 					}
-					if (equal(iModel[9], 11252, 0))
+					if (equal(iModel[9], "fiveseven.mdl", "HamFilter"))
 					{
 						new var18 = s_fAngle[1];
 						var18 = floatsub(var18, 1112014848);
 					}
-					if (equal(iModel[9], 11308, 0))
+					if (equal(iModel[9], "m3.mdl", "HamFilter"))
 					{
 						new var19 = s_fAngle[1];
 						var19 = floatsub(var19, 1123680256);
 					}
-					if (equal(iModel[9], 11336, 0))
+					if (equal(iModel[9], "xm1014.mdl", "HamFilter"))
 					{
 						new var20 = s_fAngle[1];
 						var20 = floatsub(var20, 1084227584);
 					}
-					if (equal(iModel[9], 11380, 0))
+					if (equal(iModel[9], "mp5.mdl", "HamFilter"))
 					{
 						new var21 = s_fAngle[1];
 						var21 = floatadd(1092616192, var21);
 					}
-					if (equal(iModel[9], 11412, 0))
+					if (equal(iModel[9], "tmp.mdl", "HamFilter"))
 					{
 						new var22 = s_fAngle[1];
 						var22 = floatsub(var22, 1124532224);
 					}
-					if (equal(iModel[9], 11444, 0))
+					if (equal(iModel[9], "p90.mdl", "HamFilter"))
 					{
 						new var23 = s_fAngle[1];
 						var23 = floatsub(var23, 1123680256);
 					}
-					if (equal(iModel[9], 11476, 0))
+					if (equal(iModel[9], "ump45.mdl", "HamFilter"))
 					{
 						new var24 = s_fAngle[1];
 						var24 = floatsub(var24, 1116471296);
 					}
-					if (equal(iModel[9], 11516, 0))
+					if (equal(iModel[9], "galil.mdl", "HamFilter"))
 					{
 						new var25 = s_fAngle[1];
 						var25 = floatadd(1097859072, var25);
 					}
-					if (equal(iModel[9], 11556, 0))
+					if (equal(iModel[9], "famas.mdl", "HamFilter"))
 					{
 						new var26 = s_fAngle[1];
 						var26 = floatsub(var26, 1106247680);
 					}
-					if (equal(iModel[9], 11596, 0))
+					if (equal(iModel[9], "ak47.mdl", "HamFilter"))
 					{
 						new var27 = s_fAngle[1];
 						var27 = floatsub(var27, 1121058816);
 					}
-					if (equal(iModel[9], 11632, 0))
+					if (equal(iModel[9], "m4a1.mdl", "HamFilter"))
 					{
 						new var28 = s_fAngle[1];
 						var28 = floatsub(var28, 1114636288);
 					}
-					if (equal(iModel[9], 11668, 0))
+					if (equal(iModel[9], "sg552.mdl", "HamFilter"))
 					{
 						new var29 = s_fAngle[1];
 						var29 = floatsub(var29, 1124204544);
 					}
-					if (equal(iModel[9], 11708, 0))
+					if (equal(iModel[9], "aug.mdl", "HamFilter"))
 					{
 						new var30 = s_fAngle[1];
 						var30 = floatsub(var30, 1123680256);
 					}
-					if (equal(iModel[9], 11740, 0))
+					if (equal(iModel[9], "scout.mdl", "HamFilter"))
 					{
 						new var31 = s_fAngle[1];
 						var31 = floatsub(var31, 1116471296);
 					}
-					if (equal(iModel[9], 11780, 0))
+					if (equal(iModel[9], "awp.mdl", "HamFilter"))
 					{
 						new var32 = s_fAngle[1];
 						var32 = floatsub(var32, 1121714176);
 					}
-					if (equal(iModel[9], 11812, 0))
+					if (equal(iModel[9], "g3sg1.mdl", "HamFilter"))
 					{
 						new var33 = s_fAngle[1];
 						var33 = floatsub(var33, 1121714176);
 					}
-					if (equal(iModel[9], 11852, 0))
+					if (equal(iModel[9], "sg550.mdl", "HamFilter"))
 					{
 						new var34 = s_fAngle[1];
 						var34 = floatsub(var34, 1122369536);
 					}
-					if (equal(iModel[9], 11892, 0))
+					if (equal(iModel[9], "m249.mdl", "HamFilter"))
 					{
 						new var35 = s_fAngle[1];
 						var35 = floatsub(var35, 1119748096);
 					}
 				}
-				set_pev(iEnt, 124, 10384);
+				set_pev(iEnt, 124, s_fAngle);
 			}
 		}
 	}
@@ -580,7 +580,7 @@ public Ham_Killed_player_Pre(iPlrId, iAttackerId, iShouldGib)
 			if (s_iWeaponType == 25 || s_iWeaponType == 4 || s_iWeaponType == 9)
 			{
 				new var3;
-				if (get_pdata_float(s_iArmedGrenade, 30, 3, 5) && get_pdata_float(s_iArmedGrenade, 48, 4, 5) <= 0)
+				if (get_pdata_float(s_iArmedGrenade, 30, "", 5) && get_pdata_float(s_iArmedGrenade, 48, 4, 5) <= 0)
 				{
 					s_iArmedGrenade = s_iWeaponType;
 				}
@@ -626,7 +626,7 @@ public Ham_Think_player_Pre(iPlrId)
 	if (g_iDeathDropsNum[iPlrId])
 	{
 		static Float:s_fVelocity[3];
-		pev(iPlrId, 120, 11940);
+		pev(iPlrId, 120, s_fVelocity);
 		static s_iEnt;
 		static s_iDeathDrops;
 		s_iDeathDrops = 0;
@@ -636,7 +636,7 @@ public Ham_Think_player_Pre(iPlrId)
 			new var1;
 			if (s_iEnt > 0 && pev_valid(s_iEnt))
 			{
-				set_pev(s_iEnt, 120, 11940);
+				set_pev(s_iEnt, 120, s_fVelocity);
 			}
 			s_iDeathDrops += 1;
 		}
@@ -725,10 +725,10 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 			new var2;
 			if (s_iUserAmmo <= 0 && s_iBoxAmmo >= 2)
 			{
-				ham_give_item(iPlrId, 11980);
-				ham_give_item(iPlrId, 12048);
-				emit_sound(iPlrId, 3, 12116, 1065353216, 1061997773, 0, 100);
-				emit_sound(iPlrId, 3, 12200, 1065353216, 1061997773, 0, 100);
+				ham_give_item(iPlrId, "weapon_flashbang");
+				ham_give_item(iPlrId, "weapon_flashbang");
+				emit_sound(iPlrId, "", "items/gunpickup2.wav", 1065353216, 1061997773, "HamFilter", 100);
+				emit_sound(iPlrId, "", "items/9mmclip1.wav", 1065353216, 1061997773, "HamFilter", 100);
 				set_pev(iEnt, 70, 0);
 				set_pev(iEnt, 73, 128);
 				dllfunc(2, iEnt);
@@ -737,8 +737,8 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 			new var3;
 			if (s_iUserAmmo == 1 && s_iBoxAmmo == 1)
 			{
-				ham_give_item(iPlrId, 12276);
-				emit_sound(iPlrId, 3, 12344, 1065353216, 1061997773, 0, 100);
+				ham_give_item(iPlrId, "weapon_flashbang");
+				emit_sound(iPlrId, "", "items/9mmclip1.wav", 1065353216, 1061997773, "HamFilter", 100);
 				set_pev(iEnt, 70, 0);
 				set_pev(iEnt, 73, 128);
 				dllfunc(2, iEnt);
@@ -748,14 +748,14 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 			if (s_iUserAmmo == 1 && s_iBoxAmmo >= 2)
 			{
 				set_pdata_int(iEnt, 84, s_iBoxAmmo + -1, 4, 5);
-				ham_give_item(iPlrId, 12420);
-				emit_sound(iPlrId, 3, 12488, 1065353216, 1061997773, 0, 100);
+				ham_give_item(iPlrId, "weapon_flashbang");
+				emit_sound(iPlrId, "", "items/9mmclip1.wav", 1065353216, 1061997773, "HamFilter", 100);
 				return 4;
 			}
 			new var5;
-			if (s_iUserAmmo <= 0 && ham_give_item(iPlrId, 12564) > 0)
+			if (s_iUserAmmo <= 0 && ham_give_item(iPlrId, "weapon_flashbang") > 0)
 			{
-				emit_sound(iPlrId, 3, 12632, 1065353216, 1061997773, 0, 100);
+				emit_sound(iPlrId, "", "items/gunpickup2.wav", 1065353216, 1061997773, "HamFilter", 100);
 				set_pev(iEnt, 70, 0);
 				set_pev(iEnt, 73, 128);
 				dllfunc(2, iEnt);
@@ -771,7 +771,7 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 			if (get_pdata_int(s_iTemp, 43, 4, 5) == 29)
 			{
 				static s_iFwdMsg_AmmoPickup;
-				s_iFwdMsg_AmmoPickup = register_message(g_iMsgId_AmmoPickup, 12724);
+				s_iFwdMsg_AmmoPickup = register_message(g_iMsgId_AmmoPickup, "Message_AmmoPickup");
 				new var7 = g_iBulletsDropped;
 				g_iBulletsDropped[iPlrId][0] = 0;
 				var7[0][var7] = 0;
@@ -780,7 +780,7 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 				{
 					if (0 < (s_iBoxAmmo = get_pdata_int(iEnt, s_iTemp + 73, 4, 5)))
 					{
-						if (g_iMaxAmmo[s_iTemp] <= (s_iUserAmmo = clamp(get_pdata_int(iPlrId, s_iTemp + 376, 5, 5), 0, g_iMaxAmmo[s_iTemp])))
+						if (g_iMaxAmmo[s_iTemp] <= (s_iUserAmmo = clamp(get_pdata_int(iPlrId, s_iTemp + 376, 5, 5), "HamFilter", g_iMaxAmmo[s_iTemp])))
 						{
 							new var8 = g_iBulletsDropped;
 							var8[0][var8] = 1;
@@ -789,7 +789,7 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 						{
 							g_iBulletsDropped[iPlrId][s_iTemp] = s_iBoxAmmo;
 							s_iUserAmmo = s_iBoxAmmo + s_iUserAmmo;
-							set_pdata_int(iEnt, s_iTemp + 73, 0, 4, 5);
+							set_pdata_int(iEnt, s_iTemp + 73, "HamFilter", 4, 5);
 						}
 						else
 						{
@@ -809,7 +809,7 @@ public Ham_Touch_wpnbox_Pre(iEnt, iPlrId)
 				unregister_message(g_iMsgId_AmmoPickup, s_iFwdMsg_AmmoPickup);
 				if (g_iBulletsDropped[iPlrId][0])
 				{
-					emit_sound(iPlrId, 3, 12800, 1065353216, 1061997773, 0, 100);
+					emit_sound(iPlrId, "", "items/9mmclip2.wav", 1065353216, 1061997773, "HamFilter", 100);
 				}
 				new var11 = g_iBulletsDropped;
 				if (!var11[0][var11])
@@ -835,12 +835,12 @@ force_weapon_drop(iPlrId, iArmedGrenade, iWeaponType)
 	static Float:s_fAngle[3];
 	static s_iUserWeapons;
 	s_iUserWeapons = pev(iPlrId, 79);
-	pev(iPlrId, 126, 12880);
+	pev(iPlrId, 126, s_fAngle);
 	g_fPlayerAngle[iPlrId] = s_fAngle[1];
 	new var1;
 	if (iArmedGrenade != 4 && get_pdata_int(iPlrId, 388, 5, 5) > 0)
 	{
-		engclient_cmd(iPlrId, 12892, 12912, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_hegrenade", 10772);
 	}
 	new var2;
 	if (iArmedGrenade == 25)
@@ -851,19 +851,19 @@ force_weapon_drop(iPlrId, iArmedGrenade, iWeaponType)
 	{
 		var2 = 0;
 	}
-	if (0 < (g_iBulletsDropped[iPlrId][11] = clamp(get_pdata_int(iPlrId, 387, 5, 5), 0, 2) - var2))
+	if (0 < (g_iBulletsDropped[iPlrId][11] = clamp(get_pdata_int(iPlrId, 387, 5, 5), "HamFilter", 2) - var2))
 	{
-		engclient_cmd(iPlrId, 12980, 13000, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_flashbang", 10772);
 		if (iArmedGrenade == 25)
 		{
 			set_pdata_int(iPlrId, 387, 1, 5, 5);
-			iArmedGrenade = ham_give_item(iPlrId, 13068);
+			iArmedGrenade = ham_give_item(iPlrId, "weapon_flashbang");
 			set_pdata_int(iPlrId, 387, 1, 5, 5);
 			new var3;
 			if (iArmedGrenade > 0 && pev_valid(iArmedGrenade))
 			{
 				set_pdata_cbase(iPlrId, 373, iArmedGrenade, 5, 5);
-				set_pdata_float(iArmedGrenade, 30, 1065353216, 3, 5);
+				set_pdata_float(iArmedGrenade, 30, 1065353216, "", 5);
 				set_pdata_float(iArmedGrenade, 48, -1165815185, 4, 5);
 			}
 			iArmedGrenade = 0;
@@ -872,15 +872,15 @@ force_weapon_drop(iPlrId, iArmedGrenade, iWeaponType)
 	new var4;
 	if (iArmedGrenade != 9 && get_pdata_int(iPlrId, 389, 5, 5) > 0)
 	{
-		engclient_cmd(iPlrId, 13136, 13156, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_smokegrenade", 10772);
 	}
 	static s_iLoop;
 	g_iBulletsDropped[iPlrId][0] = 0;
 	s_iLoop = 1;
 	while (s_iLoop < 11)
 	{
-		g_iBulletsDropped[iPlrId][s_iLoop] = clamp(get_pdata_int(iPlrId, s_iLoop + 376, 5, 5), 0, g_iMaxAmmo[s_iLoop]);
-		set_pdata_int(iPlrId, s_iLoop + 376, 0, 5, 5);
+		g_iBulletsDropped[iPlrId][s_iLoop] = clamp(get_pdata_int(iPlrId, s_iLoop + 376, 5, 5), "HamFilter", g_iMaxAmmo[s_iLoop]);
+		set_pdata_int(iPlrId, s_iLoop + 376, "HamFilter", 5, 5);
 		new var30 = g_iBulletsDropped[iPlrId];
 		var30[0] = g_iBulletsDropped[iPlrId][s_iLoop][var30[0]];
 		s_iLoop += 1;
@@ -889,136 +889,136 @@ force_weapon_drop(iPlrId, iArmedGrenade, iWeaponType)
 	{
 		if (~s_iUserWeapons & 536870912)
 		{
-			ham_give_item(iPlrId, 13240);
+			ham_give_item(iPlrId, "weapon_knife");
 		}
-		engclient_cmd(iPlrId, 13292, 13312, 10772);
-		ham_give_item(iPlrId, 13364);
+		engclient_cmd(iPlrId, "drop", "weapon_knife", 10772);
+		ham_give_item(iPlrId, "weapon_knife");
 	}
 	g_bInAutoDrop = 0;
 	new var5;
 	if (s_iUserWeapons & 2 && iWeaponType != 1)
 	{
-		engclient_cmd(iPlrId, 13416, 13436, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_p228", 10772);
 	}
 	new var6;
 	if (s_iUserWeapons & 8 && iWeaponType != 3)
 	{
-		engclient_cmd(iPlrId, 13484, 13504, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_scout", 10772);
 	}
 	new var7;
 	if (s_iUserWeapons & 32 && iWeaponType != 5)
 	{
-		engclient_cmd(iPlrId, 13556, 13576, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_xm1014", 10772);
 	}
 	new var8;
 	if (s_iUserWeapons & 128 && iWeaponType != 7)
 	{
-		engclient_cmd(iPlrId, 13632, 13652, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_mac10", 10772);
 	}
 	new var9;
 	if (s_iUserWeapons & 256 && iWeaponType != 8)
 	{
-		engclient_cmd(iPlrId, 13704, 13724, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_aug", 10772);
 	}
 	new var10;
 	if (s_iUserWeapons & 1024 && iWeaponType != 10)
 	{
-		engclient_cmd(iPlrId, 13768, 13788, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_elite", 10772);
 	}
 	new var11;
 	if (s_iUserWeapons & 2048 && iWeaponType != 11)
 	{
-		engclient_cmd(iPlrId, 13840, 13860, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_fiveseven", 10772);
 	}
 	new var12;
 	if (s_iUserWeapons & 4096 && iWeaponType != 12)
 	{
-		engclient_cmd(iPlrId, 13928, 13948, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_ump45", 10772);
 	}
 	new var13;
 	if (s_iUserWeapons & 8192 && iWeaponType != 13)
 	{
-		engclient_cmd(iPlrId, 14000, 14020, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_sg550", 10772);
 	}
 	new var14;
 	if (s_iUserWeapons & 16384 && iWeaponType != 14)
 	{
-		engclient_cmd(iPlrId, 14072, 14092, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_galil", 10772);
 	}
 	new var15;
 	if (s_iUserWeapons & 32768 && iWeaponType != 15)
 	{
-		engclient_cmd(iPlrId, 14144, 14164, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_famas", 10772);
 	}
 	new var16;
 	if (s_iUserWeapons & 65536 && iWeaponType != 16)
 	{
-		engclient_cmd(iPlrId, 14216, 14236, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_usp", 10772);
 	}
 	new var17;
 	if (s_iUserWeapons & 131072 && iWeaponType != 17)
 	{
-		engclient_cmd(iPlrId, 14280, 14300, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_glock18", 10772);
 	}
 	new var18;
 	if (s_iUserWeapons & 262144 && iWeaponType != 18)
 	{
-		engclient_cmd(iPlrId, 14360, 14380, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_awp", 10772);
 	}
 	new var19;
 	if (s_iUserWeapons & 524288 && iWeaponType != 19)
 	{
-		engclient_cmd(iPlrId, 14424, 14444, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_mp5navy", 10772);
 	}
 	new var20;
 	if (s_iUserWeapons & 1048576 && iWeaponType != 20)
 	{
-		engclient_cmd(iPlrId, 14504, 14524, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_m249", 10772);
 	}
 	new var21;
 	if (s_iUserWeapons & 2097152 && iWeaponType != 21)
 	{
-		engclient_cmd(iPlrId, 14572, 14592, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_m3", 10772);
 	}
 	new var22;
 	if (s_iUserWeapons & 4194304 && iWeaponType != 22)
 	{
-		engclient_cmd(iPlrId, 14632, 14652, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_m4a1", 10772);
 	}
 	new var23;
 	if (s_iUserWeapons & 8388608 && iWeaponType != 23)
 	{
-		engclient_cmd(iPlrId, 14700, 14720, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_tmp", 10772);
 	}
 	new var24;
 	if (s_iUserWeapons & 16777216 && iWeaponType != 24)
 	{
-		engclient_cmd(iPlrId, 14764, 14784, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_g3sg1", 10772);
 	}
 	new var25;
 	if (s_iUserWeapons & 67108864 && iWeaponType != 26)
 	{
-		engclient_cmd(iPlrId, 14836, 14856, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_deagle", 10772);
 	}
 	new var26;
 	if (s_iUserWeapons & 134217728 && iWeaponType != 27)
 	{
-		engclient_cmd(iPlrId, 14912, 14932, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_sg552", 10772);
 	}
 	new var27;
 	if (s_iUserWeapons & 268435456 && iWeaponType != 28)
 	{
-		engclient_cmd(iPlrId, 14984, 15004, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_ak47", 10772);
 	}
 	new var28;
 	if (s_iUserWeapons & 1073741824 && iWeaponType != 30)
 	{
-		engclient_cmd(iPlrId, 15052, 15072, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_p90", 10772);
 	}
 	new var29;
 	if (s_iUserWeapons & 64 && iWeaponType != 6)
 	{
-		engclient_cmd(iPlrId, 15116, 15136, 10772);
+		engclient_cmd(iPlrId, "drop", "weapon_c4", 10772);
 	}
 	return 0;
 }
@@ -1090,14 +1090,14 @@ bool:SphereToCartesian(Float:fDest[3], Float:fOrigin[3], Float:fView[3], Float:f
 	static Float:s_fSin1;
 	static Float:s_fCos0;
 	static Float:s_fSin0;
-	s_fSin0 = floatsin(floatadd(fAngle[0], floatmul(1078530011, 1056964608)), 0);
-	fDest[0] = floatmul(floatmul(fAngle[2], s_fSin0), floatcos(fAngle[1], 0));
-	fDest[1] = floatmul(floatmul(fAngle[2], s_fSin0), floatsin(fAngle[1], 0));
-	fDest[2] = floatmul(fAngle[2], floatcos(floatadd(fAngle[0], floatmul(1078530011, 1056964608)), 0));
-	s_fSin0 = floatsin(fView[0], 0);
-	s_fCos0 = floatcos(fView[0], 0);
-	s_fSin1 = floatsin(fView[1], 0);
-	s_fCos1 = floatcos(fView[1], 0);
+	s_fSin0 = floatsin(floatadd(fAngle[0], floatmul(1078530011, 1056964608)), "HamFilter");
+	fDest[0] = floatmul(floatmul(fAngle[2], s_fSin0), floatcos(fAngle[1], "HamFilter"));
+	fDest[1] = floatmul(floatmul(fAngle[2], s_fSin0), floatsin(fAngle[1], "HamFilter"));
+	fDest[2] = floatmul(fAngle[2], floatcos(floatadd(fAngle[0], floatmul(1078530011, 1056964608)), "HamFilter"));
+	s_fSin0 = floatsin(fView[0], "HamFilter");
+	s_fCos0 = floatcos(fView[0], "HamFilter");
+	s_fSin1 = floatsin(fView[1], "HamFilter");
+	s_fCos1 = floatcos(fView[1], "HamFilter");
 	static Float:s_fTemp[3];
 	s_fTemp[0] = floatadd(floatsub(floatmul(floatmul(fDest[0], s_fCos0), s_fCos1), floatmul(fDest[1], s_fSin1)), floatmul(floatmul(fDest[2], s_fSin0), s_fCos1));
 	s_fTemp[1] = floatadd(floatadd(floatmul(floatmul(fDest[0], s_fCos0), s_fSin1), floatmul(fDest[1], s_fCos1)), floatmul(floatmul(fDest[2], s_fSin1), s_fSin0));

@@ -7,7 +7,7 @@ new g_statevar_0; // Internal state variable for default automation
 
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(24, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
@@ -29,7 +29,7 @@ public __fatal_ham_error(Ham:id, HamError:err, reason[])
 
 public plugin_init()
 {
-	register_plugin(68, 108, 124);
+	register_plugin("Automaton", "1.0", "Albernaz o Carniceiro Demoniaco");
 	state unregistered;
 	return 0;
 }
@@ -60,7 +60,7 @@ enableHam() <>
 
 enableHam() <unregistered>
 {
-	if ((HamHookSpawn = RegisterHam(0, 252, 280, 0, 0)))
+	if ((HamHookSpawn = RegisterHam(0, "player", "playerSpawn", 0, 0)))
 	{
 		state enabled;
 	}

@@ -5,14 +5,14 @@ new SOUND[16] =
 };
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(0, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
 	{
 		callfunc_push_int(id);
 		callfunc_push_int(err);
-		callfunc_push_str(reason, 0);
+		callfunc_push_str(reason, "HamFilter");
 		if (callfunc_end() == 1)
 		{
 			fail = false;
@@ -38,14 +38,14 @@ public plugin_cfg()
 
 public plugin_init()
 {
-	register_plugin(108, 176, 192);
-	RegisterHam(9, 220, 248, 0);
+	register_plugin("Helmet Hit Sound", "1.0", "tmen13");
+	RegisterHam(9, "player", "playerTakeDamage", "HamFilter");
 	return 0;
 }
 
 public plugin_precache()
 {
-	precache_sound(44);
+	precache_sound(SOUND);
 	return 0;
 }
 
@@ -62,7 +62,7 @@ public playerTakeDamage(victim, inflictor, attacker, Float:fDamage, bitDamage)
 		{
 			new Float:origin[3] = 0.0;
 			pev(victim, 118, origin);
-			EF_EmitAmbientSound(0, origin, SOUND, 1.0, 0.8, 0, 100);
+			EF_EmitAmbientSound(0, origin, "misc/helmet.wav", 1.0, 0.8, 0, 100);
 		}
 	}
 	return 0;

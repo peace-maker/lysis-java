@@ -582,6 +582,34 @@ public class AMXModXFile extends PawnFile {
 		return null;
 	}
 
+	@Override
+	public boolean IsMaybeString(long address) {
+		if (!isValidDataAddress(address))
+			return false;
+
+		// See if we're in the middle of a string.
+		// Don't allow addressing of strings other than the from the beginning.
+		// Better to miss some strings than to have too many false positives.
+		if (address >= 4) {
+			int cell = BitConverter.ToInt32(DAT(), (int) (address - 4));
+			if (cell > 0 && Character.isValidCodePoint(cell))
+				return false;
+		}
+
+		int len = 0;
+		for (; address < DAT().length; address += 4, len++) {
+			int cell = BitConverter.ToInt32(DAT(), (int) address);
+
+			if (cell == 0)
+				break;
+
+			if (!Character.isValidCodePoint(cell))
+				return false;
+		}
+
+		return len > 1;
+	}
+
 	// https://github.com/alliedmodders/amxmodx/blob/e95099817b1383fe5d9c797f761017a862fa8a97/amxmodx/amx.cpp#L786
 	public byte[] decompressCompactCode(AMX_HEADER amx, byte[] binary) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream(binary.length);

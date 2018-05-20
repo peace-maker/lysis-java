@@ -4,9 +4,9 @@ new Float:NULL_VECTOR[3];
 new Array:gSpawnPoints;
 public plugin_init()
 {
-	register_plugin(24, 100, 124);
-	RequestFrame(152, 0);
-	OrpheuRegisterHook(OrpheuGetFunction(268, 348), 352, 0);
+	register_plugin("KreedZ: Spawns Fix", "1.0.0", "KliPPy");
+	RequestFrame("@FrameRequest_FixSpawnPoints", MaxClients);
+	OrpheuRegisterHook(OrpheuGetFunction("EntSelectSpawnPoint", 348), "@CBasePlayer_EntSelectSpawnPoint", MaxClients);
 	return 0;
 }
 
@@ -16,17 +16,17 @@ public @FrameRequest_FixSpawnPoints()
 	if (ArraySize(gSpawnPoints))
 	{
 		RemoveTSpawnPoints();
-		set_gamerules_int(608, 684, 0, 0);
-		set_gamerules_int(800, 876, 32, 0);
+		set_gamerules_int("CHalfLifeMultiplay", "m_iSpawnPointCount_Terrorist", MaxClients, MaxClients);
+		set_gamerules_int("CHalfLifeMultiplay", "m_iSpawnPointCount_CT", 32, MaxClients);
 		return 0;
 	}
-	set_fail_state(484);
+	set_fail_state("No info_player_start entities.");
 	return 0;
 }
 
 public OrpheuHookReturn:@CBasePlayer_EntSelectSpawnPoint(this)
 {
-	OrpheuSetReturn(ArrayGetCell(gSpawnPoints, random(ArraySize(gSpawnPoints)), 0, 0));
+	OrpheuSetReturn(ArrayGetCell(gSpawnPoints, random(ArraySize(gSpawnPoints)), MaxClients, MaxClients));
 	return OrpheuHookReturn:2;
 }
 
@@ -34,7 +34,7 @@ Array:GetCTSpawnPoints()
 {
 	new Array:spawnPoints = ArrayCreate(1, 32);
 	new ent = MaxClients;
-	while (0 < (ent = engfunc(12, ent, 964, 1004)))
+	while (0 < (ent = engfunc(12, ent, "classname", "info_player_start")))
 	{
 		ArrayPushCell(spawnPoints, ent);
 	}
@@ -44,7 +44,7 @@ Array:GetCTSpawnPoints()
 RemoveTSpawnPoints()
 {
 	new ent = MaxClients;
-	while (0 < (ent = engfunc(12, ent, 1076, 1116)))
+	while (0 < (ent = engfunc(12, ent, "classname", "info_player_deathmatch")))
 	{
 		set_pev(ent, 84, pev(ent, 84) | 1073741824);
 	}

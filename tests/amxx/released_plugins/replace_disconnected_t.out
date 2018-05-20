@@ -34,19 +34,19 @@ bool:operator<(Float:,_:)(Float:oper1, oper2)
 
 get_datadir(name[], len)
 {
-	return get_localinfo(0, name, len);
+	return get_localinfo("amxx_datadir", name, len);
 }
 
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(52, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
 	{
 		callfunc_push_int(id);
 		callfunc_push_int(err);
-		callfunc_push_str(reason, 0);
+		callfunc_push_str(reason, "amxx_datadir");
 		if (callfunc_end() == 1)
 		{
 			fail = false;
@@ -61,18 +61,18 @@ public __fatal_ham_error(Ham:id, HamError:err, reason[])
 
 public plugin_init()
 {
-	register_plugin(144, 236, 252);
-	RegisterHam(43, 292, 340, 1);
-	RegisterHam(0, 396, 424, 1);
-	RegisterHam(11, 476, 504, 1);
+	register_plugin("Replace Disconnected T", "1.5", "Sylwester");
+	RegisterHam(43, "func_button", "button_pushed", 1);
+	RegisterHam("amxx_datadir", "player", "Player_Spawn", 1);
+	RegisterHam(11, "player", "Player_Killed", 1);
 	g_max_players = get_maxplayers();
-	g_msg_saytext = get_user_msgid(560);
+	g_msg_saytext = get_user_msgid("SayText");
 	new path[128];
 	get_datadir(path, 127);
-	add(path, 127, 592, 0);
+	add(path, 127, "/lang/replace_disconnected_t.txt", "amxx_datadir");
 	if (file_exists(path))
 	{
-		register_dictionary(724);
+		register_dictionary("replace_disconnected_t.txt");
 		g_ml = true;
 	}
 	return 0;
@@ -86,7 +86,7 @@ public button_pushed(ent, idcaller, idactivator, use_type, Float:value)
 		return 0;
 	}
 	new Float:ftmp[3] = 0.0;
-	pev(ent, 131, 124);
+	pev(ent, 131, g_b_origin);
 	pev(ent, 132, ftmp);
 	new var2 = g_b_origin;
 	var2[0] = floatadd(var2[0], ftmp[0]);
@@ -100,7 +100,7 @@ public button_pushed(ent, idcaller, idactivator, use_type, Float:value)
 	var6 = floatmul(1056964608, var6);
 	new var7 = g_b_origin[2];
 	var7 = floatmul(1056964608, var7);
-	pev(idcaller, 118, 112);
+	pev(idcaller, 118, g_t_origin);
 	if (pev(idcaller, 84) & 16384)
 	{
 		g_t_origin[2] += 19;
@@ -150,8 +150,8 @@ public announce_t_change(newid, oldid)
 	get_user_name(newid, ntname, 31);
 	if (!g_ml)
 	{
-		formatex(msg, 159, 832, otname, ntname);
-		message_begin(2, g_msg_saytext, 1092, 0);
+		formatex(msg, 159, "\x03[ DeathRun ] \x04%s\x01 has left the game. \x04%s\x01 is now the terrorist.", otname, ntname);
+		message_begin(2, g_msg_saytext, 1092, "amxx_datadir");
 		write_byte(oldid);
 		write_string(msg);
 		message_end();
@@ -162,7 +162,7 @@ public announce_t_change(newid, oldid)
 	{
 		if (1 << i & _human)
 		{
-			formatex(msg, 159, 1104, i, 1116, otname, ntname);
+			formatex(msg, 159, "%L", i, "ANN_REPL_T", otname, ntname);
 			message_begin(1, g_msg_saytext, 1092, i);
 			write_byte(oldid);
 			write_string(msg);
@@ -198,7 +198,7 @@ public client_disconnect(id)
 		return 0;
 	}
 	new new_terr = players[random(pnum)];
-	cs_set_user_team(new_terr, 1, 0);
+	cs_set_user_team(new_terr, 1, "amxx_datadir");
 	announce_t_change(new_terr, id);
 	if (!g_valid_origin)
 	{
@@ -231,7 +231,7 @@ public restore_origin(param[])
 	{
 		engfunc(32, ftmp, ftmp, 0, 1, 0, tr);
 		new var2;
-		if (get_tr2(tr, 1) || get_tr2(tr, 0))
+		if (get_tr2(tr, 1) || get_tr2(tr, "amxx_datadir"))
 		{
 			ftmp[0] = floatadd(ftmp[0], random_float(-1054867456, 1092616192));
 			new var4 = ftmp[1];
@@ -240,7 +240,7 @@ public restore_origin(param[])
 			var5 = floatadd(var5, random_float(-1054867456, 1092616192));
 			i++;
 		}
-		engfunc(29, 112, ftmp, 0, 0, tr);
+		engfunc(29, g_t_origin, ftmp, 0, 0, tr);
 		new Float:fraction = 0.0;
 		get_tr2(tr, 4, fraction);
 		if (!(1.0 != fraction))
@@ -248,7 +248,7 @@ public restore_origin(param[])
 			g_t_origin[0] = ftmp[0];
 			g_t_origin[1] = ftmp[1];
 			g_t_origin[2] = ftmp[2];
-			set_pev(param[0], 118, 112);
+			set_pev(param[0], 118, g_t_origin);
 			ftmp[0] = -g_t_origin[0];
 			ftmp[1] = -g_t_origin[1];
 			ftmp[2] = -g_t_origin[2];
@@ -261,14 +261,14 @@ public restore_origin(param[])
 			ftmp[1] = floatacos(floatdiv(ftmp[0], _pg_ftmp), 1) * 1 - ftmp[1] < 0 * 2;
 			ftmp[0] = -floatatan(floatdiv(ftmp[2], _pg_ftmp), 1);
 			ftmp[2] = 0.0;
-			set_pev(param[0], 124, ftmp);
+			set_pev(param[0], g_b_origin, ftmp);
 			set_pev(param[0], 65, 1);
 			return 0;
 		}
-		set_task(1036831949, 1160, param[0] + 457547, param, 2, 1220, 0);
+		set_task(1036831949, "restore_origin", param[0] + 457547, param, 2, 1220, "amxx_datadir");
 		return 0;
 	}
-	set_task(1036831949, 1160, param[0] + 457547, param, 2, 1220, 0);
+	set_task(1036831949, "restore_origin", param[0] + 457547, param, 2, 1220, "amxx_datadir");
 	return 0;
 }
 

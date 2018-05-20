@@ -64,7 +64,7 @@ Float:floatclamp(Float:Value, Float:MinValue, Float:MaxValue)
 
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(4, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
@@ -86,29 +86,29 @@ public __fatal_ham_error(Ham:id, HamError:err, reason[])
 
 public plugin_init()
 {
-	register_plugin(408, 448, 464);
-	register_cvar(484, 524, 68, 0);
-	RegisterHam(0, 540, 568, 1);
-	RegisterHam(11, 656, 684, 1);
+	register_plugin("HotVision", "2.1", "Numb");
+	register_cvar("hotvision", "2.1", g_iMsgId_NVGToggle, 0);
+	RegisterHam(0, "player", "Ham_Spawn_player_Post", 1);
+	RegisterHam(11, "player", "Ham_Killed_player_Post", 1);
 	unregister_forward(39, g_iFwdFM_LightStyle, 0);
-	register_forward(106, 776, 0);
-	register_impulse(100, 848);
-	register_event(952, 988, 1048, 1060);
-	register_event(1064, 1084, 1144, 1152, 1168);
-	g_iMsgId_HostagePos = get_user_msgid(1184);
-	g_iMsgId_HostageK = get_user_msgid(1228);
-	g_iMsgId_NVGToggle = get_user_msgid(1264);
-	g_iMsgId_SayText = get_user_msgid(1304);
-	g_iMsgId_Flashlight = get_user_msgid(1336);
-	register_message(g_iMsgId_NVGToggle, 1380);
-	g_iCvarHotVisionEnabled = register_cvar(1452, 1524, 0, 0);
-	g_iCvarHotVisionRadar = register_cvar(1532, 1596, 0, 0);
-	g_iCvarHotVisionRadarRange = register_cvar(1604, 1692, 0, 0);
-	g_iCvarHotVisionModels = register_cvar(1720, 1788, 0, 0);
-	g_iCvarHotVisionWalls = register_cvar(1796, 1860, 0, 0);
-	g_iCvarHotVisionEffectFix = register_cvar(1868, 1952, 0, 0);
-	g_iCvarHotVisionObjectGlow = register_cvar(1960, 2048, 0, 0);
-	g_iCvarHotVisionBrightness = register_cvar(2056, 2140, 0, 0);
+	register_forward(106, "FM_StartFrame_Pre", 0);
+	register_impulse(g_iCvarHotVisionWalls, "client_impulse_flashlight");
+	register_event("ResetHUD", "Event_ResetHUD", "be", 1060);
+	register_event("HLTV", "Event_NewRound", 1144, "1=0", "2=0");
+	g_iMsgId_HostagePos = get_user_msgid("HostagePos");
+	g_iMsgId_HostageK = get_user_msgid("HostageK");
+	g_iMsgId_NVGToggle = get_user_msgid("NVGToggle");
+	g_iMsgId_SayText = get_user_msgid("SayText");
+	g_iMsgId_Flashlight = get_user_msgid("Flashlight");
+	register_message(g_iMsgId_NVGToggle, "Message_NVGToggle");
+	g_iCvarHotVisionEnabled = register_cvar("hotvision_enabled", 1524, 0, 0);
+	g_iCvarHotVisionRadar = register_cvar("hotvision_radar", 1596, 0, 0);
+	g_iCvarHotVisionRadarRange = register_cvar("hotvision_radar_range", "1024.0", 0, 0);
+	g_iCvarHotVisionModels = register_cvar("hotvision_models", 1788, 0, 0);
+	g_iCvarHotVisionWalls = register_cvar("hotvision_walls", 1860, 0, 0);
+	g_iCvarHotVisionEffectFix = register_cvar("hotvision_effect_fix", 1952, 0, 0);
+	g_iCvarHotVisionObjectGlow = register_cvar("hotvision_object_glow", 2048, 0, 0);
+	g_iCvarHotVisionBrightness = register_cvar("hotvision_brightness", 2140, 0, 0);
 	if (!g_iDefaultBrightness[0])
 	{
 		g_iDefaultBrightness[0] = 109;
@@ -119,7 +119,7 @@ public plugin_init()
 
 public plugin_precache()
 {
-	g_iFwdFM_LightStyle = register_forward(39, 2148, 0);
+	g_iFwdFM_LightStyle = register_forward(39, "FM_LightStyle_Pre", 0);
 	return 0;
 }
 
@@ -133,7 +133,7 @@ public plugin_pause()
 {
 	message_begin(2, 12, 2220, 0);
 	write_byte(0);
-	write_string(116);
+	write_string(g_iDefaultBrightness);
 	message_end();
 	return 0;
 }
@@ -213,9 +213,9 @@ public Event_NewRound()
 		}
 		if (!g_iFwdFM_AddToFullPack)
 		{
-			g_iFwdFM_AddToFullPack = register_forward(124, 2232, 1);
+			g_iFwdFM_AddToFullPack = register_forward(124, "FM_AddToFullPack_Post", 1);
 		}
-		get_pcvar_string(g_iCvarHotVisionBrightness, 244, 31);
+		get_pcvar_string(g_iCvarHotVisionBrightness, g_iCustomBrightness, 31);
 	}
 	else
 	{
@@ -226,7 +226,7 @@ public Event_NewRound()
 		}
 		state Default;
 	}
-	switch (clamp(get_pcvar_num(g_iCvarHotVisionEffectFix), 0, 3))
+	switch (clamp(get_pcvar_num(g_iCvarHotVisionEffectFix), 0, ""))
 	{
 		case 1:
 		{
@@ -249,7 +249,7 @@ public Event_NewRound()
 			g_bEffectFix = false;
 		}
 	}
-	switch (clamp(get_pcvar_num(g_iCvarHotVisionObjectGlow), 0, 3))
+	switch (clamp(get_pcvar_num(g_iCvarHotVisionObjectGlow), 0, ""))
 	{
 		case 1:
 		{
@@ -286,23 +286,23 @@ public Event_ResetHUD(iPlrId)
 			{
 				new iTaskId = iPlrId + 32;
 				remove_task(iTaskId, 0);
-				set_task(1036831949, 2320, iTaskId, 2372, 0, 2376, 0);
+				set_task(1036831949, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				remove_task(iTaskId, 0);
-				set_task(1045220557, 2380, iTaskId, 2372, 0, 2376, 0);
+				set_task(1045220557, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				remove_task(iTaskId, 0);
-				set_task(1050253722, 2432, iTaskId, 2372, 0, 2376, 0);
+				set_task(1050253722, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				if (task_exists(iTaskId, 0))
 				{
 					send_nvg_msg(iTaskId);
 					remove_task(iTaskId, 0);
 				}
-				set_task(1053609165, 2484, iTaskId, 2372, 0, 2376, 0);
+				set_task(1053609165, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 			}
 		}
-		if (pev(iPlrId, 100) == 4)
+		if (pev(iPlrId, g_iCvarHotVisionWalls) == 4)
 		{
 			new iSpectatedPerson = pev(iPlrId, 101);
 			new var2;
@@ -318,20 +318,20 @@ public Event_ResetHUD(iPlrId)
 			{
 				new iTaskId = iPlrId + 32;
 				remove_task(iTaskId, 0);
-				set_task(1036831949, 2536, iTaskId, 2372, 0, 2376, 0);
+				set_task(1036831949, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				remove_task(iTaskId, 0);
-				set_task(1045220557, 2588, iTaskId, 2372, 0, 2376, 0);
+				set_task(1045220557, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				remove_task(iTaskId, 0);
-				set_task(1050253722, 2640, iTaskId, 2372, 0, 2376, 0);
+				set_task(1050253722, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 				iTaskId += 32;
 				if (task_exists(iTaskId, 0))
 				{
 					send_nvg_msg(iTaskId);
 					remove_task(iTaskId, 0);
 				}
-				set_task(1053609165, 2692, iTaskId, 2372, 0, 2376, 0);
+				set_task(1053609165, "send_nvg_msg", iTaskId, 2372, 0, 2376, 0);
 			}
 		}
 	}
@@ -347,7 +347,7 @@ public Message_NVGToggle(iMsgId, iMsgType, iPlrId)
 		{
 			if (!task_exists(iPlrId, 0))
 			{
-				set_task(1073741824, 2744, iPlrId, 2800, 0, 2804, 0);
+				set_task(1073741824, "refresh_radar", iPlrId, 2800, 0, 2804, 0);
 			}
 		}
 		else
@@ -359,7 +359,7 @@ public Message_NVGToggle(iMsgId, iMsgType, iPlrId)
 			set_pev(iPlrId, 73, pev(iPlrId, 73) & -9);
 			message_begin(1, g_iMsgId_Flashlight, 2220, iPlrId);
 			write_byte(0);
-			write_byte(get_pdata_int(iPlrId, 244, 5, 5));
+			write_byte(get_pdata_int(iPlrId, g_iCustomBrightness, 5, 5));
 			message_end();
 			if (!g_bEffectFix)
 			{
@@ -407,7 +407,7 @@ public Ham_Spawn_player_Post(iPlrId)
 		g_iJustJoined = ~1 << iPlrId & 31 & g_iJustJoined;
 		message_begin(1, g_iMsgId_SayText, 2220, iPlrId);
 		write_byte(iPlrId);
-		write_string(2812);
+		write_string("\x03* \x01This server has support for \x04hotvision\x01 when using \x04nightvision\x01.");
 		message_end();
 	}
 	return 0;
@@ -445,7 +445,7 @@ public FM_LightStyle_Pre(iStyle, iVal[])
 {
 	if (!iStyle)
 	{
-		copy(116, 31, iVal);
+		copy(g_iDefaultBrightness, 31, iVal);
 	}
 	return 0;
 }
@@ -472,7 +472,7 @@ public send_nvg_msg(iTaskId)
 	}
 	else
 	{
-		if (pev(iPlrId, 100) == 4)
+		if (pev(iPlrId, g_iCvarHotVisionWalls) == 4)
 		{
 			new iSpectated = pev(iPlrId, 101);
 			new var1;
@@ -646,7 +646,7 @@ bool:frame_nvg_update(iPlrId, iUpdatingPlayer, iEsHandle, iEnt)
 			}
 			else
 			{
-				if (pev(iPlrId, 100) == 4)
+				if (pev(iPlrId, g_iCvarHotVisionWalls) == 4)
 				{
 					s_iSpectatedPerson[iPlrId] = pev(iPlrId, 101);
 					new var2;
@@ -679,7 +679,7 @@ bool:frame_nvg_update(iPlrId, iUpdatingPlayer, iEsHandle, iEnt)
 				{
 					message_begin(1, 12, 2220, iPlrId);
 					write_byte(0);
-					write_string(116);
+					write_string(g_iDefaultBrightness);
 					message_end();
 				}
 			}
@@ -688,7 +688,7 @@ bool:frame_nvg_update(iPlrId, iUpdatingPlayer, iEsHandle, iEnt)
 			{
 				message_begin(1, 12, 2220, iPlrId);
 				write_byte(0);
-				write_string(244);
+				write_string(g_iCustomBrightness);
 				message_end();
 			}
 		}
@@ -740,7 +740,7 @@ FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <A
 				return 1;
 			}
 			static s_iModel[2];
-			pev(iEnt, 3, 3092, 1);
+			pev(iEnt, "", s_iModel, 1);
 			if (s_iModel[0] == 109)
 			{
 				set_hotvision_object(iEsHandle);
@@ -769,7 +769,7 @@ FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <M
 				return 1;
 			}
 			static s_iModel[2];
-			pev(iEnt, 3, 3100, 1);
+			pev(iEnt, "", s_iModel, 1);
 			if (s_iModel[0] == 109)
 			{
 				set_hotvision_object(iEsHandle);
@@ -793,7 +793,7 @@ FM_AddToFullPack_Post(iEsHandle, iE, iEnt, iHost, iHostFlags, iPlayer, iPSet) <W
 				return 1;
 			}
 			static s_iModel[2];
-			pev(iEnt, 3, 3108, 1);
+			pev(iEnt, "", s_iModel, 1);
 			if (s_iModel[0] == 42)
 			{
 				set_hotvision_walls(iEsHandle);

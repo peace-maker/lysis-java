@@ -88,30 +88,30 @@ EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pit
 
 public OnPluginStart()
 {
-	HookEvent(1032, 23, 1);
-	HookEvent(1048, 25, 1);
-	CreateConVar(1064, 1084, 1092, 270656, 0, 0, 0, 0);
-	cvSpeed = CreateConVar(1112, 1132, 1140, 0, 0, 0, 0, 0);
-	cvDistance = CreateConVar(1144, 1164, 1140, 0, 0, 0, 0, 0);
-	cvTeamRestrict = CreateConVar(1172, 1200, 1204, 0, 0, 0, 0, 0);
-	cvSound = CreateConVar(1264, 1284, 1320, 0, 0, 0, 0, 0);
-	cvGround = CreateConVar(1372, 1396, 1400, 0, 0, 0, 0, 0);
-	cvThrowTime = CreateConVar(1432, 1456, 1460, 0, 0, 0, 0, 0);
-	cvThrowSpeed = CreateConVar(1500, 1524, 1532, 0, 0, 0, 0, 0);
-	cvMaxDistance = CreateConVar(1568, 1592, 1600, 0, 0, 0, 0, 0);
-	cvSteal = CreateConVar(1652, 1672, 1676, 0, 0, 0, 0, 0);
-	cvDropOnJump = CreateConVar(1732, 1756, 1760, 0, 0, 0, 0, 0);
-	RegConsoleCmd(1860, 1, 1868, 0);
-	RegConsoleCmd(1872, 7, 1868, 0);
-	RegConsoleCmd(1880, 3, 1868, 0);
-	RegConsoleCmd(1888, 9, 1868, 0);
+	HookEvent("player_death", 23, 1);
+	HookEvent("player_spawn", 25, 1);
+	CreateConVar("sm_grabber_version", "1.0.0.3", "Grabber:SM Version", 270656, 0, 0, 0, 0);
+	cvSpeed = CreateConVar("sm_grabber_speed", "10.0", 1140, 0, 0, 0, 0, 0);
+	cvDistance = CreateConVar("sm_grabber_distance", "64.0", 1140, 0, 0, 0, 0, 0);
+	cvTeamRestrict = CreateConVar("sm_grabber_team_restrict", "0", "team restriction (0=all use, 2 or 3 to restrict that team", 0, 0, 0, 0, 0);
+	cvSound = CreateConVar("sm_grabber_sound", "weapons/physcannon/hold_loop.wav", "sound to play, change takes effect on map change", 0, 0, 0, 0, 0);
+	cvGround = CreateConVar("sm_grabber_groundmode", "0", "ground mode (soccer) 0=off 1=on", 0, 0, 0, 0, 0);
+	cvThrowTime = CreateConVar("sm_grabber_throwtime", "2.0", "time to charge up to full throw speed", 0, 0, 0, 0, 0);
+	cvThrowSpeed = CreateConVar("sm_grabber_throwspeed", "1000.0", "speed at which an object is thrown", 0, 0, 0, 0, 0);
+	cvMaxDistance = CreateConVar("sm_grabber_maxdistance", "512.0", "maximum distance from which you can grab an object", 0, 0, 0, 0, 0);
+	cvSteal = CreateConVar("sm_grabber_steal", "1", "can objects be 'stolen' from other players (0=no 1=yes)", 0, 0, 0, 0, 0);
+	cvDropOnJump = CreateConVar("sm_grabber_droponjump", "1", "drop objects when jumping (prevents player from flying around level on large objects) (0=no 1=yes)", 0, 0, 0, 0, 0);
+	RegConsoleCmd("+grab", 1, 1868, 0);
+	RegConsoleCmd("-grab", 7, 1868, 0);
+	RegConsoleCmd("+throw", 3, 1868, 0);
+	RegConsoleCmd("-throw", 9, 1868, 0);
 	return 0;
 }
 
 public OnEventShutdown()
 {
-	UnhookEvent(1896, 23, 1);
-	UnhookEvent(1912, 25, 1);
+	UnhookEvent("player_death", 23, 1);
+	UnhookEvent("player_spawn", 25, 1);
 	return 0;
 }
 
@@ -125,8 +125,8 @@ public OnMapStart()
 		i++;
 	}
 	gTimer = CreateTimer(1036831949, 31, 0, 1);
-	GetConVarString(cvSound, 644, 256);
-	PrecacheSound(644, 1);
+	GetConVarString(cvSound, gSound, 256);
+	PrecacheSound(gSound, 1);
 	return 0;
 }
 
@@ -158,19 +158,19 @@ public OnClientDisconnect(client)
 
 public Action:PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, 1928));
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	gThrow[client] = 0;
 	gObj[client] = -1;
-	StopSound(client, 0, 644);
+	StopSound(client, 0, gSound);
 	return Action:0;
 }
 
 public Action:PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, 1936));
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	gThrow[client] = 0;
 	gObj[client] = -1;
-	StopSound(client, 0, 644);
+	StopSound(client, 0, gSound);
 	return Action:0;
 }
 
@@ -199,7 +199,7 @@ public Action:Command_Grab(client, args)
 	}
 	new String:edictname[128];
 	GetEdictClassname(ent, edictname, 128);
-	if (!(strncmp(1944, edictname, 5, 0)))
+	if (!(strncmp("prop_", edictname, 5, 0)))
 	{
 		new j = 1;
 		while (j <= 64)
@@ -232,7 +232,7 @@ public Action:Command_UnGrab(client, args)
 	}
 	if (GetConVarInt(cvGround) != 1)
 	{
-		StopSound(client, 0, 644);
+		StopSound(client, 0, gSound);
 	}
 	if (gThrow[client] > 0.0)
 	{
@@ -291,11 +291,11 @@ public Action:Command_UnThrow(client, args)
 	new Float:angle[3] = 0.0;
 	new Float:speed[3] = 0.0;
 	GetClientEyeAngles(client, angle);
-	GetAngleVectors(angle, speed, 48, 48);
+	GetAngleVectors(angle, speed, NULL_VECTOR, NULL_VECTOR);
 	speed[0] = speed[0] * throwspeed;
 	speed[1] *= throwspeed;
 	speed[2] *= throwspeed;
-	TeleportEntity(gObj[client], 48, 48, speed);
+	TeleportEntity(gObj[client], NULL_VECTOR, NULL_VECTOR, speed);
 	Command_UnGrab(client, args);
 	PrintHintText(client, 1956);
 	return Action:3;
@@ -336,7 +336,7 @@ public Action:UpdateObjects(Handle:timer)
 			if (IsValidEdict(gObj[i]) && IsValidEntity(gObj[i]) && !DropInJump)
 			{
 				GetClientEyeAngles(i, viewang);
-				GetAngleVectors(viewang, vecDir, 48, 48);
+				GetAngleVectors(viewang, vecDir, NULL_VECTOR, NULL_VECTOR);
 				if (groundmode == 1)
 				{
 					GetClientAbsOrigin(i, vecPos);
@@ -351,14 +351,14 @@ public Action:UpdateObjects(Handle:timer)
 				{
 					vecPos[2] += vecDir[2] * distance;
 				}
-				GetEntPropVector(gObj[i], 0, 1960, vecDir);
+				GetEntPropVector(gObj[i], 0, "m_vecOrigin", vecDir);
 				SubtractVectors(vecPos, vecDir, vecVel);
 				ScaleVector(vecVel, speed);
 				if (groundmode == 1)
 				{
 					vecVel[2] = 0.0;
 				}
-				TeleportEntity(gObj[i], 48, 48, vecVel);
+				TeleportEntity(gObj[i], NULL_VECTOR, NULL_VECTOR, vecVel);
 				if (gThrow[i] > 0.0)
 				{
 					ShowBar(i, time - gThrow[i], throwtime);
@@ -382,7 +382,7 @@ public TraceToEntity(client)
 	{
 		new TRIndex = TR_GetEntityIndex(0);
 		new Float:pos[3] = 0.0;
-		GetEntPropVector(TRIndex, 0, 1972, pos);
+		GetEntPropVector(TRIndex, 0, "m_vecOrigin", pos);
 		if (GetVectorDistance(vecClientEyePos, pos, 0) > GetConVarFloat(cvMaxDistance))
 		{
 			return -1;
@@ -407,7 +407,7 @@ ShowBar(client, Float:curTime, Float:totTime)
 	new String:output[128];
 	if (curTime > totTime)
 	{
-		Format(output, 128, 1984);
+		Format(output, 128, "[XXXXXXXXXXXXXXXXXXXX]");
 	}
 	else
 	{

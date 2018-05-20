@@ -43,21 +43,21 @@ SetPlayerCash(entity, amount)
 
 public OnPluginStart()
 {
-	LoadTranslations(196);
-	g_MoneyOffset = FindSendPropOffs(216, 228);
+	LoadTranslations("knifemug.phrases");
+	g_MoneyOffset = FindSendPropOffs("CCSPlayer", "m_iAccount");
 	if (g_MoneyOffset == -1)
 	{
 		g_isHooked = false;
-		PrintToServer(240);
-		SetFailState(304);
+		PrintToServer("* FATAL ERROR: Failed to get offset for CCSPlayer::m_iAccount");
+		SetFailState("[KnifeMug] * FATAL ERROR: Failed to get offset CCSPlayer::m_iAccount");
 	}
 	else
 	{
-		CreateConVar(376, 388, 396, 270656, 0, 0, 0, 0);
-		cvarEnable = CreateConVar(400, 412, 416, 262144, 1, 0, 1, 1077936128);
-		cvarMugCash = CreateConVar(548, 560, 568, 262144, 1, 0, 1, 1182400512);
-		cvarMugPercent = CreateConVar(636, 652, 660, 262144, 1, 0, 1, 1065353216);
-		AutoExecConfig(1, 724, 736);
+		CreateConVar("km_version", "2.0.0", 396, 270656, 0, 0, 0, 0);
+		cvarEnable = CreateConVar("km_enable", "1", "Enables/Disables KnifeMug as well as sets the type of mugging\n0 = Off\n1 = Hard Cash\n2 = Percentage on Kill\n3 = Percentage on Damage", 262144, 1, 0, 1, 1077936128);
+		cvarMugCash = CreateConVar("km_mugcash", "2500", "Sets the amount of money taken in a mugging based on a hard value", 262144, 1, 0, 1, 1182400512);
+		cvarMugPercent = CreateConVar("km_mugpercent", "0.33", "Sets the amount of money taken in a mugging based on percent", 262144, 1, 0, 1, 1065353216);
+		AutoExecConfig(1, "knifemug", "sourcemod");
 		CreateTimer(1077936128, 5, 0, 0);
 	}
 	return 0;
@@ -69,10 +69,10 @@ public Action:OnPluginStart_Delayed(Handle:timer)
 	if (GetConVarInt(cvarEnable) > 0 && GetConVarInt(cvarEnable) <= 3)
 	{
 		g_isHooked = true;
-		HookEvent(748, 7, 1);
-		HookEvent(764, 9, 1);
+		HookEvent("player_death", 7, 1);
+		HookEvent("player_hurt", 9, 1);
 		HookConVarChange(cvarEnable, 1);
-		LogMessage(776);
+		LogMessage("[KnifeMug] - Loaded");
 	}
 	return Action:0;
 }
@@ -84,8 +84,8 @@ public KnifeMugCvarChange(Handle:convar, String:oldValue[], String:newValue[])
 		if (g_isHooked)
 		{
 			g_isHooked = false;
-			UnhookEvent(796, 7, 1);
-			UnhookEvent(812, 9, 1);
+			UnhookEvent("player_death", 7, 1);
+			UnhookEvent("player_hurt", 9, 1);
 		}
 	}
 	else
@@ -93,8 +93,8 @@ public KnifeMugCvarChange(Handle:convar, String:oldValue[], String:newValue[])
 		if (!g_isHooked)
 		{
 			g_isHooked = true;
-			HookEvent(824, 7, 1);
-			HookEvent(840, 9, 1);
+			HookEvent("player_death", 7, 1);
+			HookEvent("player_hurt", 9, 1);
 		}
 	}
 	return 0;
@@ -105,15 +105,15 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 	decl String:weaponName[100];
 	decl String:victimName[100];
 	decl String:killerName[100];
-	GetEventString(event, 852, weaponName, 100);
+	GetEventString(event, "weapon", weaponName, 100);
 	if (StrEqual(weaponName, "knife", true))
 	{
 		new MugType = GetConVarInt(cvarEnable);
 		if (MugType == 2)
 		{
 			new Float:mugPercent = GetConVarFloat(cvarMugPercent);
-			new userid = GetEventInt(event, 868);
-			new userid2 = GetEventInt(event, 876);
+			new userid = GetEventInt(event, "userid");
+			new userid2 = GetEventInt(event, "attacker");
 			new victim = GetClientOfUserId(userid);
 			new killer = GetClientOfUserId(userid2);
 			new var1;
@@ -131,8 +131,8 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 					new percentKillerCash = RoundFloat(float(killerCash) + float(victimCash) * mugPercent);
 					new percentCashTaken = RoundFloat(float(victimCash) * mugPercent);
 					SetPlayerCash(victim, percentVictimCash);
-					PrintToConsole(victim, 888, 904, 0, killerName, percentCashTaken);
-					PrintToChat(victim, 920, 4, 1, 940, 0, killerName, percentCashTaken);
+					PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, killerName, percentCashTaken);
+					PrintToChat(victim, "%c[KnifeMug]%c %T", 4, 1, "Mugged You For", 0, killerName, percentCashTaken);
 					if (percentKillerCash > 16000)
 					{
 						SetPlayerCash(killer, 16000);
@@ -141,16 +141,16 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 					{
 						SetPlayerCash(killer, percentKillerCash);
 					}
-					PrintToConsole(killer, 956, 972, 0, victimName, percentCashTaken);
-					PrintToChat(killer, 988, 4, 1, 1008, 0, victimName, percentCashTaken);
+					PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, victimName, percentCashTaken);
+					PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, victimName, percentCashTaken);
 				}
 			}
 		}
 		if (MugType == 1)
 		{
 			new mugCash = GetConVarInt(cvarMugCash);
-			new userid = GetEventInt(event, 1024);
-			new userid2 = GetEventInt(event, 1032);
+			new userid = GetEventInt(event, "userid");
+			new userid2 = GetEventInt(event, "attacker");
 			new victim = GetClientOfUserId(userid);
 			new killer = GetClientOfUserId(userid2);
 			new var2;
@@ -170,8 +170,8 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 						if (victimCash < mugCash)
 						{
 							SetPlayerCash(victim, 0);
-							PrintToConsole(victim, 1044, 1060, 0, killerName, victimCash);
-							PrintToChat(victim, 1076, 4, 1, 1096, 0, killerName, victimCash);
+							PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, killerName, victimCash);
+							PrintToChat(victim, "%c[KnifeMug]%c %T", 4, 1, "Mugged You For", 0, killerName, victimCash);
 							if (victimCash + killerCash > 16000)
 							{
 								SetPlayerCash(killer, 16000);
@@ -180,8 +180,8 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 							{
 								SetPlayerCash(killer, victimCash + killerCash);
 							}
-							PrintToConsole(killer, 1112, 1128, 0, victimName, victimCash);
-							PrintToChat(killer, 1144, 4, 1, 1164, 0, victimName, victimCash);
+							PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, victimName, victimCash);
+							PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, victimName, victimCash);
 						}
 						else
 						{
@@ -190,8 +190,8 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 							new newVictimCash = victimCash - mugCash;
 							new newKillerCash = mugCash + killerCash;
 							SetPlayerCash(victim, newVictimCash);
-							PrintToConsole(victim, 1180, 1196, 0, killerName, mugCash);
-							PrintToChat(victim, 1212, 4, 1, 1232, 0, killerName, mugCash);
+							PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, killerName, mugCash);
+							PrintToChat(victim, "%c[KnifeMug%c %T", 4, 1, "Mugged You For", 0, killerName, mugCash);
 							if (newKillerCash > 16000)
 							{
 								SetPlayerCash(killer, 16000);
@@ -200,8 +200,8 @@ public ev_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 							{
 								SetPlayerCash(killer, newKillerCash);
 							}
-							PrintToConsole(killer, 1248, 1264, 0, victimName, mugCash);
-							PrintToChat(killer, 1280, 4, 1, 1300, 0, victimName, mugCash);
+							PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, victimName, mugCash);
+							PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, victimName, mugCash);
 						}
 					}
 				}
@@ -219,11 +219,11 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 	new MugType = GetConVarInt(cvarEnable);
 	if (MugType == 3)
 	{
-		GetEventString(event, 1316, dmgWeaponName, 100);
+		GetEventString(event, "weapon", dmgWeaponName, 100);
 		if (StrEqual(dmgWeaponName, "knife", true))
 		{
-			new userid = GetEventInt(event, 1332);
-			new userid2 = GetEventInt(event, 1340);
+			new userid = GetEventInt(event, "userid");
+			new userid2 = GetEventInt(event, "attacker");
 			new victim = GetClientOfUserId(userid);
 			new killer = GetClientOfUserId(userid2);
 			new var1;
@@ -237,15 +237,15 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 					GetClientName(killer, dmgKillerName, 100);
 					new dmgVictimCash = GetPlayerCash(victim);
 					new dmgKillerCash = GetPlayerCash(killer);
-					new dmgDone = GetEventInt(event, 1352);
+					new dmgDone = GetEventInt(event, "dmg_health");
 					if (dmgDone >= 100)
 					{
 						new dmgPercentVictimCash = RoundFloat(float(dmgVictimCash) - float(dmgVictimCash) * 0.5);
 						new dmgPercentKillerCash = RoundFloat(float(dmgKillerCash) + float(dmgVictimCash) * 0.5);
 						new dmgPercentCashTaken = RoundFloat(float(dmgVictimCash) * 0.5);
 						SetPlayerCash(victim, dmgPercentVictimCash);
-						PrintToConsole(victim, 1364, 1380, 0, dmgKillerName, dmgPercentCashTaken);
-						PrintToChat(victim, 1396, 4, 1, 1416, 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToChat(victim, "%c[KnifeMug]%c %T", 4, 1, "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
 						if (dmgPercentKillerCash > 16000)
 						{
 							SetPlayerCash(killer, 16000);
@@ -254,8 +254,8 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 						{
 							SetPlayerCash(killer, dmgPercentKillerCash);
 						}
-						PrintToConsole(killer, 1432, 1448, 0, dmgVictimName, dmgPercentCashTaken);
-						PrintToChat(killer, 1464, 4, 1, 1484, 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
 					}
 					new var2;
 					if (dmgDone > 20 && dmgDone < 100)
@@ -264,8 +264,8 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 						new dmgPercentKillerCash = RoundFloat(float(dmgKillerCash) + float(dmgVictimCash) * 0.33);
 						new dmgPercentCashTaken = RoundFloat(float(dmgVictimCash) * 0.33);
 						SetPlayerCash(victim, dmgPercentVictimCash);
-						PrintToConsole(victim, 1500, 1516, 0, dmgKillerName, dmgPercentCashTaken);
-						PrintToChat(victim, 1532, 4, 1, 1552, 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToChat(victim, "%c[KnifeMug]%c %T", 4, 1, "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
 						if (dmgPercentKillerCash > 16000)
 						{
 							SetPlayerCash(killer, 16000);
@@ -274,8 +274,8 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 						{
 							SetPlayerCash(killer, dmgPercentKillerCash);
 						}
-						PrintToConsole(killer, 1568, 1584, 0, dmgVictimName, dmgPercentCashTaken);
-						PrintToChat(killer, 1600, 4, 1, 1620, 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
 					}
 					new var3;
 					if (dmgDone > 1 && dmgDone <= 20)
@@ -284,8 +284,8 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 						new dmgPercentKillerCash = RoundFloat(float(dmgKillerCash) + float(dmgVictimCash) * 0.25);
 						new dmgPercentCashTaken = RoundFloat(float(dmgVictimCash) * 0.25);
 						SetPlayerCash(victim, dmgPercentVictimCash);
-						PrintToConsole(victim, 1636, 1652, 0, dmgKillerName, dmgPercentCashTaken);
-						PrintToChat(victim, 1668, 4, 1, 1688, 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToConsole(victim, "[KnifeMug] %T", "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
+						PrintToChat(victim, "%c[KnifeMug]%c %T", 4, 1, "Mugged You For", 0, dmgKillerName, dmgPercentCashTaken);
 						if (dmgPercentKillerCash > 16000)
 						{
 							SetPlayerCash(killer, 16000);
@@ -294,8 +294,8 @@ public ev_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
 						{
 							SetPlayerCash(killer, dmgPercentKillerCash);
 						}
-						PrintToConsole(killer, 1704, 1720, 0, dmgVictimName, dmgPercentCashTaken);
-						PrintToChat(killer, 1736, 4, 1, 1756, 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToConsole(killer, "[KnifeMug] %T", "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
+						PrintToChat(killer, "%c[KnifeMug]%c %T", 4, 1, "You Have Mugged", 0, dmgVictimName, dmgPercentCashTaken);
 					}
 				}
 			}

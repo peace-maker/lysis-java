@@ -478,4 +478,6 @@ public abstract class PawnFile {
 			return String.format("State %d of automation %d : %s", state_id_, automation_id_, name_);
 		}
 	}
+
+	public abstract boolean IsMaybeString(long address);
 }

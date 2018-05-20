@@ -70,14 +70,14 @@ cmd_access(id, level, cid, num, bool:accesssilent)
 			new hinfo[128];
 			new hflag;
 			get_concmd(cid, hcmd, 31, hflag, hinfo, 127, level, -1);
-			console_print(id, 60, id, 104, hcmd, hinfo);
+			console_print(id, "%L:  %s %s", id, "USAGE", hcmd, hinfo);
 			return 0;
 		}
 		return 1;
 	}
 	if (!accesssilent)
 	{
-		console_print(id, 4, id, 16);
+		console_print(id, "%L", id, "NO_ACC_COM");
 	}
 	return 0;
 }
@@ -94,11 +94,11 @@ OrpheuFunction:OrpheuGetEngineFunction(memberName[], libFunctionName[])
 
 public plugin_precache()
 {
-	register_plugin(136, 224, 248);
-	register_cvar(296, 224, 68, 0);
-	register_concmd(384, 428, 2048, 540, -1);
-	set_cvar_num(652, 5);
-	set_cvar_num(708, 75);
+	register_plugin(pluginName, pluginVersion, pluginAuhtor);
+	register_cvar("server_cvars_unlocker", pluginVersion, 68, 0);
+	register_concmd("scu_toggle", "ConsoleCommand_TogglePlugin", 2048, "<0|1> - Toggle plugin state", -1);
+	set_cvar_num("sv_accelerate", 5);
+	set_cvar_num("sv_stopspeed", 75);
 	state disabled;
 	TogglePluginState(0, 1);
 	return 0;
@@ -128,7 +128,7 @@ TogglePluginState(player, stateWanted)
 		{
 			var1 = 892;
 		}
-		console_print(player, 760, 136, var1);
+		console_print(player, "\n[%s] %s", pluginName, var1);
 	}
 	else
 	{
@@ -141,7 +141,7 @@ TogglePluginState(player, stateWanted)
 		{
 			var2 = 1124;
 		}
-		console_print(player, 996, 136, var2);
+		console_print(player, "\n[%s] %s", pluginName, var2);
 	}
 	new var3 = stateWanted;
 	currentPluginState = var3;
@@ -170,7 +170,7 @@ public plugin_end()
 
 public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 {
-	server_print(1548, 136);
+	server_print("\n[%s] Reading/setting multiplay cvars...\n", pluginName);
 	new cvarsName[4][] = {
 		{
 			109, ...
@@ -236,10 +236,10 @@ public OrpheuHookReturn:ReadMultiplayCvars(handleGameRules)
 			set_pcvar_float(cvarsHandle[cvar], value / entriesNewValues[cvar][2]);
 		}
 		OrpheuMemorySetAtAddress(handleGameRules, entriesIdentifiers[cvar], 1, value);
-		server_print(2408, cvarsName[cvar], value / entriesNewValues[cvar][2]);
+		server_print("\x09[OK] %s %.1f", cvarsName[cvar], value / entriesNewValues[cvar][2]);
 		cvar++;
 	}
-	server_print(2464);
+	server_print("\n\x09* All multiplay cvars set properly.\n");
 	return OrpheuHookReturn:2;
 }
 
@@ -285,13 +285,13 @@ TogglePatchMemory()
 {
 	if (currentPluginState == 1)
 	{
-		server_print(2796, 136);
+		server_print("[%s] Applying multiplay cvars memory patches...\n", pluginName);
 	}
 	PatchMe(2992, 15, 0, 3172, 15, 0, 3344, 15 / 1114636288, float(0));
 	PatchMe(3532, float(800), float(0), 3692, float(16000), float(2147483583), 3852, float(800), float(0), 4020, float(16000), float(2147483583), 4188, float(800), float(0), 4372, float(16000), float(2147483583), 4556, 800, 0, 4708, 16000, 2147483583, 4860, 800, 0, 5020, 16000, 2147483583, 5180, 800, 0, 5356, 16000, 2147483583, 5532, 16000, 2147483583, 5716, 16000, 2147483583, 5892, 16000, 2147483583, 6084, 16000, 2147483583, 6268, 16000, 2147483583, 6432, 16000, 2147483583, 6588, 16000, 2147483583, 6800, 16000, 2147483583);
 	if (currentPluginState == 1)
 	{
-		server_print(7004, 136);
+		server_print("[%s] Applying server cvars memory patches...\n", pluginName);
 	}
 	new bool:isLinuxServer = is_linux_server();
 	new var1;
@@ -341,12 +341,12 @@ PatchMe()
 		{
 			if (OrpheuMemorySet(data, 1, data[65]))
 			{
-				server_print(7972, data);
+				server_print("\x09[OK] %s", data);
 				offsetsPatched++;
 			}
 			else
 			{
-				server_print(8008, data);
+				server_print("\x09[NOT FOUND] %s", data);
 			}
 		}
 		else
@@ -358,7 +358,7 @@ PatchMe()
 	}
 	if (currentPluginState == 1)
 	{
-		server_print(8072, offsetsPatched, rowCount);
+		server_print("\n\x09* Total Patches : %d/%d\n", offsetsPatched, rowCount);
 	}
 	return 0;
 }
@@ -440,7 +440,7 @@ NopMe()
 		}
 		if (currentPluginState == 1)
 		{
-			server_print(8184, data);
+			server_print("\x09* %d bytes were nopped successful.", data);
 			ArrayDestroy(handleArrayBytesToPatch);
 		}
 		i++;
@@ -518,8 +518,8 @@ EnablePlugin() <>
 
 EnablePlugin() <disabled>
 {
-	handleHookReadMultiplayCvars = OrpheuRegisterHook(OrpheuGetFunction(1224, 1300), 1304, 0);
-	handleHookCVarSetFloat = OrpheuRegisterHook(OrpheuGetEngineFunction(1380, 1444), 1496, 0);
+	handleHookReadMultiplayCvars = OrpheuRegisterHook(OrpheuGetFunction("ReadMultiplayCvars", 1300), "ReadMultiplayCvars", 0);
+	handleHookCVarSetFloat = OrpheuRegisterHook(OrpheuGetEngineFunction("pfnCVarSetFloat", "CVarSetFloat"), "CVarSetFloat", 0);
 	TogglePatchMemory();
 	state enabled;
 	return 0;

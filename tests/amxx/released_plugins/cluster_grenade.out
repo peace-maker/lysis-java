@@ -36,7 +36,7 @@ public fire_in_the_hole(id, dest, ent)
 	}
 	new temp[17];
 	get_msg_arg_string(5, temp, 17);
-	if (equali(temp, 148, 0))
+	if (equali(temp, "#Fire_in_the_hole", explosion1))
 	{
 		new name[32];
 		entity_get_string(ent, 5, name, 32);
@@ -52,23 +52,23 @@ public pfn_touch(ptr, ptd)
 	new Float:origin[3] = 0.0;
 	if (ptr)
 	{
-		entity_get_string(ptr, 0, identify, 15);
+		entity_get_string(ptr, explosion1, identify, 15);
 	}
 	if (ptd)
 	{
 		if (is_valid_ent(ptd))
 		{
-			entity_get_string(ptd, 0, compare, 15);
+			entity_get_string(ptd, explosion1, compare, 15);
 		}
 	}
 	new var1;
-	if (ptr && equali(compare, 276, 0))
+	if (ptr && equali(compare, "grenade_cluster", explosion1))
 	{
 		return 1;
 	}
-	if (equali(identify, 340, 0))
+	if (equali(identify, "grenade_cluster", explosion1))
 	{
-		entity_get_vector(ptr, 0, origin);
+		entity_get_vector(ptr, explosion1, origin);
 		new player[32];
 		new players;
 		new location[3];
@@ -76,15 +76,15 @@ public pfn_touch(ptr, ptd)
 		new distance;
 		new Float:multiplier = 0.0;
 		new owner;
-		origin2[0] = floatround(origin[0], 0);
-		origin2[1] = floatround(origin[1], 0);
-		origin2[2] = floatround(origin[2], 0);
-		owner = entity_get_edict(ptr, 4);
+		origin2[0] = floatround(origin[0], explosion1);
+		origin2[1] = floatround(origin[1], explosion1);
+		origin2[2] = floatround(origin[2], explosion1);
+		owner = entity_get_edict(ptr, explosion2);
 		get_players(player, players, 404, 412);
 		new i;
 		while (i < players)
 		{
-			get_user_origin(player[i], location, 0);
+			get_user_origin(player[i], location, explosion1);
 			distance = get_distance(origin2, location);
 			if (distance < 300)
 			{
@@ -93,33 +93,33 @@ public pfn_touch(ptr, ptd)
 			}
 			i++;
 		}
-		message_begin(0, 23, 416, 0);
+		message_begin(explosion1, 23, 416, explosion1);
 		write_byte(3);
-		write_coord(floatround(origin[0], 0));
-		write_coord(floatround(origin[1], 0));
-		write_coord(floatround(origin[2], 0));
+		write_coord(floatround(origin[0], explosion1));
+		write_coord(floatround(origin[1], explosion1));
+		write_coord(floatround(origin[2], explosion1));
 		write_short(explosion1);
 		write_byte(50);
 		write_byte(15);
-		write_byte(0);
+		write_byte(explosion1);
 		message_end();
-		message_begin(0, 23, 416, 0);
+		message_begin(explosion1, 23, 416, explosion1);
 		write_byte(3);
-		write_coord(floatround(origin[0], 0));
-		write_coord(floatround(origin[1], 0));
-		write_coord(floatround(origin[2], 0));
+		write_coord(floatround(origin[0], explosion1));
+		write_coord(floatround(origin[1], explosion1));
+		write_coord(floatround(origin[2], explosion1));
 		write_short(explosion2);
 		write_byte(50);
 		write_byte(15);
-		write_byte(0);
+		write_byte(explosion1);
 		message_end();
 		if (!ptd)
 		{
-			message_begin(0, 23, 416, 0);
+			message_begin(explosion1, 23, 416, explosion1);
 			write_byte(116);
-			write_coord(floatround(origin[0], 0));
-			write_coord(floatround(origin[1], 0));
-			write_coord(floatround(origin[2], 0));
+			write_coord(floatround(origin[0], explosion1));
+			write_coord(floatround(origin[1], explosion1));
+			write_coord(floatround(origin[2], explosion1));
 			write_byte(47);
 			message_end();
 		}
@@ -135,9 +135,9 @@ public grenade_explosion()
 	if (get_msg_arg_int(1) == 3 && get_msg_arg_int(6) == 25 && get_msg_arg_int(7) == 30 && enabled)
 	{
 		new pos[3];
-		pos[0] = floatround(get_msg_arg_float(2), 0);
-		pos[1] = floatround(get_msg_arg_float(3), 0);
-		pos[2] = floatround(get_msg_arg_float(4), 0);
+		pos[0] = floatround(get_msg_arg_float(2), explosion1);
+		pos[1] = floatround(get_msg_arg_float(3), explosion1);
+		pos[2] = floatround(get_msg_arg_float(explosion2), explosion1);
 		new cluster;
 		new Float:vAngle[3] = 0.0;
 		new Float:angles[3] = 0.0;
@@ -156,19 +156,19 @@ public grenade_explosion()
 		while (i < 5)
 		{
 			velocity[0] = random_float(float(200), float(400));
-			if (random_num(0, 1) == 1)
+			if (random_num(explosion1, 1) == 1)
 			{
 				velocity[0] = floatmul(velocity[0], -1082130432);
 			}
 			velocity[1] = random_float(float(200), float(400));
-			if (random_num(0, 1) == 1)
+			if (random_num(explosion1, 1) == 1)
 			{
 				velocity[1] = floatmul(velocity[1], -1082130432);
 			}
 			velocity[2] = float(200);
-			Rvelocity[0] = floatround(velocity[0], 0) + pos[0];
-			Rvelocity[1] = floatround(velocity[1], 0) + pos[1];
-			Rvelocity[2] = floatround(velocity[2], 0) + pos[2];
+			Rvelocity[0] = floatround(velocity[0], explosion1) + pos[0];
+			Rvelocity[1] = floatround(velocity[1], explosion1) + pos[1];
+			Rvelocity[2] = floatround(velocity[2], explosion1) + pos[2];
 			distance = random_float(float(200), float(400));
 			actualDistance = float(get_distance(pos, Rvelocity));
 			multiplier = floatdiv(distance, actualDistance);
@@ -177,9 +177,9 @@ public grenade_explosion()
 			velocity[2] = floatmul(velocity[2], multiplier);
 			vector_to_angle(velocity, angles);
 			vector_to_angle(velocity, vAngle);
-			cluster = create_entity(428);
-			entity_set_string(cluster, 0, 476);
-			entity_set_model(cluster, 540);
+			cluster = create_entity("info_target");
+			entity_set_string(cluster, explosion1, "grenade_cluster");
+			entity_set_model(cluster, "models/grenade.mdl");
 			entity_set_vector(cluster, 14, minBox);
 			entity_set_vector(cluster, 15, maxBox);
 			entity_set_origin(cluster, origin);
@@ -187,7 +187,7 @@ public grenade_explosion()
 			entity_set_vector(cluster, 9, vAngle);
 			entity_set_int(cluster, 14, 6);
 			entity_set_int(cluster, 15, 1);
-			entity_set_edict(cluster, 4, get_grenade_owner());
+			entity_set_edict(cluster, explosion2, get_grenade_owner());
 			entity_set_vector(cluster, 2, velocity);
 			i++;
 		}
@@ -214,40 +214,40 @@ public enable_cluster_grenade(id)
 
 public plugin_init()
 {
-	register_plugin(616, 684, 716);
-	register_concmd(740, 848, 4, 940, -1);
-	register_message(23, 1176);
-	register_message(77, 1248);
-	register_message(83, 1316);
-	register_message(99, 1356);
+	register_plugin("Cluster Grenades", "1.0beta", "doomy");
+	register_concmd("amx_cluster_grenade_enable", "enable_cluster_grenade", explosion2, "Enable or disable cluster grenades (1 = enable, 0 = false)", -1);
+	register_message(23, "grenade_explosion");
+	register_message(77, "fire_in_the_hole");
+	register_message(83, "death_msg");
+	register_message(99, "grenade_throw");
 	return 0;
 }
 
 public plugin_precachce()
 {
-	precache_sound(1412);
-	explosion1 = precache_model(1520);
-	explosion2 = precache_model(1616);
+	precache_sound("sound/weapons/explode3.wav");
+	explosion1 = precache_model("sprites/zerogxplode.spr");
+	explosion2 = precache_model("sprites/explode1.spr");
 	return 0;
 }
 
 deal_grenade_damage(attacked, attacker, Float:damage)
 {
-	if (0 >= get_user_health(attacked) - floatround(damage, 0))
+	if (0 >= get_user_health(attacked) - floatround(damage, explosion1))
 	{
 		catchdeath = true;
-		user_kill(attacked, 0);
-		message_begin(2, 83, 416, 0);
+		user_kill(attacked, explosion1);
+		message_begin(2, 83, 416, explosion1);
 		write_byte(attacker);
 		write_byte(attacked);
-		write_byte(0);
-		write_string(1700);
+		write_byte(explosion1);
+		write_string("grenade");
 		message_end();
 		set_user_frags(attacker, get_user_frags(attacker) + 1);
 	}
 	else
 	{
-		set_user_health(attacked, get_user_health(attacked) - floatround(damage, 0));
+		set_user_health(attacked, get_user_health(attacked) - floatround(damage, explosion1));
 	}
 	return 0;
 }

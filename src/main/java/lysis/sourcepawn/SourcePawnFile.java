@@ -121,6 +121,7 @@ public class SourcePawnFile extends PawnFile {
 	private Header header_ = new Header();
 	public static boolean debugUnpacked_;
 	private HashMap<String, Section> sections_;
+	private HashSet<AddressRange> stringRanges_ = new HashSet<>();
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
 			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info",
@@ -397,6 +398,12 @@ public class SourcePawnFile extends PawnFile {
 			// Add the public variables to the list right away.
 			globals_ = globals.toArray(new Variable[0]);
 			br.close();
+
+			// Collect the addresses of strings in structs to be able
+			// to ignore them when guessing if a constant is an offset to a
+			// string.
+			// Can't reference those strings in the code.
+			collectStructStringRanges();
 		}
 
 		if (sections_.containsKey(".natives")) {
@@ -723,6 +730,66 @@ public class SourcePawnFile extends PawnFile {
 		}
 		}
 		return null;
+	}
+
+	class AddressRange {
+		public long start;
+		public long end;
+
+		public AddressRange(long start, long end) {
+			this.start = start;
+			this.end = end;
+		}
+	}
+
+	private void collectStructStringRanges() {
+
+		for (PubVar pub : pubvars_) {
+			if (pub.name().equals("myinfo")) {
+				long nameOffset = int32FromData(pub.address() + 0);
+				long urlOffset = int32FromData(pub.address() + 16);
+				String url = stringFromData(urlOffset);
+				stringRanges_.add(new AddressRange(nameOffset, urlOffset + url.length()));
+				stringRanges_.add(new AddressRange(pub.address(), pub.address() + 20));
+			} else if (pub.name().startsWith("__ext_") || pub.name().startsWith("__pl_")) {
+				long nameOffset = int32FromData(pub.address() + 0);
+				long fileOffset = int32FromData(pub.address() + 4);
+				String file = stringFromData(fileOffset);
+				stringRanges_.add(new AddressRange(nameOffset, fileOffset + file.length()));
+				stringRanges_.add(new AddressRange(pub.address(), pub.address() + 16));
+			} else if (pub.name().startsWith("__version")) {
+				long fileversOffset = int32FromData(pub.address() + 4);
+				long timeOffset = int32FromData(pub.address() + 12);
+				String time = stringFromData(timeOffset);
+				stringRanges_.add(new AddressRange(fileversOffset, timeOffset + time.length()));
+				stringRanges_.add(new AddressRange(pub.address(), pub.address() + 16));
+			}
+		}
+	}
+
+	@Override
+	public boolean IsMaybeString(long address) {
+		if (!isValidDataAddress(address))
+			return false;
+		
+		// Can't reference strings in public structs.
+		for (AddressRange range : stringRanges_) {
+			if (range.start >= address  && address <= range.end)
+				return false;
+		}
+
+		int len = 0;
+		for (; address < data().bytes().length; address++, len++) {
+			byte cell = data().bytes()[(int) address];
+
+			if (cell == 0)
+				break;
+
+			if (!Character.isValidCodePoint(cell))
+				return false;
+		}
+
+		return len > 0;
 	}
 
 	@Override
