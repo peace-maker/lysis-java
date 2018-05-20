@@ -1,6 +1,7 @@
 package lysis.amxmodx;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -8,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 import java.util.zip.Inflater;
 
 import lysis.BitConverter;
@@ -34,6 +36,7 @@ public class AMXModXFile extends PawnFile {
 	public final static long CUR_FILE_VERSION = 8;
 	public final static int DEFSIZE = 8;
 	public final static int AMX_FLAG_DEBUG = 0x2;
+	public final static int AMX_FLAG_COMPACT = 0x4;
 	public final static byte IDENT_VARIABLE = 1;
 	public final static byte IDENT_REFERENCE = 2;
 	public final static byte IDENT_ARRAY = 3;
@@ -52,37 +55,37 @@ public class AMXModXFile extends PawnFile {
 	}
 
 	private class AMX_HEADER {
-		public int size;
-		public int magic;
-		public byte file_version;
-		public byte amx_version;
+		public int size;			/* size of the "file" */
+		public int magic;			/* signature */
+		public byte file_version;	/* file format version */
+		public byte amx_version;	/* required version of the AMX */
 		public short flags;
-		public short defsize;
-		public int cod;
-		public int dat;
-		public int hea;
-		public int stp;
-		public int cip;
-		public int publics;
-		public int natives;
-		public int libraries;
-		public int pubvars;
-		public int tags;
-		public int nametable;
+		public short defsize;		/* size of a definition record */
+		public int cod;				/* initial value of COD - code block */
+		public int dat;				/* initial value of DAT - data block */
+		public int hea;				/* initial value of HEA - start of the heap */
+		public int stp;				/* initial value of STP - stack top */
+		public int cip;				/* initial value of CIP - the instruction pointer */
+		public int publics;			/* offset to the "public functions" table */
+		public int natives;			/* offset to the "native functions" table */
+		public int libraries;		/* offset to the table of libraries */
+		public int pubvars;			/* the "public variables" table */
+		public int tags;			/* the "public tagnames" table */
+		public int nametable;		/* name table */
 	}
 
 	private class AMX_DEBUG_HDR {
-		public int size;
-		public int magic;
-		public byte file_version;
-		public byte amx_version;
-		public short flags;
-		public short files;
-		public short lines;
-		public short symbols;
-		public short tags;
-		public short automatons;
-		public short states;
+		public int size;			/* size of the debug information chunk */
+		public int magic;			/* signature, must be 0xf1ef */
+		public byte file_version;	/* file format version */
+		public byte amx_version;	/* required version of the AMX */
+		public short flags;			/* currently unused */
+		public short files;			/* number of entries in the "file" table */
+		public short lines;			/* number of entries in the "line" table */
+		public short symbols;		/* number of entries in the "symbol" table */
+		public short tags;			/* number of entries in the "tag" table */
+		public short automatons;	/* number of entries in the "automaton" table */
+		public short states;		/* number of entries in the "state" table */
 
 		public final static int SIZE = 4 + 2 + (1 * 2) + (4 * 7);
 	}
@@ -181,6 +184,12 @@ public class AMXModXFile extends PawnFile {
 			}
 			r.close();
 		}
+		
+		assert((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT || amx.size == amx.hea);
+		if ((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT)
+		{
+			binary = decompressCompactCode(amx, binary);
+		}
 
 		// .CODE
 		{
@@ -190,8 +199,8 @@ public class AMXModXFile extends PawnFile {
 
 		// .DATA
 		{
-			byte[] dataBytes = Slice(binary, amx.dat, amx.size - amx.dat);
-			data_ = new Data(dataBytes, amx.size - amx.dat);
+			byte[] dataBytes = Slice(binary, amx.dat, amx.hea - amx.dat);
+			data_ = new Data(dataBytes, amx.hea - amx.dat);
 		}
 
 		// .NATIVES
@@ -226,9 +235,8 @@ public class AMXModXFile extends PawnFile {
 
 		// Debug stuff.
 		if (amx.file_version >= MIN_DEBUG_FILE_VERSION && (amx.flags & AMX_FLAG_DEBUG) == AMX_FLAG_DEBUG) {
-			int debugOffset = amx.size;
 			ExtendedDataInputStream r = new ExtendedDataInputStream(
-					new ByteArrayInputStream(binary, debugOffset, AMX_DEBUG_HDR.SIZE));
+					new ByteArrayInputStream(binary, amx.hea, AMX_DEBUG_HDR.SIZE));
 			AMX_DEBUG_HDR dbg = new AMX_DEBUG_HDR();
 			dbg.size = r.ReadInt32();
 			dbg.magic = r.ReadUInt16();
@@ -246,7 +254,7 @@ public class AMXModXFile extends PawnFile {
 				throw new Exception("unrecognized debug magic");
 
 			r = new ExtendedDataInputStream(
-					new ByteArrayInputStream(binary, debugOffset + AMX_DEBUG_HDR.SIZE, dbg.size - AMX_DEBUG_HDR.SIZE));
+					new ByteArrayInputStream(binary, amx.hea + AMX_DEBUG_HDR.SIZE, dbg.size - AMX_DEBUG_HDR.SIZE));
 
 			// Fill sp struct
 			debugHeader_.numFiles = dbg.files;
@@ -578,6 +586,70 @@ public class AMXModXFile extends PawnFile {
 		}
 
 		return null;
+	}
+	
+	// https://github.com/alliedmodders/amxmodx/blob/e95099817b1383fe5d9c797f761017a862fa8a97/amxmodx/amx.cpp#L786
+	public byte[] decompressCompactCode(AMX_HEADER amx, byte[] binary) throws IOException
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream(binary.length);
+		// Copy everything before the compressed code section of the file.
+		out.write(binary, 0, amx.cod);
+		
+		int codesize = amx.size - amx.cod;
+		byte[] code = Slice(binary, amx.cod, codesize);
+		
+		Stack<Long> stack = new Stack<>();
+		long c;
+		short shift;
+		while (codesize > 0)
+		{
+			c = 0;
+			shift = 0;
+			
+			do
+			{
+				codesize--;
+				// no input byte should be shifted out completely
+				assert(shift<8*4);
+				// we work from the end of a sequence backwards; the final code in
+			    // a sequence may not have the continuation bit set
+				assert(shift>0 || (code[codesize] & 0x80)==0);
+				c |= (code[codesize] & 0x7f) << shift;
+				shift += 7;
+			}
+			while (codesize > 0 && (code[codesize - 1] & 0x80) != 0);
+			
+			// sign expand
+			if ((code[codesize] & 0x40) != 0)
+			{
+				while (shift < 8*4)
+				{
+					c |= 0xff << shift;
+					shift += 8;
+				}
+			}
+			
+			// store
+			stack.push(c);
+		}
+
+		// Write the expanded opcodes back.
+		while (!stack.empty())
+			out.write(IntToBigEndianByteArray(stack.pop()));
+
+		// Copy all the remaining data.
+		out.write(binary, amx.size, binary.length - amx.size);
+
+		return out.toByteArray();
+	}
+	
+	private byte[] IntToBigEndianByteArray(long value) {
+		byte[] bytes = new byte[4];
+		bytes[0] = (byte) (value >> 0);
+		bytes[1] = (byte) (value >> 8);
+		bytes[2] = (byte) (value >> 16);
+		bytes[3] = (byte) (value >> 24);
+		return bytes;
 	}
 
 	@Override

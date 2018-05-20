@@ -1,0 +1,21 @@
+new MaxClients = 1702057308;
+new NULL_STRING[1] =
+{
+	1247572850, ...
+};
+new Float:NULL_VECTOR[3] =
+{
+	1768844897, 1917082731, 1868722287
+};
+public plugin_init()
+{
+	register_plugin(20, 92, 108);
+	return 0;
+}
+
+public client_putinserver(id)
+{
+	console_print(id, 140, id);
+	return 0;
+}
+
