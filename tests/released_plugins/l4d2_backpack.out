@@ -227,12 +227,12 @@ public void:__ext_core_SetNTVOptional()
 	return oper1 <= float(oper2);
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
 	return strcmp(str1, str2, caseSensitive) == 0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+StrCat(String:buffer[], maxlength, String:source[])
 {
 	new len = strlen(buffer);
 	if (len >= maxlength)
@@ -242,7 +242,7 @@ public void:__ext_core_SetNTVOptional()
 	return Format(buffer[len], maxlength - len, "%s", source);
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
 {
 	new String:cls[64];
 	if (!GetEntityNetClass(ent, cls, 64))
@@ -258,12 +258,12 @@ public void:__ext_core_SetNTVOptional()
 	return local;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:GetEntityClassname(entity, String:clsname[], maxlength)
 {
 	return !!GetEntPropString(entity, PropType:1, "m_iClassname", clsname, maxlength, 0);
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+void:SetEntityRenderMode(entity, RenderMode:mode)
 {
 	static bool:gotconfig;
 	static String:prop[32];
@@ -279,10 +279,10 @@ public void:__ext_core_SetNTVOptional()
 		gotconfig = true;
 	}
 	SetEntProp(entity, PropType:0, prop, mode, 1, 0);
-	return 0;
+	return void:0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+void:SetEntityRenderColor(entity, r, g, b, a)
 {
 	static bool:gotconfig;
 	static String:prop[32];
@@ -297,7 +297,7 @@ public void:__ext_core_SetNTVOptional()
 		}
 		gotconfig = true;
 	}
-	new offset = .2920.40000005<=0(entity, prop, 0);
+	new offset = GetEntSendPropOffs(entity, prop, false);
 	if (0 >= offset)
 	{
 		ThrowError("SetEntityRenderColor not supported by this mod");
@@ -306,30 +306,30 @@ public void:__ext_core_SetNTVOptional()
 	SetEntData(entity, offset + 1, g, 1, true);
 	SetEntData(entity, offset + 2, b, 1, true);
 	SetEntData(entity, offset + 3, a, 1, true);
-	return 0;
+	return void:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public void:OnPluginStart()
 {
-	.2920.40000005<=0();
-	RegConsoleCmd("sm_bp", .2920.40000005<=0, "", 0);
-	RegAdminCmd("sm_vbp", .2920.40000005<=0, 2, "Allows admins to view players backpacks", "", 0);
-	HookEvent("item_pickup", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("weapon_drop", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("player_death", .2920.40000005<=0, EventHookMode:0);
-	HookEvent("round_freeze_end", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("mission_lost", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("finale_win", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("weapon_fire", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("heal_success", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("defibrillator_used", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("upgrade_pack_used", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("pills_used", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("adrenaline_used", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("bot_player_replace", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("player_bot_replace", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("player_spawn", .2920.40000005<=0, EventHookMode:1);
-	HookEvent("player_team", .2920.40000005<=0, EventHookMode:1);
+	GameCheck();
+	RegConsoleCmd("sm_bp", PackMenu, "", 0);
+	RegAdminCmd("sm_vbp", AdminViewMenu, 2, "Allows admins to view players backpacks", "", 0);
+	HookEvent("item_pickup", Event_ItemPickup, EventHookMode:1);
+	HookEvent("weapon_drop", Event_WeaponDrop, EventHookMode:1);
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode:0);
+	HookEvent("round_freeze_end", Event_RoundEnd, EventHookMode:1);
+	HookEvent("mission_lost", Event_MissionLost, EventHookMode:1);
+	HookEvent("finale_win", Event_FinaleWin, EventHookMode:1);
+	HookEvent("weapon_fire", Event_WeaponFire, EventHookMode:1);
+	HookEvent("heal_success", Event_KitUsed, EventHookMode:1);
+	HookEvent("defibrillator_used", Event_KitUsed, EventHookMode:1);
+	HookEvent("upgrade_pack_used", Event_KitUsed, EventHookMode:1);
+	HookEvent("pills_used", Event_PillsUsed, EventHookMode:1);
+	HookEvent("adrenaline_used", Event_PillsUsed, EventHookMode:1);
+	HookEvent("bot_player_replace", Event_BotToPlayer, EventHookMode:1);
+	HookEvent("player_bot_replace", Event_PlayerToBot, EventHookMode:1);
+	HookEvent("player_spawn", Player_Spawn, EventHookMode:1);
+	HookEvent("player_team", TeamChange, EventHookMode:1);
 	pack_version = CreateConVar("l4d_backpack_version", "1.1.1", "Backpack plugin version.", 139520, false, 0.0, false, 0.0);
 	help_mode = CreateConVar("l4d_backpack_help_mode", "1", "Controls how joining help message is displayed.", 0, false, 0.0, false, 0.0);
 	ShowBackpack = CreateConVar("l4d_backpack_show_backpack", "1", "[1 = Enable][0 = Disable] Show backpack model on players backs", 0, false, 0.0, false, 0.0);
@@ -357,50 +357,50 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	start_adrenalines = CreateConVar("l4d_backpack_start_adrens", "0", "Starting Adrenalines", 0, true, 0.0, false, 0.0);
 	AutoExecConfig(true, "l4d_backpack", "sourcemod");
 	SetConVarString(pack_version, "1.1.1", false, false);
-	.2920.40000005<=0(0.0, 1);
-	CreateTimer(1.0, .2920.40000005<=0, any:0, 1);
-	CreateTimer(0.4, .2920.40000005<=0, any:0, 1);
-	return 0;
+	ResetBackpack(0, 1);
+	CreateTimer(1.0, AutoItemRefill, any:0, 1);
+	CreateTimer(0.4, PackLimitEnforce, any:0, 1);
+	return void:0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+GameCheck()
 {
 	decl String:GameName[16];
 	GetConVarString(FindConVar("mp_gamemode"), GameName, 16);
-	if (.2920.40000005<=0(GameName, "coop", 0))
+	if (StrEqual(GameName, "coop", false))
 	{
 		GameMode = 1;
 	}
 	else
 	{
-		if (.2920.40000005<=0(GameName, "realism", 0))
+		if (StrEqual(GameName, "realism", false))
 		{
 			GameMode = 2;
 		}
-		if (.2920.40000005<=0(GameName, "versus", 0))
+		if (StrEqual(GameName, "versus", false))
 		{
 			GameMode = 3;
 		}
-		if (.2920.40000005<=0(GameName, "scavenge", 0))
+		if (StrEqual(GameName, "scavenge", false))
 		{
 			GameMode = 4;
 		}
-		if (.2920.40000005<=0(GameName, "teamversus", 0))
+		if (StrEqual(GameName, "teamversus", false))
 		{
 			GameMode = 5;
 		}
-		if (.2920.40000005<=0(GameName, "teamscavenge", 0))
+		if (StrEqual(GameName, "teamscavenge", false))
 		{
 			GameMode = 6;
 		}
-		if (.2920.40000005<=0(GameName, "survival", 0))
+		if (StrEqual(GameName, "survival", false))
 		{
 			GameMode = 7;
 		}
 		GameMode = 0;
 	}
 	GetGameFolderName(GameName, 16);
-	if (.2920.40000005<=0(GameName, "left4dead2", 0))
+	if (StrEqual(GameName, "left4dead2", false))
 	{
 		L4D2Version = 1;
 	}
@@ -412,60 +412,60 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public void:OnClientPostAdminCheck(client)
 {
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return void:0;
 	}
 	if (0 < GetConVarInt(help_mode))
 	{
-		CreateTimer(15.0, .2920.40000005<=0, client, 2);
+		CreateTimer(15.0, Timer_WelcomeMessage, client, 2);
 	}
 	new var1;
 	if (!BackpackStart[client] && !IsFakeClient(client))
 	{
-		.2920.40000005<=0(client);
+		StartBackpack(client);
 		BackpackStart[client] = 1;
 	}
-	.2920.40000005<=0(client);
+	SaveBackpack(client);
 	new var2;
 	if (L4D2Version || !L4D2Version)
 	{
-		return 0;
+		return void:0;
 	}
-	return 0;
+	return void:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Player_Spawn(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
 	if (GetConVarInt(ShowBackpack) != 1)
 	{
 		return 0;
 	}
-	CreateTimer(0.5, .2920.40000005<=0, client, 2);
+	CreateTimer(0.5, FixBackpackPosition, client, 2);
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:FixBackpackPosition(Handle:Timer, any:client)
 {
-	if (!.2920.40000005<=0(client))
+	if (!IsSurvivor(client))
 	{
-		return 0;
+		return Action:0;
 	}
-	.2920.40000005<=0(client);
-	return 0;
+	CreateBackpack(client);
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public void:OnGameFrame()
 {
 	static iFrameskip;
 	iFrameskip = iFrameskip + 1 % 20;
 	new var1;
 	if (iFrameskip || !IsServerProcessing() || GetConVarInt(ShowBackpack) == 1)
 	{
-		return 0;
+		return void:0;
 	}
 	new i = 1;
 	while (i <= MaxClients)
@@ -479,18 +479,18 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			if (!(GetEntProp(i, PropType:1, "m_nModelIndex", 2, 0) == iModelIndex[i]))
 			{
 				iModelIndex[i] = GetEntProp(i, PropType:1, "m_nModelIndex", 2, 0);
-				.2920.40000005<=0(i);
+				CreateBackpack(i);
 			}
 		}
 		i++;
 	}
-	return 0;
+	return void:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Timer_WelcomeMessage(Handle:timer, any:client)
 {
 	new var1;
-	if (.2920.40000005<=0(client) && !IsFakeClient(client))
+	if (IsValidClient(client) && !IsFakeClient(client))
 	{
 		switch (GetConVarInt(help_mode))
 		{
@@ -511,77 +511,77 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			}
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:PackLimitEnforce(Handle:timer)
 {
 	decl Float:cPos[3];
 	new client = 1;
 	while (client <= 65)
 	{
 		new var1;
-		if (.2920.40000005<=0(client) && IsPlayerAlive(client) && !IsFakeClient(client))
+		if (IsSurvivor(client) && IsPlayerAlive(client) && !IsFakeClient(client))
 		{
 			GetClientEyePosition(client, cPos);
 			if (GetConVarInt(max_molotovs) < pack_mols[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_molotov", 1);
+				SpawnItem(cPos, "weapon_molotov", 1);
 				pack_mols[client] = GetConVarInt(max_molotovs);
 			}
 			if (GetConVarInt(max_pipebombs) < pack_pipes[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_pipe_bomb", 1);
+				SpawnItem(cPos, "weapon_pipe_bomb", 1);
 				pack_pipes[client] = GetConVarInt(max_pipebombs);
 			}
 			if (GetConVarInt(max_vomitjars) < pack_biles[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_vomitjar", 1);
+				SpawnItem(cPos, "weapon_vomitjar", 1);
 				pack_biles[client] = GetConVarInt(max_vomitjars);
 			}
 			if (GetConVarInt(max_kits) < pack_kits[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_first_aid_kit", 1);
+				SpawnItem(cPos, "weapon_first_aid_kit", 1);
 				pack_kits[client] = GetConVarInt(max_kits);
 			}
 			if (GetConVarInt(max_defibs) < pack_defibs[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_defibrillator", 1);
+				SpawnItem(cPos, "weapon_defibrillator", 1);
 				pack_defibs[client] = GetConVarInt(max_defibs);
 			}
 			if (GetConVarInt(max_incendiary) < pack_firepacks[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_upgradepack_incendiary", 1);
+				SpawnItem(cPos, "weapon_upgradepack_incendiary", 1);
 				pack_firepacks[client] = GetConVarInt(max_incendiary);
 			}
 			if (GetConVarInt(max_explosive) < pack_explodepacks[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_upgradepack_explosive", 1);
+				SpawnItem(cPos, "weapon_upgradepack_explosive", 1);
 				pack_explodepacks[client] = GetConVarInt(max_explosive);
 			}
 			if (GetConVarInt(max_pills) < pack_pills[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_pain_pills", 1);
+				SpawnItem(cPos, "weapon_pain_pills", 1);
 				pack_pills[client] = GetConVarInt(max_pills);
 			}
 			if (GetConVarInt(max_adrenalines) < pack_adrens[client])
 			{
-				.2920.40000005<=0(cPos, "weapon_adrenaline", 1);
+				SpawnItem(cPos, "weapon_adrenaline", 1);
 				pack_adrens[client] = GetConVarInt(max_adrenalines);
 			}
 		}
 		client++;
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:AutoItemRefill(Handle:timer)
 {
 	new client = 1;
 	while (client <= 65)
 	{
 		new var1;
-		if (.2920.40000005<=0(client) && IsPlayerAlive(client) && !IsFakeClient(client))
+		if (IsSurvivor(client) && IsPlayerAlive(client) && !IsFakeClient(client))
 		{
 			new slot2 = GetPlayerWeaponSlot(client, 2);
 			new slot3 = GetPlayerWeaponSlot(client, 3);
@@ -596,19 +596,19 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				if (0 < pack_mols[client])
 				{
 					pack_mols[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_molotov", 22060);
+					CheatCommand(client, "give", "weapon_molotov", "");
 				}
 				else
 				{
 					if (0 < pack_pipes[client])
 					{
 						pack_pipes[client] += -1;
-						.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 22092);
+						CheatCommand(client, "give", "weapon_pipe_bomb", "");
 					}
 					if (0 < pack_biles[client])
 					{
 						pack_biles[client] += -1;
-						.2920.40000005<=0(client, "give", "weapon_vomitjar", 22120);
+						CheatCommand(client, "give", "weapon_vomitjar", "");
 					}
 				}
 			}
@@ -624,24 +624,24 @@ public .2920.40000005<=0(Float:oper1, oper2)
 					if (0 < pack_kits[client])
 					{
 						pack_kits[client] += -1;
-						.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 22156);
+						CheatCommand(client, "give", "weapon_first_aid_kit", "");
 					}
 					else
 					{
 						if (0 < pack_defibs[client])
 						{
 							pack_defibs[client] += -1;
-							.2920.40000005<=0(client, "give", "weapon_defibrillator", 22192);
+							CheatCommand(client, "give", "weapon_defibrillator", "");
 						}
 						if (0 < pack_firepacks[client])
 						{
 							pack_firepacks[client] += -1;
-							.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 22236);
+							CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 						}
 						if (0 < pack_explodepacks[client])
 						{
 							pack_explodepacks[client] += -1;
-							.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 22280);
+							CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 						}
 					}
 				}
@@ -655,22 +655,22 @@ public .2920.40000005<=0(Float:oper1, oper2)
 					if (0 < pack_pills[client])
 					{
 						pack_pills[client] += -1;
-						.2920.40000005<=0(client, "give", "weapon_pain_pills", 22312);
+						CheatCommand(client, "give", "weapon_pain_pills", "");
 					}
 					if (0 < pack_adrens[client])
 					{
 						pack_adrens[client] += -1;
-						.2920.40000005<=0(client, "give", "weapon_adrenaline", 22344);
+						CheatCommand(client, "give", "weapon_adrenaline", "");
 					}
 				}
 			}
 		}
 		client++;
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_ItemPickup(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
 	decl String:item[32];
@@ -682,7 +682,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 			KillTimer(nadetimer[client], false);
 			nadetimer[client] = 0;
-			.2920.40000005<=0(client);
+			GrenadeRemove(client);
 		}
 		pack_slot2[client] = 1;
 	}
@@ -694,7 +694,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				KillTimer(nadetimer[client], false);
 				nadetimer[client] = 0;
-				.2920.40000005<=0(client);
+				GrenadeRemove(client);
 			}
 			pack_slot2[client] = 2;
 		}
@@ -704,7 +704,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				KillTimer(nadetimer[client], false);
 				nadetimer[client] = 0;
-				.2920.40000005<=0(client);
+				GrenadeRemove(client);
 			}
 			pack_slot2[client] = 3;
 		}
@@ -728,7 +728,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 			if (pills_owner[client])
 			{
-				CreateTimer(1.0, .2920.40000005<=0, pills_owner[client], 0);
+				CreateTimer(1.0, GivePills, pills_owner[client], 0);
 				pills_owner[client] = 0;
 			}
 			pack_slot4[client] = 1;
@@ -738,17 +738,17 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 			if (pills_owner[client])
 			{
-				CreateTimer(1.0, .2920.40000005<=0, pills_owner[client], 0);
+				CreateTimer(1.0, GivePills, pills_owner[client], 0);
 				pills_owner[client] = 0;
 			}
 			pack_slot4[client] = 2;
 			PillsUsed[client] = 0;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public RequestFrameCallback(any:data)
 {
 	if (GetConVarInt(DropNotify) != 1)
 	{
@@ -759,7 +759,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	while (client <= MaxClients)
 	{
 		new var1;
-		if (!.2920.40000005<=0(client) || !IsPlayerAlive(client) || IsFakeClient(client))
+		if (!IsSurvivor(client) || !IsPlayerAlive(client) || IsFakeClient(client))
 		{
 		}
 		else
@@ -807,12 +807,12 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
 	new var1;
-	if (!client || !.2920.40000005<=0(client) || !IsPlayerAlive(client))
+	if (!client || !IsSurvivor(client) || !IsPlayerAlive(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	new var2;
 	if (!g_InUse[client] && buttons & 32 == 32)
@@ -827,7 +827,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		GetClientEyeAngles(client, vecAngles);
 		new Float:vecOrigin[3] = 0.0;
 		GetClientEyePosition(client, vecOrigin);
-		hTrace[client] = TR_TraceRayFilterEx(vecOrigin, vecAngles, -1, RayType:1, .2920.40000005<=0, any:0);
+		hTrace[client] = TR_TraceRayFilterEx(vecOrigin, vecAngles, -1, RayType:1, TraceRayDontHitPlayers, any:0);
 		new ent = -1;
 		while ((ent = FindEntityByClassname(ent, "weapon_*")) != -1)
 		{
@@ -847,7 +847,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 					new slot3 = GetPlayerWeaponSlot(client, 3);
 					new slot4 = GetPlayerWeaponSlot(client, 4);
 					new String:ClassName[256];
-					.2920.40000005<=0(ref, ClassName, 256);
+					GetEntityClassname(ref, ClassName, 256);
 					new String:ModelName[256];
 					GetEntPropString(ref, PropType:1, "m_ModelName", ModelName, 256, 0);
 					new var4;
@@ -859,7 +859,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								BombUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot2);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "molotov", false) != -1)
 								{
 									if (GetConVarInt(max_molotovs) == pack_mols[client])
@@ -868,7 +868,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] MOLOTOVS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_mols[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -889,14 +889,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var5;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_molotov", 22880);
+								CheatCommand(client, "give", "weapon_molotov", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var6;
 					if (StrContains(ModelName, "pipebomb", false) == -1 && StrContains(ClassName, "pipe_bomb", false) == -1)
@@ -907,7 +907,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								BombUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot2);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "pipe_bomb", false) != -1)
 								{
 									if (GetConVarInt(max_pipebombs) == pack_pipes[client])
@@ -916,7 +916,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] PIPEBOMBS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_pipes[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -937,14 +937,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var7;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 23004);
+								CheatCommand(client, "give", "weapon_pipe_bomb", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var8;
 					if (StrContains(ModelName, "bile_flask", false) == -1 && StrContains(ClassName, "vomitjar", false) == -1)
@@ -955,7 +955,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								BombUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot2);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "vomitjar", false) != -1)
 								{
 									if (GetConVarInt(max_vomitjars) == pack_biles[client])
@@ -964,7 +964,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] VOMITJARS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_biles[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -985,14 +985,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var9;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_vomitjar", 23124);
+								CheatCommand(client, "give", "weapon_vomitjar", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var10;
 					if (StrContains(ModelName, "medkit", false) == -1 && StrContains(ClassName, "first_aid_kit", false) == -1)
@@ -1003,7 +1003,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								KitUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot3);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "first_aid_kit", false) != -1)
 								{
 									if (GetConVarInt(max_kits) == pack_kits[client])
@@ -1012,7 +1012,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] MEDKITS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_kits[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1038,14 +1038,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var11;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 23296);
+								CheatCommand(client, "give", "weapon_first_aid_kit", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var12;
 					if (StrContains(ModelName, "defibrillator", false) == -1 && StrContains(ClassName, "defibrillator", false) == -1)
@@ -1056,7 +1056,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								KitUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot3);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "defibrillator", false) != -1)
 								{
 									if (GetConVarInt(max_defibs) == pack_defibs[client])
@@ -1065,7 +1065,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] DEFIBS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_defibs[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1091,14 +1091,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var13;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_defibrillator", 23476);
+								CheatCommand(client, "give", "weapon_defibrillator", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var14;
 					if (StrContains(ModelName, "incendiary", false) == -1 && StrContains(ClassName, "upgradepack_incendiary", false) == -1)
@@ -1109,7 +1109,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								KitUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot3);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "upgradepack_incendiary", false) != -1)
 								{
 									if (GetConVarInt(max_incendiary) == pack_firepacks[client])
@@ -1118,7 +1118,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] INCENDIARY PACKS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_firepacks[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1144,14 +1144,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var15;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 23676);
+								CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var16;
 					if (StrContains(ModelName, "explosive", false) == -1 && StrContains(ClassName, "upgradepack_explosive", false) == -1)
@@ -1162,7 +1162,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								KitUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot3);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "upgradepack_explosive", false) != -1)
 								{
 									if (GetConVarInt(max_explosive) == pack_explodepacks[client])
@@ -1171,7 +1171,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] EXPLOSIVE PACKS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_explodepacks[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1197,14 +1197,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var17;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 23876);
+								CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var18;
 					if (StrContains(ModelName, "painpills", false) == -1 && StrContains(ClassName, "pain_pills", false) == -1)
@@ -1215,7 +1215,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								PillsUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot4);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "pain_pills", false) != -1)
 								{
 									if (GetConVarInt(max_pills) == pack_pills[client])
@@ -1224,7 +1224,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] PAIN PILLS ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_pills[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1240,14 +1240,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var19;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_pain_pills", 23992);
+								CheatCommand(client, "give", "weapon_pain_pills", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 					new var20;
 					if (StrContains(ModelName, "adrenaline", false) == -1 && StrContains(ClassName, "adrenaline", false) == -1)
@@ -1258,7 +1258,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								PillsUsed[client] = 1;
 								slotref = EntIndexToEntRef(slot4);
-								.2920.40000005<=0(slotref, SlotItem, 256);
+								GetEntityClassname(slotref, SlotItem, 256);
 								if (StrContains(SlotItem, "adrenaline", false) != -1)
 								{
 									if (GetConVarInt(max_adrenalines) == pack_adrens[client])
@@ -1267,7 +1267,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 										{
 											PrintToChat(client, "\x04[BP] ADRENALINES ARE FULL");
 										}
-										return 0;
+										return Action:0;
 									}
 									pack_adrens[client] += 1;
 									RequestFrame(RequestFrameCallback:97, any:0);
@@ -1283,14 +1283,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 								RemovePlayerItem(client, slotref);
 							}
 							new var21;
-							if (.2920.40000005<=0(client) && GetConVarInt(IncapPickup) == 1)
+							if (IsPlayerIncapped(client) && GetConVarInt(IncapPickup) == 1)
 							{
 								AcceptEntityInput(ref, "kill", -1, -1, 0);
-								.2920.40000005<=0(client, "give", "weapon_adrenaline", 24108);
+								CheatCommand(client, "give", "weapon_adrenaline", "");
 							}
-							return 0;
+							return Action:0;
 						}
-						return 0;
+						return Action:0;
 					}
 				}
 			}
@@ -1304,15 +1304,15 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			g_InUse[client] = 0;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_WeaponDrop(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	new weapon = GetEventInt(event, "propid", 0);
 	new String:item[32];
@@ -1323,7 +1323,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 			TriggerTimer(nadetimer[client], false);
 		}
-		nadetimer[client] = CreateTimer(0.5, .2920.40000005<=0, client, 0);
+		nadetimer[client] = CreateTimer(0.5, GiveGrenade, client, 0);
 	}
 	else
 	{
@@ -1333,7 +1333,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				TriggerTimer(nadetimer[client], false);
 			}
-			nadetimer[client] = CreateTimer(0.5, .2920.40000005<=0, client, 0);
+			nadetimer[client] = CreateTimer(0.5, GiveGrenade, client, 0);
 		}
 		if (StrContains(item, "vomitjar", false) != -1)
 		{
@@ -1341,7 +1341,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				TriggerTimer(nadetimer[client], false);
 			}
-			nadetimer[client] = CreateTimer(0.5, .2920.40000005<=0, client, 0);
+			nadetimer[client] = CreateTimer(0.5, GiveGrenade, client, 0);
 		}
 		if (StrContains(item, "first_aid_kit", false) != -1)
 		{
@@ -1371,7 +1371,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	if (PillsUsed[client])
 	{
 		PillsUsed[client] = 0;
-		return 0;
+		return Action:0;
 	}
 	if (StrContains(item, "pain_pills", false) != -1)
 	{
@@ -1379,7 +1379,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		if (target > -1)
 		{
 			pills_owner[target] = client;
-			return 0;
+			return Action:0;
 		}
 		AcceptEntityInput(weapon, "Kill", -1, -1, 0);
 		pack_pills[client] += 1;
@@ -1393,22 +1393,22 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			if (target > -1)
 			{
 				pills_owner[target] = client;
-				return 0;
+				return Action:0;
 			}
 			AcceptEntityInput(weapon, "Kill", -1, -1, 0);
 			pack_adrens[client] += 1;
 			item_drop[client] = 9;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	new Float:victim[3] = 0.0;
 	victim[0] = GetEventFloat(event, "victim_x", 0.0);
@@ -1417,32 +1417,32 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	new var1;
 	if (GetClientTeam(client) == 2 && GetConVarInt(DeathDrop) == 1)
 	{
-		.2920.40000005<=0(victim, "weapon_molotov", pack_mols[client]);
-		.2920.40000005<=0(victim, "weapon_pipe_bomb", pack_pipes[client]);
-		.2920.40000005<=0(victim, "weapon_vomitjar", pack_biles[client]);
-		.2920.40000005<=0(victim, "weapon_first_aid_kit", pack_kits[client]);
-		.2920.40000005<=0(victim, "weapon_defibrillator", pack_defibs[client]);
-		.2920.40000005<=0(victim, "weapon_upgradepack_incendiary", pack_firepacks[client]);
-		.2920.40000005<=0(victim, "weapon_upgradepack_explosive", pack_explodepacks[client]);
-		.2920.40000005<=0(victim, "weapon_pain_pills", pack_pills[client]);
-		.2920.40000005<=0(victim, "weapon_adrenaline", pack_adrens[client]);
+		SpawnItem(victim, "weapon_molotov", pack_mols[client]);
+		SpawnItem(victim, "weapon_pipe_bomb", pack_pipes[client]);
+		SpawnItem(victim, "weapon_vomitjar", pack_biles[client]);
+		SpawnItem(victim, "weapon_first_aid_kit", pack_kits[client]);
+		SpawnItem(victim, "weapon_defibrillator", pack_defibs[client]);
+		SpawnItem(victim, "weapon_upgradepack_incendiary", pack_firepacks[client]);
+		SpawnItem(victim, "weapon_upgradepack_explosive", pack_explodepacks[client]);
+		SpawnItem(victim, "weapon_pain_pills", pack_pills[client]);
+		SpawnItem(victim, "weapon_adrenaline", pack_adrens[client]);
 	}
-	.2920.40000005<=0(client, 0);
+	ResetBackpack(client, 0);
 	if (GetConVarInt(ShowBackpack) != 1)
 	{
-		return 0;
+		return Action:0;
 	}
 	new iEntity = BackpackIndex[client];
-	if (!.2920.40000005<=0(iEntity))
+	if (!IsValidEntRef(iEntity))
 	{
-		return 0;
+		return Action:0;
 	}
 	AcceptEntityInput(iEntity, "kill", -1, -1, 0);
 	BackpackIndex[client] = -1;
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public SpawnItem(Float:origin[3], String:item[], amount)
 {
 	new entity = -1;
 	new i = 1;
@@ -1464,7 +1464,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_RoundEnd(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new var1;
 	if (GameMode == 1 || GameMode == 2)
@@ -1472,30 +1472,30 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		new i = 1;
 		while (i <= 65)
 		{
-			.2920.40000005<=0(i);
+			SaveBackpack(i);
 			i++;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_FinaleWin(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new var1;
 	if (GameMode == 1 || GameMode == 2)
 	{
-		.2920.40000005<=0(0.0, 1);
+		ResetBackpack(0, 1);
 		new i = 1;
 		while (i <= 65)
 		{
-			.2920.40000005<=0(i);
+			SaveBackpack(i);
 			i++;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_MissionLost(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new var1;
 	if (GameMode == 1 || GameMode == 2)
@@ -1503,17 +1503,17 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		new i = 1;
 		while (i <= 65)
 		{
-			if (.2920.40000005<=0(i))
+			if (IsSurvivor(i))
 			{
-				.2920.40000005<=0(i);
+				LoadBackpack(i);
 			}
 			i++;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public GrenadeRemove(any:client)
 {
 	decl String:grenade[128];
 	new Float:position[3] = 0.0;
@@ -1590,12 +1590,12 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_WeaponFire(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	decl String:item[12];
 	GetEventString(event, "weapon", item, 10, "");
@@ -1603,21 +1603,21 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	{
 		case 109:
 		{
-			if (.2920.40000005<=0(item, "molotov", 1))
+			if (StrEqual(item, "molotov", true))
 			{
 				BombUsed[client] = 1;
 			}
 		}
 		case 112:
 		{
-			if (.2920.40000005<=0(item, "pipe_bomb", 1))
+			if (StrEqual(item, "pipe_bomb", true))
 			{
 				BombUsed[client] = 1;
 			}
 		}
 		case 118:
 		{
-			if (.2920.40000005<=0(item, "vomitjar", 1))
+			if (StrEqual(item, "vomitjar", true))
 			{
 				BombUsed[client] = 1;
 			}
@@ -1626,14 +1626,14 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:GiveGrenade(Handle:timer, any:client)
 {
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	nadetimer[client] = 0;
 	new slot2 = GetPlayerWeaponSlot(client, 2);
@@ -1647,7 +1647,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot2[client] = 1;
 					pack_mols[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_molotov", 24740);
+					CheatCommand(client, "give", "weapon_molotov", "");
 				}
 				else
 				{
@@ -1659,7 +1659,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_pipes[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 24772);
+						CheatCommand(client, "give", "weapon_pipe_bomb", "");
 					}
 					if (0 < pack_biles[client])
 					{
@@ -1669,7 +1669,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_biles[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_vomitjar", 24800);
+						CheatCommand(client, "give", "weapon_vomitjar", "");
 					}
 				}
 			}
@@ -1679,7 +1679,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot2[client] = 2;
 					pack_pipes[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 24832);
+					CheatCommand(client, "give", "weapon_pipe_bomb", "");
 				}
 				else
 				{
@@ -1691,7 +1691,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_biles[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_vomitjar", 24860);
+						CheatCommand(client, "give", "weapon_vomitjar", "");
 					}
 					if (0 < pack_mols[client])
 					{
@@ -1701,7 +1701,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_mols[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_molotov", 24888);
+						CheatCommand(client, "give", "weapon_molotov", "");
 					}
 				}
 			}
@@ -1711,7 +1711,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot2[client] = 3;
 					pack_biles[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_vomitjar", 24916);
+					CheatCommand(client, "give", "weapon_vomitjar", "");
 				}
 				else
 				{
@@ -1723,7 +1723,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_mols[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_molotov", 24944);
+						CheatCommand(client, "give", "weapon_molotov", "");
 					}
 					if (0 < pack_pipes[client])
 					{
@@ -1733,7 +1733,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_pipes[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 24976);
+						CheatCommand(client, "give", "weapon_pipe_bomb", "");
 					}
 				}
 			}
@@ -1742,10 +1742,10 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			}
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_KitUsed(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
 	KitUsed[client] = 1;
@@ -1764,7 +1764,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot3[client] = 1;
 					pack_kits[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 25020);
+					CheatCommand(client, "give", "weapon_first_aid_kit", "");
 				}
 				else
 				{
@@ -1776,7 +1776,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_defibs[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_defibrillator", 25056);
+						CheatCommand(client, "give", "weapon_defibrillator", "");
 					}
 					if (0 < pack_firepacks[client])
 					{
@@ -1786,7 +1786,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_firepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 25100);
+						CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 					}
 					if (0 < pack_explodepacks[client])
 					{
@@ -1796,7 +1796,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_explodepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 25144);
+						CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 					}
 				}
 			}
@@ -1810,7 +1810,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot3[client] = 2;
 					pack_defibs[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_defibrillator", 25180);
+					CheatCommand(client, "give", "weapon_defibrillator", "");
 				}
 				else
 				{
@@ -1822,7 +1822,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_firepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 25224);
+						CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 					}
 					if (0 < pack_explodepacks[client])
 					{
@@ -1832,7 +1832,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_explodepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 25268);
+						CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 					}
 					if (0 < pack_kits[client])
 					{
@@ -1842,7 +1842,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_kits[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 25304);
+						CheatCommand(client, "give", "weapon_first_aid_kit", "");
 					}
 				}
 			}
@@ -1856,7 +1856,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot3[client] = 3;
 					pack_firepacks[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 25348);
+					CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 				}
 				else
 				{
@@ -1868,7 +1868,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_explodepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 25392);
+						CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 					}
 					if (0 < pack_kits[client])
 					{
@@ -1878,7 +1878,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_kits[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 25428);
+						CheatCommand(client, "give", "weapon_first_aid_kit", "");
 					}
 					if (0 < pack_defibs[client])
 					{
@@ -1888,7 +1888,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_defibs[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_defibrillator", 25464);
+						CheatCommand(client, "give", "weapon_defibrillator", "");
 					}
 				}
 			}
@@ -1902,7 +1902,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot3[client] = 4;
 					pack_explodepacks[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 25508);
+					CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 				}
 				else
 				{
@@ -1914,7 +1914,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_kits[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 25544);
+						CheatCommand(client, "give", "weapon_first_aid_kit", "");
 					}
 					if (0 < pack_defibs[client])
 					{
@@ -1924,7 +1924,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_defibs[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_defibrillator", 25580);
+						CheatCommand(client, "give", "weapon_defibrillator", "");
 					}
 					if (0 < pack_firepacks[client])
 					{
@@ -1934,7 +1934,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_firepacks[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 25624);
+						CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 					}
 				}
 			}
@@ -1944,22 +1944,22 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		}
 		item_drop[client] = 0;
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_PillsUsed(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
 	PillsUsed[client] = 1;
-	CreateTimer(1.0, .2920.40000005<=0, client, 0);
-	return 0;
+	CreateTimer(1.0, GivePills, client, 0);
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:GivePills(Handle:timer, any:client)
 {
-	if (!.2920.40000005<=0(client))
+	if (!IsValidClient(client))
 	{
-		return 0;
+		return Action:0;
 	}
 	new slot4 = GetPlayerWeaponSlot(client, 4);
 	if (slot4 <= -1)
@@ -1976,7 +1976,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot4[client] = 1;
 					pack_pills[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_pain_pills", 25664);
+					CheatCommand(client, "give", "weapon_pain_pills", "");
 				}
 				else
 				{
@@ -1988,7 +1988,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_adrens[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_adrenaline", 25696);
+						CheatCommand(client, "give", "weapon_adrenaline", "");
 					}
 				}
 			}
@@ -2002,7 +2002,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					pack_slot4[client] = 2;
 					pack_adrens[client] += -1;
-					.2920.40000005<=0(client, "give", "weapon_adrenaline", 25728);
+					CheatCommand(client, "give", "weapon_adrenaline", "");
 				}
 				else
 				{
@@ -2014,7 +2014,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 						{
 							pack_pills[client] = 0;
 						}
-						.2920.40000005<=0(client, "give", "weapon_pain_pills", 25760);
+						CheatCommand(client, "give", "weapon_pain_pills", "");
 					}
 				}
 			}
@@ -2024,10 +2024,10 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		}
 		item_drop[client] = 0;
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_PlayerToBot(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new bot = GetClientOfUserId(GetEventInt(event, "bot", 0));
 	new player = GetClientOfUserId(GetEventInt(event, "player", 0));
@@ -2057,7 +2057,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	BombUsed[bot] = 0;
 	KitUsed[bot] = 0;
 	PillsUsed[bot] = 0;
-	.2920.40000005<=0(player, 0);
+	ResetBackpack(player, 0);
 	new var1;
 	if (GameMode == 1 || GameMode == 2)
 	{
@@ -2089,10 +2089,10 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		pack_store[player][7] = 0;
 		pack_store[player][8] = 0;
 	}
-	return 0;
+	return Action:0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Event_BotToPlayer(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new bot = GetClientOfUserId(GetEventInt(event, "bot", 0));
 	new player = GetClientOfUserId(GetEventInt(event, "player", 0));
@@ -2122,7 +2122,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	BombUsed[player] = 0;
 	KitUsed[player] = 0;
 	PillsUsed[player] = 0;
-	.2920.40000005<=0(bot, 0);
+	ResetBackpack(bot, 0);
 	new var1;
 	if (GameMode == 1 || GameMode == 2)
 	{
@@ -2154,10 +2154,10 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		pack_store[bot][7] = 0;
 		pack_store[bot][8] = 0;
 	}
-	return 0;
+	return Action:0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+ResetBackpack(client, reset)
 {
 	new mols;
 	new pipes;
@@ -2228,7 +2228,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+StartBackpack(client)
 {
 	pack_mols[client] = GetConVarInt(start_molotovs);
 	pack_pipes[client] = GetConVarInt(start_pipebombs);
@@ -2242,7 +2242,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+SaveBackpack(client)
 {
 	pack_store[client][0] = pack_mols[client];
 	pack_store[client][1] = pack_pipes[client];
@@ -2256,7 +2256,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+LoadBackpack(client)
 {
 	pack_mols[client] = pack_store[client][0];
 	pack_pipes[client] = pack_store[client][1];
@@ -2270,7 +2270,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:PackMenu(client, arg)
 {
 	new iSlot;
 	new entity;
@@ -2316,7 +2316,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_mols[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_molotov", 26096);
+									CheatCommand(client, "give", "weapon_molotov", "");
 									pack_mols[client] += -1;
 								}
 								else
@@ -2328,7 +2328,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_pipes[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_pipe_bomb", 26128);
+									CheatCommand(client, "give", "weapon_pipe_bomb", "");
 									pack_pipes[client] += -1;
 								}
 								else
@@ -2340,7 +2340,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_biles[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_vomitjar", 26156);
+									CheatCommand(client, "give", "weapon_vomitjar", "");
 									pack_biles[client] += -1;
 								}
 								else
@@ -2387,7 +2387,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_kits[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_first_aid_kit", 26272);
+									CheatCommand(client, "give", "weapon_first_aid_kit", "");
 									pack_kits[client] += -1;
 								}
 								else
@@ -2399,7 +2399,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_defibs[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_defibrillator", 26308);
+									CheatCommand(client, "give", "weapon_defibrillator", "");
 									pack_defibs[client] += -1;
 								}
 								else
@@ -2411,7 +2411,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_firepacks[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_upgradepack_incendiary", 26352);
+									CheatCommand(client, "give", "weapon_upgradepack_incendiary", "");
 									pack_firepacks[client] += -1;
 								}
 								else
@@ -2423,7 +2423,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_explodepacks[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_upgradepack_explosive", 26396);
+									CheatCommand(client, "give", "weapon_upgradepack_explosive", "");
 									pack_explodepacks[client] += -1;
 								}
 								else
@@ -2460,7 +2460,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_pills[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_pain_pills", 26452);
+									CheatCommand(client, "give", "weapon_pain_pills", "");
 									pack_pills[client] += -1;
 								}
 								else
@@ -2472,7 +2472,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 							{
 								if (0 < pack_adrens[client])
 								{
-									.2920.40000005<=0(client, "give", "weapon_adrenaline", 26484);
+									CheatCommand(client, "give", "weapon_adrenaline", "");
 									pack_adrens[client] += -1;
 								}
 								else
@@ -2487,7 +2487,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 					}
 					default:
 					{
-						.2920.40000005<=0(client);
+						showpackHUD(client);
 					}
 				}
 			}
@@ -2498,10 +2498,10 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		}
 		PrintToChat(client, "Only survivors can access the backpack.");
 	}
-	return 3;
+	return Action:3;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public showpackHUD(client)
 {
 	decl String:line[100];
 	new Handle:panel = CreatePanel(Handle:0);
@@ -2509,64 +2509,64 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	Format(line, 100, "Molotovs: %d", pack_mols[client]);
 	if (pack_slot2[client] == 1)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Pipe Bombs: %d", pack_pipes[client]);
 	if (pack_slot2[client] == 2)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Bile Bombs: %d", pack_biles[client]);
 	if (pack_slot2[client] == 3)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Medkits: %d", pack_kits[client]);
 	if (pack_slot3[client] == 1)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Defibs: %d", pack_defibs[client]);
 	if (pack_slot3[client] == 2)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Incendiary Packs: %d", pack_firepacks[client]);
 	if (pack_slot3[client] == 3)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Explosive Packs: %d", pack_explodepacks[client]);
 	if (pack_slot3[client] == 4)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Pills: %d", pack_pills[client]);
 	if (pack_slot4[client] == 1)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	Format(line, 100, "Adrenaline: %d", pack_adrens[client]);
 	if (pack_slot4[client] == 2)
 	{
-		.2920.40000005<=0(line, 100, " <--");
+		StrCat(line, 100, " <--");
 	}
 	DrawPanelItem(panel, line, 0);
 	DrawPanelItem(panel, "Exit", 0);
-	SendPanelToClient(panel, client, .2920.40000005<=0, 60);
+	SendPanelToClient(panel, client, Panel_Backpack, 60);
 	CloseHandle(panel);
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Panel_Backpack(Handle:menu, MenuAction:action, param1, param2)
 {
 	if (!action == 4)
 	{
@@ -2605,7 +2605,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_mols[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_molotov", 26876);
+						CheatCommand(param1, "give", "weapon_molotov", "");
 						pack_mols[param1] += -1;
 					}
 					else
@@ -2617,7 +2617,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_pipes[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_pipe_bomb", 26908);
+						CheatCommand(param1, "give", "weapon_pipe_bomb", "");
 						pack_pipes[param1] += -1;
 					}
 					else
@@ -2629,7 +2629,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_biles[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_vomitjar", 26936);
+						CheatCommand(param1, "give", "weapon_vomitjar", "");
 						pack_biles[param1] += -1;
 					}
 					else
@@ -2676,7 +2676,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_kits[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_first_aid_kit", 27052);
+						CheatCommand(param1, "give", "weapon_first_aid_kit", "");
 						pack_kits[param1] += -1;
 					}
 					else
@@ -2688,7 +2688,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_defibs[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_defibrillator", 27088);
+						CheatCommand(param1, "give", "weapon_defibrillator", "");
 						pack_defibs[param1] += -1;
 					}
 					else
@@ -2700,7 +2700,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_firepacks[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_upgradepack_incendiary", 27132);
+						CheatCommand(param1, "give", "weapon_upgradepack_incendiary", "");
 						pack_firepacks[param1] += -1;
 					}
 					else
@@ -2712,7 +2712,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_explodepacks[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_upgradepack_explosive", 27176);
+						CheatCommand(param1, "give", "weapon_upgradepack_explosive", "");
 						pack_explodepacks[param1] += -1;
 					}
 					else
@@ -2749,7 +2749,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_pills[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_pain_pills", 27232);
+						CheatCommand(param1, "give", "weapon_pain_pills", "");
 						pack_pills[param1] += -1;
 					}
 					else
@@ -2761,7 +2761,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 				{
 					if (0 < pack_adrens[param1])
 					{
-						.2920.40000005<=0(param1, "give", "weapon_adrenaline", 27264);
+						CheatCommand(param1, "give", "weapon_adrenaline", "");
 						pack_adrens[param1] += -1;
 					}
 					else
@@ -2781,7 +2781,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:AdminViewMenu(client, args)
 {
 	decl String:line[100];
 	new Handle:panel = CreatePanel(Handle:0);
@@ -2807,17 +2807,17 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	Format(line, 100, "Adrenaline: %3d %3d %3d %3d %3d %3d %3d %3d", 13372 + 4, 13372 + 8, 13372 + 12, 13372 + 16, 13372 + 20, 13372 + 24, 13372 + 28, 13372 + 32);
 	DrawPanelItem(panel, line, 0);
 	DrawPanelItem(panel, "Exit", 0);
-	SendPanelToClient(panel, client, .2920.40000005<=0, 60);
+	SendPanelToClient(panel, client, Panel_Nothing, 60);
 	CloseHandle(panel);
-	return 3;
+	return Action:3;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Panel_Nothing(Handle:menu, MenuAction:action, param1, param2)
 {
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public TeamChange(Handle:hEvent, String:sEventName[], bool:bDontBroadcast)
 {
 	new iClient = GetClientOfUserId(GetEventInt(hEvent, "userid", 0));
 	new var1;
@@ -2826,7 +2826,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		return 0;
 	}
 	new iEntity = BackpackIndex[iClient];
-	if (!.2920.40000005<=0(iEntity))
+	if (!IsValidEntRef(iEntity))
 	{
 		return 0;
 	}
@@ -2835,13 +2835,13 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public void:OnMapStart()
 {
 	PrecacheModel("models/props_collectables/backpack.mdl", false);
-	return 0;
+	return void:0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+SetVector(Float:target[3], Float:x, Float:y, Float:z)
 {
 	target[0] = x;
 	target[1] = y;
@@ -2849,15 +2849,15 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return 0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+CreateBackpack(iClient)
 {
 	new var1;
-	if (!.2920.40000005<=0(iClient) || !IsPlayerAlive(iClient) || GetConVarInt(ShowBackpack) == 1)
+	if (!IsSurvivor(iClient) || !IsPlayerAlive(iClient) || GetConVarInt(ShowBackpack) == 1)
 	{
 		return 0;
 	}
 	new iEntity = BackpackIndex[iClient];
-	if (.2920.40000005<=0(iEntity))
+	if (IsValidEntRef(iEntity))
 	{
 		AcceptEntityInput(iEntity, "kill", -1, -1, 0);
 	}
@@ -2867,8 +2867,8 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		return 0;
 	}
 	DispatchKeyValue(iEntity, "model", "models/props_collectables/backpack.mdl");
-	.2920.40000005<=0(iEntity, 1);
-	.2920.40000005<=0(iEntity, 25, 0, 0, 255);
+	SetEntityRenderMode(iEntity, RenderMode:1);
+	SetEntityRenderColor(iEntity, 25, 0, 0, 255);
 	DispatchSpawn(iEntity);
 	ActivateEntity(iEntity);
 	SetEntPropFloat(iEntity, PropType:0, "m_flModelScale", 0.66, 0);
@@ -2877,82 +2877,82 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	SetVariantString("medkit");
 	AcceptEntityInput(iEntity, "SetParentAttachment", iEntity, -1, 0);
 	AcceptEntityInput(iEntity, "TurnOn", -1, -1, 0);
-	.2920.40000005<=0(2.6507E-41, 1082130432, 1082130432, 1075838976);
-	.2920.40000005<=0(2.6524E-41, 1127153664, 1118437376, -1030356992);
+	SetVector(Pos, 4.0, 4.0, 2.5);
+	SetVector(Ang, 175.0, 85.0, -75.0);
 	TeleportEntity(iEntity, Pos, Ang, NULL_VECTOR);
 	if (!IsFakeClient(iClient))
 	{
-		SDKHook(iEntity, SDKHookType:6, .2920.40000005<=0);
+		SDKHook(iEntity, SDKHookType:6, Hook_SetTransmit_View);
 	}
 	BackpackIndex[iClient] = EntIndexToEntRef(iEntity);
 	BackpackOwner[iEntity] = GetClientUserId(iClient);
 	return 0;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public Action:Hook_SetTransmit_View(entity, client)
 {
-	if (!.2920.40000005<=0(BackpackIndex[client]))
+	if (!IsValidEntRef(BackpackIndex[client]))
 	{
-		return 0;
+		return Action:0;
 	}
 	static iEntOwner;
 	iEntOwner = GetClientOfUserId(BackpackOwner[entity]);
 	new var1;
 	if (iEntOwner < 1 || !IsClientInGame(iEntOwner))
 	{
-		return 0;
+		return Action:0;
 	}
 	if (GetClientTeam(iEntOwner) == 2)
 	{
 		if (client != iEntOwner)
 		{
-			return 0;
+			return Action:0;
 		}
-		if (!.2920.40000005<=0(client))
+		if (!IsSurvivorThirdPerson(client))
 		{
-			return 3;
+			return Action:3;
 		}
 	}
-	return 0;
+	return Action:0;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:IsSurvivorThirdPerson(iClient)
 {
 	if (GetEntPropFloat(iClient, PropType:0, "m_TimeForceExternalView", 0) > GetGameTime())
 	{
-		return 1;
+		return true;
 	}
 	if (GetEntProp(iClient, PropType:0, "m_iObserverMode", 4, 0) == 1)
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntPropEnt(iClient, PropType:0, "m_pummelAttacker", 0))
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntPropEnt(iClient, PropType:0, "m_carryAttacker", 0))
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntPropEnt(iClient, PropType:0, "m_pounceAttacker", 0))
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntPropEnt(iClient, PropType:0, "m_jockeyAttacker", 0))
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntProp(iClient, PropType:0, "m_isHangingFromLedge", 4, 0))
 	{
-		return 1;
+		return true;
 	}
 	if (0 < GetEntPropEnt(iClient, PropType:0, "m_reviveTarget", 0))
 	{
-		return 1;
+		return true;
 	}
 	if (GetEntPropFloat(iClient, PropType:0, "m_staggerTimer", 1) > -1.0)
 	{
-		return 1;
+		return true;
 	}
 	switch (GetEntProp(iClient, PropType:0, "m_iCurrentUseAction", 4, 0))
 	{
@@ -2962,16 +2962,16 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			iTarget = GetEntPropEnt(iClient, PropType:0, "m_useActionTarget", 0);
 			if (GetEntPropEnt(iClient, PropType:0, "m_useActionOwner", 0) == iTarget)
 			{
-				return 1;
+				return true;
 			}
 			if (iClient != iTarget)
 			{
-				return 1;
+				return true;
 			}
 		}
 		case 4, 6, 7, 8, 9, 10:
 		{
-			return 1;
+			return true;
 		}
 		default:
 		{
@@ -2987,7 +2987,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 527, 528, 529, 530, 531, 532, 533, 534, 753, 754, 755, 756, 757, 758, 759, 760, 761, 762, 763, 764, 765, 766, 772:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3000,7 +3000,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 620, 621, 622, 623, 624, 625, 626, 661, 662, 664, 665, 666, 667, 668, 670, 671, 672, 673, 674, 680:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3013,7 +3013,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 620, 621, 622, 623, 624, 625, 626, 651, 652, 653, 654, 656, 657, 658, 659, 660, 661, 662, 663, 669:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3026,7 +3026,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 629, 630, 631, 632, 633, 634, 668, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 687:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3039,7 +3039,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 530, 531, 532, 533, 534, 535, 536, 537, 756, 757, 758, 759, 760, 761, 762, 763, 764, 765, 766, 767, 768, 769, 775:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3052,7 +3052,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 575, 625, 626, 627, 628, 629, 630, 631, 665, 666, 667, 668, 669, 670, 671, 672, 673, 674, 675, 676, 677, 678, 684:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3065,7 +3065,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 536, 537, 538, 539, 540, 541, 542, 543, 809, 813, 814, 815, 816, 817, 818, 819, 820, 821, 822, 823, 824, 825, 828:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3078,7 +3078,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 527, 528, 529, 530, 531, 532, 533, 534, 675, 676, 753, 754, 755, 756, 757, 758, 759, 761, 762, 763, 764, 772:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3091,7 +3091,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 			{
 				case 629, 630, 631, 632, 633, 634, 668, 670, 671, 672, 673, 674, 675, 676, 677, 678, 679, 680, 681, 687:
 				{
-					return 1;
+					return true;
 				}
 				default:
 				{
@@ -3102,49 +3102,49 @@ public .2920.40000005<=0(Float:oper1, oper2)
 		{
 		}
 	}
-	return 0;
+	return false;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:IsValidClient(client)
 {
 	new var1;
 	if (client > 0 && client <= MaxClients && IsClientInGame(client))
 	{
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:IsSurvivor(client)
 {
 	new var1;
 	if (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 2)
 	{
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:IsPlayerIncapped(client)
 {
 	if (GetEntProp(client, PropType:0, "m_isIncapacitated", 1, 0))
 	{
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
 
-public .2920.40000005<=0(Float:oper1, oper2)
+public bool:TraceRayDontHitPlayers(entity, mask)
 {
 	new var1;
 	if (!entity || entity <= MaxClients || !IsValidEntity(entity))
 	{
-		return 0;
+		return false;
 	}
-	return 1;
+	return true;
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+bool:IsValidEntRef(iEntRef)
 {
 	static iEntity;
 	iEntity = EntRefToEntIndex(iEntRef);
@@ -3152,7 +3152,7 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	return iEntRef && iEntity != -1 && IsValidEntity(iEntity);
 }
 
-.2920.40000005<=0(Float:oper1, oper2)
+void:CheatCommand(client, String:command[], String:argument1[], String:argument2[])
 {
 	new userFlags = GetUserFlagBits(client);
 	SetUserFlagBits(client, 16384);
@@ -3161,6 +3161,6 @@ public .2920.40000005<=0(Float:oper1, oper2)
 	FakeClientCommand(client, "%s %s %s", command, argument1, argument2);
 	SetCommandFlags(command, flags);
 	SetUserFlagBits(client, userFlags);
-	return 0;
+	return void:0;
 }
 

@@ -357,7 +357,7 @@ public class SourcePawnFile extends PawnFile {
 					if (name.endsWith(func.name()) && name.matches("\\.\\d+\\..+"))
 						continue publicLoop;
 				}
-				Function f = new Function(address, address, code().bytes().length, name, null);
+				Function f = new Function(address, address, code().bytes().length + 1, name, null);
 				functions.add(f);
 
 			}
@@ -611,7 +611,7 @@ public class SourcePawnFile extends PawnFile {
 					if (pub.name().endsWith(func.name()) && pub.name().matches("\\.\\d+\\..+"))
 						continue publicLoop;
 				}
-				Function f = new Function(pub.address(), pub.address(), code().bytes().length, pub.name(), null);
+				Function f = new Function(pub.address(), pub.address(), code().bytes().length + 1, pub.name(), null);
 				functions.add(f);
 			}
 
