@@ -256,7 +256,9 @@ public class SourcePawnFile extends PawnFile {
         
         for (String sectionName : knownSections)
         {
-            System.err.printf("// Missing section \"%s\".%n", sectionName);
+        	// There was no dbg.natives section in SM 1.0. Don't require it.
+        	if (header_.version != 0x0101 || !sectionName.equals(".dbg.natives"))
+        		System.err.printf("// Missing section \"%s\".%n", sectionName);
         }
         
         // There are some sections missing and some unknown ones there?
