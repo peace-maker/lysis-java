@@ -90,7 +90,6 @@ public class AMXModXFile extends PawnFile {
 		public final static int SIZE = 4 + 2 + (1 * 2) + (4 * 7);
 	}
 
-	private byte[] DAT_;
 	private Variable[] allvars_;
 	private Tag stringTag;
 	private Automation[] automations_;
@@ -166,10 +165,6 @@ public class AMXModXFile extends PawnFile {
 
 		if (amx.defsize != DEFSIZE)
 			throw new Exception("unrecognized header defsize");
-
-		DAT_ = new byte[amx.hea - amx.dat];
-		for (int i = 0; i < DAT_.length; i++)
-			DAT_[i] = binary[amx.dat + i];
 
 		if (amx.publics > 0) {
 			int count = (amx.natives - amx.publics) / DEFSIZE;
@@ -566,13 +561,13 @@ public class AMXModXFile extends PawnFile {
 
 			int end = (int) (var.address() + size - 1);
 
-			if (DAT_[end] != 0)
+			if (DAT()[end] != 0)
 				return null;
 
 			// See if it contains only valid characters.
 			int addr = (int) var.address();
-			for (; addr < DAT_.length && addr < end && DAT_[addr] != 0; addr += 4) {
-				int cell = BitConverter.ToInt32(DAT_, addr);
+			for (; addr < DAT().length && addr < end && DAT()[addr] != 0; addr += 4) {
+				int cell = BitConverter.ToInt32(DAT(), addr);
 				if (!Character.isValidCodePoint(cell))
 					return null;
 			}
@@ -647,30 +642,25 @@ public class AMXModXFile extends PawnFile {
 
 	@Override
 	public String stringFromData(long address) {
-		return ReadString(DAT_, (int) address);
+		return ReadString(DAT(), (int) address);
 	}
 
 	@Override
 	public String stringFromData(long address, int maxread) {
-		return ReadStringEx(DAT_, (int) address, maxread);
+		return ReadStringEx(DAT(), (int) address, maxread);
 	}
 
 	@Override
 	public float floatFromData(long address) {
-		return BitConverter.ToSingle(DAT_, address);
+		return BitConverter.ToSingle(DAT(), address);
 	}
 
 	@Override
 	public int int32FromData(long address) {
-		assert (address >= 0 && DAT_.length > address);
-		if (address >= 0 && DAT_.length <= address)
+		assert (address >= 0 && DAT().length > address);
+		if (address >= 0 && DAT().length <= address)
 			return 0;
-		return BitConverter.ToInt32(DAT_, (int) address);
-	}
-
-	@Override
-	public byte[] DAT() {
-		return DAT_;
+		return BitConverter.ToInt32(DAT(), (int) address);
 	}
 
 	@Override

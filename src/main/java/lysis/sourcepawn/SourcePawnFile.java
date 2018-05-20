@@ -749,11 +749,6 @@ public class SourcePawnFile extends PawnFile {
 	}
 
 	@Override
-	public byte[] DAT() {
-		return data().bytes();
-	}
-
-	@Override
 	public boolean PassArgCountAsSize() {
 		return false;
 	}

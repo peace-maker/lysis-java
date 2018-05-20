@@ -279,7 +279,9 @@ public abstract class PawnFile {
 		return natives_;
 	}
 
-	public abstract byte[] DAT();
+	public byte[] DAT() {
+		return data().bytes();
+	}
 
 	public abstract boolean PassArgCountAsSize();
 
