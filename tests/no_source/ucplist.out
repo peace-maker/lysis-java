@@ -1,0 +1,178 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.0",
+	date = "05/19/2015",
+	time = "11:42:50"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new bool:g_bUcpClient[66];
+public Plugin:myinfo =
+{
+	name = "UCP List",
+	description = "",
+	author = "Scarface_slv",
+	version = "2.1",
+	url = ""
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public OnPluginStart()
+{
+	new var = 1;
+	if (var != var)
+	{
+	}
+	RegConsoleCmd("sm_ucp", Command, "", 0);
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		if (!IsFakeClient(client))
+		{
+			decl String:sInfo[20];
+			sInfo[0] = MissingTAG:0;
+			GetClientInfo(client, "ucp_id", sInfo, 20);
+			sInfo[2] = MissingTAG:0;
+			if (sInfo[0])
+			{
+				Format(sInfo, 20, "ucp_%s", sInfo);
+				QueryClientConVar(client, sInfo, ClientConVars, client);
+				return 0;
+			}
+			g_bUcpClient[client] = 0;
+			PrintToChatAll("\x04[\x03UCP\x04] \x01Игрок \x04%N \x01подключился \x04без UCP", client);
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public ClientConVars(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[])
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		if (result == ConVarQueryResult:2)
+		{
+			g_bUcpClient[client] = 1;
+		}
+		else
+		{
+			g_bUcpClient[client] = 0;
+		}
+		new var1;
+		if (g_bUcpClient[client])
+		{
+			var1[0] = 660;
+		}
+		else
+		{
+			var1[0] = 664;
+		}
+		PrintToChatAll("\x04[\x03UCP\x04] \x01Игрок \x04%N \x01подключился \x04%s UCP", client, var1);
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public Action:Command(client, args)
+{
+	if (0 < client)
+	{
+		new Handle:hMenu = CreateMenu(Select_Menu, MenuAction:28);
+		SetMenuTitle(hMenu, "Игроки играющие с UCP:\n \n");
+		SetMenuExitButton(hMenu, true);
+		decl String:sName[32];
+		sName[0] = MissingTAG:0;
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && !IsFakeClient(i) && g_bUcpClient[i])
+			{
+				GetClientName(i, sName, 32);
+				AddMenuItem(hMenu, sName, sName, 0);
+			}
+			i++;
+		}
+		if (!(GetMenuItemCount(hMenu)))
+		{
+			AddMenuItem(hMenu, "", "Нет игроков играющих с UCP", 1);
+		}
+		DisplayMenu(hMenu, client, 0);
+	}
+	return Action:3;
+}
+
+public Select_Menu(Handle:hMenu, MenuAction:action, client, param)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(hMenu);
+	}
+	return 0;
+}
+

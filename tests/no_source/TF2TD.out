@@ -1,0 +1,839 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.3.8",
+	date = "07/06/2011",
+	time = "16:42:42"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:TFResourceNames[18][];
+new TowerDefense = 576;
+new MULTIPLY_BASECOST_CRIT = 200;
+new MULTIPLY_BASECOST_OTHERS = 400;
+new MULTIPLY_ADDITION_CRIT = 200;
+new MULTIPLY_ADDITION_OTHERS = 400;
+new String:EngineerTowerBuilt[140] = "\x04An Engineer with infinite metal will appear on the teleporter location and start repairing whatever is close to him (for \x03%i\x04 metal).";
+new AmmoBoxes[4096] =
+{
+	-1, ...
+};
+new String:TowerNames[9][32] =
+{
+	"towersniper",
+	"towermedic",
+	"towerflame",
+	"towergrenade",
+	"towerjarate",
+	"towerrepair",
+	"towerscout",
+	"towerair2",
+	"towerair"
+};
+new String:TowerNiceNames[9][128] =
+{
+	"Sniper",
+	"Medic",
+	"Pyro",
+	"Demoman",
+	"Jarate",
+	"-",
+	"Scout",
+	"Anti-Aerial Pyro",
+	"Anti-Aerial Soldier"
+};
+new TowerPrices[9] =
+{
+	1300, 350, 2200, 2000, 850, 500, 500, 850, 850
+};
+new TowerBought[9];
+new String:MultiplierName[5][32] =
+{
+	"bullet",
+	"fire",
+	"explosion",
+	"sentry",
+	"crits"
+};
+new String:MultiplierStrings[5][32] =
+{
+	"Bullets",
+	"Fire",
+	"Explosions",
+	"Sentries",
+	"-"
+};
+new MultiplierPrices[5] =
+{
+	400, ...
+};
+new Multipliers[5] =
+{
+	1, ...
+};
+new GotSaw;
+new Handle:DebugMode;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+Float:operator/(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 / float(oper2);
+}
+
+bool:operator==(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) == 0;
+}
+
+bool:operator>(_:,Float:)(oper1, Float:oper2)
+{
+	return FloatCompare(float(oper1), oper2) > 0;
+}
+
+Float:DegToRad(Float:angle)
+{
+	return angle * 3.1415927 / 180;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+StrCat(String:buffer[], maxlength, String:source[])
+{
+	new len = strlen(buffer);
+	if (len >= maxlength)
+	{
+		return 0;
+	}
+	return Format(buffer[len], maxlength - len, "%s", source);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+ReplyToTargetError(client, reason)
+{
+	switch (reason)
+	{
+		case -7:
+		{
+			ReplyToCommand(client, "[SM] %t", "More than one client matched");
+		}
+		case -6:
+		{
+			ReplyToCommand(client, "[SM] %t", "Cannot target bot");
+		}
+		case -5:
+		{
+			ReplyToCommand(client, "[SM] %t", "No matching clients");
+		}
+		case -4:
+		{
+			ReplyToCommand(client, "[SM] %t", "Unable to target");
+		}
+		case -3:
+		{
+			ReplyToCommand(client, "[SM] %t", "Target is not in game");
+		}
+		case -2:
+		{
+			ReplyToCommand(client, "[SM] %t", "Target must be dead");
+		}
+		case -1:
+		{
+			ReplyToCommand(client, "[SM] %t", "Target must be alive");
+		}
+		case 0:
+		{
+			ReplyToCommand(client, "[SM] %t", "No matching client");
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+FindTarget(client, String:target[], bool:nobots, bool:immunity)
+{
+	decl String:target_name[64];
+	decl target_list[1];
+	decl target_count;
+	decl bool:tn_is_ml;
+	new flags = 16;
+	if (nobots)
+	{
+		flags |= 32;
+	}
+	if (!immunity)
+	{
+		flags |= 8;
+	}
+	if (0 < (target_count = ProcessTargetString(target, client, target_list, 1, flags, target_name, 64, tn_is_ml)))
+	{
+		return target_list[0];
+	}
+	ReplyToTargetError(client, target_count);
+	return -1;
+}
+
+TFClassType:TF2_GetPlayerClass(client)
+{
+	return GetEntProp(client, PropType:0, TFResourceNames, 4);
+}
+
+public OnPluginStart()
+{
+	RegAdminCmd("sm_multiply", BuyMultiplier, 4, "Buys a multiplier.\nSyntax: sm_multiply multipliername", "", 0);
+	RegAdminCmd("sm_buy", BuyTower, 4, "Buys a tower.\nSyntax: sm_buy tower", "", 0);
+	RegAdminCmd("sm_saw", Saw, 4, "Enables the saw", "", 0);
+	RegConsoleCmd("mt", Metal, "", 0);
+	RegConsoleCmd("allmetal", AllMetal, "", 0);
+	RegConsoleCmd("amt", AllMetal, "", 0);
+	RegConsoleCmd("drop", DropMetal, "", 0);
+	RegAdminCmd("sm_reset_multipliers", ResetMultipliers, 4, "Resets the game.", "", 0);
+	RegAdminCmd("ammotest", Command_Ammo, 4, "Ammotest.", "", 0);
+	RegAdminCmd("bot_refill_blu", RefillBlu, 4, "Refills BLU", "", 0);
+	RegAdminCmd("bot_heal", SetBotHealth, 4, "Heals a single bot.", "", 0);
+	RegAdminCmd("bot_setangles", SetBotAngles, 4, "Changes the eye angles of a single bot.", "", 0);
+	RegAdminCmd("bot_give", GiveWeapon, 4, "Gives a weapon to a bot.", "", 0);
+	RegAdminCmd("bot_spawn", SpawnBot, 4, "Spawns a bunch of bots. Usage: bot_spawn number class name health. This doesn't work properly.", "", 0);
+	HookEvent("player_spawn", PlayerSpawn, EventHookMode:1);
+	HookEvent("player_connect", PlayerConnect, EventHookMode:0);
+	HookEvent("player_disconnect", PlayerDisconnect, EventHookMode:0);
+	HookEvent("player_team", PlayerTeam, EventHookMode:0);
+	DebugMode = CreateConVar("tf2td_debug_mode", "0", "Debug mode for TF2 TD. Options:\n\x090: No debugging\n\x091: Low debugging.\n\x092: Extreme chat spam.", 0, false, 0.0, false, 0.0);
+	return 0;
+}
+
+public OnMapStart()
+{
+	PrecacheModel("models/items\ammopack_small.mdl", true);
+	DoMessage();
+	DoResetMultipliers();
+	return 0;
+}
+
+public Action:Saw(client, args)
+{
+	if (GotSaw)
+	{
+		return Action:3;
+	}
+	if (!TF_ChargePlayers(450))
+	{
+		return Action:3;
+	}
+	BreakEntity(FindEntityByTargetname("saw", "func_breakable"));
+	PrintToChatAll("\x04The saw is now enabled.");
+	GotSaw = 1;
+	return Action:3;
+}
+
+public Action:AllMetal(client, args)
+{
+	new index = -1;
+	while ((index = FindEntityByClassname(index, "player")) != -1)
+	{
+		new var1;
+		if (GetClientTeam(index) == 3 && TF2_GetPlayerClass(index) == 9 && !IsFakeClient(index))
+		{
+			new String:name[32];
+			GetClientName(index, name, 32);
+			PrintToChatAll("\x05%s\x01 - \x04%i\x01 metal", name, TF_GetMetalAmount(index));
+		}
+	}
+	return Action:3;
+}
+
+public bool:TraceRayDontHitSelf(entity, contentsMask, any:data)
+{
+	return data != entity;
+}
+
+public Action:DropMetal(client, args)
+{
+	new String:arg1[12];
+	GetCmdArg(1, arg1, 10);
+	new var1;
+	if (StringToInt(arg1, 10) < 1 || StringToInt(arg1, 10) > TF_GetMetalAmount(client))
+	{
+		return Action:3;
+	}
+	new Float:PlayerPos[3] = 0.0;
+	new Float:EndPos[3] = 0.0;
+	new Float:PlayerAngle[3] = 0.0;
+	GetClientAbsOrigin(client, PlayerPos);
+	GetClientEyeAngles(client, PlayerAngle);
+	EndPos[0] = PlayerPos[0] + Cosine(DegToRad(PlayerAngle[1])) * 50;
+	EndPos[1] = PlayerPos[1] + Sine(DegToRad(PlayerAngle[1])) * 50;
+	EndPos[2] = PlayerPos[2];
+	new AmmoBox = CreateEntityByName("prop_dynamic", -1);
+	TeleportEntity(AmmoBox, EndPos, NULL_VECTOR, NULL_VECTOR);
+	AmmoBoxes[AmmoBox] = StringToInt(arg1, 10);
+	SetEntityModel(AmmoBox, "models/items\ammopack_small.mdl");
+	DispatchKeyValue(AmmoBox, "Solid", "6");
+	DispatchSpawn(AmmoBox);
+	TF_SetMetalAmount(client, TF_GetMetalAmount(client) - StringToInt(arg1, 10));
+	return Action:3;
+}
+
+public Action:BuyTower(client, args)
+{
+	new String:TowerName[32];
+	GetCmdArg(1, TowerName, 32);
+	new i;
+	while (i < 9)
+	{
+		if (strcmp(TowerName, TowerNames[i], true))
+		{
+		}
+		else
+		{
+			if (!TF_ChargePlayers(TowerPrices[i]))
+			{
+				return Action:3;
+			}
+			BreakEntity(FindEntityByTargetname(TowerNames[i], "func_breakable"));
+			if (i == 5)
+			{
+				PrintToChatAll(EngineerTowerBuilt, TowerPrices[i]);
+			}
+			else
+			{
+				new String:buymessage[128];
+				StrCat(buymessage, 128, TowerNiceNames[i]);
+				StrCat(buymessage, 128, " tower has been bought (for \x03%i\x04 metal).");
+				PrintToChatAll(buymessage, TowerPrices[i]);
+			}
+			TowerBought[i] = 1;
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+public Action:BuyMultiplier(client, args)
+{
+	new String:CurrentMultiplierName[32];
+	GetCmdArg(1, CurrentMultiplierName, 32);
+	new i;
+	while (i < 5)
+	{
+		if (strcmp(CurrentMultiplierName, MultiplierName[i], true))
+		{
+		}
+		else
+		{
+			new Multiplier = Multipliers[i] + -1;
+			new BaseCost = MULTIPLY_BASECOST_OTHERS;
+			new Addition = MULTIPLY_ADDITION_OTHERS;
+			if (i == 4)
+			{
+				Multiplier = Multipliers[i][-2] / 5;
+				BaseCost = MULTIPLY_BASECOST_CRIT;
+				Addition = MULTIPLY_ADDITION_CRIT;
+			}
+			MultiplierPrices[i] = Addition * Multiplier + BaseCost;
+			if (!TF_ChargePlayers(MultiplierPrices[i]))
+			{
+				return Action:3;
+			}
+			if (i == 4)
+			{
+				Multipliers[i] = Min(100, Multipliers[i][1]);
+				PrintToChatAll("\x04Crits now have a %i%s chance of happening (for \x03%i\x04 metal)!", Multipliers[i], "%", MultiplierPrices[i]);
+			}
+			else
+			{
+				new String:buymessage[128];
+				StrCat(buymessage, 128, MultiplierStrings[i]);
+				StrCat(buymessage, 128, " now %s %i times more damage  (for \x03%i\x04 metal)!");
+				Multipliers[i]++;
+				new String:does[8] = "does";
+				if (!(i == 1))
+				{
+				}
+				PrintToChatAll(buymessage, does, Multipliers[i], MultiplierPrices[i]);
+			}
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+DoResetMultipliers()
+{
+	new i;
+	while (i != 4)
+	{
+		Multipliers[i] = 1;
+		i++;
+	}
+	new i;
+	while (i != 8)
+	{
+		TowerBought[i] = 0;
+		i++;
+	}
+	new i;
+	while (i != 4)
+	{
+		MultiplierPrices[i] = MULTIPLY_BASECOST_OTHERS;
+		i++;
+	}
+	GotSaw = 0;
+	new i;
+	while (i != 4095)
+	{
+		AmmoBoxes[i] = -1;
+		i++;
+	}
+	Multipliers[4] = 9;
+	MultiplierPrices[4] = MULTIPLY_BASECOST_CRIT;
+	PrintToChatAll("\x04The round has been reset.");
+	return 0;
+}
+
+public Action:ResetMultipliers(client, args)
+{
+	DoResetMultipliers();
+	return Action:0;
+}
+
+public Action:SetBotHealth(client, args)
+{
+	new index2 = -1;
+	new String:HP[8];
+	GetCmdArg(1, HP, 8);
+	new hp = StringToInt(HP, 10);
+	while ((index2 = FindEntityByClassname(index2, "player")) != -1)
+	{
+		if (GetClientTeam(index2) == 2)
+		{
+			new String:name[64];
+			GetClientName(index2, name, 64);
+			ServerCommand("sm_sethealth %s %i", name, hp);
+		}
+	}
+	return Action:0;
+}
+
+public Action:SetBotAngles(client, args)
+{
+	new index2 = -1;
+	new String:SEyeAngles[8];
+	GetCmdArg(2, SEyeAngles, 8);
+	new Float:EyeAngles[3] = 0.0;
+	new String:arg1[32];
+	GetCmdArg(1, arg1, 32);
+	index2 = FindTarget(client, arg1, false, true);
+	if (index2 == -1)
+	{
+		return Action:0;
+	}
+	GetClientEyeAngles(index2, EyeAngles);
+	EyeAngles[0] = StringToFloat(SEyeAngles);
+	TeleportEntity(index2, NULL_VECTOR, EyeAngles, NULL_VECTOR);
+	return Action:3;
+}
+
+public Action:SpawnBot(client, args)
+{
+	new String:amount[8];
+	new String:class[16];
+	new String:name[32];
+	new String:health[8];
+	GetCmdArg(1, amount, 6);
+	GetCmdArg(2, class, 16);
+	GetCmdArg(3, name, 32);
+	GetCmdArg(4, health, 5);
+	new iamount = StringToInt(amount, 10);
+	new i = 1;
+	while (iamount == i)
+	{
+		ServerCommand("bot -team red -class %s -name %s%i", class, name, i);
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:RefillBlu(client, args)
+{
+	new index2 = -1;
+	while ((index2 = FindEntityByClassname(index2, "player")) != -1)
+	{
+		new var1;
+		if (GetClientTeam(index2) == 3 && IsFakeClient(index2))
+		{
+			TF2_RegeneratePlayer(index2);
+		}
+	}
+	return Action:0;
+}
+
+public Action:GiveWeapon(client, args)
+{
+	new String:arg1[128];
+	GetCmdArg(1, arg1, 128);
+	new String:arg2[256];
+	GetCmdArg(2, arg2, 256);
+	new weaponIndex;
+	new weaponSlot;
+	while (weaponSlot < 6)
+	{
+		while ((weaponIndex = GetPlayerWeaponSlot(FindTarget(client, arg1, false, true), weaponSlot)) != -1)
+		{
+			RemovePlayerItem(FindTarget(client, arg1, false, true), weaponIndex);
+			RemoveEdict(weaponIndex);
+		}
+		weaponSlot++;
+	}
+	new entity = GivePlayerItem(FindTarget(client, arg1, false, true), arg2, 0);
+	EquipPlayerWeapon(FindTarget(client, arg1, false, true), entity);
+	return Action:0;
+}
+
+public Action:Command_Ammo(client, args)
+{
+	new String:arg1[32];
+	GetCmdArg(1, arg1, 32);
+	new ply = FindTarget(client, arg1, false, true);
+	if (ply == -1)
+	{
+		return Action:0;
+	}
+	TF_SetMetalAmount(ply, TF_GetMetalAmount(ply) + 1500);
+	return Action:3;
+}
+
+IsDebugging()
+{
+	return GetConVarInt(DebugMode);
+}
+
+Min(a, b)
+{
+	if (a > b)
+	{
+		return b;
+	}
+	return a;
+}
+
+TF_ChargePlayers(Amount)
+{
+	new bool:Return = 1;
+	new index = -1;
+	while ((index = FindEntityByClassname(index, "player")) != -1)
+	{
+		new var1;
+		if (GetClientTeam(index) == 3 && TF2_GetPlayerClass(index) == 9 && !IsFakeClient(index))
+		{
+			if (TF_GetMetalAmount(index) < Amount)
+			{
+				if (0 < IsDebugging())
+				{
+					PrintToChatAll("Can't charge %i because you only have %i", Amount, TF_GetMetalAmount(index));
+				}
+				Return = false;
+			}
+		}
+	}
+	if (!Return)
+	{
+		PrintToChatAll("Couldn't charge the following users: ");
+	}
+	new index2 = -1;
+	while ((index2 = FindEntityByClassname(index2, "player")) != -1)
+	{
+		new var2;
+		if (GetClientTeam(index2) == 3 && TF2_GetPlayerClass(index2) == 9 && !IsFakeClient(index2))
+		{
+			if (Return == true)
+			{
+				TF_SetMetalAmount(index2, TF_GetMetalAmount(index2) - Amount);
+			}
+			if (TF_GetMetalAmount(index2) < Amount)
+			{
+				new String:name[32];
+				GetClientName(index2, name, 32);
+				PrintToChatAll("\x05%s\x01 - \x04%i\x01 metal - Needs \x04%i", name, TF_GetMetalAmount(index2), Amount - TF_GetMetalAmount(index2));
+			}
+		}
+	}
+	return Return;
+}
+
+BreakEntity(ent)
+{
+	if (0 < IsDebugging())
+	{
+		PrintToChatAll("DEBUG: Breaking entity %i", ent);
+	}
+	return AcceptEntityInput(ent, "break", -1, -1, 0);
+}
+
+FindEntityByTargetname(String:targetname[], String:classname[])
+{
+	decl String:namebuf[32];
+	new index = -1;
+	namebuf[0] = MissingTAG:0;
+	while (strcmp(namebuf, targetname, true) && (index = FindEntityByClassname(index, classname)) != -1)
+	{
+		GetEntPropString(index, PropType:1, "m_iName", namebuf, 32);
+	}
+	return index;
+}
+
+TF_SetMetalAmount(Player, Amount)
+{
+	SetEntData(Player, FindDataMapOffs(Player, "m_iAmmo", 0, 0) + 12, Amount, 4, true);
+	return 0;
+}
+
+TF_GetMetalAmount(Player)
+{
+	return GetEntData(Player, FindDataMapOffs(Player, "m_iAmmo", 0, 0) + 12, 4);
+}
+
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+	new String:Class[64];
+	GetEdictClassname(inflictor, Class, 64);
+	new String:AttackerClass[64];
+	GetEdictClassname(attacker, AttackerClass, 64);
+	new String:Victim[64];
+	GetEdictClassname(victim, AttackerClass, 64);
+	if (StrEqual(Victim, "func_breakable", true))
+	{
+		new var1;
+		if (damagetype & 2 || damagetype & 536870912 || damagetype & 128)
+		{
+			return Action:0;
+		}
+		damage = 0;
+		return Action:1;
+	}
+	if (!StrEqual(AttackerClass, "obj_sentrygun", true))
+	{
+		if (!StrEqual(AttackerClass, "tf_projectile_sentryrocket", true))
+		{
+			if (!StrEqual(AttackerClass, "player", true))
+			{
+				return Action:0;
+			}
+		}
+	}
+	if (StrEqual(Class, "obj_sentrygun", true))
+	{
+		damage = damage * Multipliers[3];
+		return Action:1;
+	}
+	new var2;
+	if (damagetype & 2 || damagetype & 536870912)
+	{
+		if (damagetype & 128)
+		{
+			return Action:0;
+		}
+		damage = damage * Multipliers[0];
+		return Action:1;
+	}
+	if (damagetype & 64)
+	{
+		damage = damage * Multipliers[2];
+		return Action:1;
+	}
+	if (damagetype & 8)
+	{
+		damage = damage * Multipliers[1];
+		return Action:1;
+	}
+	return Action:0;
+}
+
+public Action:RemoveMetal(Handle:timer, any:client)
+{
+	TF_SetMetalAmount(client, 0);
+	return Action:0;
+}
+
+public Action:Metal(client, args)
+{
+	PrintToChat(client, "\x03You have %i metal.", TF_GetMetalAmount(client));
+	return Action:3;
+}
+
+public OnClientPutInServer(client)
+{
+	SDKHook(client, SDKHookType:2, OnTakeDamage);
+	SDKHook(client, SDKHookType:8, OnTouch);
+	return 0;
+}
+
+public OnTouch(client, other)
+{
+	new String:Class[256];
+	GetEntPropString(other, PropType:1, "m_ModelName", Class, 256);
+	new var1;
+	if (GetClientTeam(client) != 3 && AmmoBoxes[other] != -1)
+	{
+		RemoveEdict(other);
+		AmmoBoxes[other] = -1;
+		return 0;
+	}
+	if (TF2_GetPlayerClass(client) != 9)
+	{
+		return 0;
+	}
+	if (AmmoBoxes[other] != -1)
+	{
+		TF_SetMetalAmount(client, AmmoBoxes[other][TF_GetMetalAmount(client)]);
+		RemoveEdict(other);
+		AmmoBoxes[other] = -1;
+		return 0;
+	}
+	if (StrEqual(Class, "models/items\ammopack_small.mdl", true))
+	{
+		TF_SetMetalAmount(client, TF_GetMetalAmount(client) + 100);
+		RemoveEdict(other);
+		return 0;
+	}
+	if (StrEqual(Class, "models/items\ammopack_medium.mdl", true))
+	{
+		TF_SetMetalAmount(client, TF_GetMetalAmount(client) + 200);
+		RemoveEdict(other);
+		return 0;
+	}
+	new var2;
+	if (StrEqual(Class, "models/items\ammopack_large.mdl", true) || StrEqual(Class, "models/items/ammopack_large.mdl", true))
+	{
+		TF_SetMetalAmount(client, TF_GetMetalAmount(client) + 400);
+		RemoveEdict(other);
+		return 0;
+	}
+	return 0;
+}
+
+public Action:PlayerSpawn(Handle:event, String:name[], bool:NoBroadcast)
+{
+	new client_id = GetEventInt(event, "userid");
+	new client = GetClientOfUserId(client_id);
+	new TFClassType:Class = TF2_GetPlayerClass(client);
+	if (TF2_GetClass("engineer") == Class)
+	{
+		CreateTimer(0.03, RemoveMetal, client, 2);
+	}
+	return Action:0;
+}
+
+public Action:PlayerConnect(Handle:event, String:name[], bool:NoBroadcast)
+{
+	return Action:3;
+}
+
+public Action:PlayerDisconnect(Handle:event, String:name[], bool:NoBroadcast)
+{
+	return Action:3;
+}
+
+public Action:PlayerTeam(Handle:event, String:name[], bool:NoBroadcast)
+{
+	return Action:3;
+}
+
+public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
+{
+	if (0 == Multipliers[4])
+	{
+		return Action:0;
+	}
+	if (IsDebugging() > 1)
+	{
+		PrintToChatAll("DEBUG: Rolling crit with %i%s chance", 19168 + 16, "%");
+	}
+	if (Multipliers[4] > GetRandomFloat(0.0, 100.0))
+	{
+		result = 1;
+		return Action:3;
+	}
+	if (IsDebugging() > 1)
+	{
+		PrintToChatAll("Crit failed!");
+	}
+	result = 0;
+	return Action:3;
+}
+
+DoMessage()
+{
+	CreateTimer(300.0, Advert, any:0, 1);
+	return 0;
+}
+
+public Action:Advert(Handle:timer)
+{
+	PrintToChatAll("\x04TF2 Tower Defense Mod (alpha), made by Visiteur, Gran PC and flyflo.");
+	PrintToChatAll("\x04Visit tf2td.com for updates and more info.");
+	return Action:0;
+}
+

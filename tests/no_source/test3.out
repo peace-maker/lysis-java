@@ -1,0 +1,114 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.4-dev+4615",
+	date = "03/23/2016",
+	time = "21:55:05"
+};
+public Plugin:myinfo =
+{
+	name = "",
+	description = "",
+	author = "KK",
+	version = "0.00",
+	url = ""
+};
+new g_var44c;
+public OnGameFrame()
+{
+	if (g_var44c)
+	{
+		g_var44c += 1;
+	}
+	else
+	{
+		g_var44c -= 1;
+	}
+	return 0;
+}
+
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional(104);
+	MarkNativeAsOptional(124);
+	MarkNativeAsOptional(140);
+	MarkNativeAsOptional(160);
+	MarkNativeAsOptional(184);
+	MarkNativeAsOptional(196);
+	MarkNativeAsOptional(208);
+	MarkNativeAsOptional(220);
+	MarkNativeAsOptional(236);
+	MarkNativeAsOptional(248);
+	MarkNativeAsOptional(260);
+	MarkNativeAsOptional(276);
+	MarkNativeAsOptional(292);
+	MarkNativeAsOptional(308);
+	MarkNativeAsOptional(324);
+	MarkNativeAsOptional(340);
+	MarkNativeAsOptional(356);
+	MarkNativeAsOptional(376);
+	MarkNativeAsOptional(392);
+	MarkNativeAsOptional(404);
+	MarkNativeAsOptional(416);
+	MarkNativeAsOptional(428);
+	MarkNativeAsOptional(440);
+	MarkNativeAsOptional(452);
+	MarkNativeAsOptional(464);
+	MarkNativeAsOptional(476);
+	MarkNativeAsOptional(492);
+	MarkNativeAsOptional(508);
+	MarkNativeAsOptional(520);
+	MarkNativeAsOptional(532);
+	MarkNativeAsOptional(548);
+	MarkNativeAsOptional(564);
+	MarkNativeAsOptional(580);
+	MarkNativeAsOptional(600);
+	MarkNativeAsOptional(612);
+	MarkNativeAsOptional(624);
+	MarkNativeAsOptional(636);
+	MarkNativeAsOptional(652);
+	MarkNativeAsOptional(664);
+	MarkNativeAsOptional(676);
+	MarkNativeAsOptional(692);
+	MarkNativeAsOptional(708);
+	MarkNativeAsOptional(732);
+	MarkNativeAsOptional(744);
+	MarkNativeAsOptional(756);
+	MarkNativeAsOptional(768);
+	MarkNativeAsOptional(780);
+	MarkNativeAsOptional(792);
+	MarkNativeAsOptional(804);
+	MarkNativeAsOptional(816);
+	MarkNativeAsOptional(832);
+	MarkNativeAsOptional(844);
+	MarkNativeAsOptional(856);
+	MarkNativeAsOptional(868);
+	MarkNativeAsOptional(880);
+	MarkNativeAsOptional(892);
+	MarkNativeAsOptional(904);
+	MarkNativeAsOptional(916);
+	MarkNativeAsOptional(932);
+	MarkNativeAsOptional(960);
+	MarkNativeAsOptional(976);
+	MarkNativeAsOptional(1000);
+	VerifyCoreVersion();
+	return 0;
+}
+

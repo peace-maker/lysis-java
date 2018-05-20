@@ -1,0 +1,3174 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.2",
+	date = "06/04/2015",
+	time = "21:13:41"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_cstrike =
+{
+	name = "cstrike",
+	file = "games/game.cstrike.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+new bool:xD = 1;
+new g_ClientParameter[66][83];
+new g_SpawnHp;
+new g_RespawnTimer;
+new g_RespawnLimit;
+new g_BombPlace;
+new bool:g_bBackKill;
+new bool:g_bWarningTeleport;
+new bool:g_bBuy;
+new bool:g_bSpawnKnife;
+new bool:g_bRestoreHp;
+new bool:g_bGroundStuck;
+new bool:g_bNoSmoke;
+new bool:g_bOnlyArenaDamage;
+new bool:g_bUnauthorizedEntry;
+new Handle:g_hWarningSound;
+new String:g_sWarningSound[256];
+new Handle:g_hTimerSound;
+new String:g_sTimerSound[256];
+new Handle:g_hTimerSoundGo;
+new String:g_sTimerSoundGo[256];
+new Float:g_fSpawnPos[66][3];
+new Float:g_fMyLastKillTime[66];
+new Float:g_fHurtProtectSec;
+new Float:g_fDmgProtectDist;
+new g_SpawnProtect;
+new Handle:g_hSpawnProtectTimer[66];
+new Handle:g_hRespawnTimer[66];
+new Handle:g_hRespawnTrie;
+new g_RespawnCount[66];
+new String:g_SteamID[66][36];
+new g_ArenaRef = -1;
+new g_ArenaLevels;
+new Float:g_fArenaCenterPos[3];
+new Float:g_fArenaRadius;
+new Float:g_fArenaLength;
+new g_ArenaColor[4] =
+{
+	255, ...
+};
+new RenderFx:g_ArenaRenderFx;
+new Handle:g_hSpotLightArray;
+new g_ArenaClientTT;
+new g_ArenaClientCT;
+new Float:g_fArenaClientTTpos[3];
+new Float:g_fArenaClientCTpos[3];
+new Float:g_fArenaClientTTang[3];
+new Float:g_fArenaClientCTang[3];
+new Float:g_fC4pos[3];
+new Float:g_fC4respPos[3] =
+{
+	1178657792, 0, 0
+};
+new String:g_sArenaSpotlightRGB[16];
+new g_ArenaTimer;
+new Handle:g_hArenaTimer;
+new Handle:g_hArenaClientParameterTimer;
+new bool:g_bArenaTimerForAll;
+new g_Sec;
+new g_ArenaHp;
+new Handle:g_hArenaQueueTT_Array;
+new Handle:g_hArenaQueueCT_Array;
+new Handle:g_hArenaQueueTT_Timer;
+new Handle:g_hArenaQueueCT_Timer;
+new bool:g_bTestArena;
+new bool:g_bRoundEnded;
+new Handle:g_hOnKnifeArenaSpawn;
+new Handle:g_hOnKnifeArenaSpawn_Post;
+new Handle:g_hOnClientWantLeaveKnifeArena;
+new Handle:g_hOnClientLeftKnifeArena;
+new Handle:g_hOnClientInKnifeArena;
+new Handle:g_hOnClientInKnifeArena_Post;
+new Handle:g_hOnClientInKnifeArenaQueue;
+new String:FOR_IP_PORT[20] = "46.174.52.17:27221";
+new bool:bSocketOk;
+public Plugin:myinfo =
+{
+	name = "Knife Arena",
+	description = "",
+	author = "wS (World-Source.Ru)",
+	version = "1.2.9",
+	url = ""
+};
+new Handle:g_hEndTouchTimer;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:operator==(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) == 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+FindCharInString(String:str[], c, bool:reverse)
+{
+	new i;
+	new len = strlen(str);
+	if (!reverse)
+	{
+		i = 0;
+		while (i < len)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i++;
+		}
+	}
+	else
+	{
+		i = len + -1;
+		while (0 <= i)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i--;
+		}
+	}
+	return -1;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+PrintCenterTextAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintCenterText(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
+{
+	decl String:cls[64];
+	if (!GetEntityNetClass(ent, cls, 64))
+	{
+		return -1;
+	}
+	if (actual)
+	{
+		return FindSendPropInfo(cls, prop, 0, 0, 0);
+	}
+	return FindSendPropOffs(cls, prop);
+}
+
+bool:GetEntityClassname(entity, String:clsname[], maxlength)
+{
+	return !!GetEntPropString(entity, PropType:1, "m_iClassname", clsname, maxlength, 0);
+}
+
+SetEntityMoveType(entity, MoveType:mt)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_MoveType");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:1, datamap, mt, 4, 0);
+	return 0;
+}
+
+SetEntityRenderMode(entity, RenderMode:mode)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderMode", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderMode");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:0, prop, mode, 1, 0);
+	return 0;
+}
+
+SetEntityRenderFx(entity, RenderFx:fx)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderFX", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderFX");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:0, prop, fx, 1, 0);
+	return 0;
+}
+
+SetEntityRenderColor(entity, r, g, b, a)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_clrRender", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_clrRender");
+		}
+		gotconfig = true;
+	}
+	new offset = GetEntSendPropOffs(entity, prop, false);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityRenderColor not supported by this mod");
+	}
+	SetEntData(entity, offset, r, 1, true);
+	SetEntData(entity, offset + 1, g, 1, true);
+	SetEntData(entity, offset + 2, b, 1, true);
+	SetEntData(entity, offset + 3, a, 1, true);
+	return 0;
+}
+
+Float:GetEntityGravity(entity)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_flGravity");
+		}
+		gotconfig = true;
+	}
+	return GetEntPropFloat(entity, PropType:1, datamap, 0);
+}
+
+SetEntityGravity(entity, Float:amount)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_flGravity");
+		}
+		gotconfig = true;
+	}
+	SetEntPropFloat(entity, PropType:1, datamap, amount, 0);
+	return 0;
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[MaxClients];
+	new total;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+public OnPluginStart()
+{
+	if (!xD)
+	{
+		new Handle:kv;
+		do {
+			do {
+			} while (KvGotoNextKey(kv, true));
+			KvGoBack(kv);
+		} while (KvGotoNextKey(kv, true));
+	}
+	new V = 1;
+	wS_Protect_IpPort(V);
+	if (!4 < V < 6)
+	{
+		do {
+		} while (xD);
+	}
+	if (!xD)
+	{
+		do {
+		} while (!xD);
+	}
+	g_hRespawnTrie = CreateTrie();
+	g_hSpotLightArray = CreateArray(1, 0);
+	g_hArenaQueueTT_Array = CreateArray(1, 0);
+	g_hArenaQueueCT_Array = CreateArray(1, 0);
+	g_hOnKnifeArenaSpawn = CreateGlobalForward("OnKnifeArenaSpawn", ExecType:2, 3, 5, 5, 9);
+	g_hOnKnifeArenaSpawn_Post = CreateGlobalForward("OnKnifeArenaSpawn_Post", ExecType:0, 2, 4, 4, 9, 9, 9);
+	g_hOnClientWantLeaveKnifeArena = CreateGlobalForward("OnClientWantLeaveKnifeArena", ExecType:2, 2);
+	g_hOnClientLeftKnifeArena = CreateGlobalForward("OnClientLeftKnifeArena", ExecType:0, 2, 2);
+	g_hOnClientInKnifeArena = CreateGlobalForward("OnClientInKnifeArena", ExecType:2, 2);
+	g_hOnClientInKnifeArena_Post = CreateGlobalForward("OnClientInKnifeArena_Post", ExecType:0, 2);
+	g_hOnClientInKnifeArenaQueue = CreateGlobalForward("OnClientInKnifeArenaQueue", ExecType:2, 2);
+	wS_Cvars();
+	LoadTranslations("knife_arena.phrases");
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsValidEntity(i) && IsClientInGame(i))
+		{
+			OnClientPutInServer(i);
+		}
+		i++;
+	}
+	HookEvent("player_spawn", player_spawn, EventHookMode:1);
+	HookEvent("player_team", player_team, EventHookMode:1);
+	HookEvent("player_death", player_death, EventHookMode:1);
+	HookEvent("player_blind", player_blind, EventHookMode:1);
+	HookEvent("item_pickup", item_pickup, EventHookMode:1);
+	HookEvent("bomb_pickup", bomb_pickup, EventHookMode:1);
+	HookEvent("round_start", round_start, EventHookMode:2);
+	HookEvent("round_end", round_end, EventHookMode:2);
+	RegAdminCmd("sm_knife_arena_create", sm_knife_arena_create, 16384, "", "", 0);
+	RegAdminCmd("sm_knife_arena_save", sm_knife_arena_save, 16384, "", "", 0);
+	RegAdminCmd("sm_knife_arena_delete", sm_knife_arena_delete, 16384, "", "", 0);
+	RegConsoleCmd("sm_arena", sm_arena, "", 0);
+	return 0;
+}
+
+wS_Protect_IpPort(&V)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	static Handle:cvar_hostip;
+	static Handle:cvar_hostport;
+	if (!cvar_hostip)
+	{
+		cvar_hostip = FindConVar("hostip");
+		cvar_hostport = FindConVar("hostport");
+		new var3 = V;
+		var3++;
+		V = var3;
+	}
+	new var1;
+	if (cvar_hostip && cvar_hostport)
+	{
+		wS_Protect_Stop("hostip || hostport == INVALID_HANDLE");
+	}
+	decl ip[4];
+	new IP = GetConVarInt(cvar_hostip);
+	ip[0] = IP >> 24 & 255;
+	ip[1] = IP >> 16 & 255;
+	ip[2] = IP >> 8 & 255;
+	ip[3] = IP & 255;
+	if (wS_Protect(ip, GetConVarInt(cvar_hostport)))
+	{
+		new var4 = V;
+		var4++;
+		V = var4;
+	}
+	decl String:info[68];
+	info[0] = MissingTAG:0;
+	GetPluginInfo(GetMyHandle(), PluginInfo:1, info, 65);
+	while (!xD || !wS_IpPortValid())
+	{
+	}
+	new var5 = V;
+	var5++;
+	V = var5;
+	static bool:hook;
+	if (!hook)
+	{
+		hook = true;
+		HookEvent("server_spawn", server_spawn, EventHookMode:1);
+		CreateTimer(1.5, OnPluginStart_ChangeLevel, any:0, 2);
+		HookConVarChange(cvar_hostip, cvar_hostip_ip_port_changed);
+		HookConVarChange(cvar_hostport, cvar_hostip_ip_port_changed);
+		new var6 = V;
+		var6++;
+		V = var6;
+		wS_Socket(true);
+	}
+	return 0;
+}
+
+bool:wS_IpPortValid()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new symbols = strlen(FOR_IP_PORT);
+	if (symbols < 7)
+	{
+		return false;
+	}
+	new x;
+	new i;
+	while (i < symbols)
+	{
+		if (FOR_IP_PORT[i] == 46)
+		{
+			x++;
+		}
+		i++;
+	}
+	return 2 < x < 4;
+}
+
+public cvar_hostip_ip_port_changed(Handle:cVar, String:OldValue[], String:NewValue[])
+{
+	wS_Protect_IpPort(1);
+	return 0;
+}
+
+bool:wS_Protect(ip[4], port)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (!(ip[3] + ip[2] + ip[1] + ip[0]))
+	{
+		new pos = FindCharInString(FOR_IP_PORT, 58, false) + 1;
+		if (port == StringToInt(pos + 29288, 10))
+		{
+			return true;
+		}
+	}
+	decl String:IpPort[76];
+	Format(IpPort, 75, "%d.%d.%d.%d:%d", ip, ip[1], ip[2], ip[3], port);
+	if (strcmp(IpPort, FOR_IP_PORT, false))
+	{
+		decl String:Error[512];
+		Format(Error, 512, "\nPlugin not for this server!\nYour ip:port \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97", IpPort, FOR_IP_PORT);
+		wS_Protect_Stop(Error);
+		do {
+		} while (xD);
+	}
+	return true;
+}
+
+wS_Protect_Stop(String:Error[])
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	LogError(Error);
+	decl String:PluginName[256];
+	PluginName[0] = MissingTAG:0;
+	GetPluginFilename(GetMyHandle(), PluginName, 256);
+	ServerCommand("sm plugins unload \"%s\"", PluginName);
+	SetFailState(Error);
+	do {
+	} while (xD);
+	return 0;
+}
+
+public Action:OnPluginStart_ChangeLevel(Handle:timer)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl String:map[256];
+	map[0] = MissingTAG:0;
+	GetCurrentMap(map, 256);
+	ServerCommand("changelevel \"%s\"", map);
+	return Action:4;
+}
+
+public server_spawn(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl String:info[68];
+	GetEventString(event, "port", info, 65);
+	new port = StringToInt(info, 10);
+	if (0 < port)
+	{
+		new String:buffer[4][12] = {
+			"address",
+			"",
+			"orld-source.ru",
+			"ru"
+		};
+		GetEventString(event, "address", info, 65);
+		if (ExplodeString(info, ".", buffer, 4, 10, false) > 3)
+		{
+			decl ip[4];
+			new pos = FindCharInString(buffer[3], 58, false);
+			if (0 < pos)
+			{
+				buffer[3][pos] = MissingTAG:0;
+			}
+			ip[0] = StringToInt(buffer[0][buffer], 10);
+			ip[1] = StringToInt(buffer[1], 10);
+			ip[2] = StringToInt(buffer[2], 10);
+			ip[3] = StringToInt(buffer[3], 10);
+			wS_Protect(ip, port);
+		}
+	}
+	return 0;
+}
+
+wS_Socket(bool:bFirst)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (bSocketOk)
+	{
+		if (bFirst)
+		{
+			do {
+			} while (bFirst);
+		}
+		return 0;
+	}
+	new Handle:socket = SocketCreate(SocketType:1, OnSocketError);
+	if (socket)
+	{
+		SocketConnect(socket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "ws.world-source.ru", 80);
+	}
+	else
+	{
+		CreateTimer(60.0, TIMER_wS_Socket, any:0, 0);
+	}
+	return 0;
+}
+
+public Action:TIMER_wS_Socket(Handle:timer)
+{
+	wS_Socket(false);
+	return Action:4;
+}
+
+public OnSocketError(Handle:socket, errorType, errorNum, any:data)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	CreateTimer(60.0, TIMER_wS_Socket, any:0, 0);
+	PrintToServer("Socket error (type: %d, num: %d)", errorType, errorNum);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSocketConnected(Handle:socket, any:id)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl String:info[300];
+	Format(info, 300, "GET /sm_plugins.php?address=%s HTTP/1.0\r\nHost: ws.world-source.ru\r\nConnection: close\r\n\r\n", FOR_IP_PORT);
+	SocketSend(socket, info, -1);
+	return 0;
+}
+
+public OnSocketReceive(Handle:socket, String:receiveData[], dataSize, any:data)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (0 < dataSize)
+	{
+		decl String:name[52];
+		if (!GetPluginInfo(GetMyHandle(), PluginInfo:0, name, 50))
+		{
+			wS_Protect_Stop("GetPluginInfo error");
+		}
+		else
+		{
+			TrimString(name);
+			ReplaceString(name, 50, " ", "_", false);
+			decl String:address[52];
+			strcopy(address, 50, FOR_IP_PORT);
+			ReplaceString(address, 50, ".", "_", false);
+			ReplaceString(address, 50, ":", "_", false);
+			TrimString(address);
+			decl String:info[252];
+			Format(info, 250, "s/%s/%s.zip'", name, address);
+			if (0 < StrContains(receiveData, info, false))
+			{
+				bSocketOk = true;
+			}
+		}
+	}
+	return 0;
+}
+
+public OnSocketDisconnected(Handle:socket, any:data)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	CloseHandle(socket);
+	if (!bSocketOk)
+	{
+		wS_Protect_Stop("Your server not found in database");
+	}
+	return 0;
+}
+
+wS_Cvars()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new Handle:cvar = CreateConVar("ka_back_kill", "1", "1 = В спину убивать можно\n0 = Нельзя", 0, false, 0.0, false, 0.0);
+	g_bBackKill = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_hurt_protect_sec", "0", "Защита 'x' сек после убийства, чтобы не бежали толпой на одного (0 = откл)", 0, true, 0.0, true, 3.0);
+	g_fHurtProtectSec = GetConVarFloat(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	g_hWarningSound = CreateConVar("ka_warning_sound", "resource/warning.wav", "Звук для игрока, который нарушил правила (можно не указывать)", 0, false, 0.0, false, 0.0);
+	cvar = CreateConVar("ka_warning_teleport", "1", "1 = Телепортировать нарушителя правил на базу\n0 = Нет", 0, false, 0.0, false, 0.0);
+	g_bWarningTeleport = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_buy", "1", "1 = Покупка оружия разрешена\n0 = Запрещена", 0, false, 0.0, false, 0.0);
+	g_bBuy = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_spawn_knife", "0", "1 = У игрока при рождении будет только нож\n0 = Нет, рождается с любым оружием", 0, false, 0.0, false, 0.0);
+	g_bSpawnKnife = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_spawn_hp", "0", "Здоровье при рождении (0 = не менять)", 0, false, 0.0, false, 0.0);
+	g_SpawnHp = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_restore_hp", "0", "1 = Восстановить здоровье до ka_spawn_hp после убийства врага\n0 = Нет", 0, false, 0.0, false, 0.0);
+	g_bRestoreHp = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_spawn_protect", "0", "Защищать игрока после рождения в течение 'x' сек (0 = откл)", 0, false, 0.0, false, 0.0);
+	g_SpawnProtect = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_respawn_timer", "0", "Оживить игрока через 'x' сек после смерти (DM режим, 0 = откл)", 0, false, 0.0, false, 0.0);
+	g_RespawnTimer = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_respawn_limit", "0", "Сколько раз за раунд можно ожить, если ka_respawn_timer вкл (0 = всегда)", 0, false, 0.0, false, 0.0);
+	g_RespawnLimit = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_dmg_protect_dist", "0", "Повреждение не будет нанесено, если расстояние между игроками больше 'x' юнитов (0 = откл)", 0, false, 0.0, false, 0.0);
+	g_fDmgProtectDist = GetConVarFloat(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_color", "255 255 255 255", "Цвет клетки (r g b a)", 0, false, 0.0, false, 0.0);
+	wS_GetCvarColor(cvar, g_ArenaColor, 31580);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_renderfx", "0", "Эффект клетки (0 = без эффекта)", 0, true, 0.0, true, 25.0);
+	g_ArenaRenderFx = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_spotlight_rgb", "255 0 0", "Цвет (r g b) 4-x лучей в углах клетки (оставьте пустым, чтобы отключить их)", 0, false, 0.0, false, 0.0);
+	GetConVarString(cvar, g_sArenaSpotlightRGB, 15);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_timer", "3", "Отсчет перед началом поединка", 0, true, 1.0, true, 10.0);
+	g_ArenaTimer = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_timer_for_all", "0", "1 = Все видят отсчет перед поединком\n0 = Только 2 игрока в клетке", 0, false, 0.0, false, 0.0);
+	g_bArenaTimerForAll = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_hp", "35", "Здоровье у игроков в клетке перед началом поединка", 0, true, 1.0, true, 100.0);
+	g_ArenaHp = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_ground_stuck", "0", "1 = Во время отсчета перед поединком ноги игроков будут в земле\n0 = Нет", 0, false, 0.0, false, 0.0);
+	g_bGroundStuck = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	g_hTimerSound = CreateConVar("ka_arena_timer_sound", "ambient/weather/rain_drip1.wav", "Звук таймера '10,9,8,7,6,5,4,3,2,1' (можно не указывать)", 0, false, 0.0, false, 0.0);
+	g_hTimerSoundGo = CreateConVar("ka_arena_timer_sound_go", "ambient/weather/drip2.wav", "Звук таймера 'GO' (можно не указывать)", 0, false, 0.0, false, 0.0);
+	cvar = CreateConVar("ka_arena_nosmoke", "1", "1 = Удалять дым рядом с ареной\n0 = Нет", 0, false, 0.0, false, 0.0);
+	g_bNoSmoke = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_arena_only_dmg", "0", "1 = Ранить/убить можно только на арене\n0 = Нет", 0, false, 0.0, false, 0.0);
+	g_bOnlyArenaDamage = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_unauthorized_entry", "1", "1 = Запретить несанкционированный вход на арену\n0 = Разрешить", 0, false, 0.0, false, 0.0);
+	g_bUnauthorizedEntry = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("ka_bomb_place", "1", "Если Т зашел с бомбой на арену:\n1 = Переместить её за арену\n2 = На базу Т", 0, true, 1.0, true, 2.0);
+	g_BombPlace = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	AutoExecConfig(true, "knife_arena", "knife_arena");
+	return 0;
+}
+
+public cvar_changed(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl String:CvarName[32];
+	GetConVarName(cvar, CvarName, 32);
+	if (strcmp(CvarName, "ka_back_kill", false))
+	{
+		if (strcmp(CvarName, "ka_warning_teleport", false))
+		{
+			if (strcmp(CvarName, "ka_buy", false))
+			{
+				if (strcmp(CvarName, "ka_spawn_knife", false))
+				{
+					if (strcmp(CvarName, "ka_arena_timer_for_all", false))
+					{
+						if (strcmp(CvarName, "ka_restore_hp", false))
+						{
+							if (strcmp(CvarName, "ka_arena_ground_stuck", false))
+							{
+								if (strcmp(CvarName, "ka_arena_nosmoke", false))
+								{
+									if (strcmp(CvarName, "ka_arena_only_dmg", false))
+									{
+										if (strcmp(CvarName, "ka_unauthorized_entry", false))
+										{
+											if (strcmp(CvarName, "ka_spawn_hp", false))
+											{
+												if (strcmp(CvarName, "ka_spawn_protect", false))
+												{
+													if (strcmp(CvarName, "ka_respawn_timer", false))
+													{
+														if (strcmp(CvarName, "ka_respawn_limit", false))
+														{
+															if (strcmp(CvarName, "ka_arena_timer", false))
+															{
+																if (strcmp(CvarName, "ka_arena_hp", false))
+																{
+																	if (strcmp(CvarName, "ka_bomb_place", false))
+																	{
+																		if (strcmp(CvarName, "ka_hurt_protect_sec", false))
+																		{
+																			if (strcmp(CvarName, "ka_dmg_protect_dist", false))
+																			{
+																				if (strcmp(CvarName, "ka_arena_color", false))
+																				{
+																					if (strcmp(CvarName, "ka_arena_renderfx", false))
+																					{
+																						if (!(strcmp(CvarName, "ka_arena_spotlight_rgb", false)))
+																						{
+																							GetConVarString(cvar, g_sArenaSpotlightRGB, 15);
+																						}
+																					}
+																					g_ArenaRenderFx = StringToInt(NewValue, 10);
+																				}
+																				wS_GetCvarColor(cvar, g_ArenaColor, 33452);
+																			}
+																			g_fDmgProtectDist = StringToFloat(NewValue);
+																		}
+																		g_fHurtProtectSec = StringToFloat(NewValue);
+																	}
+																	g_BombPlace = StringToInt(NewValue, 10);
+																}
+																g_ArenaHp = StringToInt(NewValue, 10);
+															}
+															g_ArenaTimer = StringToInt(NewValue, 10);
+														}
+														g_RespawnLimit = StringToInt(NewValue, 10);
+													}
+													g_RespawnTimer = StringToInt(NewValue, 10);
+												}
+												g_SpawnProtect = StringToInt(NewValue, 10);
+											}
+											g_SpawnHp = StringToInt(NewValue, 10);
+										}
+										g_bUnauthorizedEntry = StringToInt(NewValue, 10) == 1;
+									}
+									g_bOnlyArenaDamage = StringToInt(NewValue, 10) == 1;
+								}
+								g_bNoSmoke = StringToInt(NewValue, 10) == 1;
+							}
+							g_bGroundStuck = StringToInt(NewValue, 10) == 1;
+						}
+						g_bRestoreHp = StringToInt(NewValue, 10) == 1;
+					}
+					g_bArenaTimerForAll = StringToInt(NewValue, 10) == 1;
+				}
+				g_bSpawnKnife = StringToInt(NewValue, 10) == 1;
+			}
+			g_bBuy = StringToInt(NewValue, 10) == 1;
+		}
+		g_bWarningTeleport = StringToInt(NewValue, 10) == 1;
+	}
+	else
+	{
+		g_bBackKill = StringToInt(NewValue, 10) == 1;
+	}
+	return 0;
+}
+
+wS_ClearArenaVars()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	g_ArenaRef = -1;
+	g_ArenaClientTT = 0;
+	g_ArenaClientCT = 0;
+	ClearArray(g_hSpotLightArray);
+	ClearArray(g_hArenaQueueTT_Array);
+	ClearArray(g_hArenaQueueCT_Array);
+	wS_ClearTimer(g_hArenaTimer);
+	wS_ClearTimer(g_hArenaClientParameterTimer);
+	wS_ClearTimer(g_hArenaQueueCT_Timer);
+	wS_ClearTimer(g_hArenaQueueTT_Timer);
+	return 0;
+}
+
+wS_TryReturnOldWeapons(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl x;
+	new var1;
+	if (strlen(g_ClientParameter[client][9]) > 1 && (x = GivePlayerItem(client, g_ClientParameter[client][9], 0)) > 0)
+	{
+		SetEntProp(x, PropType:1, "m_iClip1", g_ClientParameter[client][79], 4, 0);
+		SetEntProp(client, PropType:0, "m_iAmmo", g_ClientParameter[client][80], 4, GetEntProp(x, PropType:0, "m_iPrimaryAmmoType", 4, 0));
+	}
+	new var2;
+	if (strlen(g_ClientParameter[client][44]) > 1 && (x = GivePlayerItem(client, g_ClientParameter[client][44], 0)) > 0)
+	{
+		SetEntProp(x, PropType:1, "m_iClip1", g_ClientParameter[client][81], 4, 0);
+		SetEntProp(client, PropType:0, "m_iAmmo", g_ClientParameter[client][82], 4, GetEntProp(x, PropType:0, "m_iPrimaryAmmoType", 4, 0));
+	}
+	return 0;
+}
+
+wS_MinMaxContol_Int(&value, min, max)
+{
+	if (value < min)
+	{
+		value = min;
+	}
+	else
+	{
+		if (value > max)
+		{
+			value = max;
+		}
+	}
+	return 0;
+}
+
+wS_MinMaxContol_Float(&Float:value, Float:min, Float:max)
+{
+	if (value < min)
+	{
+		value = min;
+	}
+	else
+	{
+		if (value > max)
+		{
+			value = max;
+		}
+	}
+	return 0;
+}
+
+bool:wS_ClientInArena(client)
+{
+	new var1;
+	return g_ArenaClientTT != client && g_ArenaClientCT != client;
+}
+
+wS_SetOnlyKnife(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl weapon;
+	new slot = -1;
+	slot++;
+	while (slot < 4)
+	{
+		while (0 < (weapon = GetPlayerWeaponSlot(client, slot)))
+		{
+			if (RemovePlayerItem(client, weapon))
+			{
+				AcceptEntityInput(weapon, "Kill", -1, -1, 0);
+			}
+		}
+	}
+	GivePlayerItem(client, "weapon_knife", 0);
+	ClientCommand(client, "lastinv");
+	return 0;
+}
+
+wS_ClearTimer(&Handle:t)
+{
+	if (t)
+	{
+		KillTimer(t, false);
+		t = 0;
+	}
+	return 0;
+}
+
+wS_GetCvarSound(Handle:cvar, String:buffer[256])
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	GetConVarString(cvar, buffer, 256);
+	new var1;
+	if (StrContains(buffer, ".mp3", true) > 0 || StrContains(buffer, ".wav", true) > 0)
+	{
+		ReplaceString(buffer, 256, "\", "/", true);
+		ReplaceString(buffer, 256, "sound/", "", true);
+		PrecacheSound(buffer, true);
+		Format(buffer, 256, "sound/%s", buffer);
+		AddFileToDownloadsTable(buffer);
+		strcopy(buffer, 256, buffer[1]);
+	}
+	else
+	{
+		buffer[0] = MissingTAG:0;
+	}
+	return 0;
+}
+
+wS_GetCvarColor(Handle:cVar, color[4], default_color[4])
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new i;
+	while (i < 4)
+	{
+		color[i] = default_color[i];
+		i++;
+	}
+	decl String:str_rgba[36];
+	new String:buffer[4][12] = {
+		" ",
+		"der",
+		"for_knife_server/remove.txt",
+		"rver/remove.txt"
+	};
+	GetConVarString(cVar, str_rgba, 35);
+	new var1;
+	if (TrimString(str_rgba) < 4 || ExplodeString(str_rgba, " ", buffer, 4, 9, false) < 4)
+	{
+		return 0;
+	}
+	decl value;
+	i = 0;
+	while (i < 4)
+	{
+		new var2;
+		if ((value = StringToInt(buffer[i], 10)) < 0 || value > 255)
+		{
+			i = 0;
+			while (i < 4)
+			{
+				color[i] = default_color[i];
+				i++;
+			}
+			return 0;
+		}
+		color[i] = value;
+		i++;
+	}
+	return 0;
+}
+
+wS_SetColor(entity, r, g, b, a)
+{
+	SetEntityRenderMode(entity, RenderMode:1);
+	SetEntityRenderColor(entity, r, g, b, a);
+	return 0;
+}
+
+wS_GetColor(entity, color[4])
+{
+	new offset = GetEntSendPropOffs(entity, "m_clrRender", false);
+	if (offset != -1)
+	{
+		new i;
+		while (i < 4)
+		{
+			color[i] = GetEntData(entity, i + offset, 1);
+			i++;
+		}
+	}
+	else
+	{
+		new i;
+		while (i < 4)
+		{
+			color[i] = 255;
+			i++;
+		}
+	}
+	return 0;
+}
+
+wS_RemoveEnts()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new Handle:hFile = OpenFile("cfg/for_knife_server/remove.txt", "r");
+	if (hFile)
+	{
+		static Handle:cvar;
+		if (!cvar)
+		{
+			cvar = FindConVar("sv_cheats");
+		}
+		new bool:sv_cheats_on = GetConVarBool(cvar);
+		if (!sv_cheats_on)
+		{
+			SetConVarBool(cvar, true, false, false);
+		}
+		decl String:class[48];
+		while (!IsEndOfFile(hFile) && ReadFileLine(hFile, class, 45))
+		{
+			new var2;
+			if (TrimString(class) > 1 && class[0] != '/')
+			{
+				ServerCommand("ent_remove_all %s", class);
+			}
+		}
+		CloseHandle(hFile);
+		if (!sv_cheats_on)
+		{
+			ServerCommand("sv_cheats 0");
+		}
+		return 0;
+	}
+	return 0;
+}
+
+wS_GetAimInfo(client, bool:get_index, bool:get_origin, Float:end_origin[3])
+{
+	decl Float:angles[3];
+	if (!GetClientEyeAngles(client, angles))
+	{
+		return -5;
+	}
+	decl Float:origin[3];
+	GetClientEyePosition(client, origin);
+	TR_TraceRayFilter(origin, angles, 33570827, RayType:1, wS_GetAimInfo_Filter, client);
+	if (!TR_DidHit(Handle:0))
+	{
+		return -5;
+	}
+	if (get_origin)
+	{
+		TR_GetEndPosition(end_origin, Handle:0);
+		if (!get_index)
+		{
+			return 0;
+		}
+	}
+	if (get_index)
+	{
+		return TR_GetEntityIndex(Handle:0);
+	}
+	return -5;
+}
+
+public bool:wS_GetAimInfo_Filter(TraceEnt, mask, any:entity)
+{
+	return entity != TraceEnt;
+}
+
+wS_GetArenaIndex()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (g_ArenaRef != -1)
+	{
+		decl ent;
+		if (0 < (ent = EntRefToEntIndex(g_ArenaRef)))
+		{
+			return ent;
+		}
+		g_ArenaRef = -1;
+	}
+	return -1;
+}
+
+bool:wS_CmdFlood(admin)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	static last_time;
+	new curr_time = GetTime({0,0});
+	if (curr_time - last_time < 2)
+	{
+		PrintToConsole(admin, "Команда будет доступна через %d сек", 2 - curr_time - last_time);
+		return true;
+	}
+	last_time = curr_time;
+	return false;
+}
+
+wS_Warning(client, String:phrase[], bool:teleport, bool:bCenterText)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var2;
+	if (teleport && (g_bWarningTeleport || strcmp(phrase, "unauthorized_entry", false)))
+	{
+		TeleportEntity(client, g_fSpawnPos[client], NULL_VECTOR, NULL_VECTOR);
+	}
+	if (g_sWarningSound[0])
+	{
+		ClientCommand(client, "playgamesound \"%s\"", g_sWarningSound);
+	}
+	if (bCenterText)
+	{
+		PrintCenterText(client, "%t", phrase);
+	}
+	else
+	{
+		PrintToChat(client, "%t", phrase);
+	}
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	RegPluginLibrary("ws_knife_arena");
+	CreateNative("KA_GetArenaClients", KA_GetArenaClients_);
+	CreateNative("KA_ClientInKnifeArena", KA_ClientInKnifeArena_);
+	CreateNative("KA_GetClientQueuePosition", KA_GetClientQueuePosition_);
+	CreateNative("KA_LeaveArena", KA_LeaveArena_);
+	CreateNative("KA_ClearQueue", KA_ClearQueue_);
+	return APLRes:0;
+}
+
+public KA_GetArenaClients_(Handle:plugin, args)
+{
+	new var1;
+	if (g_bRoundEnded)
+	{
+		var1 = MissingTAG:0;
+	}
+	else
+	{
+		var1 = g_ArenaClientTT;
+	}
+	SetNativeCellRef(1, var1);
+	new var2;
+	if (g_bRoundEnded)
+	{
+		var2 = MissingTAG:0;
+	}
+	else
+	{
+		var2 = g_ArenaClientCT;
+	}
+	SetNativeCellRef(2, var2);
+	return 0;
+}
+
+public KA_ClientInKnifeArena_(Handle:plugin, args)
+{
+	new client = GetNativeCell(1);
+	new var1;
+	return client > 0 && !g_bRoundEnded && wS_ClientInArena(client);
+}
+
+public KA_GetClientQueuePosition_(Handle:plugin, args)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (g_bRoundEnded)
+	{
+		return 0;
+	}
+	new client = GetNativeCell(1);
+	new team = GetClientTeam(client);
+	if (team > 1)
+	{
+		new var1;
+		if (team == 2)
+		{
+			var1 = g_hArenaQueueTT_Array;
+		}
+		else
+		{
+			var1 = g_hArenaQueueCT_Array;
+		}
+		return FindValueInArray(var1, GetClientUserId(client)) + 1;
+	}
+	return 0;
+}
+
+public KA_LeaveArena_(Handle:plugin, args)
+{
+	new client = GetNativeCell(1);
+	if (wS_TryClearArenaClient(client, 6))
+	{
+		wS_LeaveArena(client);
+	}
+	return 0;
+}
+
+public KA_ClearQueue_(Handle:plugin, args)
+{
+	ClearArray(g_hArenaQueueTT_Array);
+	ClearArray(g_hArenaQueueCT_Array);
+	return 0;
+}
+
+public Action:sm_knife_arena_save(admin, args)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (admin > 0 && !wS_CmdFlood(admin))
+	{
+		new Handle:kv = CreateKeyValues("arena", "", "");
+		new bool:bArenaReady = wS_GetArenaIndex() > 0;
+		if (bArenaReady)
+		{
+			KvSetVector(kv, "origin", g_fArenaCenterPos);
+			KvSetFloat(kv, "radius", g_fArenaRadius);
+			KvSetFloat(kv, "length", g_fArenaLength);
+			KvSetNum(kv, "levels", g_ArenaLevels);
+			KvRewind(kv);
+		}
+		decl String:info[252];
+		GetCurrentMap(info, 250);
+		Format(info, 250, "cfg/knife_arena/maps/%s.txt", info);
+		if (!KeyValuesToFile(kv, info))
+		{
+			LogError("Can't save '%s'", info);
+		}
+		else
+		{
+			if (bArenaReady)
+			{
+				ServerCommand("mp_restartgame 1");
+			}
+		}
+		CloseHandle(kv);
+		PrintToConsole(admin, "Сохранено");
+	}
+	return Action:3;
+}
+
+public Action:sm_knife_arena_delete(admin, args)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (admin < 1)
+	{
+		return Action:3;
+	}
+	new ent = wS_GetArenaIndex();
+	if (ent < 1)
+	{
+		return Action:3;
+	}
+	AcceptEntityInput(ent, "Kill", -1, -1, 0);
+	new i = GetArraySize(g_hSpotLightArray);
+	i--;
+	while (0 < i)
+	{
+		if (0 < (ent = EntRefToEntIndex(GetArrayCell(g_hSpotLightArray, i, 0, false))))
+		{
+			AcceptEntityInput(ent, "LightOff", -1, -1, 0);
+			SetVariantString("OnUser1 !self:Kill::0.1:1");
+			AcceptEntityInput(ent, "AddOutput", -1, -1, 0);
+			AcceptEntityInput(ent, "FireUser1", -1, -1, 0);
+		}
+	}
+	wS_ClearArenaVars();
+	PrintToConsole(admin, "Арена удалена");
+	return Action:3;
+}
+
+public Action:sm_knife_arena_create(admin, args)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (admin < 1)
+	{
+		return Action:3;
+	}
+	if (0 < wS_GetArenaIndex())
+	{
+		PrintToConsole(admin, "Арена уже создана. Вы можете удалить её: sm_knife_arena_delete.");
+		return Action:3;
+	}
+	if (args != 3)
+	{
+		PrintToConsole(admin, "Syntax: sm_knife_arena_create \"кол-во этажей от 1 до 3\" \"радиус от 100 до 280\" \"длина от 262 до 524\"");
+		return Action:3;
+	}
+	decl String:info[12];
+	decl Levels;
+	GetCmdArg(1, info, 10);
+	new var1;
+	if ((Levels = StringToInt(info, 10)) < 1 || Levels > 3)
+	{
+		PrintToConsole(admin, "Syntax: sm_knife_arena_create \"кол-во этажей от 1 до 3\" \"радиус от 100 до 280\" \"длина от 262 до 524\"");
+		return Action:3;
+	}
+	decl Float:fRadius;
+	GetCmdArg(2, info, 10);
+	new var2;
+	if ((fRadius = StringToFloat(info)) < 1120403456 || fRadius > 280.0)
+	{
+		PrintToConsole(admin, "Syntax: sm_knife_arena_create \"кол-во этажей от 1 до 3\" \"радиус от 100 до 280\" \"длина от 262 до 524\"");
+		return Action:3;
+	}
+	decl Float:fLength;
+	GetCmdArg(3, info, 10);
+	new var3;
+	if ((fLength = StringToFloat(info)) < 1132658688 || fLength > 524.0)
+	{
+		PrintToConsole(admin, "Syntax: sm_knife_arena_create \"кол-во этажей от 1 до 3\" \"радиус от 100 до 280\" \"длина от 262 до 524\"");
+		return Action:3;
+	}
+	if (!wS_CmdFlood(admin))
+	{
+		wS_GetAimInfo(admin, false, true, g_fArenaCenterPos);
+		g_ArenaLevels = Levels;
+		g_fArenaRadius = fRadius;
+		g_fArenaLength = fLength;
+		g_bTestArena = true;
+		wS_SpawnArena();
+	}
+	return Action:3;
+}
+
+wS_SpawnArena()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new Float:fLength = g_fArenaLength - 262.0;
+	if (fLength > 1.9)
+	{
+		fLength /= 2.0;
+	}
+	else
+	{
+		fLength = 0.0;
+	}
+	decl Float:p[3];
+	decl Float:a[3];
+	a[0] = 0.0;
+	a[2] = 0.0;
+	new Float:fValue[4] = {0.0,1.8748E-41,6.4664E-41,4.8523E-41};
+	new i;
+	while (i < 4)
+	{
+		p = g_fArenaCenterPos;
+		a[1] = fValue[i];
+		wS_MovePos(p, 34980, g_fArenaRadius, i);
+		if (!g_bTestArena)
+		{
+			if (i)
+			{
+				if (i == 1)
+				{
+					g_fArenaClientCTang[1] += 180.0;
+					wS_MovePos(g_fArenaClientCTpos, g_fArenaClientCTang, 35.0, 0);
+					g_fArenaClientCTpos[2] += 10.0;
+				}
+			}
+			g_fArenaClientTTang[1] += 180.0;
+			wS_MovePos(g_fArenaClientTTpos, g_fArenaClientTTang, 35.0, 0);
+			g_fArenaClientTTpos[2] += 10.0;
+			wS_MovePos(g_fC4pos, a, 50.0, 0);
+			g_fC4pos[2] += 100.0;
+		}
+		wS_SpwanWall(p, a, fLength, i + 1);
+		i++;
+	}
+	if (!g_bTestArena)
+	{
+		wS_CreateTriggerMultiple();
+	}
+	return 0;
+}
+
+wS_MovePos(Float:pos[3], Float:CurrentAngles[3], Float:fDist, move_type)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	static Float:fValue[4] =
+	{
+		0, 1127481344, 1119092736, 1132920832
+	};
+	decl Float:angles[3];
+	angles[0] = 0.0;
+	angles[1] = fValue[move_type][CurrentAngles[1]];
+	angles[2] = 0.0;
+	decl Float:direction[3];
+	GetAngleVectors(angles, direction, NULL_VECTOR, NULL_VECTOR);
+	pos[0] = pos[0] + direction[0] * fDist;
+	pos[1] = pos[1] + direction[1] * fDist;
+	return 0;
+}
+
+wS_SpwanWall(Float:wall_pos[3], Float:angles[3], Float:fLength, wall_num)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl Float:p[3];
+	decl ent;
+	new var2 = wall_pos;
+	p = var2;
+	if (fLength > 0.9)
+	{
+		wS_MovePos(p, angles, fLength, 3);
+	}
+	wS_SpawnSpotLight(p, angles);
+	p[2] -= 105.0;
+	new L;
+	L++;
+	while (L <= g_ArenaLevels)
+	{
+		new var1;
+		if (wall_num == 1 && L == 1)
+		{
+		}
+	}
+	if (fLength > 0.9)
+	{
+		new var3 = wall_pos;
+		p = var3;
+		wS_MovePos(p, angles, fLength, 2);
+		p[2] -= 105.0;
+		L = 0;
+		L++;
+		while (L <= g_ArenaLevels)
+		{
+			wS_AddLevel(p, angles, ent, false);
+		}
+	}
+	return 0;
+}
+
+wS_AddLevel(Float:p[3], Float:angles[3], ent, bool:bFirstWall)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	p[2] += 105.0;
+	ent = CreateEntityByName("prop_dynamic", -1);
+	if (bFirstWall)
+	{
+		DispatchKeyValue(ent, "targetname", "wS_KnifeArenaWall");
+		g_ArenaRef = EntIndexToEntRef(ent);
+	}
+	else
+	{
+		DispatchKeyValue(ent, "targetname", "wS_Wall");
+	}
+	DispatchKeyValue(ent, "model", "models/props/de_train/chainlinkgate.mdl");
+	DispatchKeyValue(ent, "solid", "6");
+	DispatchSpawn(ent);
+	TeleportEntity(ent, p, angles, NULL_VECTOR);
+	SetEntityMoveType(ent, MoveType:0);
+	wS_SetColor(ent, g_ArenaColor[0], g_ArenaColor[1], g_ArenaColor[2], g_ArenaColor[3]);
+	SetEntityRenderFx(ent, g_ArenaRenderFx);
+	if (!bFirstWall)
+	{
+		SetVariantString("wS_KnifeArenaWall");
+		AcceptEntityInput(ent, "SetParent", -1, -1, 0);
+	}
+	if (!g_bTestArena)
+	{
+		HookSingleEntityOutput(ent, "OnTakeDamage", OnArenaTakeDamage, false);
+	}
+	return 0;
+}
+
+wS_SpawnSpotLight(Float:pos[3], Float:angles[3])
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (strlen(g_sArenaSpotlightRGB) < 3)
+	{
+		return 0;
+	}
+	decl ent;
+	if ((ent = CreateEntityByName("point_spotlight", -1)) < 1)
+	{
+		LogError("Can't create point_spotlight");
+		return 0;
+	}
+	PushArrayCell(g_hSpotLightArray, EntIndexToEntRef(ent));
+	decl Float:p[3];
+	new var2 = pos;
+	p = var2;
+	wS_MovePos(p, angles, 131.0, 3);
+	DispatchKeyValue(ent, "spawnflags", "2");
+	DispatchKeyValueVector(ent, "origin", p);
+	new var1;
+	if (g_ArenaLevels > 1)
+	{
+		var1[0] = 35288;
+	}
+	else
+	{
+		var1[0] = 35292;
+	}
+	DispatchKeyValue(ent, "SpotlightLength", var1);
+	DispatchKeyValue(ent, "SpotlightWidth", "25");
+	DispatchKeyValue(ent, "rendermode", "5");
+	DispatchKeyValue(ent, "rendercolor", g_sArenaSpotlightRGB);
+	DispatchKeyValue(ent, "renderamt", "255");
+	DispatchKeyValue(ent, "scale", "5");
+	DispatchKeyValue(ent, "angles", "-90 0 0");
+	DispatchSpawn(ent);
+	AcceptEntityInput(ent, "LightOn", -1, -1, 0);
+	return 0;
+}
+
+wS_CreateTriggerMultiple()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new ent = CreateEntityByName("trigger_multiple", -1);
+	if (ent < 1)
+	{
+		LogError("Can't create trigger_multiple");
+		return 0;
+	}
+	DispatchKeyValueVector(ent, "origin", g_fArenaCenterPos);
+	DispatchKeyValue(ent, "spawnflags", "16");
+	DispatchKeyValue(ent, "wait", "0");
+	DispatchSpawn(ent);
+	ActivateEntity(ent);
+	SetEntityModel(ent, "models/props/de_train/chainlinkgate.mdl");
+	decl Float:mins[3];
+	decl Float:maxs[3];
+	mins[0] = 0.0 - g_fArenaRadius + 10.0;
+	mins[1] = 0.0 - g_fArenaRadius + 10.0;
+	mins[2] = 0.0;
+	maxs[0] = g_fArenaRadius - 10.0;
+	maxs[1] = g_fArenaRadius - 10.0;
+	maxs[2] = float(g_ArenaLevels * 102 + 30);
+	SetEntPropVector(ent, PropType:0, "m_vecMins", mins, 0);
+	SetEntPropVector(ent, PropType:0, "m_vecMaxs", maxs, 0);
+	SetEntProp(ent, PropType:0, "m_nSolidType", any:2, 4, 0);
+	SetEntProp(ent, PropType:0, "m_fEffects", GetEntProp(ent, PropType:0, "m_fEffects", 4, 0) | 32, 4, 0);
+	HookSingleEntityOutput(ent, "OnStartTouch", wS_TriggerMultipleTouch_Start, false);
+	HookSingleEntityOutput(ent, "OnEndTouch", wS_TriggerMultipleTouch_End, false);
+	SetVariantString("wS_KnifeArenaWall");
+	AcceptEntityInput(ent, "SetParent", -1, -1, 0);
+	return 0;
+}
+
+public wS_TriggerMultipleTouch_Start(String:output[], ent, activator, Float:delay)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (activator < 1)
+	{
+		return 0;
+	}
+	if (activator <= MaxClients)
+	{
+		new var1;
+		if (!wS_ClientInArena(activator) && g_bUnauthorizedEntry)
+		{
+			wS_Warning(activator, "unauthorized_entry", true, false);
+		}
+	}
+	else
+	{
+		decl String:info[16];
+		GetEntPropString(activator, PropType:1, "m_iName", info, 15, 0);
+		if (strcmp(info, "wS_Wall", false))
+		{
+			AcceptEntityInput(activator, "Kill", -1, -1, 0);
+		}
+	}
+	return 0;
+}
+
+public wS_TriggerMultipleTouch_End(String:output[], ent, activator, Float:delay)
+{
+	new var1;
+	if (wS_bEndTouchHookOn() && activator > 0 && wS_TryClearArenaClient(activator, 5) && IsClientInGame(activator) && IsPlayerAlive(activator))
+	{
+		SetEntityMoveType(activator, MoveType:2);
+	}
+	return 0;
+}
+
+wS_TryCreateArena()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl String:info[252];
+	decl levels;
+	GetCurrentMap(info, 250);
+	Format(info, 250, "cfg/knife_arena/maps/%s.txt", info);
+	new Handle:kv = CreateKeyValues("arena", "", "");
+	new var1;
+	if (FileToKeyValues(kv, info) && 4 > var3 & 0 < var3)
+	{
+		g_ArenaLevels = levels;
+		KvGetVector(kv, "origin", g_fArenaCenterPos, 35756);
+		g_fArenaRadius = KvGetFloat(kv, "radius", 0.0);
+		wS_MinMaxContol_Float(g_fArenaRadius, 100.0, 280.0);
+		g_fArenaLength = KvGetFloat(kv, "length", 0.0);
+		wS_MinMaxContol_Float(g_fArenaLength, 262.0, 524.0);
+		new Action:result;
+		Call_StartForward(g_hOnKnifeArenaSpawn);
+		Call_PushCellRef(g_ArenaLevels);
+		Call_PushFloatRef(g_fArenaRadius);
+		Call_PushFloatRef(g_fArenaLength);
+		Call_PushArrayEx(g_fArenaCenterPos, 3, 1);
+		Call_Finish(result);
+		new var2;
+		if (result && result == Action:1)
+		{
+			g_bTestArena = false;
+			wS_MinMaxContol_Int(g_ArenaLevels, 1, 3);
+			wS_MinMaxContol_Float(g_fArenaRadius, 100.0, 280.0);
+			wS_MinMaxContol_Float(g_fArenaLength, 262.0, 524.0);
+			wS_SpawnArena();
+			Call_StartForward(g_hOnKnifeArenaSpawn_Post);
+			Call_PushCell(g_ArenaLevels);
+			Call_PushFloat(g_fArenaRadius);
+			Call_PushFloat(g_fArenaLength);
+			Call_PushArray(g_fArenaCenterPos, 3);
+			Call_PushArray(g_fArenaClientTTpos, 3);
+			Call_PushArray(g_fArenaClientCTpos, 3);
+			Call_Finish(0);
+			PrintToChatAll("\x04%t", "arena_round_start_msg");
+		}
+	}
+	CloseHandle(kv);
+	return 0;
+}
+
+public OnArenaTakeDamage(String:output[], wall, client, Float:delay)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (client < 1 || client > MaxClients || g_bRoundEnded)
+	{
+		return 0;
+	}
+	static last_time[66];
+	new curr_time = GetTime({0,0});
+	if (curr_time - last_time[client] < 1)
+	{
+		return 0;
+	}
+	last_time[client] = curr_time;
+	new var2;
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	decl Float:p[3];
+	decl Float:ClientPos[3];
+	GetEntPropVector(wall, PropType:1, "m_vecAbsOrigin", p, 0);
+	GetClientAbsOrigin(client, ClientPos);
+	if (GetVectorDistance(p, ClientPos, false) > 1125515264)
+	{
+		return 0;
+	}
+	new var3;
+	if ((g_ArenaClientTT == client && g_ArenaClientCT < 1) || (g_ArenaClientCT == client && g_ArenaClientTT < 1))
+	{
+		wS_ShowArenaExitPanel(client);
+		return 0;
+	}
+	new team = GetClientTeam(client);
+	new var6;
+	if ((team == 2 && g_ArenaClientTT < 1 && g_hArenaQueueTT_Timer) || (team == 3 && g_ArenaClientCT < 1 && g_hArenaQueueCT_Timer))
+	{
+		if (GetPlayerWeaponSlot(client, 2) == GetEntPropEnt(client, PropType:0, "m_hActiveWeapon", 0))
+		{
+			wS_PushClientToArena(client, team);
+		}
+	}
+	return 0;
+}
+
+wS_ShowArenaExitPanel(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	decl String:text[88];
+	Format(text, 85, "%T", "menu_arena_exit", client);
+	SetPanelCurrentKey(panel, 3);
+	DrawPanelItem(panel, text, 0);
+	Format(text, 85, "%T", "menu_arena_stay", client);
+	SetPanelCurrentKey(panel, 5);
+	DrawPanelItem(panel, text, 0);
+	SendPanelToClient(panel, client, StayOrExit_Panel, 7);
+	CloseHandle(panel);
+	return 0;
+}
+
+public StayOrExit_Panel(Handle:panel, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var4;
+	if (action == MenuAction:4 && item == 3 && IsPlayerAlive(client) && ((g_ArenaClientTT == client && g_ArenaClientCT < 1) || (g_ArenaClientCT == client && g_ArenaClientTT < 1)))
+	{
+		new Action:result;
+		Call_StartForward(g_hOnClientWantLeaveKnifeArena);
+		Call_PushCell(client);
+		Call_Finish(result);
+		new var5;
+		if (result && wS_TryClearArenaClient(client, 1))
+		{
+			wS_LeaveArena(client);
+		}
+	}
+	return 0;
+}
+
+bool:wS_TryClearArenaClient(client, reason)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (g_ArenaClientTT == client)
+	{
+		if (g_hArenaQueueTT_Timer)
+		{
+			KillTimer(g_hArenaQueueTT_Timer, false);
+		}
+		g_hArenaQueueTT_Timer = CreateTimer(3.0, g_hArenaQueueTT_Timer_CallBack, any:0, 0);
+		g_ArenaClientTT = 0;
+		Call_StartForward(g_hOnClientLeftKnifeArena);
+		Call_PushCell(client);
+		Call_PushCell(reason);
+		Call_Finish(0);
+		return true;
+	}
+	if (g_ArenaClientCT == client)
+	{
+		if (g_hArenaQueueCT_Timer)
+		{
+			KillTimer(g_hArenaQueueCT_Timer, false);
+		}
+		g_hArenaQueueCT_Timer = CreateTimer(3.0, g_hArenaQueueCT_Timer_CallBack, any:0, 0);
+		g_ArenaClientCT = 0;
+		Call_StartForward(g_hOnClientLeftKnifeArena);
+		Call_PushCell(client);
+		Call_PushCell(reason);
+		Call_Finish(0);
+		return true;
+	}
+	return false;
+}
+
+wS_LeaveArena(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	wS_SetOnlyKnife(client);
+	TeleportEntity(client, g_fSpawnPos[client], NULL_VECTOR, NULL_VECTOR);
+	SetEntProp(client, PropType:0, "m_iHealth", g_ClientParameter[client][0], 4, 0);
+	SetEntProp(client, PropType:1, "m_ArmorValue", g_ClientParameter[client][3], 4, 0);
+	SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", g_ClientParameter[client][1], 0);
+	wS_SetColor(client, g_ClientParameter[client][5], g_ClientParameter[client][6], g_ClientParameter[client][7], g_ClientParameter[client][8]);
+	SetEntityGravity(client, g_ClientParameter[client][2]);
+	new var1;
+	if (g_ClientParameter[client][4] && GetClientTeam(client) == 3)
+	{
+		SetEntProp(client, PropType:0, "m_bHasDefuser", any:1, 4, 0);
+	}
+	wS_TryReturnOldWeapons(client);
+	decl String:name[32];
+	name[0] = MissingTAG:0;
+	GetClientName(client, name, 32);
+	PrintToChatAll("%t", "menu_arena_exit_used", name);
+	return 0;
+}
+
+wS_ArenaTimerMsg()
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (g_bArenaTimerForAll)
+	{
+		if (0 < g_Sec)
+		{
+			PrintCenterTextAll("%t", "arena_timer", g_Sec);
+			if (g_sTimerSound[0])
+			{
+				EmitSoundToAll(g_sTimerSound, -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+		}
+		else
+		{
+			PrintCenterTextAll("%t", "arena_go");
+			if (g_sTimerSoundGo[0])
+			{
+				EmitSoundToAll(g_sTimerSoundGo, -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+		}
+	}
+	else
+	{
+		if (0 < g_Sec)
+		{
+			PrintCenterText(g_ArenaClientTT, "%t", "arena_timer", g_Sec);
+			PrintCenterText(g_ArenaClientCT, "%t", "arena_timer", g_Sec);
+			if (g_sTimerSound[0])
+			{
+				ClientCommand(g_ArenaClientTT, "playgamesound \"%s\"", g_sTimerSound);
+				ClientCommand(g_ArenaClientCT, "playgamesound \"%s\"", g_sTimerSound);
+			}
+		}
+		PrintCenterText(g_ArenaClientTT, "%t", "arena_go");
+		PrintCenterText(g_ArenaClientCT, "%t", "arena_go");
+		if (g_sTimerSoundGo[0])
+		{
+			ClientCommand(g_ArenaClientTT, "playgamesound \"%s\"", g_sTimerSoundGo);
+			ClientCommand(g_ArenaClientCT, "playgamesound \"%s\"", g_sTimerSoundGo);
+		}
+	}
+	return 0;
+}
+
+public Action:g_hArenaTimer_CallBack(Handle:timer)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (g_ArenaClientTT > 0 && g_ArenaClientCT > 0)
+	{
+		g_Sec -= 1;
+		if (0 < g_Sec)
+		{
+			wS_ArenaTimerMsg();
+			return Action:0;
+		}
+		wS_DisableEndTouchHook();
+		TeleportEntity(g_ArenaClientTT, g_fArenaClientTTpos, g_fArenaClientTTang, NULL_VECTOR);
+		TeleportEntity(g_ArenaClientCT, g_fArenaClientCTpos, g_fArenaClientCTang, NULL_VECTOR);
+		wS_SetClientArenaParameters(g_ArenaClientTT, false);
+		wS_SetClientArenaParameters(g_ArenaClientCT, false);
+		wS_ClearTimer(g_hArenaClientParameterTimer);
+		g_hArenaClientParameterTimer = CreateTimer(0.5, g_hArenaClientParameterTimer_CallBack, any:0, 1);
+		wS_ArenaTimerMsg();
+	}
+	else
+	{
+		if (0 < g_ArenaClientTT)
+		{
+			SetEntityMoveType(g_ArenaClientTT, MoveType:2);
+			wS_DisableEndTouchHook();
+			TeleportEntity(g_ArenaClientTT, g_fArenaClientTTpos, g_fArenaClientTTang, NULL_VECTOR);
+		}
+		if (0 < g_ArenaClientCT)
+		{
+			SetEntityMoveType(g_ArenaClientCT, MoveType:2);
+			wS_DisableEndTouchHook();
+			TeleportEntity(g_ArenaClientCT, g_fArenaClientCTpos, g_fArenaClientCTang, NULL_VECTOR);
+		}
+	}
+	g_hArenaTimer = MissingTAG:0;
+	return Action:4;
+}
+
+public Action:g_hArenaClientParameterTimer_CallBack(Handle:timer)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (g_ArenaClientTT > 0 && g_ArenaClientCT > 0 && g_Sec < 1)
+	{
+		wS_SetClientArenaParameters(g_ArenaClientTT, true);
+		wS_SetClientArenaParameters(g_ArenaClientCT, true);
+		return Action:0;
+	}
+	g_hArenaClientParameterTimer = MissingTAG:0;
+	return Action:4;
+}
+
+wS_SetClientArenaParameters(client, bool:bFightOn)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (!bFightOn || GetEntProp(client, PropType:0, "m_iHealth", 4, 0) > g_ArenaHp)
+	{
+		SetEntProp(client, PropType:0, "m_iHealth", g_ArenaHp, 4, 0);
+	}
+	SetEntityMoveType(client, MoveType:2);
+	SetEntProp(client, PropType:1, "m_ArmorValue", any:0, 4, 0);
+	SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 1.0, 0);
+	wS_SetColor(client, 255, 255, 255, 255);
+	SetEntityGravity(client, 1.0);
+	SetEntProp(client, PropType:0, "m_bHasDefuser", any:0, 4, 0);
+	SetEntProp(client, PropType:1, "m_takedamage", any:2, 4, 0);
+	return 0;
+}
+
+bool:wS_bEndTouchHookOn()
+{
+	return g_hEndTouchTimer == 0;
+}
+
+wS_DisableEndTouchHook()
+{
+	if (g_hEndTouchTimer)
+	{
+		KillTimer(g_hEndTouchTimer, false);
+	}
+	g_hEndTouchTimer = CreateTimer(0.1, EnableEndTouchHook_Timer, any:0, 0);
+	return 0;
+}
+
+public Action:EnableEndTouchHook_Timer(Handle:timer)
+{
+	g_hEndTouchTimer = MissingTAG:0;
+	return Action:4;
+}
+
+public OnEntityCreated(entity, String:classname[])
+{
+	new var1;
+	if (g_bNoSmoke && wS_GetArenaIndex() > 0 && strcmp(classname, "env_particlesmokegrenade", false))
+	{
+		CreateTimer(0.1, wS_TryRemoveSmoke_Timer, EntIndexToEntRef(entity), 2);
+	}
+	return 0;
+}
+
+public Action:wS_TryRemoveSmoke_Timer(Handle:timer, any:entity)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (0 < (entity = EntRefToEntIndex(entity)))
+	{
+		decl Float:p[3];
+		GetEntPropVector(entity, PropType:1, "m_vecAbsOrigin", p, 0);
+		if (GetVectorDistance(p, g_fArenaCenterPos, false) < g_fArenaRadius + 200.0)
+		{
+			AcceptEntityInput(entity, "Kill", -1, -1, 0);
+		}
+	}
+	return Action:4;
+}
+
+public Action:sm_arena(client, args)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (client < 1 || client > MaxClients || g_bRoundEnded)
+	{
+		return Action:3;
+	}
+	static last_time[66];
+	new curr_time = GetTime({0,0});
+	if (curr_time - last_time[client] < 2)
+	{
+		return Action:3;
+	}
+	last_time[client] = curr_time;
+	if (!IsPlayerAlive(client))
+	{
+		PrintToChat(client, "Вы мертвы");
+	}
+	else
+	{
+		new var2;
+		if (g_bTestArena || wS_GetArenaIndex() < 1)
+		{
+			PrintToChat(client, "Арена не создана");
+		}
+		new var3;
+		if ((g_ArenaClientTT == client && g_ArenaClientCT < 1) || (g_ArenaClientCT == client && g_ArenaClientTT < 1))
+		{
+			wS_ShowArenaExitPanel(client);
+		}
+		if (!wS_ClientInArena(client))
+		{
+			new Action:result;
+			Call_StartForward(g_hOnClientInKnifeArenaQueue);
+			Call_PushCell(client);
+			Call_Finish(result);
+			if (result)
+			{
+			}
+			else
+			{
+				new team = GetClientTeam(client);
+				new var7;
+				if ((team == 2 && (g_ArenaClientTT > 0 || g_hArenaQueueTT_Timer)) || (team == 3 && (g_ArenaClientCT > 0 || g_hArenaQueueCT_Timer)) || (team == 2 && g_ArenaClientCT < 1) || (team == 3 && g_ArenaClientTT < 1))
+				{
+					new id = GetClientUserId(client);
+					decl Handle:Ar;
+					new var13;
+					if (team == 2)
+					{
+						var13 = g_hArenaQueueTT_Array;
+					}
+					else
+					{
+						var13 = g_hArenaQueueCT_Array;
+					}
+					Ar = var13;
+					new ps = FindValueInArray(Ar, id);
+					if (0 > ps)
+					{
+						new var14;
+						if (g_ArenaClientTT < 1 && g_ArenaClientCT < 1)
+						{
+							new var15;
+							if ((team == 2 && wS_TryPushToArenaFromQueue(g_hArenaQueueCT_Array, 3)) || (team == 3 && wS_TryPushToArenaFromQueue(g_hArenaQueueTT_Array, 2)))
+							{
+								wS_PushClientToArena(client, team);
+								return Action:3;
+							}
+						}
+						ps = PushArrayCell(Ar, id);
+					}
+					PrintToChat(client, "%t", "arena_queue_position", ps + 1);
+				}
+				else
+				{
+					wS_PushClientToArena(client, team);
+				}
+			}
+		}
+	}
+	return Action:3;
+}
+
+bool:wS_PushClientToArena(client, team)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl Handle:Ar;
+	decl x;
+	if (team == 2)
+	{
+		Ar = g_hArenaQueueTT_Array;
+	}
+	else
+	{
+		Ar = g_hArenaQueueCT_Array;
+	}
+	if ((x = FindValueInArray(Ar, GetClientUserId(client))) > -1)
+	{
+		RemoveFromArray(Ar, x);
+	}
+	new Action:result;
+	Call_StartForward(g_hOnClientInKnifeArena);
+	Call_PushCell(client);
+	Call_Finish(result);
+	if (result)
+	{
+		return false;
+	}
+	if (team == 2)
+	{
+		g_ArenaClientTT = client;
+		if (0 < (x = GetPlayerWeaponSlot(client, 4)))
+		{
+			CS_DropWeapon(client, x, false, false);
+			new var1;
+			if (g_BombPlace == 1)
+			{
+				var1[0] = 28776;
+			}
+			else
+			{
+				var1[0] = 28788;
+			}
+			TeleportEntity(x, var1, NULL_VECTOR, NULL_VECTOR);
+		}
+	}
+	else
+	{
+		g_ArenaClientCT = client;
+	}
+	g_ClientParameter[client][0] = GetEntProp(client, PropType:0, "m_iHealth", 4, 0);
+	g_ClientParameter[client][1] = GetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 0);
+	g_ClientParameter[client][2] = GetEntityGravity(client);
+	g_ClientParameter[client][3] = GetEntProp(client, PropType:1, "m_ArmorValue", 4, 0);
+	g_ClientParameter[client][4] = GetEntProp(client, PropType:0, "m_bHasDefuser", 4, 0);
+	decl color[4];
+	wS_GetColor(client, color);
+	g_ClientParameter[client][5] = color[0];
+	g_ClientParameter[client][6] = color[1];
+	g_ClientParameter[client][7] = color[2];
+	g_ClientParameter[client][8] = color[3];
+	g_ClientParameter[client][9] = 0;
+	new var2;
+	if ((x = GetPlayerWeaponSlot(client, 0)) > 0 && GetEntityClassname(x, g_ClientParameter[client][9], 35))
+	{
+		g_ClientParameter[client][79] = GetEntProp(x, PropType:1, "m_iClip1", 4, 0);
+		g_ClientParameter[client][80] = GetEntProp(client, PropType:0, "m_iAmmo", 4, GetEntProp(x, PropType:0, "m_iPrimaryAmmoType", 4, 0));
+	}
+	g_ClientParameter[client][44] = 0;
+	new var3;
+	if ((x = GetPlayerWeaponSlot(client, 1)) > 0 && GetEntityClassname(x, g_ClientParameter[client][44], 35))
+	{
+		g_ClientParameter[client][81] = GetEntProp(x, PropType:1, "m_iClip1", 4, 0);
+		g_ClientParameter[client][82] = GetEntProp(client, PropType:0, "m_iAmmo", 4, GetEntProp(x, PropType:0, "m_iPrimaryAmmoType", 4, 0));
+	}
+	decl Float:p[3];
+	wS_DisableEndTouchHook();
+	new var4;
+	if (g_ArenaClientTT > 0 && g_ArenaClientCT > 0)
+	{
+		wS_ClearTimer(g_hArenaTimer);
+		wS_ClearTimer(g_hArenaClientParameterTimer);
+		p = g_fArenaClientTTpos;
+		if (g_bGroundStuck)
+		{
+			p[2] -= 30.0;
+		}
+		TeleportEntity(g_ArenaClientTT, p, g_fArenaClientTTang, NULL_VECTOR);
+		p = g_fArenaClientCTpos;
+		if (g_bGroundStuck)
+		{
+			p[2] -= 30.0;
+		}
+		TeleportEntity(g_ArenaClientCT, p, g_fArenaClientCTang, NULL_VECTOR);
+		wS_SetOnlyKnife(g_ArenaClientTT);
+		wS_SetOnlyKnife(g_ArenaClientCT);
+		wS_SetClientArenaParameters(g_ArenaClientTT, false);
+		wS_SetClientArenaParameters(g_ArenaClientCT, false);
+		SetEntityMoveType(g_ArenaClientTT, MoveType:0);
+		SetEntityMoveType(g_ArenaClientCT, MoveType:0);
+		if ((g_Sec = g_ArenaTimer) < 1)
+		{
+			g_Sec = 1;
+		}
+		wS_ArenaTimerMsg();
+		g_hArenaTimer = CreateTimer(1.0, g_hArenaTimer_CallBack, any:0, 1);
+	}
+	else
+	{
+		p = g_fArenaCenterPos;
+		p[2] += 30.0;
+		TeleportEntity(client, p, NULL_VECTOR, NULL_VECTOR);
+		wS_SetOnlyKnife(client);
+		wS_SetClientArenaParameters(client, false);
+	}
+	Call_StartForward(g_hOnClientInKnifeArena_Post);
+	Call_PushCell(client);
+	Call_Finish(0);
+	return true;
+}
+
+public Action:g_hArenaQueueCT_Timer_CallBack(Handle:timer)
+{
+	g_hArenaQueueCT_Timer = MissingTAG:0;
+	if (g_ArenaClientCT < 1)
+	{
+		wS_TryPushToArenaFromQueue(g_hArenaQueueCT_Array, 3);
+	}
+	return Action:4;
+}
+
+public Action:g_hArenaQueueTT_Timer_CallBack(Handle:timer)
+{
+	g_hArenaQueueTT_Timer = MissingTAG:0;
+	if (g_ArenaClientTT < 1)
+	{
+		wS_TryPushToArenaFromQueue(g_hArenaQueueTT_Array, 2);
+	}
+	return Action:4;
+}
+
+bool:wS_TryPushToArenaFromQueue(Handle:Ar, team)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	decl i;
+	if ((i = GetArraySize(Ar)) < 1)
+	{
+		return false;
+	}
+	decl client;
+	i--;
+	while (i > -1)
+	{
+		new var1;
+		if ((client = GetClientOfUserId(GetArrayCell(Ar, i, 0, false))) < 1 || !IsClientInGame(client) || team == GetClientTeam(client) || !IsPlayerAlive(client))
+		{
+			RemoveFromArray(Ar, i);
+		}
+	}
+	i = 0;
+	while (0 < GetArraySize(Ar))
+	{
+		if (wS_PushClientToArena(GetClientOfUserId(GetArrayCell(Ar, 0, 0, false)), team))
+		{
+			return true;
+		}
+		i++;
+		if (MaxClients == i)
+		{
+			return false;
+		}
+	}
+	return false;
+}
+
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (attacker < 1 || attacker > MaxClients || victim != attacker)
+	{
+		return Action:0;
+	}
+	if (wS_ClientInArena(victim))
+	{
+		if (wS_ClientInArena(attacker))
+		{
+			return Action:0;
+		}
+		if (IsClientInGame(attacker))
+		{
+			ClientCommand(attacker, "lastinv");
+		}
+		return Action:3;
+	}
+	new var2;
+	if (wS_ClientInArena(attacker) || g_bOnlyArenaDamage)
+	{
+		return Action:3;
+	}
+	if (!IsClientInGame(attacker))
+	{
+		return Action:0;
+	}
+	new var3;
+	if (g_fHurtProtectSec > 0.0 && GetGameTime() - g_fMyLastKillTime[victim] < g_fHurtProtectSec)
+	{
+		wS_Warning(attacker, "fks_hurt_protect_sec", true, true);
+		return Action:3;
+	}
+	decl Float:VictimPos[3];
+	decl Float:AttackerPos[3];
+	GetClientAbsOrigin(attacker, AttackerPos);
+	GetClientAbsOrigin(victim, VictimPos);
+	new Float:fDist = GetVectorDistance(AttackerPos, VictimPos, false);
+	new var4;
+	if (g_fDmgProtectDist > 0.0 && fDist > g_fDmgProtectDist)
+	{
+		ForcePlayerSuicide(attacker);
+		wS_Warning(attacker, "fks_dmg_protect_dist", false, true);
+		return Action:3;
+	}
+	if (!g_bBackKill)
+	{
+		decl Float:VictimAngles[3];
+		decl Float:direction[3];
+		GetClientAbsAngles(victim, VictimAngles);
+		VictimAngles[0] = 0.0;
+		VictimAngles[1] += 180.0;
+		VictimAngles[2] = 0.0;
+		GetAngleVectors(VictimAngles, direction, NULL_VECTOR, NULL_VECTOR);
+		VictimPos[0] = VictimPos[0] + direction[0] * 5.0;
+		VictimPos[1] = VictimPos[1] + direction[1] * 5.0;
+		if (fDist > GetVectorDistance(AttackerPos, VictimPos, false))
+		{
+			wS_Warning(attacker, "fks_back_kill", true, true);
+			return Action:3;
+		}
+	}
+	return Action:0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	g_RespawnCount[client] = 0;
+	if (!GetClientAuthString(client, g_SteamID[client], 66))
+	{
+		g_SteamID[client][0] = MissingTAG:0;
+	}
+	else
+	{
+		GetTrieValue(g_hRespawnTrie, g_SteamID[client], g_RespawnCount[client]);
+	}
+	SDKHook(client, SDKHookType:2, OnTakeDamage);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	wS_TryClearArenaClient(client, 2);
+	wS_ClearTimer(g_hSpawnProtectTimer[client]);
+	wS_ClearTimer(g_hRespawnTimer[client]);
+	return 0;
+}
+
+public Action:CS_OnBuyCommand(client, String:item[])
+{
+	if (!g_bBuy)
+	{
+		PrintCenterText(client, "%t", "fks_buy");
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public OnConfigsExecuted()
+{
+	wS_GetCvarSound(g_hWarningSound, g_sWarningSound);
+	wS_GetCvarSound(g_hTimerSound, g_sTimerSound);
+	wS_GetCvarSound(g_hTimerSoundGo, g_sTimerSoundGo);
+	return 0;
+}
+
+public OnMapStart()
+{
+	g_fC4respPos[0] = 1178657792;
+	PrecacheModel("models/props/de_train/chainlinkgate.mdl", true);
+	return 0;
+}
+
+public round_start(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	g_bRoundEnded = false;
+	wS_ClearArenaVars();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		g_RespawnCount[i] = 0;
+		i++;
+	}
+	ClearTrie(g_hRespawnTrie);
+	wS_RemoveEnts();
+	wS_TryCreateArena();
+	return 0;
+}
+
+public round_end(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	g_bRoundEnded = true;
+	new tt = g_ArenaClientTT;
+	new ct = g_ArenaClientCT;
+	wS_ClearArenaVars();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if ((tt != i && ct != i) && (IsClientInGame(i) && IsPlayerAlive(i)))
+		{
+			wS_TryReturnOldWeapons(i);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public player_blind(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	static g_FlashAlpha_Offs;
+	static g_FlashDuration_Offs = -123;
+	if (g_FlashDuration_Offs == -123)
+	{
+		g_FlashDuration_Offs = -1;
+		if ((g_FlashDuration_Offs = FindSendPropOffs("CCSPlayer", "m_flFlashDuration")) == -1)
+		{
+			LogError("m_flFlashDuration not found (FindSendPropOffs)");
+		}
+		if ((g_FlashAlpha_Offs = FindSendPropOffs("CCSPlayer", "m_flFlashMaxAlpha")) == -1)
+		{
+			LogError("m_flFlashMaxAlpha not found (FindSendPropOffs)");
+		}
+	}
+	new var1;
+	if (g_FlashDuration_Offs != -1 && g_FlashAlpha_Offs != -1)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		if (wS_ClientInArena(client))
+		{
+			SetEntDataFloat(client, g_FlashAlpha_Offs, 0.0, false);
+			SetEntDataFloat(client, g_FlashDuration_Offs, 0.0, false);
+		}
+	}
+	return 0;
+}
+
+public item_pickup(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (wS_ClientInArena(client))
+	{
+		decl String:ItemName[8];
+		GetEventString(event, "item", ItemName, 7);
+		if (strcmp(ItemName, "c4", false))
+		{
+			if (strcmp(ItemName, "knife", false))
+			{
+				wS_SetOnlyKnife(client);
+			}
+		}
+		else
+		{
+			new c4 = GetPlayerWeaponSlot(client, 4);
+			if (0 < c4)
+			{
+				CS_DropWeapon(client, c4, false, false);
+				TeleportEntity(c4, g_fC4pos, NULL_VECTOR, NULL_VECTOR);
+			}
+		}
+	}
+	return 0;
+}
+
+public bomb_pickup(Handle:event, String:name[], bool:silent)
+{
+	if (12345.0 == g_fC4respPos[0])
+	{
+		GetClientAbsOrigin(GetClientOfUserId(GetEventInt(event, "userid")), g_fC4respPos);
+		g_fC4respPos[2] += 5.0;
+	}
+	return 0;
+}
+
+public player_spawn(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	g_fMyLastKillTime[client] = 0;
+	wS_ClearTimer(g_hSpawnProtectTimer[client]);
+	wS_ClearTimer(g_hRespawnTimer[client]);
+	GetClientAbsOrigin(client, g_fSpawnPos[client]);
+	new var1 = g_fSpawnPos[client][2];
+	var1 = var1[50.0];
+	if (GetClientTeam(client) < 2)
+	{
+		return 0;
+	}
+	if (g_bSpawnKnife)
+	{
+		wS_SetOnlyKnife(client);
+	}
+	if (0 < g_SpawnHp)
+	{
+		SetEntProp(client, PropType:0, "m_iHealth", g_SpawnHp, 4, 0);
+	}
+	if (0 < g_SpawnProtect)
+	{
+		SetEntProp(client, PropType:1, "m_takedamage", any:0, 4, 0);
+		SetEntityRenderFx(client, RenderFx:13);
+		g_hSpawnProtectTimer[client] = CreateTimer(float(g_SpawnProtect), g_hSpawnProtectTimer_CallBack, client, 0);
+	}
+	return 0;
+}
+
+public Action:g_hSpawnProtectTimer_CallBack(Handle:timer, any:client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	g_hSpawnProtectTimer[client] = 0;
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		SetEntProp(client, PropType:1, "m_takedamage", any:2, 4, 0);
+		SetEntityRenderFx(client, RenderFx:0);
+	}
+	return Action:4;
+}
+
+public player_death(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	wS_TryClearArenaClient(victim, 3);
+	new killer = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new var1;
+	if (killer > 0 && victim != killer)
+	{
+		g_fMyLastKillTime[killer] = GetGameTime();
+	}
+	new var2;
+	if (g_bRestoreHp && g_SpawnHp > 0 && killer > 0 && IsPlayerAlive(killer) && g_ArenaClientTT != killer && g_ArenaClientCT != killer)
+	{
+		SetEntProp(killer, PropType:0, "m_iHealth", g_SpawnHp, 4, 0);
+	}
+	wS_TryRespawnClient(victim);
+	return 0;
+}
+
+public player_team(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	if (!GetEventBool(event, "disconnect"))
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		if (0 < client)
+		{
+			if (wS_TryClearArenaClient(client, 4))
+			{
+				TeleportEntity(client, g_fSpawnPos[client], NULL_VECTOR, NULL_VECTOR);
+			}
+			if (GetEventInt(event, "team") < 2)
+			{
+				wS_TryRespawnClient(client);
+			}
+		}
+	}
+	return 0;
+}
+
+wS_TryRespawnClient(client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var2;
+	if (g_RespawnTimer > 0 && (g_RespawnLimit < 1 || g_RespawnCount[client] < g_RespawnLimit))
+	{
+		if (g_hRespawnTimer[client])
+		{
+			KillTimer(g_hRespawnTimer[client], false);
+		}
+		g_hRespawnTimer[client] = CreateTimer(float(g_SpawnProtect), g_hRespawnTimer_CallBack, client, 1);
+	}
+	return 0;
+}
+
+public Action:g_hRespawnTimer_CallBack(Handle:timer, any:client)
+{
+	if (!xD)
+	{
+		ReplyToCommand(0, "%s");
+		new Handle:o;
+		do {
+			do {
+			} while (KvGotoNextKey(o, true));
+			KvGoBack(o);
+		} while (KvGotoNextKey(o, true));
+	}
+	new var1;
+	if (!IsClientInGame(client) || IsPlayerAlive(client))
+	{
+		g_hSpawnProtectTimer[client] = 0;
+		return Action:4;
+	}
+	if (GetClientTeam(client) < 2)
+	{
+		return Action:0;
+	}
+	g_hSpawnProtectTimer[client] = 0;
+	new var2 = g_RespawnCount[client];
+	var2++;
+	SetTrieValue(g_hRespawnTrie, g_SteamID[client], var2, true);
+	CS_RespawnPlayer(client);
+	return Action:4;
+}
+

@@ -1,0 +1,469 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.0",
+	date = "12/25/2011",
+	time = "19:52:15"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new Handle:SVIN_Enabled_Cvar;
+new Handle:SVIN_PlaySound_Cvar;
+new Handle:SVIN_Sound_Cvar;
+new bool:SVIN_Enabled;
+new bool:SVIN_PlaySound;
+new String:SVIN_Sound[256];
+new Handle:SVIN_CTSkin_Cvar;
+new Handle:SVIN_TSkin_Cvar;
+new String:SVIN_CTSkin[256];
+new String:SVIN_TSkin[256];
+new bool:SVIN_bool_CTSkin;
+new bool:SVIN_bool_TSkin;
+new bool:SVIN_Check;
+new SVIN_Client;
+new SVIN_Team = 5;
+new String:SVIN_GetClientModel[256];
+new Handle:SVIN_ChatMessage_Cvar;
+new bool:SVIN_ChatMessage;
+new String:AllModels[8][256] =
+{
+	"models/player/t_phoenix.mdl",
+	"models/player/t_leet.mdl",
+	"models/player/t_arctic.mdl",
+	"models/player/t_guerilla.mdl",
+	"models/player/ct_urban.mdl",
+	"models/player/ct_gsg9.mdl",
+	"models/player/ct_sas.mdl",
+	"models/player/ct_gign.mdl"
+};
+public Plugin:myinfo =
+{
+	name = "svinorez",
+	description = "Sets the skin to the player who killed with a knife",
+	author = "NoTiCE",
+	version = "1.4",
+	url = "http://uaplayer.com/"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[MaxClients];
+	new total;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+public OnPluginStart()
+{
+	LoadTranslations("svinorez.phrases");
+	SVIN_Enabled_Cvar = CreateConVar("sm_svin_enable", "1", "Enable or disable plugin.", 0, true, 0.0, true, 1.0);
+	SVIN_PlaySound_Cvar = CreateConVar("sm_svin_playsound", "1", "Enable or disable playing sound.", 0, true, 0.0, true, 1.0);
+	SVIN_Sound_Cvar = CreateConVar("sm_svin_sound", "svinorez/kaban4eg.mp3", "The sound to play.", 0, false, 0.0, false, 0.0);
+	SVIN_CTSkin_Cvar = CreateConVar("sm_svin_ctskin", "models/player/ics/ct_gign_kking/ct_gign.mdl", "The custom CT model path.", 0, false, 0.0, false, 0.0);
+	SVIN_TSkin_Cvar = CreateConVar("sm_svin_tskin", "models/player/ics/t_leet_kking/t_leet.mdl", "The custom T model path.", 0, false, 0.0, false, 0.0);
+	SVIN_ChatMessage_Cvar = CreateConVar("sm_svin_chatmessage", "1", "Enable/disable chat messadge.", 0, true, 0.0, true, 1.0);
+	HookConVarChange(SVIN_Enabled_Cvar, ConVarChanged);
+	HookConVarChange(SVIN_PlaySound_Cvar, ConVarChanged);
+	HookConVarChange(SVIN_Sound_Cvar, OnSoundChanged);
+	HookConVarChange(SVIN_ChatMessage_Cvar, ConVarChanged);
+	HookEvent("player_death", EventPlayerDeath, EventHookMode:1);
+	HookEvent("player_disconnect", EventPlayerDisconnect, EventHookMode:1);
+	HookEvent("round_start", EventRoundStart, EventHookMode:1);
+	HookEvent("player_team", EventPlayerTeam, EventHookMode:1);
+	RegConsoleCmd("joinclass", OnJoinClass, "Joinclass hook", 0);
+	AutoExecConfig(true, "svinorez", "sourcemod");
+	return 0;
+}
+
+public OnConfigsExecuted()
+{
+	SVIN_Enabled = GetConVarBool(SVIN_Enabled_Cvar);
+	SVIN_PlaySound = GetConVarBool(SVIN_PlaySound_Cvar);
+	SVIN_ChatMessage = GetConVarBool(SVIN_ChatMessage_Cvar);
+	decl String:sBuffer[256];
+	if (SVIN_PlaySound)
+	{
+		GetConVarString(SVIN_Sound_Cvar, SVIN_Sound, 256);
+		PrecacheSound(SVIN_Sound, true);
+		Format(sBuffer, 256, "sound/%s", SVIN_Sound);
+		AddFileToDownloadsTable(sBuffer);
+	}
+	GetConVarString(SVIN_CTSkin_Cvar, sBuffer, 256);
+	if (!StrEqual(sBuffer, "off", false))
+	{
+		PrecacheModel(sBuffer, false);
+		Format(SVIN_CTSkin, 256, sBuffer);
+		AddDLs(sBuffer);
+		Format(sBuffer, 256, "materials/%s", SVIN_CTSkin);
+		AddDLs(sBuffer);
+		SVIN_bool_CTSkin = true;
+	}
+	else
+	{
+		SVIN_bool_CTSkin = false;
+	}
+	GetConVarString(SVIN_TSkin_Cvar, sBuffer, 256);
+	if (!StrEqual(sBuffer, "off", false))
+	{
+		PrecacheModel(sBuffer, false);
+		Format(SVIN_TSkin, 256, sBuffer);
+		AddDLs(sBuffer);
+		Format(sBuffer, 256, "materials/%s", SVIN_TSkin);
+		AddDLs(sBuffer);
+		SVIN_bool_TSkin = true;
+	}
+	else
+	{
+		SVIN_bool_TSkin = false;
+	}
+	return 0;
+}
+
+AddDLs(String:path[])
+{
+	new len = strlen(path);
+	new i = len;
+	while (0 <= i)
+	{
+		if (path[i] != '/')
+		{
+			path[i] = MissingTAG:0;
+			i--;
+		}
+		path[i] = MissingTAG:0;
+		TrimString(path);
+		if (DirExists(path))
+		{
+			new Handle:dir = OpenDirectory(path);
+			new FileType:type;
+			decl String:file[256];
+			while (ReadDirEntry(dir, file, 256, type))
+			{
+				if (type == FileType:2)
+				{
+					Format(file, 256, "%s/%s", path, file);
+					AddFileToDownloadsTable(file);
+				}
+			}
+			CloseHandle(dir);
+		}
+		else
+		{
+			LogError("Directory %s does not exist.", path);
+		}
+		return 0;
+	}
+	TrimString(path);
+	if (DirExists(path))
+	{
+		new Handle:dir = OpenDirectory(path);
+		new FileType:type;
+		decl String:file[256];
+		while (ReadDirEntry(dir, file, 256, type))
+		{
+			if (type == FileType:2)
+			{
+				Format(file, 256, "%s/%s", path, file);
+				AddFileToDownloadsTable(file);
+			}
+		}
+		CloseHandle(dir);
+	}
+	else
+	{
+		LogError("Directory %s does not exist.", path);
+	}
+	return 0;
+}
+
+public OnSoundChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	if (SVIN_PlaySound)
+	{
+		decl String:buffer[256];
+		strcopy(SVIN_Sound, 256, newValue);
+		PrecacheSound(SVIN_Sound, true);
+		Format(buffer, 256, "sound/%s", SVIN_Sound);
+		AddFileToDownloadsTable(buffer);
+	}
+	return 0;
+}
+
+public ConVarChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	if (SVIN_Enabled_Cvar == convar)
+	{
+		SVIN_Enabled = GetConVarBool(SVIN_Enabled_Cvar);
+	}
+	if (SVIN_PlaySound_Cvar == convar)
+	{
+		SVIN_PlaySound = GetConVarBool(SVIN_PlaySound_Cvar);
+	}
+	if (SVIN_ChatMessage_Cvar == convar)
+	{
+		SVIN_ChatMessage = GetConVarBool(SVIN_ChatMessage_Cvar);
+	}
+	return 0;
+}
+
+public Action:EventPlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (SVIN_Enabled)
+	{
+		new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+		new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+		new var1;
+		if (!victim || !IsClientInGame(victim) || IsFakeClient(victim))
+		{
+			return Action:0;
+		}
+		new var2;
+		if (!attacker || !IsClientInGame(attacker) || IsFakeClient(attacker))
+		{
+			return Action:0;
+		}
+		new String:Weapon[100];
+		new VictimTeam = GetClientTeam(victim);
+		new AttackerTeam = GetClientTeam(attacker);
+		GetEventString(event, "weapon", Weapon, 100);
+		if (strcmp(Weapon, "knife", false))
+		{
+		}
+		else
+		{
+			if (!SVIN_Check)
+			{
+				if (AttackerTeam != VictimTeam)
+				{
+					Func_GetClientModel(attacker);
+					CreateTimer(0.1, SetModel, attacker, 2);
+					if (SVIN_PlaySound)
+					{
+						EmitSoundToAll(SVIN_Sound, -2, 0, 60, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					}
+					if (SVIN_ChatMessage)
+					{
+						ChatMessage(attacker, victim);
+					}
+					SVIN_Client = attacker;
+					SVIN_Check = true;
+					SVIN_Team = AttackerTeam;
+				}
+			}
+			if (SVIN_Check)
+			{
+				if (AttackerTeam != VictimTeam)
+				{
+					if (victim == SVIN_Client)
+					{
+						new ragdoll = GetEntPropEnt(victim, PropType:0, "m_hRagdoll", 0);
+						SetStandModel(ragdoll);
+					}
+					else
+					{
+						SetStandModel(SVIN_Client);
+					}
+					SVIN_Client = attacker;
+					Func_GetClientModel(attacker);
+					CreateTimer(0.1, SetModel, attacker, 2);
+					SVIN_Team = AttackerTeam;
+					SVIN_Check = true;
+					if (SVIN_PlaySound)
+					{
+						EmitSoundToAll(SVIN_Sound, -2, 0, 60, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					}
+					if (SVIN_ChatMessage)
+					{
+						ChatMessage(attacker, victim);
+					}
+				}
+			}
+		}
+	}
+	return Action:0;
+}
+
+public Action:SetModel(Handle:timer, any:client)
+{
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		new team = GetClientTeam(client);
+		new var2;
+		if (team == 3 && SVIN_bool_CTSkin)
+		{
+			SetEntityModel(client, SVIN_CTSkin);
+		}
+		else
+		{
+			new var3;
+			if (team == 2 && SVIN_bool_TSkin)
+			{
+				SetEntityModel(client, SVIN_TSkin);
+			}
+		}
+	}
+	return Action:0;
+}
+
+ChatMessage(attacker, victim)
+{
+	new String:AttackerName[256];
+	new String:VictimName[256];
+	new String:Attacker_cl[256];
+	new String:Victim_cl[256];
+	GetClientName(attacker, AttackerName, 256);
+	GetClientName(victim, VictimName, 256);
+	Format(Attacker_cl, 256, "\x04%s\x03", AttackerName);
+	Format(Victim_cl, 256, "\x04%s\x03", VictimName);
+	PrintToChatAll("\x03%t", "svinorez_message", Attacker_cl, Victim_cl);
+	return 0;
+}
+
+public EventPlayerDisconnect(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (SVIN_Enabled)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		if (SVIN_Client == client)
+		{
+			SVIN_Check = false;
+			SVIN_Client = 0;
+			SVIN_Team = 5;
+		}
+	}
+	return 0;
+}
+
+public EventRoundStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (SVIN_Enabled)
+	{
+		if (SVIN_Check)
+		{
+			if (SVIN_Client)
+			{
+				CreateTimer(0.1, SetModel, SVIN_Client, 2);
+			}
+		}
+	}
+	return 0;
+}
+
+public EventPlayerTeam(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new var1;
+	if (SVIN_Enabled && SVIN_Check)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		if (client == SVIN_Client)
+		{
+			new team = GetClientTeam(client);
+			new var2;
+			if (team != SVIN_Team && SVIN_Team != 5)
+			{
+				CreateTimer(0.1, SetModel, client, 2);
+				SVIN_Team = team;
+				LogMessage("Event::EventPlayerTeam: SVIN Model changed!");
+			}
+		}
+	}
+	return 0;
+}
+
+public Action:OnJoinClass(client, args)
+{
+	if (client == SVIN_Client)
+	{
+		new String:ClientArgs[80];
+		GetCmdArg(1, ClientArgs, 80);
+		new iClientArgs = StringToInt(ClientArgs, 10);
+	}
+	return Action:0;
+}
+
+SetStandModel(client)
+{
+	SetEntityModel(client, SVIN_GetClientModel);
+	return 0;
+}
+
+Func_GetClientModel(client)
+{
+	GetClientModel(client, SVIN_GetClientModel, 256);
+	return 0;
+}
+

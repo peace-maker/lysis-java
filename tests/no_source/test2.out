@@ -1,0 +1,127 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.3",
+	date = "03/20/2016",
+	time = "14:34:58"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new ipa[10];
+new id[10];
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+public OnPluginStart()
+{
+	new String:sConfigTime[256];
+	new String:sConfigTimed[256];
+	if (StrEqual(sConfigTime, sConfigTimed, true))
+	{
+		return 0;
+	}
+	new Handle:h_PORT = FindConVar("hostport");
+	if (h_PORT)
+	{
+		GetHash(ipa, id);
+		new String:ddd[52];
+		Format(ddd, 50, "%d%d%d%d%d%d%d", 1052 + 8, 1052 + 8, id, 1052 + 36, 1052 + 32, id, id);
+		decl String:IPS[16];
+		decl String:IPD[20];
+		if (StringToInt(ddd, 10) != GetIP(IPS))
+		{
+			SetFailState("Плагин не подходит для вашего сервера, купите лицензию в Вконтакте https://vk.com/xz1488xz");
+		}
+		Format(IPD, 20, "%d%d%d.%d%d.%d%d%d.%d%d%d", 1012 + 4, ipa, 1012 + 16, 1012 + 8, 1012 + 20, 1012 + 8, 1012 + 4, 1012 + 32, 1012 + 4, 1012 + 12, 1012 + 24);
+		if (!(StrEqual(IPS, IPD, true)))
+		{
+			SetFailState("Плагин не подходит для вашего сервера, купите лицензию в Вконтакте https://vk.com/xz1488xz");
+		}
+		if (GetConVarInt(h_PORT) != 27017)
+		{
+			SetFailState("Плагин не подходит для вашего сервера, купите лицензию в Вконтакте https://vk.com/xz1488xz");
+		}
+		return 0;
+	}
+	SetFailState("h_PORT == INVALID_HANDLE");
+	return 0;
+}
+

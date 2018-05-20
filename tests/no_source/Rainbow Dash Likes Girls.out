@@ -1,0 +1,757 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.4",
+	date = "02/01/2013",
+	time = "12:54:41"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Plugin:myinfo =
+{
+	name = "Rainbow Dash Likes Girls",
+	description = "Unknown",
+	author = "Chamamyungsu",
+	version = "1.0.0",
+	url = "http://cafe.naver.com/sourcemulti"
+};
+new String:MyLittlePony[52][2][4];
+new String:Renard[10][2][4];
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public OnPluginStart()
+{
+	CreateConVar("sm_Rainbow_Dash_Likes_Girls", "1.0.0", "Made By Chamamyungsu", 270656, false, 0.0, false, 0.0);
+	RegConsoleCmd("sm_encrypt", Command_encrypt, "", 0);
+	RegConsoleCmd("sm_decrypt", Command_decrypt, "", 0);
+	return 0;
+}
+
+public Action:Command_encrypt(client, Arguments)
+{
+	if (Arguments < 1)
+	{
+		PrintToChat(client, "\x04Usage : !encrypt words(MaxLength : %d)", 12);
+		return Action:3;
+	}
+	new String:ScanChar[256];
+	new String:MainChar[256];
+	new String:OriginalChar[256];
+	new String:DoNotDecompile[256];
+	GetCmdArg(1, ScanChar, 256);
+	Format(DoNotDecompile, 256, "Do..not..decompile..sigh.. - Made by Chamamyungsu");
+	new var3 = MyLittlePony;
+	if (!(StrContains(ScanChar, var3[0][var3], true)))
+	{
+		TrimString(DoNotDecompile);
+	}
+	new i;
+	while (strlen(ScanChar) > i)
+	{
+		new var1;
+		if (!IsCharAlpha(ScanChar[i]) && !IsCharNumeric(ScanChar[i]))
+		{
+			PrintToChat(client, "Alphabet and number use only.");
+			return Action:3;
+		}
+		i++;
+	}
+	if (strlen(ScanChar) > 12)
+	{
+		PrintToChat(client, "input words are shorter than %d-character.", 12);
+		return Action:3;
+	}
+	strcopy(OriginalChar, 256, ScanChar);
+	new i;
+	while (i < 12)
+	{
+		new Chartemp;
+		new String:TempChar[48];
+		new bool:charisnotprime;
+		new temp;
+		new numtemp;
+		new firstrandomint = GetRandomInt(1, 46);
+		new secondrandomint = GetRandomInt(1, 46);
+		new thirdrandomint = GetRandomInt(1, 46);
+		if (!i < strlen(OriginalChar))
+		{
+			new RandomChar = GetRandomInt(1, 2);
+			if (RandomChar == 1)
+			{
+				Format(ScanChar, 256, "%s%s", ScanChar, Renard[GetRandomInt(0, 9)][0]);
+			}
+			else
+			{
+				Format(ScanChar, 256, "%s%s", ScanChar, MyLittlePony[GetRandomInt(0, 51)][0]);
+			}
+		}
+		if (IsCharAlpha(ScanChar[i]))
+		{
+			new j;
+			while (j < 52)
+			{
+				if (!(StrContains(ScanChar[i], MyLittlePony[j][0], true)))
+				{
+					Chartemp = StringToInt(MyLittlePony[j][1], 10);
+				}
+				j++;
+			}
+		}
+		else
+		{
+			new j;
+			while (j < 10)
+			{
+				if (!(StrContains(ScanChar[i], Renard[j][0], true)))
+				{
+					Chartemp = StringToInt(Renard[j][1], 10);
+				}
+				j++;
+			}
+		}
+		if (0 < i)
+		{
+			new j = 2;
+			while (i + 1 > j)
+			{
+				if (!(i + 1 % j))
+				{
+					charisnotprime = true;
+				}
+				j++;
+			}
+		}
+		else
+		{
+			charisnotprime = true;
+		}
+		new var2;
+		if (charisnotprime)
+		{
+			var2 = 1;
+		}
+		else
+		{
+			var2 = -2;
+		}
+		numtemp = var2 + Chartemp * RoundToNearest(Pow(2.0, float(strlen(OriginalChar)))) + firstrandomint + secondrandomint + thirdrandomint;
+		new whiletemp = numtemp;
+		while (0 < whiletemp)
+		{
+			whiletemp /= 16;
+			temp++;
+		}
+		if (strlen(OriginalChar) > i)
+		{
+			Format(TempChar, 48, "%s", MyLittlePony[firstrandomint + 5][0]);
+		}
+		else
+		{
+			Format(TempChar, 48, "%x", GetRandomInt(0, 15));
+		}
+		Format(TempChar, 48, "%s%s", TempChar, MyLittlePony[secondrandomint + 5][0]);
+		if (temp < 5)
+		{
+			Format(TempChar, 48, "%s%s", TempChar, MyLittlePony[thirdrandomint + 5][0]);
+			new j = 4 - temp;
+			while (0 < j)
+			{
+				Format(TempChar, 48, "%s%s", TempChar, MyLittlePony[GetRandomInt(1, 46) + 5][0]);
+				j--;
+			}
+		}
+		else
+		{
+			numtemp -= thirdrandomint;
+		}
+		Format(TempChar, 48, "%s%x", TempChar, numtemp);
+		Format(MainChar, 256, "%s%s", MainChar, TempChar);
+		i++;
+	}
+	PrintToChat(client, "\x04 Encrypt complete! Input : \x01%s", OriginalChar);
+	PrintToChat(client, "\x04 Results : \x01%s", MainChar);
+	return Action:0;
+}
+
+public Action:Command_decrypt(client, Arguments)
+{
+	if (Arguments < 1)
+	{
+		PrintToChat(client, "\x04Usage : !decrypt Encryptwords");
+		return Action:3;
+	}
+	new String:ScanChar[256];
+	new String:MainChar[256];
+	new Length;
+	new String:DoNotDecompile[256];
+	GetCmdArg(1, ScanChar, 256);
+	Format(DoNotDecompile, 256, "Do..not..decompile..sigh.. - Made by Chamamyungsu");
+	new var7 = MyLittlePony;
+	if (!(StrContains(ScanChar, var7[0][var7], true)))
+	{
+		TrimString(DoNotDecompile);
+	}
+	if (!strlen(ScanChar) % 7 == 0)
+	{
+		PrintToChat(client, "Is not in the correct format. (Error code : 05:%d)", strlen(ScanChar));
+		return Action:3;
+	}
+	if (strlen(ScanChar) / 7 != 12)
+	{
+		PrintToChat(client, "Is not in the correct format. (Error code : 25:%d)", strlen(ScanChar) / 7);
+		return Action:3;
+	}
+	new h;
+	while (strlen(ScanChar) / 7 > h)
+	{
+		if (IsCharAlpha(ScanChar[h * 7]))
+		{
+			new i = 6;
+			while (i < 52)
+			{
+				if (!(StrContains(ScanChar[h * 7], MyLittlePony[i][0], true)))
+				{
+					Length += 1;
+				}
+				i++;
+			}
+		}
+		h++;
+	}
+	new h = 1;
+	while (strlen(ScanChar) / 7 >= h)
+	{
+		new String:CharTemp[12];
+		new IntTemp;
+		new bool:charisnotprime;
+		new firstrandomint;
+		new secondrandomint;
+		new thirdrandomint;
+		new xtemp;
+		new fakenumtemp;
+		xtemp = h + -1 * 7;
+		new i = xtemp;
+		while (xtemp + 6 >= i)
+		{
+			new bool:AlphaCheck;
+			if (IsCharAlpha(ScanChar[i]))
+			{
+				new j = 6;
+				while (j < 52)
+				{
+					if (!(StrContains(ScanChar[i], MyLittlePony[j][0], true)))
+					{
+						AlphaCheck = true;
+						if (firstrandomint)
+						{
+							if (secondrandomint)
+							{
+								if (!thirdrandomint)
+								{
+									thirdrandomint = j;
+								}
+							}
+							secondrandomint = j;
+						}
+						else
+						{
+							firstrandomint = j;
+						}
+						new var1;
+						if (firstrandomint && AlphaCheck)
+						{
+							fakenumtemp = 1;
+							if (fakenumtemp)
+							{
+							}
+							else
+							{
+								if (h > 1)
+								{
+									new j = 2;
+									while (j < h)
+									{
+										if (!(h % j))
+										{
+											charisnotprime = true;
+										}
+										j++;
+									}
+								}
+								else
+								{
+									charisnotprime = true;
+								}
+								new var3;
+								if (secondrandomint > 0)
+								{
+									var3 = secondrandomint + -5;
+								}
+								else
+								{
+									var3 = 0;
+								}
+								new var4;
+								if (thirdrandomint > 0)
+								{
+									var4 = thirdrandomint + -5;
+								}
+								else
+								{
+									var4 = 0;
+								}
+								new var5;
+								if (charisnotprime)
+								{
+									var5 = 1;
+								}
+								else
+								{
+									var5 = -2;
+								}
+								IntTemp -= var5 + var4 + var3 + firstrandomint + -5;
+								IntTemp /= RoundToNearest(Pow(2.0, float(Length)));
+								if (IntTemp)
+								{
+									new var6;
+									if (IntTemp > 62 || IntTemp < 1)
+									{
+										PrintToChat(client, "Is not in the correct format. (Error code : 15:%d)", IntTemp);
+										return Action:3;
+									}
+									if (firstrandomint)
+									{
+										new RenardCheck;
+										new j;
+										while (j < 52)
+										{
+											if (StringToInt(MyLittlePony[j][1], 10) == IntTemp)
+											{
+												RenardCheck = 1;
+												Format(CharTemp, 12, "%s", MyLittlePony[j][0]);
+												if (!RenardCheck)
+												{
+													new j;
+													while (j <= 9)
+													{
+														if (StringToInt(Renard[j][1], 10) == IntTemp)
+														{
+															Format(CharTemp, 12, "%s", Renard[j][0]);
+														}
+														j++;
+													}
+												}
+												Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+											}
+											j++;
+										}
+										if (!RenardCheck)
+										{
+											new j;
+											while (j <= 9)
+											{
+												if (StringToInt(Renard[j][1], 10) == IntTemp)
+												{
+													Format(CharTemp, 12, "%s", Renard[j][0]);
+												}
+												j++;
+											}
+										}
+										Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+									}
+									PrintToChat(client, "Is not in the correct format. (Error code : 10:%d)", firstrandomint);
+									return Action:3;
+								}
+								PrintToChat(client, "Is not in the correct format. (Error code : 20:%d)", h);
+								return Action:3;
+							}
+							h++;
+						}
+					}
+					j++;
+				}
+				new var1;
+				if (firstrandomint && AlphaCheck)
+				{
+					fakenumtemp = 1;
+					if (fakenumtemp)
+					{
+					}
+					else
+					{
+						if (h > 1)
+						{
+							new j = 2;
+							while (j < h)
+							{
+								if (!(h % j))
+								{
+									charisnotprime = true;
+								}
+								j++;
+							}
+						}
+						else
+						{
+							charisnotprime = true;
+						}
+						new var3;
+						if (secondrandomint > 0)
+						{
+							var3 = secondrandomint + -5;
+						}
+						else
+						{
+							var3 = 0;
+						}
+						new var4;
+						if (thirdrandomint > 0)
+						{
+							var4 = thirdrandomint + -5;
+						}
+						else
+						{
+							var4 = 0;
+						}
+						new var5;
+						if (charisnotprime)
+						{
+							var5 = 1;
+						}
+						else
+						{
+							var5 = -2;
+						}
+						IntTemp -= var5 + var4 + var3 + firstrandomint + -5;
+						IntTemp /= RoundToNearest(Pow(2.0, float(Length)));
+						if (IntTemp)
+						{
+							new var6;
+							if (IntTemp > 62 || IntTemp < 1)
+							{
+								PrintToChat(client, "Is not in the correct format. (Error code : 15:%d)", IntTemp);
+								return Action:3;
+							}
+							if (firstrandomint)
+							{
+								new RenardCheck;
+								new j;
+								while (j < 52)
+								{
+									if (StringToInt(MyLittlePony[j][1], 10) == IntTemp)
+									{
+										RenardCheck = 1;
+										Format(CharTemp, 12, "%s", MyLittlePony[j][0]);
+										if (!RenardCheck)
+										{
+											new j;
+											while (j <= 9)
+											{
+												if (StringToInt(Renard[j][1], 10) == IntTemp)
+												{
+													Format(CharTemp, 12, "%s", Renard[j][0]);
+												}
+												j++;
+											}
+										}
+										Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+									}
+									j++;
+								}
+								if (!RenardCheck)
+								{
+									new j;
+									while (j <= 9)
+									{
+										if (StringToInt(Renard[j][1], 10) == IntTemp)
+										{
+											Format(CharTemp, 12, "%s", Renard[j][0]);
+										}
+										j++;
+									}
+								}
+								Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+							}
+							PrintToChat(client, "Is not in the correct format. (Error code : 10:%d)", firstrandomint);
+							return Action:3;
+						}
+						PrintToChat(client, "Is not in the correct format. (Error code : 20:%d)", h);
+						return Action:3;
+					}
+					h++;
+				}
+			}
+			else
+			{
+				if (!firstrandomint)
+				{
+					fakenumtemp = 1;
+					if (fakenumtemp)
+					{
+					}
+					else
+					{
+						if (h > 1)
+						{
+							new j = 2;
+							while (j < h)
+							{
+								if (!(h % j))
+								{
+									charisnotprime = true;
+								}
+								j++;
+							}
+						}
+						else
+						{
+							charisnotprime = true;
+						}
+						new var3;
+						if (secondrandomint > 0)
+						{
+							var3 = secondrandomint + -5;
+						}
+						else
+						{
+							var3 = 0;
+						}
+						new var4;
+						if (thirdrandomint > 0)
+						{
+							var4 = thirdrandomint + -5;
+						}
+						else
+						{
+							var4 = 0;
+						}
+						new var5;
+						if (charisnotprime)
+						{
+							var5 = 1;
+						}
+						else
+						{
+							var5 = -2;
+						}
+						IntTemp -= var5 + var4 + var3 + firstrandomint + -5;
+						IntTemp /= RoundToNearest(Pow(2.0, float(Length)));
+						if (IntTemp)
+						{
+							new var6;
+							if (IntTemp > 62 || IntTemp < 1)
+							{
+								PrintToChat(client, "Is not in the correct format. (Error code : 15:%d)", IntTemp);
+								return Action:3;
+							}
+							if (firstrandomint)
+							{
+								new RenardCheck;
+								new j;
+								while (j < 52)
+								{
+									if (StringToInt(MyLittlePony[j][1], 10) == IntTemp)
+									{
+										RenardCheck = 1;
+										Format(CharTemp, 12, "%s", MyLittlePony[j][0]);
+										if (!RenardCheck)
+										{
+											new j;
+											while (j <= 9)
+											{
+												if (StringToInt(Renard[j][1], 10) == IntTemp)
+												{
+													Format(CharTemp, 12, "%s", Renard[j][0]);
+												}
+												j++;
+											}
+										}
+										Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+									}
+									j++;
+								}
+								if (!RenardCheck)
+								{
+									new j;
+									while (j <= 9)
+									{
+										if (StringToInt(Renard[j][1], 10) == IntTemp)
+										{
+											Format(CharTemp, 12, "%s", Renard[j][0]);
+										}
+										j++;
+									}
+								}
+								Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+							}
+							PrintToChat(client, "Is not in the correct format. (Error code : 10:%d)", firstrandomint);
+							return Action:3;
+						}
+						PrintToChat(client, "Is not in the correct format. (Error code : 20:%d)", h);
+						return Action:3;
+					}
+					h++;
+				}
+			}
+			new var2;
+			if (AlphaCheck && fakenumtemp)
+			{
+				new hexnumtemp;
+				if (IsCharAlpha(ScanChar[i]))
+				{
+					new k;
+					while (k <= 5)
+					{
+						new String:Hextemp[4];
+						Format(Hextemp, 2, "%x", k + 10);
+						if (StrContains(ScanChar[i], Hextemp, true))
+						{
+						}
+						else
+						{
+							hexnumtemp = k + 10;
+						}
+						k++;
+					}
+				}
+				else
+				{
+					new String:Hextemp[4];
+					Format(Hextemp, 2, "%c", ScanChar[i]);
+					hexnumtemp = StringToInt(Hextemp, 10);
+				}
+				if (xtemp + 6 > i)
+				{
+					hexnumtemp = RoundToNearest(Pow(16.0, float(xtemp + 6 - i))) * hexnumtemp;
+				}
+				IntTemp = hexnumtemp + IntTemp;
+			}
+			i++;
+		}
+		if (fakenumtemp)
+		{
+		}
+		else
+		{
+			if (h > 1)
+			{
+				new j = 2;
+				while (j < h)
+				{
+					if (!(h % j))
+					{
+						charisnotprime = true;
+					}
+					j++;
+				}
+			}
+			else
+			{
+				charisnotprime = true;
+			}
+			new var3;
+			if (secondrandomint > 0)
+			{
+				var3 = secondrandomint + -5;
+			}
+			else
+			{
+				var3 = 0;
+			}
+			new var4;
+			if (thirdrandomint > 0)
+			{
+				var4 = thirdrandomint + -5;
+			}
+			else
+			{
+				var4 = 0;
+			}
+			new var5;
+			if (charisnotprime)
+			{
+				var5 = 1;
+			}
+			else
+			{
+				var5 = -2;
+			}
+			IntTemp -= var5 + var4 + var3 + firstrandomint + -5;
+			IntTemp /= RoundToNearest(Pow(2.0, float(Length)));
+			if (IntTemp)
+			{
+				new var6;
+				if (IntTemp > 62 || IntTemp < 1)
+				{
+					PrintToChat(client, "Is not in the correct format. (Error code : 15:%d)", IntTemp);
+					return Action:3;
+				}
+				if (firstrandomint)
+				{
+					new RenardCheck;
+					new j;
+					while (j < 52)
+					{
+						if (StringToInt(MyLittlePony[j][1], 10) == IntTemp)
+						{
+							RenardCheck = 1;
+							Format(CharTemp, 12, "%s", MyLittlePony[j][0]);
+							if (!RenardCheck)
+							{
+								new j;
+								while (j <= 9)
+								{
+									if (StringToInt(Renard[j][1], 10) == IntTemp)
+									{
+										Format(CharTemp, 12, "%s", Renard[j][0]);
+									}
+									j++;
+								}
+							}
+							Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+						}
+						j++;
+					}
+					if (!RenardCheck)
+					{
+						new j;
+						while (j <= 9)
+						{
+							if (StringToInt(Renard[j][1], 10) == IntTemp)
+							{
+								Format(CharTemp, 12, "%s", Renard[j][0]);
+							}
+							j++;
+						}
+					}
+					Format(MainChar, 256, "%s%c", MainChar, CharTemp);
+				}
+				PrintToChat(client, "Is not in the correct format. (Error code : 10:%d)", firstrandomint);
+				return Action:3;
+			}
+			PrintToChat(client, "Is not in the correct format. (Error code : 20:%d)", h);
+			return Action:3;
+		}
+		h++;
+	}
+	PrintToChat(client, "\x04 Decrypt Complete! Input : \x01%s", ScanChar);
+	PrintToChat(client, "\x04 Results : \x01%s", MainChar);
+	return Action:0;
+}
+

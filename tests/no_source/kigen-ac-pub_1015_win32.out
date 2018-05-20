@@ -1,0 +1,5647 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.1",
+	date = "02/19/2012",
+	time = "05:08:55"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public SharedPlugin:__pl_kac =
+{
+	name = "Kigen's Anti-Cheat",
+	file = "kigen-ac-pub.smx",
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:CTag[6][] =
+{
+	"{default}",
+	"{green}",
+	"{lightgreen}",
+	"{red}",
+	"{blue}",
+	"{olive}"
+};
+new String:CTagCode[6][16] =
+{
+	"\x01",
+	"\x04",
+	"\x03",
+	"\x03",
+	"\x03",
+	"\x05"
+};
+new bool:CTagReqSayText2[6] =
+{
+	0, 0, 1, 1, 1, 0
+};
+new bool:CEventIsHooked;
+new bool:CSkipList[66];
+new bool:CProfile_Colors[6] =
+{
+	1, 1, 0, 0, 0, 0
+};
+new CProfile_TeamIndex[6] =
+{
+	-1, ...
+};
+new bool:CProfile_SayText2;
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 0,
+};
+public Plugin:myinfo =
+{
+	name = "Kigen's Anti-Cheat",
+	description = "'CS:S v.34' The greatest thing since sliced pie",
+	author = "Kigen, GoD-Tony, psychonic, GoDtm666 and killer666",
+	version = "1.2.2.2",
+	url = "www.SourceTM.com"
+};
+new GameType:g_Game;
+new Handle:g_hCvarWelcomeMsg;
+new Handle:g_hCvarAdminSoundsMsg;
+new Handle:g_hCvarBanDuration;
+new Handle:g_hCvarLogVerbose;
+new String:g_sLogPath[256];
+new bool:g_bSDKHooksLoaded;
+new bool:g_bMapStarted;
+new bool:g_bWelcomeMsg;
+new bool:g_bEnabledAdminSounds;
+new bool:g_bCvarLogVerbose;
+new g_iBanDuration;
+new String:g_sBadPlugins[13][] =
+{
+	"basic-anti-cheat.smx",
+	"smac.smx",
+	"rcon_lock.smx",
+	"ucp.smx",
+	"ucp_menu.smx",
+	"kac_faresp.smx",
+	"sourceadmin.smx",
+	"sourceadminother.smx",
+	"s.smx",
+	"hax.smx",
+	"sourcemod.smx",
+	"boomstick.smx",
+	"adminmanger.smx"
+};
+new String:g_sBadExtensions[3][112] =
+{
+	"extensions/sdkhooks.ext.dll",
+	"extensions/sdkhooks.ext.so",
+	"gamedata/sdkhooks.games.txt"
+};
+new Handle:g_hCVarAimBot;
+new Handle:g_hAimBotDeviation;
+new Handle:g_hCvarAimbotBan;
+new Handle:g_IgnoreWeapons;
+new bool:g_bAimbotEnabled;
+new Float:g_fAimBotDeviation;
+new Float:g_fEyeAngles[66][32][3];
+new g_iEyeIndex[66];
+new g_iAimDetections[66];
+new g_iAimbotBan;
+new Handle:g_hCvarIpAlreadyEnable;
+new bool:g_bEnabledIpAlready;
+new Handle:g_hTimerAutoTrigger;
+new Handle:g_hCvarTriggerDetections;
+new Handle:g_hCvarMethod;
+new Handle:g_hCvarAutoTriggerBlock;
+new bool:g_bEnabledAutoTrigger;
+new bool:g_bEnabledAutoTriggerBunnyHop;
+new bool:g_bEnabledAutoTriggerAutoFire;
+new g_iAutoTriggerDetections;
+new g_iAutoTriggerBlock;
+new g_iDetections[2][66];
+new g_iAttackMax = 66;
+new Handle:g_hCvarConnectSpam;
+new Float:fSpamTime;
+new Handle:g_hClientConnections;
+new Handle:g_hIgnoreList;
+new g_iNameChanges[66];
+new Handle:g_hCVarClientNameProtect;
+new bool:g_bClientNameProtect;
+new bool:g_bMapStartedWait;
+new Handle:g_hBlockedCmds;
+new Handle:g_hIgnoredCmds;
+new g_iCmdSpam = 30;
+new g_iCmdCount[66];
+new Handle:g_hCvarCmdSpam;
+new bool:g_bSpamCmds;
+new bool:g_bLogCmds;
+new String:g_sCmdLogPath[256];
+new Handle:g_hCVarCmdLog;
+new Handle:g_hCVarCVarsEnabled;
+new bool:g_bCVarCVarsEnabled;
+new Handle:g_hSvCVarChtForceEnable;
+new bool:g_bSvCVarChtForce;
+new Handle:g_hCVars;
+new Handle:g_hCVarIndex;
+new Handle:g_hCurrentQuery[66];
+new Handle:g_hReplyTimer[66];
+new Handle:g_hPeriodicTimer[66];
+new String:g_sQueryResult[4][] =
+{
+	"Okay",
+	"Not found",
+	"Not valid",
+	"Protected"
+};
+new g_iCurrentIndex[66];
+new g_iRetryAttempts[66];
+new g_iSize;
+new Handle:g_hCvarRconPass;
+new String:g_sRconRealPass[128];
+new bool:g_bRconLocked;
+new Handle:g_hCVarEyeType;
+new bool:g_bEnabledEye;
+new g_iEyeBlock;
+new Float:g_fDetectedTime[66];
+new Handle:g_hCVarSpinHack;
+new Handle:g_hSpinLoop;
+new bool:g_bSpinHackEnabled;
+new Float:g_fPrevAngle[66];
+new Float:g_fAngleDiff[66];
+new Float:g_fAngleBuffer;
+new Float:g_fSensitivity[66];
+new g_iSpinCount[66];
+new g_iSpinHackMode;
+new Handle:g_hCVarAntiRespawn;
+new Handle:g_hClientSpawned;
+new g_iClientClass[66] =
+{
+	-1, ...
+};
+new bool:g_bAntiRespawn;
+new bool:g_bClientMapStarted;
+new Handle:g_hCvarRestartGame;
+new Handle:g_hCVarAntiFlash;
+new bool:g_bFlashEnabled;
+new g_iFlashDuration = -1;
+new g_iFlashAlpha = -1;
+new Float:g_fFlashedUntil[66];
+new bool:g_bFlashHooked;
+new Handle:g_hCvarWallhack;
+new Handle:g_hTimeToTick;
+new bool:g_bEnabled;
+new bool:g_bIsVisible[66][66];
+new bool:g_bProcess[66];
+new bool:g_bIgnore[66];
+new g_iWeaponOwner[2048];
+new g_iTeam[66];
+new Float:g_vMins[66][3];
+new Float:g_vMaxs[66][3];
+new Float:g_vAbsCentre[66][3];
+new Float:g_vEyePos[66][3];
+new Float:g_vEyeAngles[66][3];
+new g_iCurrentThread = 1;
+new g_iThread[66] =
+{
+	1, ...
+};
+new g_iCacheTicks;
+new g_iNumChecks;
+new g_iTickCount;
+new g_iCmdTickCount[66];
+new Float:g_fTickDelta;
+new bool:g_bIsMod;
+new bool:g_bFarEspEnabled;
+new UserMsg:g_msgUpdateRadar = -1;
+new Handle:g_hRadarTimer;
+new bool:g_bPlayerSpotted[66];
+new g_iPlayerManager = -1;
+new g_iPlayerSpotted = -1;
+new Handle:g_hCVarSpeedhack;
+new bool:g_bSpeedEnabled;
+new Handle:g_hCvarFutureTicks;
+new g_iShTickCount[66];
+new Handle:hShTimerResTicks;
+new g_iTickRate;
+new Handle:g_hCVarAntiSmoke;
+new bool:g_bSmokeEnabled;
+new Handle:g_hSmokeLoop;
+new Handle:g_hSmokes;
+new bool:g_bIsInSmoke[66];
+new bool:g_bSmokeHooked;
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+new Handle:g_hCVarNetEnabled;
+new bool:g_bCVarNetEnabled;
+new String:AutoUpdater_Host[24] = "kigenac.sourcetm.com";
+new String:AutoUpdater_Ip[16] = "91.218.229.98";
+new String:AutoUpdater_Url[36] = "/update/kigen-ac-pub/version.txt";
+new AutoUpdater_Port = 80;
+new Handle:g_hCVarNetUseUpdate;
+new Handle:g_hCVarNetAllowUpdateToBeta;
+new bool:g_bCVarNetUseUpdate;
+new bool:g_bCVarNetAllowUpdateToBeta;
+new Handle:g_hUpdateSocket;
+new Handle:g_hUpdateTimer;
+new Handle:g_hUpdateFile;
+new Handle:g_hUpdateList;
+new AutoUpdater_States:g_iUpdateState;
+new g_iUpdateFile;
+new g_iUpdateFilesCount;
+new bool:g_iUpdateFileGotHeader;
+new bool:g_bMessageShown;
+new String:g_sUpdateFile[256];
+new String:g_sUpdateFileURI[256];
+new String:ServersList_Host[24] = "kigenac.sourcetm.com";
+new String:ServersList_Ip[16] = "91.218.229.98";
+new String:ServersList_AddUrl[12] = "/list.add/";
+new String:ServersList_Url[32] = "http://kigenac.sourcetm.com/";
+new ServersList_Port = 80;
+new Handle:g_hListSocket;
+new Handle:g_OnCheatDetected;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+Float:operator-(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 - float(oper2);
+}
+
+bool:operator==(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) == 0;
+}
+
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) != 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator>(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) > 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+bool:operator<(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) < 0;
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) <= 0;
+}
+
+bool:operator<=(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) <= 0;
+}
+
+AddVectors(Float:vec1[3], Float:vec2[3], Float:result[3])
+{
+	result[0] = vec1[0] + vec2[0];
+	result[1] = vec1[1] + vec2[1];
+	result[2] = vec1[2] + vec2[2];
+	return 0;
+}
+
+SubtractVectors(Float:vec1[3], Float:vec2[3], Float:result[3])
+{
+	result[0] = vec1[0] - vec2[0];
+	result[1] = vec1[1] - vec2[1];
+	result[2] = vec1[2] - vec2[2];
+	return 0;
+}
+
+ScaleVector(Float:vec[3], Float:scale)
+{
+	new var1 = vec;
+	var1[0] = var1[0] * scale;
+	vec[1] *= scale;
+	vec[2] *= scale;
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+CharToLower(chr)
+{
+	if (IsCharUpper(chr))
+	{
+		return chr | 32;
+	}
+	return chr;
+}
+
+FindCharInString(String:str[], c, bool:reverse)
+{
+	new i;
+	new len = strlen(str);
+	if (!reverse)
+	{
+		i = 0;
+		while (i < len)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i++;
+		}
+	}
+	else
+	{
+		i = len + -1;
+		while (0 <= i)
+		{
+			if (c == str[i])
+			{
+				return i;
+			}
+			i--;
+		}
+	}
+	return -1;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+bool:WriteFileCell(Handle:hndl, data, size)
+{
+	new array[1];
+	array[0] = data;
+	return WriteFile(hndl, array, 1, size);
+}
+
+bool:IsValidConVarChar(c)
+{
+	new var1;
+	return c == 95 || IsCharAlpha(c) || IsCharNumeric(c);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+ShowMOTDPanel(client, String:title[], String:msg[], type)
+{
+	decl String:num[4];
+	new Handle:Kv = CreateKeyValues("data", "", "");
+	IntToString(type, num, 3);
+	KvSetString(Kv, "title", title);
+	KvSetString(Kv, "type", num);
+	KvSetString(Kv, "msg", msg);
+	ShowVGUIPanel(client, "info", Kv, true);
+	CloseHandle(Kv);
+	return 0;
+}
+
+GetPluginBasename(Handle:plugin, String:buffer[], maxlength)
+{
+	GetPluginFilename(plugin, buffer, maxlength);
+	new check = -1;
+	new var1;
+	if ((check = FindCharInString(buffer, 47, true)) == -1 && (check = FindCharInString(buffer, 92, true)) == -1)
+	{
+		Format(buffer, maxlength, "%s", buffer[check + 1]);
+	}
+	return 0;
+}
+
+bool:IsClientNew(client)
+{
+	new var1;
+	return IsFakeClient(client) || GetGameTime() > GetClientTime(client);
+}
+
+bool:GetClientAbsVelocity(client, Float:velocity[3])
+{
+	static offset = -1;
+	new var1;
+	if (offset == -1 && (offset = FindDataMapOffs(client, "m_vecAbsVelocity", 0, 0)) == -1)
+	{
+		ZeroVector(velocity);
+		return false;
+	}
+	GetEntDataVector(client, offset, velocity);
+	return true;
+}
+
+ZeroVector(Float:vec[3])
+{
+	new var1 = 0.0;
+	vec[2] = var1;
+	vec[1] = var1;
+	vec[0] = var1;
+	return 0;
+}
+
+bool:IsVectorZero(Float:vec[3])
+{
+	new var1;
+	return 0.0 == vec[0] && 0.0 == vec[1] && 0.0 == vec[2];
+}
+
+IPToLong(String:ip[])
+{
+	decl String:pieces[4][4];
+	if (ExplodeString(ip, ".", pieces, 4, 4, false) != 4)
+	{
+		return 0;
+	}
+	return StringToInt(pieces[3], 10) | StringToInt(pieces[2], 10) << 8 | StringToInt(pieces[1], 10) << 16 | StringToInt(pieces[0][pieces], 10) << 24;
+}
+
+LongToIP(ip, String:buffer[], size)
+{
+	FormatEx(buffer, size, "%d.%d.%d.%d", ip >>> 24 & 255, ip >>> 16 & 255, ip >>> 8 & 255, ip & 255);
+	return 0;
+}
+
+Float:MT_GetRandomFloat(Float:min, Float:max)
+{
+	return GetURandomFloat() * max - min + min;
+}
+
+BfWriteSBitLong(Handle:bf, data, numBits)
+{
+	new i;
+	while (i < numBits)
+	{
+		BfWriteBool(bf, !!1 << i & data);
+		i++;
+	}
+	return 0;
+}
+
+EmitSoundToClient(client, String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[1];
+	clients[0] = client;
+	new var1;
+	if (entity == -2)
+	{
+		var1 = client;
+	}
+	else
+	{
+		var1 = entity;
+	}
+	entity = var1;
+	EmitSound(clients, 1, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+CPrintToChat(client, String:szMessage[])
+{
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError("Invalid client index %d", client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %d is not in game", client);
+	}
+	decl String:szBuffer[252];
+	decl String:szCMessage[252];
+	SetGlobalTransTarget(client);
+	Format(szBuffer, 250, "\x01%s", szMessage);
+	VFormat(szCMessage, 250, szBuffer, 3);
+	new index = CFormat(szCMessage, 250, -1);
+	if (index == -1)
+	{
+		PrintToChat(client, szCMessage);
+	}
+	else
+	{
+		CSayText2(client, index, szCMessage);
+	}
+	return 0;
+}
+
+CRemoveTags(String:szMessage[], maxlength)
+{
+	new i;
+	while (i < 6)
+	{
+		ReplaceString(szMessage, maxlength, CTag[i], "", true);
+		i++;
+	}
+	ReplaceString(szMessage, maxlength, "{teamcolor}", "", true);
+	return 0;
+}
+
+CFormat(String:szMessage[], maxlength, author)
+{
+	if (!CEventIsHooked)
+	{
+		CSetupProfile();
+		HookEvent("server_spawn", CEvent_MapStart, EventHookMode:2);
+		CEventIsHooked = true;
+	}
+	new iRandomPlayer = -1;
+	if (author != -1)
+	{
+		if (CProfile_SayText2)
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", "\x03", true);
+			iRandomPlayer = author;
+		}
+		else
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", CTagCode[1], true);
+		}
+	}
+	else
+	{
+		ReplaceString(szMessage, maxlength, "{teamcolor}", "", true);
+	}
+	new i;
+	while (i < 6)
+	{
+		if (!(StrContains(szMessage, CTag[i], true) == -1))
+		{
+			if (!CProfile_Colors[i])
+			{
+				ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+			}
+			else
+			{
+				if (!CTagReqSayText2[i])
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+				}
+				if (!CProfile_SayText2)
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+				}
+				if (iRandomPlayer == -1)
+				{
+					iRandomPlayer = CFindRandomPlayerByTeam(CProfile_TeamIndex[i]);
+					if (iRandomPlayer == -2)
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[1], true);
+					}
+					else
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], true);
+					}
+				}
+				ThrowError("Using two team colors in one message is not allowed");
+			}
+		}
+		i++;
+	}
+	return iRandomPlayer;
+}
+
+CFindRandomPlayerByTeam(color_team)
+{
+	if (color_team)
+	{
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && color_team == GetClientTeam(i))
+			{
+				return i;
+			}
+			i++;
+		}
+		return -2;
+	}
+	return 0;
+}
+
+CSayText2(client, author, String:szMessage[])
+{
+	new Handle:hBuffer = StartMessageOne("SayText2", client, 0);
+	BfWriteByte(hBuffer, author);
+	BfWriteByte(hBuffer, 1);
+	BfWriteString(hBuffer, szMessage);
+	EndMessage();
+	return 0;
+}
+
+CSetupProfile()
+{
+	decl String:szGameName[32];
+	GetGameFolderName(szGameName, 30);
+	if (StrEqual(szGameName, "cstrike", false))
+	{
+		CProfile_Colors[2] = 1;
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_Colors[5] = 1;
+		CProfile_TeamIndex[2] = 0;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	else
+	{
+		if (StrEqual(szGameName, "tf", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 2;
+			CProfile_TeamIndex[4] = 3;
+			CProfile_SayText2 = true;
+		}
+		new var1;
+		if (StrEqual(szGameName, "left4dead", false) || StrEqual(szGameName, "left4dead2", false))
+		{
+			CProfile_Colors[2] = 1;
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_TeamIndex[2] = 0;
+			CProfile_TeamIndex[3] = 3;
+			CProfile_TeamIndex[4] = 2;
+			CProfile_SayText2 = true;
+		}
+		if (StrEqual(szGameName, "hl2mp", false))
+		{
+			if (GetConVarBool(FindConVar("mp_teamplay")))
+			{
+				CProfile_Colors[3] = 1;
+				CProfile_Colors[4] = 1;
+				CProfile_Colors[5] = 1;
+				CProfile_TeamIndex[3] = 3;
+				CProfile_TeamIndex[4] = 2;
+				CProfile_SayText2 = true;
+			}
+			else
+			{
+				CProfile_SayText2 = false;
+				CProfile_Colors[5] = 1;
+			}
+		}
+		if (StrEqual(szGameName, "dod", false))
+		{
+			CProfile_Colors[5] = 1;
+			CProfile_SayText2 = false;
+		}
+		if (GetUserMessageId("SayText2") == -1)
+		{
+			CProfile_SayText2 = false;
+		}
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_TeamIndex[3] = 2;
+		CProfile_TeamIndex[4] = 3;
+		CProfile_SayText2 = true;
+	}
+	return 0;
+}
+
+public Action:CEvent_MapStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	CSetupProfile();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		CSkipList[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+public __ext_sdkhooks_SetNTVOptional()
+{
+	MarkNativeAsOptional("SDKHook");
+	MarkNativeAsOptional("SDKHookEx");
+	MarkNativeAsOptional("SDKUnhook");
+	MarkNativeAsOptional("SDKHooks_TakeDamage");
+	MarkNativeAsOptional("SDKHooks_DropWeapon");
+	return 0;
+}
+
+public DelBadExtensionsServerRestart_OnConfigsExecutedt()
+{
+	new String:BadExtensionsBinare[512];
+	new bool:ExtsWarnServerKill;
+	new i;
+	while (i < 3)
+	{
+		BuildPath(PathType:0, BadExtensionsBinare, 512, "%s", g_sBadExtensions[i]);
+		if (FileExists(BadExtensionsBinare, false))
+		{
+			if (FileExists(BadExtensionsBinare, false))
+			{
+				DeleteFile(BadExtensionsBinare);
+				KAC_Log("Was removed old SDK Hooks (%s), the old version SDK Hooks not suitable for correct operation of %s", g_sBadExtensions[i], "Kigen's Anti-Cheat");
+			}
+			if (!ExtsWarnServerKill)
+			{
+				ExtsWarnServerKill = true;
+			}
+		}
+		i++;
+	}
+	if (ExtsWarnServerKill)
+	{
+		KAC_Log("Fatal error Extensions SDK Hooks!!");
+		KAC_Log("Download the latest version of the SDK Hooks working on this page http://forum.sourcetm.com/index.php?showtopic=41");
+		KAC_Log("After 10 seconds the server will be automatically turned off.");
+		PrintToServer("\n\n\n[KAC] [SM] Fatal error Extensions SDK Hooks!!");
+		PrintToServer("[KAC] [SM] After 10 seconds the server will be automatically turned off.\n");
+		CreateTimer(10.0, Timer_ErrorServerKill, any:0, 0);
+	}
+	return 0;
+}
+
+public Action:Timer_ErrorServerKill(Handle:timer)
+{
+	KAC_Log("Shutting down the server.");
+	InsertServerCommand("_restart");
+	return Action:0;
+}
+
+public UnloadBadPlugins_OnConfigsExecuted()
+{
+	new String:pluginfile[512];
+	new i;
+	while (i < 13)
+	{
+		BuildPath(PathType:0, pluginfile, 512, "plugins/%s", g_sBadPlugins[i]);
+		if (FileExists(pluginfile, false))
+		{
+			new String:newpluginfile[512];
+			CreateDirectory("addons/sourcemod/plugins/disabled/kac_disabled", 1000);
+			BuildPath(PathType:0, newpluginfile, 512, "plugins/disabled/kac_disabled/%s", g_sBadPlugins[i]);
+			ServerCommand("sm plugins unload %s", g_sBadPlugins[i]);
+			if (FileExists(newpluginfile, false))
+			{
+				DeleteFile(newpluginfile);
+			}
+			RenameFile(newpluginfile, pluginfile);
+			KAC_Log("plugins/%s was unloaded and moved to plugins/disabled/kac_disabled/%s", g_sBadPlugins[i], g_sBadPlugins[i]);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public AntiFlash_LoadNoTeamFlashPlugin()
+{
+	new String:pluginnoteamflash[200];
+	BuildPath(PathType:0, pluginnoteamflash, 200, "plugins/disabled/kac_disabled/no_team_flash.smx");
+	if (FileExists(pluginnoteamflash, false))
+	{
+		new String:newpluginnoteamflash[200];
+		BuildPath(PathType:0, newpluginnoteamflash, 200, "plugins/no_team_flash.smx");
+		ServerCommand("sm plugins load no_team_flash");
+		if (FileExists(newpluginnoteamflash, false))
+		{
+			DeleteFile(newpluginnoteamflash);
+		}
+		RenameFile(newpluginnoteamflash, pluginnoteamflash);
+	}
+	return 0;
+}
+
+public AntiFlash_UnloadNoTeamFlashPlugin()
+{
+	new String:pluginnoteamflash[200];
+	BuildPath(PathType:0, pluginnoteamflash, 200, "plugins/no_team_flash.smx");
+	if (FileExists(pluginnoteamflash, false))
+	{
+		new String:newpluginnoteamflash[200];
+		CreateDirectory("addons/sourcemod/plugins/disabled/kac_disabled", 1000);
+		BuildPath(PathType:0, newpluginnoteamflash, 200, "plugins/disabled/kac_disabled/no_team_flash.smx");
+		ServerCommand("sm plugins unload no_team_flash");
+		if (FileExists(newpluginnoteamflash, false))
+		{
+			DeleteFile(newpluginnoteamflash);
+		}
+		RenameFile(newpluginnoteamflash, pluginnoteamflash);
+	}
+	return 0;
+}
+
+public AutoTrigger_LoadBhopPlugin()
+{
+	new String:pluginbhop[200];
+	BuildPath(PathType:0, pluginbhop, 200, "plugins/disabled/kac_disabled/infinite-jumping.smx");
+	if (FileExists(pluginbhop, false))
+	{
+		new String:newpluginbhop[200];
+		BuildPath(PathType:0, newpluginbhop, 200, "plugins/infinite-jumping.smx");
+		ServerCommand("sm plugins load infinite-jumping");
+		if (FileExists(newpluginbhop, false))
+		{
+			DeleteFile(newpluginbhop);
+		}
+		RenameFile(newpluginbhop, pluginbhop);
+	}
+	return 0;
+}
+
+public AutoTrigger_UnLoadBhopPlugin()
+{
+	new String:pluginbhop[200];
+	BuildPath(PathType:0, pluginbhop, 200, "plugins/infinite-jumping.smx");
+	if (FileExists(pluginbhop, false))
+	{
+		new String:newpluginbhop[200];
+		CreateDirectory("addons/sourcemod/plugins/disabled/kac_disabled", 1000);
+		BuildPath(PathType:0, newpluginbhop, 200, "plugins/disabled/kac_disabled/infinite-jumping.smx");
+		ServerCommand("sm plugins unload infinite-jumping");
+		if (FileExists(newpluginbhop, false))
+		{
+			DeleteFile(newpluginbhop);
+		}
+		RenameFile(newpluginbhop, pluginbhop);
+	}
+	return 0;
+}
+
+public AimBot_OnPluginStart()
+{
+	g_hCVarAimBot = CreateConVar("kac_antiaimbot", "1", "��������� � ������� Aimbot.\nAimbot detection module.", 262144, true, 0.0, true, 1.0);
+	Aimbot_OnSettingsChanged(g_hCVarAimBot, "", "");
+	HookConVarChange(g_hCVarAimBot, Aimbot_OnSettingsChanged);
+	g_hAimBotDeviation = CreateConVar("kac_antiaimbot_deviation", "38.0", "������������ ���������� AimBot.\nThe maximum deviation AimBot.", 262144, true, 35.0, true, 80.0);
+	AimBotDeviation_OnSettingsChanged(g_hAimBotDeviation, "", "");
+	HookConVarChange(g_hAimBotDeviation, AimBotDeviation_OnSettingsChanged);
+	g_hCvarAimbotBan = CreateConVar("kac_antiaimbot_ban", "4", "����� �������������� ������� AimBot �� ����. (0 - �� ������, ������ �������������.)\nNumber of AimBot detections before a player is banned. Minimum allowed is 4. (0 = Never ban).", 262144, true, 0.0, true, 10.0);
+	AimbotBan_OnSettingsChanged(g_hCvarAimbotBan, "", "");
+	HookConVarChange(g_hCvarAimbotBan, AimbotBan_OnSettingsChanged);
+	return 0;
+}
+
+public Aimbot_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValue = GetConVarBool(convar);
+	new var1;
+	if (bNewValue && !g_bAimbotEnabled)
+	{
+		AimBot_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValue && g_bAimbotEnabled)
+		{
+			AimBot_Disable();
+		}
+	}
+	return 0;
+}
+
+public AimBot_Enable()
+{
+	g_bAimbotEnabled = true;
+	g_IgnoreWeapons = CreateTrie();
+	SetTrieValue(g_IgnoreWeapons, "weapon_knife", any:1, true);
+	HookEntityOutput("trigger_teleport", "OnEndTouch", Aimbot_TeleportOnEndTouch);
+	HookEvent("player_spawn", Aimbot_EventPlayerSpawn, EventHookMode:1);
+	HookEvent("player_death", Aimbot_EventPlayerDeath, EventHookMode:1);
+	return 0;
+}
+
+public AimBot_Disable()
+{
+	g_bAimbotEnabled = false;
+	if (g_IgnoreWeapons)
+	{
+		CloseHandle(g_IgnoreWeapons);
+		g_IgnoreWeapons = MissingTAG:0;
+	}
+	UnhookEntityOutput("trigger_teleport", "OnEndTouch", Aimbot_TeleportOnEndTouch);
+	UnhookEvent("player_spawn", Aimbot_EventPlayerSpawn, EventHookMode:1);
+	UnhookEvent("player_death", Aimbot_EventPlayerDeath, EventHookMode:1);
+	return 0;
+}
+
+public AimBotDeviation_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_fAimBotDeviation = GetConVarFloat(convar);
+	return 0;
+}
+
+public AimBot_OnClientPutInServer(client)
+{
+	if (IsClientNew(client))
+	{
+		g_iAimDetections[client] = 0;
+		Aimbot_ClearAngles(client);
+	}
+	return 0;
+}
+
+public AimbotBan_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new iNewValue = GetConVarInt(convar);
+	new var1;
+	if (iNewValue > 0 && iNewValue < 4)
+	{
+		SetConVarInt(convar, 4, false, false);
+		return 0;
+	}
+	g_iAimbotBan = iNewValue;
+	return 0;
+}
+
+public Aimbot_TeleportOnEndTouch(String:output[], caller, activator, Float:delay)
+{
+	new var1;
+	if (1 <= activator <= MaxClients && IsClientConnected(activator))
+	{
+		Aimbot_ClearAngles(activator);
+		CreateTimer(delay + 0.1, Timer_ClearAngles, GetClientUserId(activator), 2);
+	}
+	return 0;
+}
+
+public Aimbot_EventPlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new userid = GetEventInt(event, "userid");
+	new client = GetClientOfUserId(userid);
+	if (1 <= client <= MaxClients)
+	{
+		Aimbot_ClearAngles(client);
+		CreateTimer(0.1, Timer_ClearAngles, userid, 2);
+	}
+	return 0;
+}
+
+public Aimbot_EventPlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	decl String:sWeapon[32];
+	GetEventString(event, "weapon", sWeapon, 32);
+	new dummy;
+	if (GetTrieValue(g_IgnoreWeapons, sWeapon, dummy))
+	{
+		return 0;
+	}
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new var1;
+	if (1 <= victim <= MaxClients && 1 <= attacker <= MaxClients && attacker != victim && IsClientInGame(attacker))
+	{
+		Aimbot_AnalyzeAngles(attacker);
+	}
+	return 0;
+}
+
+public Action:Timer_ClearAngles(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	if (1 <= client <= MaxClients)
+	{
+		Aimbot_ClearAngles(client);
+	}
+	return Action:4;
+}
+
+public Action:AimBot_TimerDecreaseCount(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	new var1;
+	if (1 <= client <= MaxClients && g_iAimDetections[client])
+	{
+		g_iAimDetections[client]--;
+	}
+	return Action:4;
+}
+
+public Action:Aimbot_OnPlayerRunCmd(client, Float:angles[3])
+{
+	if (!g_bAimbotEnabled)
+	{
+		return Action:0;
+	}
+	g_iEyeIndex[client]++;
+	if (g_iEyeIndex[client] == 32)
+	{
+		g_iEyeIndex[client] = 0;
+	}
+	return Action:0;
+}
+
+Aimbot_AnalyzeAngles(client)
+{
+	decl Float:vLastAngles[3];
+	decl Float:vAngles[3];
+	decl Float:fAngleDiff;
+	new idx = g_iEyeIndex[client];
+	new i;
+	while (i < 32)
+	{
+		if (idx == 32)
+		{
+			idx = 0;
+		}
+		if (!(IsVectorZero(g_fEyeAngles[client][idx])))
+		{
+			if (i)
+			{
+				new var2 = g_fEyeAngles[client][idx];
+				vAngles = var2;
+				fAngleDiff = GetVectorDistance(vLastAngles, vAngles, false);
+				if (fAngleDiff > 2.52E-43)
+				{
+					fAngleDiff = FloatAbs(fAngleDiff - 360);
+				}
+				if (fAngleDiff > g_fAimBotDeviation)
+				{
+					AimBot_Detected(client, fAngleDiff);
+					return 0;
+				}
+				idx++;
+			}
+			else
+			{
+				new var1 = g_fEyeAngles[client][idx];
+				vLastAngles = var1;
+				idx++;
+			}
+			i++;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+AimBot_Detected(client, Float:deviation)
+{
+	new var1;
+	if (!IsFakeClient(client) && IsPlayerAlive(client) && KAC_CheatDetected(client))
+	{
+		CreateTimer(600.0, AimBot_TimerDecreaseCount, GetClientUserId(client), 0);
+		new var3 = g_iAimDetections[client];
+		var3++;
+		if (var3 > 1)
+		{
+			decl String:sName[32];
+			GetClientName(client, sName, 32);
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_AimbotDetected", sName, g_iAimDetections[client], deviation);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_AimbotDetected", sName, g_iAimDetections[client], deviation);
+				}
+				default:
+				{
+				}
+			}
+			KAC_LogAction(client, "is suspected of using an aimbot. (Detection #%i) (Deviation: %.0f�)", g_iAimDetections[client], deviation);
+			new var2;
+			if (g_iAimbotBan && g_iAimDetections[client] >= g_iAimbotBan)
+			{
+				KAC_LogAction(client, "was banned for using an aimbot.");
+				KAC_Ban(client, "Aimbot Detected");
+			}
+		}
+	}
+	return 0;
+}
+
+Aimbot_ClearAngles(client)
+{
+	g_iEyeIndex[client] = 0;
+	new i;
+	while (i < 32)
+	{
+		ZeroVector(g_fEyeAngles[client][i]);
+		i++;
+	}
+	return 0;
+}
+
+public IpAlready_OnPluginStart()
+{
+	g_hCvarIpAlreadyEnable = CreateConVar("kac_ipalready_playerkick", "0", "��������� ������� ������ �� ������� � ������ Ip ������.\nDeny players to play on a server with one Ip address.", 262144, true, 0.0, true, 1.0);
+	IpAlready_OnSettingsChanged(g_hCvarIpAlreadyEnable, "", "");
+	HookConVarChange(g_hCvarIpAlreadyEnable, IpAlready_OnSettingsChanged);
+	return 0;
+}
+
+public IpAlready_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueIpAlready = GetConVarBool(convar);
+	new var1;
+	if (bNewValueIpAlready && !g_bEnabledIpAlready)
+	{
+		g_bEnabledIpAlready = true;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueIpAlready && g_bEnabledIpAlready)
+		{
+			g_bEnabledIpAlready = false;
+		}
+	}
+	return 0;
+}
+
+public OnClientConnected(client)
+{
+	if (g_bEnabledIpAlready)
+	{
+		new String:ip1[16];
+		GetClientIP(client, ip1, 16, true);
+		if (strcmp(ip1, "127.0.0.1", false))
+		{
+			new i = 1;
+			while (GetMaxClients() >= i)
+			{
+				if (IsClientInGame(i))
+				{
+					new String:ip2[16];
+					GetClientIP(i, ip2, 16, true);
+					new var1;
+					if (!strcmp(ip1, ip2, false) && client != i)
+					{
+						KickClient(client, "%t", "KAC_IpAlreadyKick", ip1);
+					}
+				}
+				i++;
+			}
+		}
+	}
+	return 0;
+}
+
+public AutoTrigger_OnPluginStart()
+{
+	g_hCvarMethod = CreateConVar("kac_autotrigger_method", "3", "����������� ��������������� ������� ���: (0 ���������, 1 BunnyHop, 2 Auto-Fire, 3 BunnyHop � Auto-Fire).\n1Defining automatic trigger bot: (0 Disable, 1 BunnyHop, 2 Auto-Fire, 3 BunnyHop and Auto-Fire).", 262144, true, 0.0, true, 3.0);
+	AutoTriggerMethod_OnSettingsChanged(g_hCvarMethod, "", "");
+	HookConVarChange(g_hCvarMethod, AutoTriggerMethod_OnSettingsChanged);
+	g_hCvarTriggerDetections = CreateConVar("kac_autotrigger_detections", "9", "������������ ����� �������� Auto-Trigger (Auto-Fire � BunnyHop).\nThe number of detections of Auto-Trigger (Auto-Fire � BunnyHop).", 262144, true, 8.0, true, 30.0);
+	AutoTriggerDetections_OnSettingsChanged(g_hCvarTriggerDetections, "", "");
+	HookConVarChange(g_hCvarTriggerDetections, AutoTriggerDetections_OnSettingsChanged);
+	g_hCvarAutoTriggerBlock = CreateConVar("kac_autotrigger_block", "2", "1 - ������������� ����������, 2 - ������������� ������ ��� �����������.\nAutomatically 1 - kicked, 2 - ban players on auto-trigger detections.", 262144, true, 0.0, true, 2.0);
+	AutoTriggerBlock_OnSettingsChanged(g_hCvarAutoTriggerBlock, "", "");
+	HookConVarChange(g_hCvarAutoTriggerBlock, AutoTriggerBlock_OnSettingsChanged);
+	g_iAttackMax = RoundToNearest(1.0 / GetTickInterval() / 3.0);
+	return 0;
+}
+
+public AutoTriggerMethod_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueAutoTrigger = GetConVarBool(convar);
+	new iNewSwitch = GetConVarInt(convar);
+	new var1;
+	if (bNewValueAutoTrigger && !g_bEnabledAutoTrigger)
+	{
+		AutoTrigger_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueAutoTrigger && g_bEnabledAutoTrigger)
+		{
+			AutoTrigger_Disable();
+		}
+	}
+	switch (iNewSwitch)
+	{
+		case 0:
+		{
+			AutoTrigger_LoadBhopPlugin();
+		}
+		case 1:
+		{
+			AutoTrigger_UnLoadBhopPlugin();
+			g_bEnabledAutoTriggerBunnyHop = true;
+			g_bEnabledAutoTriggerAutoFire = false;
+		}
+		case 2:
+		{
+			AutoTrigger_LoadBhopPlugin();
+			g_bEnabledAutoTriggerBunnyHop = false;
+			g_bEnabledAutoTriggerAutoFire = true;
+		}
+		case 3:
+		{
+			AutoTrigger_UnLoadBhopPlugin();
+			g_bEnabledAutoTriggerBunnyHop = true;
+			g_bEnabledAutoTriggerAutoFire = true;
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public AutoTrigger_Enable()
+{
+	g_bEnabledAutoTrigger = true;
+	g_hTimerAutoTrigger = CreateTimer(5.0, AutoTriggerTimer_DecreaseCount, any:0, 1);
+	return 0;
+}
+
+public AutoTrigger_Disable()
+{
+	g_bEnabledAutoTrigger = false;
+	if (g_hTimerAutoTrigger)
+	{
+		KillTimer(g_hTimerAutoTrigger, false);
+		g_hTimerAutoTrigger = MissingTAG:0;
+	}
+	return 0;
+}
+
+public AutoTriggerDetections_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_iAutoTriggerDetections = GetConVarInt(convar);
+	return 0;
+}
+
+public AutoTriggerBlock_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_iAutoTriggerBlock = GetConVarInt(convar);
+	return 0;
+}
+
+public AutoTrigger_OnClientDisconnect_Post(client)
+{
+	new i;
+	while (i < 2)
+	{
+		g_iDetections[i][client] = 0;
+		i++;
+	}
+	return 0;
+}
+
+public Action:AutoTriggerTimer_DecreaseCount(Handle:timer)
+{
+	new i;
+	while (i < 2)
+	{
+		new j = 1;
+		while (j <= MaxClients)
+		{
+			if (g_iDetections[i][j])
+			{
+				g_iDetections[i][j]--;
+			}
+			j++;
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:AutoTrigger_OnPlayerRunCmd(client, &buttons)
+{
+	if (!g_bEnabledAutoTrigger)
+	{
+		return Action:0;
+	}
+	static iPrevButtons[66];
+	if (g_bEnabledAutoTriggerBunnyHop)
+	{
+		static Float:fCheckTime[66];
+		new var1;
+		if (!buttons & 2 && GetEntityFlags(client) & 1 && fCheckTime[client] > 0.0)
+		{
+			fCheckTime[client] = 0;
+		}
+		new var2;
+		if (buttons & 2 && !iPrevButtons[client] & 2)
+		{
+			if (GetEntityFlags(client) & 1)
+			{
+				new Float:fGameTime = GetGameTime();
+				new var3;
+				if (fCheckTime[client] > 0.0 && fGameTime > fCheckTime[client])
+				{
+					AutoTrigger_Detected(client, 0);
+				}
+				else
+				{
+					fCheckTime[client] = fGameTime + 0.2;
+				}
+			}
+			fCheckTime[client] = 0;
+		}
+	}
+	static iAttackAmt[66];
+	static bool:bResetNext[66];
+	if (g_bEnabledAutoTriggerAutoFire)
+	{
+		new var4;
+		if ((buttons & 1 && !iPrevButtons[client] & 1) || (!buttons & 1 && iPrevButtons[client] & 1))
+		{
+			new var7 = iAttackAmt[client];
+			var7++;
+			if (var7 >= g_iAttackMax)
+			{
+				AutoTrigger_Detected(client, 1);
+				iAttackAmt[client] = 0;
+			}
+			bResetNext[client] = 0;
+		}
+		if (bResetNext[client])
+		{
+			iAttackAmt[client] = 0;
+			bResetNext[client] = 0;
+		}
+		bResetNext[client] = 1;
+	}
+	iPrevButtons[client] = buttons;
+	return Action:0;
+}
+
+AutoTrigger_Detected(client, method)
+{
+	decl String:sNamedbg[32];
+	GetClientName(client, sNamedbg, 32);
+	new var1;
+	if (g_iDetections[method][client] >= 1 && method)
+	{
+		KAC_PrintAdminNotice("\x03dbg\x01: Игрок '\x03%s\x01' - Подозрение \x03-> \x04BunnyHop\x01 # '\x04%d\x01'", sNamedbg, g_iDetections[method][client]);
+	}
+	new var2;
+	if (g_iDetections[method][client] >= 0 && method == 1)
+	{
+		KAC_PrintAdminNotice("\x03dbg\x01: Игрок '\x03%s\x01' - Подозрение \x03-> \x04Auto-Fire \x01 # '\x04%d\x01'", sNamedbg, g_iDetections[method][client]);
+	}
+	new var3;
+	if (!IsFakeClient(client) && IsPlayerAlive(client) && var4 >= g_iAutoTriggerDetections)
+	{
+		if (!(KAC_CheatDetected(client)))
+		{
+			decl String:sMethod[32];
+			decl String:sName[32];
+			switch (method)
+			{
+				case 0:
+				{
+					strcopy(sMethod, 32, "BunnyHop");
+				}
+				case 1:
+				{
+					strcopy(sMethod, 32, "Auto-Fire");
+				}
+				default:
+				{
+				}
+			}
+			new player_team = GetClientTeam(client);
+			GetClientName(client, sName, 32);
+			switch (player_team)
+			{
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_AutoTriggerDetected", sName, sMethod);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_AutoTriggerDetected", sName, sMethod);
+				}
+				default:
+				{
+				}
+			}
+			switch (g_iAutoTriggerBlock)
+			{
+				case 0:
+				{
+					KAC_LogAction(client, "is suspected of using auto-trigger cheat: %s", sMethod);
+				}
+				case 1:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_AutoTriggerDetectedKickMsgAdmin", sName, sMethod);
+					KAC_LogAction(client, "was kicked for using auto-trigger cheat: %s", sMethod);
+					KickClient(client, "%t", "KAC_AutoTriggerDetectedKickClient", sMethod);
+				}
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_AutoTriggerDetectedBanMsgAdmin", sName, sMethod);
+					KAC_Ban(client, "AutoTrigger Detection: %s", sMethod);
+					KAC_LogAction(client, "was banned for using auto-trigger cheat: %s", sMethod);
+				}
+				default:
+				{
+				}
+			}
+		}
+		g_iDetections[method][client] = 0;
+	}
+	return 0;
+}
+
+public Client_OnPluginStart()
+{
+	g_hCVarClientNameProtect = CreateConVar("kac_client_nameprotect", "1", "������ ������� �� ���-���.\nThis will protect the server from name crashes and hacks.", 262144, true, 0.0, true, 1.0);
+	ClientNameProtect_OnSettingsChanged(g_hCVarClientNameProtect, "", "");
+	HookConVarChange(g_hCVarClientNameProtect, ClientNameProtect_OnSettingsChanged);
+	g_hCvarConnectSpam = CreateConVar("kac_antispam_connect", "2", "������ �� ������� ��������������� N ��� � 1 �������. (0 ���������)\nProtection against fast reconnections N of times in 1 second. (0 Disabled)", 262144, true, 0.0, true, 2.0);
+	OnClientConnect_OnSettingsChanged(g_hCvarConnectSpam, "", "");
+	HookConVarChange(g_hCvarConnectSpam, OnClientConnect_OnSettingsChanged);
+	g_hClientConnections = CreateTrie();
+	g_hIgnoreList = CreateTrie();
+	AddCommandListener(Command_Autobuy, "autobuy");
+	if (g_bMapStartedWait)
+	{
+		decl String:sReason[256];
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientConnected(i) && !OnClientConnect(i, sReason, 256))
+			{
+				KickClient(i, "%s", sReason);
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+public ClientNameProtect_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValue = GetConVarBool(convar);
+	new var1;
+	if (bNewValue && !g_bClientNameProtect)
+	{
+		g_bClientNameProtect = true;
+		HookEvent("player_changename", Client_EventPlayerChangeName, EventHookMode:1);
+	}
+	else
+	{
+		new var2;
+		if (!bNewValue && g_bClientNameProtect)
+		{
+			g_bClientNameProtect = false;
+			UnhookEvent("player_changename", Client_EventPlayerChangeName, EventHookMode:1);
+		}
+	}
+	return 0;
+}
+
+public OnClientConnect_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	fSpamTime = GetConVarFloat(convar);
+	return 0;
+}
+
+public Client_OnMapStart()
+{
+	CreateTimer(20.0, ClientTimer_MapStarted, any:0, 2);
+	return 0;
+}
+
+public Client_OnMapEnd()
+{
+	g_bMapStartedWait = false;
+	ClearTrie(g_hClientConnections);
+	return 0;
+}
+
+public Action:ClientTimer_MapStarted(Handle:timer)
+{
+	g_bMapStartedWait = true;
+	return Action:4;
+}
+
+public bool:OnClientConnect(client, String:rejectmsg[], size)
+{
+	if (IsFakeClient(client))
+	{
+		return true;
+	}
+	new var1;
+	if (g_bMapStartedWait && fSpamTime > 0.0)
+	{
+		decl String:sIP[20];
+		decl String:sTempIP[20];
+		GetClientIP(client, sIP, 17, true);
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var2;
+			if (client != i && IsClientAuthorized(i) && GetClientIP(i, sTempIP, 17, true) && StrEqual(sIP, sTempIP, true))
+			{
+				SetTrieValue(g_hIgnoreList, sIP, any:1, true);
+				new temp;
+				if (!GetTrieValue(g_hIgnoreList, sIP, temp))
+				{
+					if (GetTrieValue(g_hClientConnections, sIP, temp))
+					{
+						KAC_LogAction(client, "was temporarily banned on 1 minute for connection spam.");
+						BanIdentity(sIP, 1, 2, "Spam Connecting", "KAC", any:0);
+						FormatEx(rejectmsg, size, "%T", "KAC_PleaseWait", client);
+						return false;
+					}
+					if (SetTrieValue(g_hClientConnections, sIP, any:1, true))
+					{
+						CreateTimer(fSpamTime, Timer_AntiSpamConnect, IPToLong(sIP), 0);
+					}
+				}
+			}
+			i++;
+		}
+		new temp;
+		if (!GetTrieValue(g_hIgnoreList, sIP, temp))
+		{
+			if (GetTrieValue(g_hClientConnections, sIP, temp))
+			{
+				KAC_LogAction(client, "was temporarily banned on 1 minute for connection spam.");
+				BanIdentity(sIP, 1, 2, "Spam Connecting", "KAC", any:0);
+				FormatEx(rejectmsg, size, "%T", "KAC_PleaseWait", client);
+				return false;
+			}
+			if (SetTrieValue(g_hClientConnections, sIP, any:1, true))
+			{
+				CreateTimer(fSpamTime, Timer_AntiSpamConnect, IPToLong(sIP), 0);
+			}
+		}
+	}
+	new var3;
+	if (g_bClientNameProtect && !IsClientNameValid(client))
+	{
+		FormatEx(rejectmsg, size, "%T", "KAC_ChangeName", client);
+		return false;
+	}
+	return true;
+}
+
+Client_OnClientPutInServer(client)
+{
+	if (IsClientNew(client))
+	{
+		g_iNameChanges[client] = 0;
+	}
+	return 0;
+}
+
+public OnClientSettingsChanged(client)
+{
+	new var1;
+	if (g_bClientNameProtect && !IsFakeClient(client) && !IsClientNameValid(client))
+	{
+		KickClient(client, "%t", "KAC_ChangeName");
+	}
+	return 0;
+}
+
+public Client_EventPlayerChangeName(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new userid = GetEventInt(event, "userid");
+	new client = GetClientOfUserId(userid);
+	new var1;
+	if (1 <= client <= MaxClients && IsClientInGame(client) && !IsFakeClient(client))
+	{
+		g_iNameChanges[client]++;
+		CreateTimer(10.0, Timer_DecreaseCount, userid, 0);
+		if (g_iNameChanges[client] >= 5)
+		{
+			if (!(KAC_CheatDetected(client)))
+			{
+				KAC_LogAction(client, "was kicked for name change spam.");
+				KickClient(client, "%t", "KAC_CommandSpamKick");
+			}
+			g_iNameChanges[client] = 0;
+		}
+	}
+	return 0;
+}
+
+public Action:Command_Autobuy(client, String:command[], args)
+{
+	if (!1 <= client <= MaxClients)
+	{
+		return Action:0;
+	}
+	if (!IsClientInGame(client))
+	{
+		return Action:3;
+	}
+	decl String:sAutobuy[256];
+	decl String:sArg[64];
+	new i;
+	new t;
+	GetClientInfo(client, "cl_autobuy", sAutobuy, 256);
+	if (strlen(sAutobuy) > 255)
+	{
+		return Action:3;
+	}
+	i = 0;
+	t = BreakString(sAutobuy, sArg, 64);
+	while (t != -1)
+	{
+		if (strlen(sArg) > 30)
+		{
+			return Action:3;
+		}
+		i = t + i;
+		t = BreakString(sAutobuy[i], sArg, 64);
+	}
+	if (strlen(sArg) > 30)
+	{
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public Action:Timer_AntiSpamConnect(Handle:timer, any:ip)
+{
+	decl String:sIP[20];
+	LongToIP(ip, sIP, 17);
+	RemoveFromTrie(g_hClientConnections, sIP);
+	return Action:4;
+}
+
+public Action:Timer_DecreaseCount(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	new var1;
+	if (1 <= client <= MaxClients && g_iNameChanges[client])
+	{
+		g_iNameChanges[client]--;
+	}
+	return Action:4;
+}
+
+bool:IsClientNameValid(client)
+{
+	decl String:sName[32];
+	decl String:sChar;
+	new bool:bWhiteSpace = 1;
+	GetClientName(client, sName, 32);
+	new iSize = strlen(sName);
+	new var1;
+	if (iSize < 1 || sName[0] == '&' || IsCharSpace(sName[0]) || IsCharSpace(sName[iSize + -1]))
+	{
+		return false;
+	}
+	new i;
+	while (i < iSize)
+	{
+		sChar = sName[i];
+		if (!IsCharSpace(sChar))
+		{
+			bWhiteSpace = false;
+		}
+		if (IsCharMB(sChar))
+		{
+			i++;
+			new var2;
+			if (sChar == String:194 && sName[i] == ' ')
+			{
+				return false;
+			}
+		}
+		else
+		{
+			new var3;
+			if (sChar < String:32 || sChar == String:37)
+			{
+				return false;
+			}
+		}
+		i++;
+	}
+	if (bWhiteSpace)
+	{
+		return false;
+	}
+	return true;
+}
+
+public Commands_OnPluginStart()
+{
+	g_hCvarCmdSpam = CreateConVar("kac_antispam_cmds", "30", "���������� ������, ������� ����� ������� ������ � ���� �������. ��� ��������� ������� ������.\nAmount of commands allowed in one second before kick. (0 = Disabled).", 262144, true, 0.0, true, 500.0);
+	CmdSpam_OnSettingsChanged(g_hCvarCmdSpam, "", "");
+	HookConVarChange(g_hCvarCmdSpam, CmdSpam_OnSettingsChanged);
+	g_hCVarCmdLog = CreateConVar("kac_cmds_log", "0", "���������� � log ���� ������� ��������� ������� � ������� ������� (�������).\nLog command usage. Use only for debugging purposes.", 262144, true, 0.0, true, 1.0);
+	CommandsCmdLog_OnSettingsChanged(g_hCVarCmdLog, "", "");
+	HookConVarChange(g_hCVarCmdLog, CommandsCmdLog_OnSettingsChanged);
+	new i;
+	BuildPath(PathType:0, g_sCmdLogPath, 256, "logs/KAC_CmdLog_%d.log", i);
+	while (!FileExists(g_sCmdLogPath, false))
+	{
+		i++;
+	}
+	AddCommandListener(Commands_FilterSay, "say");
+	AddCommandListener(Commands_FilterSay, "say_team");
+	AddCommandListener(Commands_BlockExploit, "sm_menu");
+	AddCommandListener(Commands_BlockEntExploit, "ent_create");
+	AddCommandListener(Commands_BlockEntExploit, "ent_fire");
+	AddCommandListener(Commands_BlockEntExploit, "give");
+	HookEvent("player_disconnect", Commands_EventDisconnect, EventHookMode:0);
+	g_hBlockedCmds = CreateTrie();
+	g_hIgnoredCmds = CreateTrie();
+	SetTrieValue(g_hBlockedCmds, "ai_test_los", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "changelevel", any:1, true);
+	SetTrieValue(g_hBlockedCmds, "cl_fullupdate", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dbghist_addline", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dbghist_dump", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "drawcross", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "drawline", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dump_entity_sizes", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dump_globals", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dump_panels", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dump_terrain", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dumpcountedstrings", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dumpentityfactories", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dumpeventqueue", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "dumpgamestringtable", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "editdemo", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "endround", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "groundlist", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "listmodels", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "map_showspawnpoints", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "mem_dump", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "mp_dump_timers", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "npc_ammo_deplete", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "npc_heal", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "npc_speakall", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "npc_thinknow", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "physics_budget", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "physics_debug_entity", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "physics_highlight_active", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "physics_report_active", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "physics_select", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "q_sndrcn", any:1, true);
+	SetTrieValue(g_hBlockedCmds, "report_entities", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "report_touchlinks", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "report_simthinklist", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "respawn_entities", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "rr_reloadresponsesystems", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "scene_flush", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "send_me_rcon", any:1, true);
+	SetTrieValue(g_hBlockedCmds, "snd_digital_surround", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "snd_restart", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "soundlist", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "soundscape_flush", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "sv_benchmark_force_start", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "sv_findsoundname", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "sv_soundemitter_filecheck", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "sv_soundemitter_flush", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "sv_soundscape_printdebuginfo", any:0, true);
+	SetTrieValue(g_hBlockedCmds, "wc_update_entity", any:0, true);
+	SetTrieValue(g_hIgnoredCmds, "buy", any:1, true);
+	SetTrieValue(g_hIgnoredCmds, "buyammo1", any:1, true);
+	SetTrieValue(g_hIgnoredCmds, "buyammo2", any:1, true);
+	SetTrieValue(g_hIgnoredCmds, "use", any:1, true);
+	SetTrieValue(g_hIgnoredCmds, "vmodenable", any:1, true);
+	SetTrieValue(g_hIgnoredCmds, "vban", any:1, true);
+	CreateTimer(1.0, Timer_CountReset, any:0, 1);
+	AddCommandListener(Commands_CommandListener, "");
+	RegAdminCmd("kac_addcmd", Commands_AddCmd, 16384, "Adds a command to be blocked by KAC.", "", 0);
+	RegAdminCmd("kac_addignorecmd", Commands_AddIgnoreCmd, 16384, "Adds a command to ignore on command spam.", "", 0);
+	RegAdminCmd("kac_removecmd", Commands_RemoveCmd, 16384, "Removes a command from the block list.", "", 0);
+	RegAdminCmd("kac_removeignorecmd", Commands_RemoveIgnoreCmd, 16384, "Remove a command to ignore.", "", 0);
+	return 0;
+}
+
+public CmdSpam_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_iCmdSpam = GetConVarInt(convar);
+	new bool:bNewValueSpamCmds = GetConVarBool(convar);
+	new var1;
+	if (bNewValueSpamCmds && !g_bSpamCmds)
+	{
+		g_bSpamCmds = true;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueSpamCmds && g_bSpamCmds)
+		{
+			g_bSpamCmds = false;
+		}
+	}
+	return 0;
+}
+
+public CommandsCmdLog_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueLogCmds = GetConVarBool(convar);
+	new var1;
+	if (bNewValueLogCmds && !g_bLogCmds)
+	{
+		g_bLogCmds = true;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueLogCmds && g_bLogCmds)
+		{
+			g_bLogCmds = false;
+		}
+	}
+	return 0;
+}
+
+public Action:Commands_EventDisconnect(Handle:event, String:name[], bool:dontBroadcast)
+{
+	decl String:f_sReason[512];
+	decl String:f_sTemp[512];
+	decl f_iLength;
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	GetEventString(event, "reason", f_sReason, 512);
+	GetEventString(event, "name", f_sTemp, 512);
+	f_iLength = strlen(f_sTemp) + strlen(f_sReason);
+	GetEventString(event, "networkid", f_sTemp, 512);
+	f_iLength = strlen(f_sTemp) + f_iLength;
+	if (f_iLength > 235)
+	{
+		new var1;
+		if (1 <= client <= MaxClients && IsClientConnected(client))
+		{
+			KAC_LogAction(client, "submitted a bad disconnect reason, length %d, \"%s\"", f_iLength, f_sReason);
+		}
+		else
+		{
+			KAC_Log("Bad disconnect reason, length %d, \"%s\"", f_iLength, f_sReason);
+		}
+		SetEventString(event, "reason", "Bad disconnect message");
+		return Action:0;
+	}
+	f_iLength = strlen(f_sReason);
+	new i;
+	while (i < f_iLength)
+	{
+		new var2;
+		if (f_sReason[i] < ' ' && f_sReason[i] != '
+')
+		{
+			new var3;
+			if (1 <= client <= MaxClients && IsClientConnected(client))
+			{
+				KAC_LogAction(client, "submitted a bad disconnect reason, \"%s\" len = %d. Possible corruption or attack.", f_sReason, f_iLength);
+			}
+			else
+			{
+				KAC_Log("Bad disconnect reason, \"%s\" len = %d. Possible corruption or attack.", f_sReason, f_iLength);
+			}
+			SetEventString(event, "reason", "Bad disconnect message");
+			return Action:0;
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:Commands_AddCmd(client, args)
+{
+	if (args != 2)
+	{
+		ReplyToCommand(client, "Usage: kac_addcmd <command name> <ban (1 or 0)>");
+		return Action:3;
+	}
+	decl String:f_sCmdName[64];
+	decl String:f_sTemp[8];
+	decl bool:f_bBan;
+	GetCmdArg(1, f_sCmdName, 64);
+	GetCmdArg(2, f_sTemp, 8);
+	new var1;
+	if (StringToInt(f_sTemp, 10) || StrEqual(f_sTemp, "ban", true) || StrEqual(f_sTemp, "yes", true) || StrEqual(f_sTemp, "true", true))
+	{
+		f_bBan = true;
+	}
+	else
+	{
+		f_bBan = false;
+	}
+	if (SetTrieValue(g_hBlockedCmds, f_sCmdName, f_bBan, true))
+	{
+		ReplyToCommand(client, "You have successfully added %s to the command block list.", f_sCmdName);
+	}
+	else
+	{
+		ReplyToCommand(client, "%s already exists in the command block list.", f_sCmdName);
+	}
+	return Action:3;
+}
+
+public Action:Commands_AddIgnoreCmd(client, args)
+{
+	if (args != 1)
+	{
+		ReplyToCommand(client, "Usage: kac_addignorecmd <command name>");
+		return Action:3;
+	}
+	decl String:f_sCmdName[64];
+	GetCmdArg(1, f_sCmdName, 64);
+	if (SetTrieValue(g_hIgnoredCmds, f_sCmdName, any:1, true))
+	{
+		ReplyToCommand(client, "You have successfully added %s to the command ignore list.", f_sCmdName);
+	}
+	else
+	{
+		ReplyToCommand(client, "%s already exists in the command ignore list.", f_sCmdName);
+	}
+	return Action:3;
+}
+
+public Action:Commands_RemoveCmd(client, args)
+{
+	if (args != 1)
+	{
+		ReplyToCommand(client, "Usage: kac_removecmd <command name>");
+		return Action:3;
+	}
+	decl String:f_sCmdName[64];
+	GetCmdArg(1, f_sCmdName, 64);
+	if (RemoveFromTrie(g_hBlockedCmds, f_sCmdName))
+	{
+		ReplyToCommand(client, "You have successfully removed %s from the command block list.", f_sCmdName);
+	}
+	else
+	{
+		ReplyToCommand(client, "%s is not in the command block list.", f_sCmdName);
+	}
+	return Action:3;
+}
+
+public Action:Commands_RemoveIgnoreCmd(client, args)
+{
+	if (args != 1)
+	{
+		ReplyToCommand(client, "Usage: kac_removeignorecmd <command name>");
+		return Action:3;
+	}
+	decl String:f_sCmdName[64];
+	GetCmdArg(1, f_sCmdName, 64);
+	if (RemoveFromTrie(g_hIgnoredCmds, f_sCmdName))
+	{
+		ReplyToCommand(client, "You have successfully removed %s from the command ignore list.", f_sCmdName);
+	}
+	else
+	{
+		ReplyToCommand(client, "%s is not in the command ignore list.", f_sCmdName);
+	}
+	return Action:3;
+}
+
+public Action:Commands_BlockExploit(client, String:command[], args)
+{
+	if (0 < args)
+	{
+		decl String:f_sArg[64];
+		GetCmdArg(1, f_sArg, 64);
+		if (StrEqual(f_sArg, "rcon_password", true))
+		{
+			decl String:f_sCmdString[256];
+			GetCmdArgString(f_sCmdString, 256);
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 1:
+				{
+					KAC_PrintAdminNotice("{green}%t", "KAC_CommandBlockExploitAdminMsgBan", client, f_sCmdString);
+				}
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_CommandBlockExploitAdminMsgBan", client, f_sCmdString);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_CommandBlockExploitAdminMsgBan", client, f_sCmdString);
+				}
+				default:
+				{
+				}
+			}
+			KAC_LogAction(client, "was banned for command usage violation of command: sm_menu %s", f_sCmdString);
+			KAC_Ban(client, "Exploit violation");
+			return Action:4;
+		}
+	}
+	return Action:0;
+}
+
+public Action:Commands_FilterSay(client, String:command[], args)
+{
+	new var1;
+	if (!g_bSpamCmds || !1 <= client <= MaxClients)
+	{
+		return Action:0;
+	}
+	new iSpaceNum;
+	decl String:f_sMsg[256];
+	decl f_iLen;
+	decl String:f_cChar;
+	GetCmdArgString(f_sMsg, 256);
+	f_iLen = strlen(f_sMsg);
+	new i;
+	while (i < f_iLen)
+	{
+		f_cChar = f_sMsg[i];
+		if (f_cChar == String:32)
+		{
+			iSpaceNum++;
+			if (iSpaceNum >= 64)
+			{
+				CPrintToChat(client, "%t \x03%t", "KAC_Tag", "KAC_SayBlock");
+				EmitSoundToClient(client, "buttons/button11.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+				return Action:4;
+			}
+		}
+		new var2;
+		if (f_cChar < String:32 && !IsCharMB(f_cChar))
+		{
+			CPrintToChat(client, "%t \x03%t", "KAC_Tag", "KAC_SayBlock");
+			EmitSoundToClient(client, "buttons/button11.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			return Action:4;
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:Commands_BlockEntExploit(client, String:command[], args)
+{
+	if (!1 <= client <= MaxClients)
+	{
+		return Action:0;
+	}
+	if (!IsClientInGame(client))
+	{
+		return Action:4;
+	}
+	decl String:f_sCmd[512];
+	GetCmdArgString(f_sCmd, 512);
+	if (strlen(f_sCmd) > 500)
+	{
+		return Action:4;
+	}
+	new var1;
+	if (StrContains(f_sCmd, "point_servercommand", true) == -1 && StrContains(f_sCmd, "point_clientcommand", true) == -1 && StrContains(f_sCmd, "logic_timer", true) == -1 && StrContains(f_sCmd, "quit", true) == -1 && StrContains(f_sCmd, "sm", true) == -1 && StrContains(f_sCmd, "quti", true) == -1 && StrContains(f_sCmd, "restart", true) == -1 && StrContains(f_sCmd, "alias", true) == -1 && StrContains(f_sCmd, "admin", true) == -1 && StrContains(f_sCmd, "ma_", true) == -1 && StrContains(f_sCmd, "rcon", true) == -1 && StrContains(f_sCmd, "sv_", true) == -1 && StrContains(f_sCmd, "mp_", true) == -1 && StrContains(f_sCmd, "meta", true) == -1 && StrContains(f_sCmd, "taketimer", true) == -1 && StrContains(f_sCmd, "logic_relay", true) == -1 && StrContains(f_sCmd, "logic_auto", true) == -1 && StrContains(f_sCmd, "logic_autosave", true) == -1 && StrContains(f_sCmd, "logic_branch", true) == -1 && StrContains(f_sCmd, "logic_case", true) == -1 && StrContains(f_sCmd, "logic_collision_pair", true) == -1 && StrContains(f_sCmd, "logic_compareto", true) == -1 && StrContains(f_sCmd, "logic_lineto", true) == -1 && StrContains(f_sCmd, "logic_measure_movement", true) == -1 && StrContains(f_sCmd, "logic_multicompare", true) == -1 && StrContains(f_sCmd, "logic_navigation", true) == -1)
+	{
+		if (g_bLogCmds)
+		{
+			decl String:f_sCmdName[64];
+			GetCmdArg(0, f_sCmdName, 64);
+			LogToFileEx(g_sCmdLogPath, "%L attempted command: %s %s", client, f_sCmdName, f_sCmd);
+		}
+		return Action:4;
+	}
+	return Action:0;
+}
+
+public Action:Commands_CommandListener(client, String:command[], argc)
+{
+	new var2;
+	if (!1 <= client <= MaxClients || (IsClientConnected(client) && IsFakeClient(client)))
+	{
+		return Action:0;
+	}
+	if (!IsClientInGame(client))
+	{
+		return Action:4;
+	}
+	decl bool:f_bBan;
+	decl String:f_sCmd[64];
+	strcopy(f_sCmd, 64, command);
+	StringToLower(f_sCmd);
+	new var3;
+	if (g_iCmdSpam && !GetTrieValue(g_hIgnoredCmds, f_sCmd, f_bBan) && var6 > g_iCmdSpam)
+	{
+		new var4;
+		if (!IsClientInKickQueue(client) && KAC_CheatDetected(client))
+		{
+			decl String:f_sCmdString[128];
+			GetCmdArgString(f_sCmdString, 128);
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 1:
+				{
+					KAC_PrintAdminNotice("{green}%t", "KAC_CommandSpamAdminMsgKick", client, command, f_sCmdString);
+				}
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_CommandSpamAdminMsgKick", client, command, f_sCmdString);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_CommandSpamAdminMsgKick", client, command, f_sCmdString);
+				}
+				default:
+				{
+				}
+			}
+			KAC_LogAction(client, "was kicked for command spamming: %s %s", command, f_sCmdString);
+			KickClient(client, "%t", "KAC_CommandSpamKick");
+		}
+		return Action:4;
+	}
+	if (GetTrieValue(g_hBlockedCmds, f_sCmd, f_bBan))
+	{
+		new var5;
+		if (f_bBan && KAC_CheatDetected(client))
+		{
+			decl String:f_sCmdString[256];
+			GetCmdArgString(f_sCmdString, 256);
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 1:
+				{
+					KAC_PrintAdminNotice("{green}%t", "KAC_CommandSpamAdminMsgBan", client, command, f_sCmdString);
+				}
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_CommandSpamAdminMsgBan", client, command, f_sCmdString);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_CommandSpamAdminMsgBan", client, command, f_sCmdString);
+				}
+				default:
+				{
+				}
+			}
+			KAC_LogAction(client, "was banned for command usage violation of command: %s %s", command, f_sCmdString);
+			KAC_Ban(client, "Command %s violation", command);
+		}
+		return Action:4;
+	}
+	if (g_bLogCmds)
+	{
+		decl String:f_sCmdString[256];
+		GetCmdArgString(f_sCmdString, 256);
+		LogToFileEx(g_sCmdLogPath, "%L used command: %s %s", client, command, f_sCmdString);
+	}
+	return Action:0;
+}
+
+public Action:Timer_CountReset(Handle:timer, any:args)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		g_iCmdCount[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+StringToLower(String:f_sInput[])
+{
+	new f_iSize = strlen(f_sInput);
+	new i;
+	while (i < f_iSize)
+	{
+		f_sInput[i] = CharToLower(f_sInput[i]);
+		i++;
+	}
+	return 0;
+}
+
+public CVars_OnPluginStart()
+{
+	g_hCVarCVarsEnabled = CreateConVar("kac_cvars_enable", "1", "1 ��������, 0 ���������: �������� Cvars, �������� � ������� �� �������.\nEnable the CVar checks module.", 262144, true, 0.0, true, 1.0);
+	CVarsEnabled_OnSettingsChanged(g_hCVarCVarsEnabled, "", "");
+	HookConVarChange(g_hCVarCVarsEnabled, CVarsEnabled_OnSettingsChanged);
+	g_hSvCVarChtForceEnable = CreateConVar("kac_cvars_force_cheats", "1", "1 ��������. 0 ���������: ������������� ���������� �������� sv_cheats 0 ��� ������� 1. (�� ��������� �������� 1).\nAutomatically return the value 0 sv_cheats set to 1", 262144, true, 0.0, true, 1.0);
+	CVarSvChtForce_OnSettingsChanged(g_hSvCVarChtForceEnable, "", "");
+	HookConVarChange(g_hSvCVarChtForceEnable, CVarSvChtForce_OnSettingsChanged);
+	decl Handle:f_hConCommand;
+	decl String:f_sName[64];
+	decl bool:f_bIsCommand;
+	decl f_iFlags;
+	decl Handle:f_hConVar;
+	g_hCVars = CreateArray(64, 0);
+	g_hCVarIndex = CreateTrie();
+	CVars_AddCVar("0penscript", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("openscript", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("antiban", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("aim_bot", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("aim_fov", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("bat_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("beetlesmod_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("est_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("eventscripts_ver", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("fm_attackmode", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("lua_open", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("Lua-Engine", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("mani_admin_plugin_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("Kentavr1kTakeOver", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("Kentavr1kTakeOver_Information", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("ManiAdminHacker", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("ManiAdminTakeOver", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("TakeOver_Password", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("metamod_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("openscript_version", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("runnscript", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("SmAdminTakeover", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("sourcemod_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("tb_enabled", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("zb_version", 5, 3, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogManiTakeOver", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogSmTakeOver", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogServercfgDownload", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogDownloadFile", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogUploadFile", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogAddAdmin", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogAdminAdd", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("NosorogSmallCheatMenu", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("FunnyExploitByNosorog", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("MNosorogcrashOver", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("DownloadServerCfg", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("AdminAddedByMrWhite", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("TakeOverByMrWhite", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("TakeOverByMrWhite_Information", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("ManiNogganoooHack", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("SmNogganoooHack", 5, 4, "0.0", 0.0, 3, "");
+	CVars_AddCVar("sv_cheats", 0, 4, "0.0", 0.0, 1, "");
+	CVars_AddCVar("sv_consistency", 0, 4, "1.0", 0.0, 1, "");
+	CVars_AddCVar("r_drawothermodels", 0, 4, "1.0", 0.0, 1, "");
+	CVars_AddCVar("cl_clock_correction", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("cl_leveloverview", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("cl_overdraw_test", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("cl_particles_show_bbox", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("cl_phys_timescale", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("cl_showevents", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("fog_enable", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("host_timescale", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("mat_dxlevel", 1, 3, "80.0", 0.0, 0, "");
+	CVars_AddCVar("mat_fillrate", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("mat_measurefillrate", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("mat_proxy", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("mat_showlowresimage", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("mat_wireframe", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("mem_force_flush", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("snd_show", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("snd_visualize", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_aspectratio", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_colorstaticprops", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_DispWalkable", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_DrawBeams", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawbrushmodels", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawclipbrushes", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawdecals", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawentities", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawmodelstatsoverlay", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawopaqueworld", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawparticles", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawrenderboxes", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawskybox", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_drawtranslucentworld", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_shadowwireframe", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("r_skybox", 0, 4, "1.0", 0.0, 0, "");
+	CVars_AddCVar("r_visocclusion", 0, 4, "0.0", 0.0, 0, "");
+	CVars_AddCVar("vcollide_wireframe", 0, 4, "0.0", 0.0, 0, "");
+	f_hConCommand = FindFirstConCommand(f_sName, 64, f_bIsCommand, f_iFlags, "", 0);
+	if (f_hConCommand)
+	{
+	}
+	else
+	{
+		SetFailState("Failed getting first ConVar");
+	}
+	do {
+		if (!f_bIsCommand)
+		{
+			if (f_iFlags & 8192)
+			{
+				if (!(f_iFlags & 262144))
+				{
+					f_hConVar = FindConVar(f_sName);
+					if (f_hConVar)
+					{
+						CVars_ReplicateConVar(f_hConVar);
+						HookConVarChange(f_hConVar, CVars_Replicate);
+					}
+				}
+			}
+		}
+	} while (FindNextConCommand(f_hConCommand, f_sName, 64, f_bIsCommand, f_iFlags, "", 0));
+	CloseHandle(f_hConCommand);
+	RegAdminCmd("kac_addcvar", CVars_CmdAddCVar, 16384, "Adds a CVar to the check list.", "", 0);
+	RegAdminCmd("kac_removecvar", CVars_CmdRemCVar, 16384, "Removes a CVar from the check list.", "", 0);
+	RegAdminCmd("kac_cvars_status", CVars_CmdStatus, 2, "Shows the status of all in-game clients.", "", 0);
+	if (g_bMapStarted)
+	{
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && IsClientAuthorized(i))
+			{
+				OnClientPostAdminCheck(i);
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+public CVarsEnabled_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueCVarsEnabled = GetConVarBool(convar);
+	new var1;
+	if (bNewValueCVarsEnabled && !g_bCVarCVarsEnabled)
+	{
+		g_bCVarCVarsEnabled = true;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueCVarsEnabled && g_bCVarCVarsEnabled)
+		{
+			g_bCVarCVarsEnabled = false;
+		}
+	}
+	return 0;
+}
+
+public CVarSvChtForce_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueCVarSvChtForceEnabled = GetConVarBool(convar);
+	new var1;
+	if (bNewValueCVarSvChtForceEnabled && !g_bSvCVarChtForce)
+	{
+		g_bSvCVarChtForce = true;
+		new Handle:f_hConVar = FindConVar("sv_cheats");
+		if (f_hConVar)
+		{
+			SetConVarInt(f_hConVar, 0, false, false);
+		}
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueCVarSvChtForceEnabled && g_bSvCVarChtForce)
+		{
+			g_bSvCVarChtForce = false;
+		}
+	}
+	return 0;
+}
+
+public OnClientPostAdminCheck(client)
+{
+	if (!IsFakeClient(client))
+	{
+		g_hPeriodicTimer[client] = CreateTimer(0.1, CVars_PeriodicTimer, client, 0);
+	}
+	return 0;
+}
+
+public CVars_OnClientDisconnect(client)
+{
+	decl Handle:f_hTemp;
+	g_iCurrentIndex[client] = 0;
+	g_iRetryAttempts[client] = 0;
+	f_hTemp = g_hPeriodicTimer[client];
+	if (f_hTemp)
+	{
+		g_hPeriodicTimer[client] = 0;
+		CloseHandle(f_hTemp);
+	}
+	f_hTemp = g_hReplyTimer[client];
+	if (f_hTemp)
+	{
+		g_hReplyTimer[client] = 0;
+		CloseHandle(f_hTemp);
+	}
+	return 0;
+}
+
+public Action:CVars_CmdStatus(client, args)
+{
+	new var1;
+	if (client && !IsClientInGame(client))
+	{
+		return Action:3;
+	}
+	decl String:f_sAuth[64];
+	decl String:f_sCVarName[64];
+	new Handle:f_hTemp;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var2;
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			GetClientAuthString(i, f_sAuth, 64);
+			f_hTemp = g_hCurrentQuery[i];
+			if (f_hTemp)
+			{
+				GetArrayString(f_hTemp, 0, f_sCVarName, 64);
+				ReplyToCommand(client, "%N (%s) has active query on %s. Current Index: %d. Retry Attempts: %d.", i, f_sAuth, f_sCVarName, g_iCurrentIndex[i], g_iRetryAttempts[i]);
+			}
+			if (g_hPeriodicTimer[i])
+			{
+				ReplyToCommand(client, "%N (%s) is waiting for new query. Current Index: %d.", i, f_sAuth, g_iCurrentIndex[i]);
+			}
+			LogError("%N (%s) doesn't have a periodic timer running and no active queries.", i, f_sAuth);
+			ReplyToCommand(client, "ERROR: %N (%s) didn't have a periodic timer running nor active queries.", i, f_sAuth);
+			g_hPeriodicTimer[i] = CreateTimer(0.1, CVars_PeriodicTimer, i, 0);
+			i++;
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+public Action:CVars_CmdAddCVar(client, args)
+{
+	new var1;
+	if (args != 4 && args != 5)
+	{
+		ReplyToCommand(client, "Usage: kac_addcvar <cvar name> <comparison type> <action> <value> <value2 if bound>");
+		return Action:3;
+	}
+	decl String:f_sCVarName[64];
+	decl String:f_sTemp[64];
+	decl f_iCompType;
+	decl f_iAction;
+	decl String:f_sValue[64];
+	decl Float:f_fValue2;
+	GetCmdArg(1, f_sCVarName, 64);
+	if (!CVars_IsValidName(f_sCVarName))
+	{
+		ReplyToCommand(client, "The ConVar name \"%s\" is invalid and cannot be used.", f_sCVarName);
+		return Action:3;
+	}
+	GetCmdArg(2, f_sTemp, 64);
+	new var2;
+	if (StrEqual(f_sTemp, "=", true) || StrEqual(f_sTemp, "equal", true))
+	{
+		f_iCompType = 0;
+	}
+	else
+	{
+		new var3;
+		if (StrEqual(f_sTemp, "<", true) || StrEqual(f_sTemp, "greater", true))
+		{
+			f_iCompType = 1;
+		}
+		new var4;
+		if (StrEqual(f_sTemp, ">", true) || StrEqual(f_sTemp, "less", true))
+		{
+			f_iCompType = 2;
+		}
+		new var5;
+		if (StrEqual(f_sTemp, "bound", true) || StrEqual(f_sTemp, "between", true))
+		{
+			f_iCompType = 3;
+		}
+		if (StrEqual(f_sTemp, "strequal", true))
+		{
+			f_iCompType = 4;
+		}
+		if (StrEqual(f_sTemp, "nonexist", true))
+		{
+			f_iCompType = 5;
+		}
+		ReplyToCommand(client, "Unrecognized comparison type \"%s\", acceptable values: \"equal\", \"greater\", \"less\", \"between\", \"strequal\", or \"nonexist\".", f_sTemp);
+		return Action:3;
+	}
+	new var6;
+	if (f_iCompType == 3 && args < 5)
+	{
+		ReplyToCommand(client, "Bound comparison type needs two values to compare with.");
+		return Action:3;
+	}
+	GetCmdArg(3, f_sTemp, 64);
+	if (StrEqual(f_sTemp, "warn", true))
+	{
+		f_iAction = 0;
+	}
+	else
+	{
+		if (StrEqual(f_sTemp, "motd", true))
+		{
+			f_iAction = 1;
+		}
+		if (StrEqual(f_sTemp, "mute", true))
+		{
+			f_iAction = 2;
+		}
+		if (StrEqual(f_sTemp, "kick", true))
+		{
+			f_iAction = 3;
+		}
+		if (StrEqual(f_sTemp, "ban", true))
+		{
+			f_iAction = 4;
+		}
+		ReplyToCommand(client, "Unrecognized action type \"%s\", acceptable values: \"warn\", \"mute\", \"kick\", or \"ban\".", f_sTemp);
+		return Action:3;
+	}
+	GetCmdArg(4, f_sValue, 64);
+	if (f_iCompType == 3)
+	{
+		GetCmdArg(5, f_sTemp, 64);
+		f_fValue2 = StringToFloat(f_sTemp);
+	}
+	if (CVars_AddCVar(f_sCVarName, f_iCompType, f_iAction, f_sValue, f_fValue2, 0, ""))
+	{
+		if (client)
+		{
+			KAC_LogAction(client, "added convar %s to the check list.", f_sCVarName);
+		}
+		ReplyToCommand(client, "Successfully added ConVar %s to the check list.", f_sCVarName);
+	}
+	else
+	{
+		ReplyToCommand(client, "Failed to add ConVar %s to the check list.", f_sCVarName);
+	}
+	return Action:3;
+}
+
+public Action:CVars_CmdRemCVar(client, args)
+{
+	if (args != 1)
+	{
+		ReplyToCommand(client, "Usage: kac_removecvar <cvar name>");
+		return Action:3;
+	}
+	decl String:f_sCVarName[64];
+	GetCmdArg(1, f_sCVarName, 64);
+	if (CVars_RemoveCVar(f_sCVarName))
+	{
+		if (client)
+		{
+			KAC_LogAction(client, "removed convar %s from the check list.", f_sCVarName);
+		}
+		else
+		{
+			KAC_Log("Console removed convar %s from the check list.", f_sCVarName);
+		}
+		ReplyToCommand(client, "ConVar %s was successfully removed from the check list.", f_sCVarName);
+	}
+	else
+	{
+		ReplyToCommand(client, "Unable to find ConVar %s in the check list.", f_sCVarName);
+	}
+	return Action:3;
+}
+
+public Action:CVars_PeriodicTimer(Handle:timer, any:client)
+{
+	if (g_hPeriodicTimer[client])
+	{
+		if (!g_bCVarCVarsEnabled)
+		{
+			g_hPeriodicTimer[client] = CreateTimer(60.0, CVars_PeriodicTimer, client, 0);
+			return Action:4;
+		}
+		g_hPeriodicTimer[client] = 0;
+		if (!IsClientConnected(client))
+		{
+			return Action:4;
+		}
+		decl String:f_sName[64];
+		decl Handle:f_hCVar;
+		decl f_iIndex;
+		if (g_iSize < 1)
+		{
+			PrintToServer("Nothing in convar list");
+			CreateTimer(10.0, CVars_PeriodicTimer, client, 0);
+			return Action:4;
+		}
+		new var1 = g_iCurrentIndex[client];
+		var1++;
+		f_iIndex = var1;
+		if (f_iIndex >= g_iSize)
+		{
+			f_iIndex = 0;
+			g_iCurrentIndex[client] = 1;
+		}
+		f_hCVar = GetArrayCell(g_hCVars, f_iIndex, 0, false);
+		if (GetArrayCell(f_hCVar, 8, 0, false))
+		{
+			g_hPeriodicTimer[client] = CreateTimer(0.1, CVars_PeriodicTimer, client, 0);
+		}
+		else
+		{
+			GetArrayString(f_hCVar, 0, f_sName, 64);
+			g_hCurrentQuery[client] = f_hCVar;
+			QueryClientConVar(client, f_sName, CVars_QueryCallback, client);
+			g_hReplyTimer[client] = CreateTimer(30.0, CVars_ReplyTimer, GetClientUserId(client), 0);
+		}
+		return Action:4;
+	}
+	return Action:4;
+}
+
+public Action:CVars_ReplyTimer(Handle:timer, any:userid)
+{
+	new client = GetClientOfUserId(userid);
+	new var1;
+	if (!client || g_hReplyTimer[client])
+	{
+		return Action:4;
+	}
+	g_hReplyTimer[client] = 0;
+	new var2;
+	if (!g_bCVarCVarsEnabled || !IsClientConnected(client) || g_hPeriodicTimer[client])
+	{
+		return Action:4;
+	}
+	new var3 = g_iRetryAttempts[client];
+	var3++;
+	if (var3 > 3)
+	{
+		KickClient(client, "%t", "KAC_FailedToReply");
+	}
+	else
+	{
+		decl String:f_sName[64];
+		decl Handle:f_hCVar;
+		if (g_iSize < 1)
+		{
+			PrintToServer("Nothing in convar list");
+			CreateTimer(10.0, CVars_PeriodicTimer, client, 0);
+			return Action:4;
+		}
+		f_hCVar = g_hCurrentQuery[client];
+		if (GetArrayCell(f_hCVar, 8, 0, false))
+		{
+			g_hPeriodicTimer[client] = CreateTimer(0.1, CVars_PeriodicTimer, client, 0);
+		}
+		else
+		{
+			GetArrayString(f_hCVar, 0, f_sName, 64);
+			QueryClientConVar(client, f_sName, CVars_QueryCallback, client);
+			g_hReplyTimer[client] = CreateTimer(15.0, CVars_ReplyTimer, GetClientUserId(client), 0);
+		}
+	}
+	return Action:4;
+}
+
+public Action:CVars_ReplicateTimer(Handle:timer, any:f_hConVar)
+{
+	decl String:f_sName[64];
+	GetConVarName(f_hConVar, f_sName, 64);
+	new var1;
+	if (g_bCVarCVarsEnabled && g_bSvCVarChtForce && StrEqual(f_sName, "sv_cheats", true) && GetConVarInt(f_hConVar))
+	{
+		SetConVarInt(f_hConVar, 0, false, false);
+	}
+	CVars_ReplicateConVar(f_hConVar);
+	return Action:4;
+}
+
+public Action:CVars_ReplicateCheck(Handle:timer, any:f_hIndex)
+{
+	SetArrayCell(f_hIndex, 8, any:0, 0, false);
+	return Action:4;
+}
+
+public CVars_QueryCallback(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[])
+{
+	if (!IsClientConnected(client))
+	{
+		return 0;
+	}
+	decl String:f_sCVarName[64];
+	decl Handle:f_hConVar;
+	decl Handle:f_hTemp;
+	decl String:f_sName[32];
+	decl String:f_sAuthID[64];
+	decl f_iCompType;
+	decl f_iAction;
+	decl String:f_sValue[64];
+	decl Float:f_fValue2;
+	decl String:f_sAlternative[128];
+	decl f_iSize;
+	decl bool:f_bContinue;
+	GetClientName(client, f_sName, 32);
+	GetClientAuthString(client, f_sAuthID, 64);
+	if (g_hPeriodicTimer[client])
+	{
+		f_bContinue = false;
+	}
+	else
+	{
+		f_bContinue = true;
+	}
+	f_hConVar = g_hCurrentQuery[client];
+	new var1;
+	if (f_hConVar && !GetTrieValue(g_hCVarIndex, cvarName, f_hConVar))
+	{
+		if (!g_hPeriodicTimer[client])
+		{
+			g_hPeriodicTimer[client] = CreateTimer(GetRandomFloat(0.5, 2.0), CVars_PeriodicTimer, client, 0);
+		}
+		return 0;
+	}
+	GetArrayString(f_hConVar, 0, f_sCVarName, 64);
+	if (!StrEqual(cvarName, f_sCVarName, true))
+	{
+		if (!GetTrieValue(g_hCVarIndex, cvarName, f_hConVar))
+		{
+			KAC_LogAction(client, "was kicked for a corrupted return with convar name \"%s\" (expecting \"%s\") with value \"%s\".", cvarName, f_sCVarName, cvarValue);
+			KickClient(client, "%t", "KAC_ClientCorrupt");
+			return 0;
+		}
+		f_bContinue = false;
+		GetArrayString(f_hConVar, 0, f_sCVarName, 64);
+	}
+	f_iCompType = GetArrayCell(f_hConVar, 1, 0, false);
+	f_iAction = GetArrayCell(f_hConVar, 3, 0, false);
+	if (f_bContinue)
+	{
+		f_hTemp = g_hReplyTimer[client];
+		g_hCurrentQuery[client] = 0;
+		if (f_hTemp)
+		{
+			g_hReplyTimer[client] = 0;
+			CloseHandle(f_hTemp);
+			g_iRetryAttempts[client] = 0;
+		}
+	}
+	if (f_iCompType == 5)
+	{
+		new var2;
+		if (result != ConVarQueryResult:1 && KAC_CheatDetected(client))
+		{
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 1:
+				{
+					KAC_PrintAdminNotice("{green}%t", "KAC_HasPlugin", f_sName, f_sAuthID, f_sCVarName);
+				}
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_HasPlugin", f_sName, f_sAuthID, f_sCVarName);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasPlugin", f_sName, f_sAuthID, f_sCVarName);
+				}
+				default:
+				{
+				}
+			}
+			switch (f_iAction)
+			{
+				case 1:
+				{
+					GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+					ShowMOTDPanel(client, "", f_sAlternative, 1);
+				}
+				case 2:
+				{
+					PrintToChatAll("%t", "KAC_Muted", f_sName);
+					ServerCommand("sm_mute #%d", GetClientUserId(client));
+				}
+				case 3:
+				{
+					KAC_LogAction(client, "was kicked for returning with plugin convar \"%s\" (value \"%s\", return %s).", cvarName, cvarValue, g_sQueryResult[result]);
+					KickClient(client, "%t", "KAC_RemovePlugins");
+					return 0;
+				}
+				case 4:
+				{
+					KAC_LogAction(client, "has convar \"%s\" (value \"%s\", return %s) when it shouldn't exist.", cvarName, cvarValue, g_sQueryResult[result]);
+					KAC_Ban(client, "ConVar %s violation", cvarName);
+					return 0;
+				}
+				default:
+				{
+				}
+			}
+		}
+		if (f_bContinue)
+		{
+			g_hPeriodicTimer[client] = CreateTimer(GetRandomFloat(1.0, 3.0), CVars_PeriodicTimer, client, 0);
+		}
+		return 0;
+	}
+	if (result)
+	{
+		KAC_LogAction(client, "returned query result \"%s\" (expected Okay) on convar \"%s\" (value \"%s\").", g_sQueryResult[result], cvarName, cvarValue);
+		KAC_Ban(client, "ConVar %s violation (bad query result)", cvarName);
+		return 0;
+	}
+	if (GetArrayCell(f_hConVar, 8, 0, false))
+	{
+		g_hPeriodicTimer[client] = CreateTimer(GetRandomFloat(1.0, 3.0), CVars_PeriodicTimer, client, 0);
+		return 0;
+	}
+	f_hTemp = GetArrayCell(f_hConVar, 2, 0, false);
+	new var3;
+	if (f_hTemp && f_iCompType)
+	{
+		GetArrayString(f_hConVar, 4, f_sValue, 64);
+	}
+	else
+	{
+		GetConVarString(f_hTemp, f_sValue, 64);
+	}
+	if (f_iCompType == 3)
+	{
+		f_fValue2 = GetArrayCell(f_hConVar, 5, 0, false);
+	}
+	if (f_iCompType != 4)
+	{
+		f_iSize = strlen(cvarValue);
+		new i;
+		while (i < f_iSize)
+		{
+			new var4;
+			if (!IsCharNumeric(cvarValue[i]) && cvarValue[i] != '.')
+			{
+				KAC_LogAction(client, "was kicked for returning a corrupted value on %s (%s), value set at \"%s\" (expected \"%s\").", f_sCVarName, cvarName, cvarValue, f_sValue);
+				KickClient(client, "%t", "KAC_ClientCorrupt");
+				return 0;
+			}
+			i++;
+		}
+	}
+	switch (f_iCompType)
+	{
+		case 0:
+		{
+			new var10;
+			if (StringToFloat(f_sValue) != StringToFloat(cvarValue) && KAC_CheatDetected(client))
+			{
+				new player_team = GetClientTeam(client);
+				switch (player_team)
+				{
+					case 1:
+					{
+						KAC_PrintAdminNotice("{green}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 2:
+					{
+						KAC_PrintAdminNotice("{red}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 3:
+					{
+						KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					default:
+					{
+					}
+				}
+				switch (f_iAction)
+				{
+					case 1:
+					{
+						GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+						ShowMOTDPanel(client, "", f_sAlternative, 1);
+					}
+					case 2:
+					{
+						PrintToChatAll("%t", "KAC_Muted", f_sName);
+						ServerCommand("sm_mute #%d", GetClientUserId(client));
+					}
+					case 3:
+					{
+						KAC_LogAction(client, "was kicked for returning with convar \"%s\" set to value \"%s\" when it should be \"%s\".", cvarName, cvarValue, f_sValue);
+						KickClient(client, "%t", "KAC_ShouldEqual", cvarName, f_sValue, cvarValue);
+						return 0;
+					}
+					case 4:
+					{
+						KAC_LogAction(client, "has convar \"%s\" set to value \"%s\" (should be \"%s\") when it should equal.", cvarName, cvarValue, f_sValue);
+						KAC_Ban(client, "ConVar %s violation", cvarName);
+						return 0;
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 1:
+		{
+			new var9;
+			if (StringToFloat(f_sValue) > StringToFloat(cvarValue) && KAC_CheatDetected(client))
+			{
+				new player_team = GetClientTeam(client);
+				switch (player_team)
+				{
+					case 1:
+					{
+						KAC_PrintAdminNotice("{green}%t", "KAC_HasNotGreater", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 2:
+					{
+						KAC_PrintAdminNotice("{red}%t", "KAC_HasNotGreater", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 3:
+					{
+						KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasNotGreater", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					default:
+					{
+					}
+				}
+				switch (f_iAction)
+				{
+					case 1:
+					{
+						GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+						ShowMOTDPanel(client, "", f_sAlternative, 1);
+					}
+					case 2:
+					{
+						PrintToChatAll("%t", "KAC_Muted", f_sName);
+						ServerCommand("sm_mute #%d", GetClientUserId(client));
+					}
+					case 3:
+					{
+						KAC_LogAction(client, "was kicked for returning with convar \"%s\" set to value \"%s\" when it should be greater than or equal to \"%s\".", cvarName, cvarValue, f_sValue);
+						KickClient(client, "%t", "KAC_ShouldBeGreater", cvarName, f_sValue, cvarValue);
+						return 0;
+					}
+					case 4:
+					{
+						KAC_LogAction(client, "has convar \"%s\" set to value \"%s\" (should be \"%s\") when it should greater than or equal to.", cvarName, cvarValue, f_sValue);
+						KAC_Ban(client, "ConVar %s violation", cvarName);
+						return 0;
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 2:
+		{
+			new var8;
+			if (StringToFloat(f_sValue) < StringToFloat(cvarValue) && KAC_CheatDetected(client))
+			{
+				new player_team = GetClientTeam(client);
+				switch (player_team)
+				{
+					case 1:
+					{
+						KAC_PrintAdminNotice("{green}%t", "KAC_HasNotLess", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 2:
+					{
+						KAC_PrintAdminNotice("{red}%t", "KAC_HasNotLess", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 3:
+					{
+						KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasNotLess", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					default:
+					{
+					}
+				}
+				switch (f_iAction)
+				{
+					case 1:
+					{
+						GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+						ShowMOTDPanel(client, "", f_sAlternative, 1);
+					}
+					case 2:
+					{
+						PrintToChatAll("%t", "KAC_Muted", f_sName);
+						ServerCommand("sm_mute #%d", GetClientUserId(client));
+					}
+					case 3:
+					{
+						KAC_LogAction(client, "was kicked for returning with convar \"%s\" set to value \"%s\" when it should be less than or equal to \"%s\".", cvarName, cvarValue, f_sValue);
+						KickClient(client, "%t", "KAC_ShouldBeLess", cvarName, f_sValue, cvarValue);
+						return 0;
+					}
+					case 4:
+					{
+						KAC_LogAction(client, "has convar \"%s\" set to value \"%s\" (should be \"%s\") when it should be less than or equal to.", cvarName, cvarValue, f_sValue);
+						KAC_Ban(client, "ConVar %s violation", cvarName);
+						return 0;
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 3:
+		{
+			new var7;
+			if (StringToFloat(cvarValue) < StringToFloat(f_sValue) || (StringToFloat(cvarValue) > f_fValue2 && KAC_CheatDetected(client)))
+			{
+				new player_team = GetClientTeam(client);
+				switch (player_team)
+				{
+					case 1:
+					{
+						KAC_PrintAdminNotice("{green}%t", "KAC_HasNotBound", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue, f_fValue2);
+					}
+					case 2:
+					{
+						KAC_PrintAdminNotice("{red}%t", "KAC_HasNotBound", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue, f_fValue2);
+					}
+					case 3:
+					{
+						KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasNotBound", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue, f_fValue2);
+					}
+					default:
+					{
+					}
+				}
+				switch (f_iAction)
+				{
+					case 1:
+					{
+						GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+						ShowMOTDPanel(client, "", f_sAlternative, 1);
+					}
+					case 2:
+					{
+						PrintToChatAll("%t", "KAC_Muted", f_sName);
+						ServerCommand("sm_mute #%d", GetClientUserId(client));
+					}
+					case 3:
+					{
+						KAC_LogAction(client, "was kicked for returning with convar \"%s\" set to value \"%s\" when it should be between \"%s\" and \"%f\".", cvarName, cvarValue, f_sValue, f_fValue2);
+						KickClient(client, "%t", "KAC_ShouldBound", cvarName, f_sValue, f_fValue2, cvarValue);
+						return 0;
+					}
+					case 4:
+					{
+						KAC_LogAction(client, "has convar \"%s\" set to value \"%s\" when it should be between \"%s\" and \"%f\".", cvarName, cvarValue, f_sValue, f_fValue2);
+						KAC_Ban(client, "ConVar %s violation", cvarName);
+						return 0;
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 4:
+		{
+			new var5;
+			if (!StrEqual(f_sValue, cvarValue, true) && KAC_CheatDetected(client))
+			{
+				new player_team = GetClientTeam(client);
+				switch (player_team)
+				{
+					case 1:
+					{
+						KAC_PrintAdminNotice("{green}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 2:
+					{
+						KAC_PrintAdminNotice("{red}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					case 3:
+					{
+						KAC_PrintAdminNotice("{lightgreen}%t", "KAC_HasNotEqual", f_sName, f_sAuthID, f_sCVarName, cvarValue, f_sValue);
+					}
+					default:
+					{
+					}
+				}
+				switch (f_iAction)
+				{
+					case 1:
+					{
+						GetArrayString(f_hConVar, 6, f_sAlternative, 128);
+						ShowMOTDPanel(client, "", f_sAlternative, 1);
+					}
+					case 2:
+					{
+						PrintToChatAll("%t", "KAC_Muted", f_sName);
+						ServerCommand("sm_mute #%d", GetClientUserId(client));
+					}
+					case 3:
+					{
+						KAC_LogAction(client, "was kicked for returning with convar \"%s\" set to value \"%s\" when it should be \"%s\".", cvarName, cvarValue, f_sValue);
+						KickClient(client, "%t", "KAC_ShouldEqual", cvarName, f_sValue, cvarValue);
+						return 0;
+					}
+					case 4:
+					{
+						KAC_LogAction(client, "has convar \"%s\" set to value \"%s\" (should be \"%s\") when it should equal.", cvarName, cvarValue, f_sValue);
+						KAC_Ban(client, "ConVar %s violation", cvarName);
+						return 0;
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	if (f_bContinue)
+	{
+		g_hPeriodicTimer[client] = CreateTimer(GetRandomFloat(0.5, 2.0), CVars_PeriodicTimer, client, 0);
+	}
+	return 0;
+}
+
+public CVars_Replicate(Handle:convar, String:oldvalue[], String:newvalue[])
+{
+	decl String:f_sName[64];
+	decl Handle:f_hCVarIndex;
+	decl Handle:f_hTimer;
+	GetConVarName(convar, f_sName, 64);
+	if (GetTrieValue(g_hCVarIndex, f_sName, f_hCVarIndex))
+	{
+		f_hTimer = GetArrayCell(f_hCVarIndex, 8, 0, false);
+		if (f_hTimer)
+		{
+			CloseHandle(f_hTimer);
+		}
+		f_hTimer = CreateTimer(30.0, CVars_ReplicateCheck, f_hCVarIndex, 0);
+		SetArrayCell(f_hCVarIndex, 8, f_hTimer, 0, false);
+	}
+	CreateTimer(0.1, CVars_ReplicateTimer, convar, 0);
+	return 0;
+}
+
+bool:CVars_IsValidName(String:f_sName[])
+{
+	if (f_sName[0])
+	{
+		new len = strlen(f_sName);
+		new i;
+		while (i < len)
+		{
+			if (!IsValidConVarChar(f_sName[i]))
+			{
+				return false;
+			}
+			i++;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool:CVars_AddCVar(String:f_sName[], f_iComparisonType, f_iAction, String:f_sValue[], Float:f_fValue2, f_iImportance, String:f_sAlternative[])
+{
+	new Handle:f_hConVar;
+	new Handle:f_hArray;
+	new c;
+	do {
+		f_sName[c] = CharToLower(f_sName[c]);
+		c++;
+	} while (f_sName[c]);
+	f_hConVar = FindConVar(f_sName);
+	new var2;
+	if (f_hConVar && GetConVarFlags(f_hConVar) & 8192 && (f_iComparisonType && f_iComparisonType == 4))
+	{
+		f_iComparisonType = 0;
+	}
+	else
+	{
+		f_hConVar = MissingTAG:0;
+	}
+	if (GetTrieValue(g_hCVarIndex, f_sName, f_hArray))
+	{
+		SetArrayString(f_hArray, 0, f_sName);
+		SetArrayCell(f_hArray, 1, f_iComparisonType, 0, false);
+		SetArrayCell(f_hArray, 2, f_hConVar, 0, false);
+		SetArrayCell(f_hArray, 3, f_iAction, 0, false);
+		SetArrayString(f_hArray, 4, f_sValue);
+		SetArrayCell(f_hArray, 5, f_fValue2, 0, false);
+		SetArrayString(f_hArray, 6, f_sAlternative);
+	}
+	else
+	{
+		f_hArray = CreateArray(64, 0);
+		PushArrayString(f_hArray, f_sName);
+		PushArrayCell(f_hArray, f_iComparisonType);
+		PushArrayCell(f_hArray, f_hConVar);
+		PushArrayCell(f_hArray, f_iAction);
+		PushArrayString(f_hArray, f_sValue);
+		PushArrayCell(f_hArray, f_fValue2);
+		PushArrayString(f_hArray, f_sAlternative);
+		PushArrayCell(f_hArray, f_iImportance);
+		PushArrayCell(f_hArray, any:0);
+		if (!SetTrieValue(g_hCVarIndex, f_sName, f_hArray, true))
+		{
+			CloseHandle(f_hArray);
+			KAC_Log("Unable to add convar to Trie link list %s.", f_sName);
+			return false;
+		}
+		PushArrayCell(g_hCVars, f_hArray);
+		g_iSize = GetArraySize(g_hCVars);
+		new var3;
+		if (f_iImportance && g_bMapStarted)
+		{
+			CVars_CreateNewOrder();
+		}
+	}
+	return true;
+}
+
+bool:CVars_RemoveCVar(String:f_sName[])
+{
+	decl Handle:f_hConVar;
+	decl f_iIndex;
+	if (!GetTrieValue(g_hCVarIndex, f_sName, f_hConVar))
+	{
+		return false;
+	}
+	f_iIndex = FindValueInArray(g_hCVars, f_hConVar);
+	if (f_iIndex == -1)
+	{
+		return false;
+	}
+	new i;
+	while (i <= MaxClients)
+	{
+		if (f_hConVar == g_hCurrentQuery[i])
+		{
+			g_hCurrentQuery[i] = 0;
+		}
+		i++;
+	}
+	RemoveFromArray(g_hCVars, f_iIndex);
+	RemoveFromTrie(g_hCVarIndex, f_sName);
+	CloseHandle(f_hConVar);
+	g_iSize = GetArraySize(g_hCVars);
+	return true;
+}
+
+CVars_CreateNewOrder()
+{
+	new f_hOrder[g_iSize];
+	new f_iCurrent;
+	new Handle:f_hPHigh;
+	new Handle:f_hPMedium;
+	new Handle:f_hPNormal;
+	new Handle:f_hCurrent;
+	new f_iHigh;
+	new f_iMedium;
+	new f_iNormal;
+	new f_iTemp;
+	f_hPHigh = CreateArray(64, 0);
+	f_hPMedium = CreateArray(64, 0);
+	f_hPNormal = CreateArray(64, 0);
+	new i;
+	while (i < g_iSize)
+	{
+		f_hCurrent = GetArrayCell(g_hCVars, i, 0, false);
+		f_iTemp = GetArrayCell(f_hCurrent, 7, 0, false);
+		if (f_iTemp)
+		{
+			if (f_iTemp == 1)
+			{
+				PushArrayCell(f_hPMedium, f_hCurrent);
+			}
+			if (f_iTemp == 3)
+			{
+				PushArrayCell(f_hPHigh, f_hCurrent);
+			}
+		}
+		else
+		{
+			PushArrayCell(f_hPNormal, f_hCurrent);
+		}
+		i++;
+	}
+	f_iHigh = GetArraySize(f_hPHigh) + -1;
+	f_iMedium = GetArraySize(f_hPMedium) + -1;
+	f_iNormal = GetArraySize(f_hPNormal) + -1;
+	while (f_iHigh > -1)
+	{
+		f_iTemp = GetRandomInt(0, f_iHigh);
+		f_iCurrent++;
+		f_hOrder[f_iCurrent] = GetArrayCell(f_hPHigh, f_iTemp, 0, false);
+		RemoveFromArray(f_hPHigh, f_iTemp);
+		f_iHigh--;
+	}
+	while (f_iMedium > -1)
+	{
+		f_iTemp = GetRandomInt(0, f_iMedium);
+		f_iCurrent++;
+		f_hOrder[f_iCurrent] = GetArrayCell(f_hPMedium, f_iTemp, 0, false);
+		RemoveFromArray(f_hPMedium, f_iTemp);
+		f_iMedium--;
+	}
+	while (f_iNormal > -1)
+	{
+		f_iTemp = GetRandomInt(0, f_iNormal);
+		f_iCurrent++;
+		f_hOrder[f_iCurrent] = GetArrayCell(f_hPNormal, f_iTemp, 0, false);
+		RemoveFromArray(f_hPNormal, f_iTemp);
+		f_iNormal--;
+	}
+	ClearArray(g_hCVars);
+	new i;
+	while (i < g_iSize)
+	{
+		PushArrayCell(g_hCVars, f_hOrder[i]);
+		i++;
+	}
+	CloseHandle(f_hPHigh);
+	CloseHandle(f_hPMedium);
+	CloseHandle(f_hPNormal);
+	return 0;
+}
+
+CVars_ReplicateConVar(Handle:f_hConVar)
+{
+	decl String:f_sValue[64];
+	GetConVarString(f_hConVar, f_sValue, 64);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			SendConVarValue(i, f_hConVar, f_sValue);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public Rcon_OnPluginStart()
+{
+	g_hCvarRconPass = FindConVar("rcon_password");
+	HookConVarChange(g_hCvarRconPass, OnRconPassChanged);
+	new Handle:hConVar = FindConVar("sv_rcon_minfailuretime");
+	if (hConVar)
+	{
+		SetConVarBounds(hConVar, ConVarBounds:0, true, 1.0);
+		SetConVarInt(hConVar, 1, false, false);
+	}
+	hConVar = FindConVar("sv_rcon_minfailures");
+	if (hConVar)
+	{
+		SetConVarBounds(hConVar, ConVarBounds:0, true, 9999999.0);
+		SetConVarBounds(hConVar, ConVarBounds:1, true, 9999999.0);
+		SetConVarInt(hConVar, 9999999, false, false);
+	}
+	hConVar = FindConVar("sv_rcon_maxfailures");
+	if (hConVar)
+	{
+		SetConVarBounds(hConVar, ConVarBounds:0, true, 9999999.0);
+		SetConVarBounds(hConVar, ConVarBounds:1, true, 9999999.0);
+		SetConVarInt(hConVar, 9999999, false, false);
+	}
+	return 0;
+}
+
+public Rcon_OnConfigsExecuted()
+{
+	if (!g_bRconLocked)
+	{
+		GetConVarString(g_hCvarRconPass, g_sRconRealPass, 128);
+		g_bRconLocked = true;
+	}
+	return 0;
+}
+
+public OnRconPassChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new var1;
+	if (g_bRconLocked && !StrEqual(newValue, g_sRconRealPass, true))
+	{
+		KAC_Log("Rcon password changed to \"%s\". Reverting back to original config value.", newValue);
+		SetConVarString(g_hCvarRconPass, g_sRconRealPass, false, false);
+	}
+	return 0;
+}
+
+public Eye_OnPluginStart()
+{
+	g_hCVarEyeType = CreateConVar("kac_eye", "2", "�������� � ���� ������ ������. (0 - ���������.), (1 - ������������� ��������������.), (2 - ������ �������������.)\nEnable the eye detection routine. (0 = Disabled, 1 = Warn Admins, 2 = Ban).", 262144, true, 0.0, true, 2.0);
+	Eye_OnSettingsChanged(g_hCVarEyeType, "", "");
+	HookConVarChange(g_hCVarEyeType, Eye_OnSettingsChanged);
+	return 0;
+}
+
+public Eye_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_iEyeBlock = GetConVarInt(convar);
+	new bool:bNewValueEye = GetConVarBool(convar);
+	new var1;
+	if (bNewValueEye && !g_bEnabledEye)
+	{
+		g_bEnabledEye = true;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueEye && g_bEnabledEye)
+		{
+			g_bEnabledEye = false;
+		}
+	}
+	return 0;
+}
+
+public Eye_OnClientDisconnect_Post(client)
+{
+	g_fDetectedTime[client] = 0;
+	return 0;
+}
+
+public Action:Eye_OnPlayerRunCmd(client, Float:angles[3])
+{
+	if (!g_bEnabledEye)
+	{
+		return Action:0;
+	}
+	if (angles[0] > 180.0)
+	{
+		new var4 = angles;
+		var4[0] = var4[0] - 360.0;
+	}
+	if (angles[2] > 180.0)
+	{
+		angles[2] -= 360.0;
+	}
+	new var1;
+	if (angles[0] > -90.0 && angles[0] < 90.0 && angles[2] > -90.0 && angles[2] < 90.0)
+	{
+		return Action:0;
+	}
+	new var2;
+	if (IsFakeClient(client) || !IsPlayerAlive(client))
+	{
+		return Action:0;
+	}
+	new flags = GetEntityFlags(client);
+	new var3;
+	if (flags & 32 || flags & 64)
+	{
+		return Action:0;
+	}
+	Eyetest_Detected(client, angles);
+	return Action:0;
+}
+
+Eyetest_Detected(client, Float:angles[3])
+{
+	if (GetGameTime() > g_fDetectedTime[client])
+	{
+		g_fDetectedTime[client] = GetGameTime() + 30.0;
+		decl String:sAuthID[32];
+		new var1;
+		if (GetClientAuthString(client, sAuthID, 32) && !StrEqual(sAuthID, "BOT", true) && KAC_CheatDetected(client))
+		{
+			decl String:sName[32];
+			GetClientName(client, sName, 32);
+			new player_team = GetClientTeam(client);
+			switch (player_team)
+			{
+				case 2:
+				{
+					KAC_PrintAdminNotice("{red}%t", "KAC_EyeDetected", sName);
+				}
+				case 3:
+				{
+					KAC_PrintAdminNotice("{lightgreen}%t", "KAC_EyeDetected", sName);
+				}
+				default:
+				{
+				}
+			}
+			switch (g_iEyeBlock)
+			{
+				case 1:
+				{
+					KAC_LogAction(client, "is suspected of cheating with their eye angles. Eye Angles: %.0f %.0f %.0f", angles, angles[1], angles[2]);
+				}
+				case 2:
+				{
+					KAC_LogAction(client, "was banned for cheating with their eye angles. Eye Angles: %.0f %.0f %.0f", angles, angles[1], angles[2]);
+					KAC_Ban(client, "Eye Angles Violation");
+				}
+				default:
+				{
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+public SpinHack_OnPluginStart()
+{
+	g_hCVarSpinHack = CreateConVar("kac_spinhack_detected", "1", "SpinHack detection module. (0 = Disabled, 1 = Warn Admins, 2 = Kick, 3 = Ban)", 262144, true, 0.0, true, 3.0);
+	SpinHack_OnSettingsChanged(g_hCVarSpinHack, "", "");
+	HookConVarChange(g_hCVarSpinHack, SpinHack_OnSettingsChanged);
+	return 0;
+}
+
+public SpinHack_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:g_bSpinHackMode = GetConVarBool(convar);
+	g_iSpinHackMode = GetConVarInt(convar);
+	new var1;
+	if (g_bSpinHackMode && !g_bSpinHackEnabled)
+	{
+		SpinHack_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!g_bSpinHackMode && g_bSpinHackEnabled)
+		{
+			SpinHack_Disable();
+		}
+	}
+	return 0;
+}
+
+public SpinHack_Enable()
+{
+	g_bSpinHackEnabled = true;
+	g_hSpinLoop = CreateTimer(1.0, Timer_CheckSpins, any:0, 1);
+	return 0;
+}
+
+public SpinHack_Disable()
+{
+	g_bSpinHackEnabled = false;
+	if (g_hSpinLoop)
+	{
+		KillTimer(g_hSpinLoop, false);
+		g_hSpinLoop = MissingTAG:0;
+	}
+	return 0;
+}
+
+public SpinHack_OnClientDisconnect(client)
+{
+	g_iSpinCount[client] = 0;
+	g_fSensitivity[client] = 0;
+	return 0;
+}
+
+public Action:Timer_CheckSpins(Handle:timer)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (!IsClientInGame(i) || IsFakeClient(i))
+		{
+		}
+		else
+		{
+			new var2;
+			if (g_fAngleDiff[i] > 2.018E-42 && IsPlayerAlive(i))
+			{
+				g_iSpinCount[i]++;
+				if (g_iSpinCount[i] == 1)
+				{
+					QueryClientConVar(i, "sensitivity", Query_MouseCheck, GetClientUserId(i));
+				}
+				new var3;
+				if (g_iSpinCount[i] == 15 && g_fSensitivity[i] <= 8.4E-45)
+				{
+					Spinhack_Detected(i);
+				}
+			}
+			else
+			{
+				g_iSpinCount[i] = 0;
+			}
+			g_fAngleDiff[i] = 0;
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public Query_MouseCheck(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[], any:userid)
+{
+	new var1;
+	if (result && client == GetClientOfUserId(userid))
+	{
+		g_fSensitivity[client] = StringToFloat(cvarValue);
+	}
+	return 0;
+}
+
+public Action:SpinHack_OnPlayerRunCmd(client, &buttons, Float:angles[3])
+{
+	new var2;
+	if (!g_bSpinHackEnabled || (!IsClientInGame(client) && !IsPlayerAlive(client)))
+	{
+		return Action:0;
+	}
+	new var3;
+	if (buttons & 128 || buttons & 256)
+	{
+		g_fAngleBuffer = FloatAbs(angles[1] - g_fPrevAngle[client]);
+		new var5 = g_fAngleDiff[client];
+		new var4;
+		if (g_fAngleBuffer > 2.52E-43)
+		{
+			var4 = g_fAngleBuffer - 360 * -1;
+		}
+		else
+		{
+			var4 = g_fAngleBuffer;
+		}
+		var5 = var5[var4];
+		g_fPrevAngle[client] = angles[1];
+	}
+	return Action:0;
+}
+
+Spinhack_Detected(client)
+{
+	if (!(KAC_CheatDetected(client)))
+	{
+		decl String:sName[32];
+		GetClientName(client, sName, 32);
+		new player_team = GetClientTeam(client);
+		switch (player_team)
+		{
+			case 2:
+			{
+				KAC_PrintAdminNotice("{red}%t", "KAC_SpinhackDetected", sName);
+			}
+			case 3:
+			{
+				KAC_PrintAdminNotice("{lightgreen}%t", "KAC_SpinhackDetected", sName);
+			}
+			default:
+			{
+			}
+		}
+		switch (g_iSpinHackMode)
+		{
+			case 1:
+			{
+				KAC_LogAction(client, "is suspected of using a spinhack.");
+			}
+			case 2:
+			{
+				KAC_LogAction(client, "was kicked for using a spinhack.");
+				KickClient(client, "%t", "KAC_SpinhackDetectedKickClient");
+			}
+			case 3:
+			{
+				KAC_LogAction(client, "was banned for using a spinhack.");
+				KAC_Ban(client, "SpinHack Detected");
+			}
+			default:
+			{
+			}
+		}
+	}
+	return 0;
+}
+
+public AntiReJoin_OnPluginStart()
+{
+	g_hCVarAntiRespawn = CreateConVar("kac_antirejoin", "1", "������ �� ��� ������ ����������� ����� ��������������� � �������.\nThe module does not allow dead to revive after reconnection to a server.", 262144, true, 0.0, true, 1.0);
+	AntiReJoin_OnSettingsChanged(g_hCVarAntiRespawn, "", "");
+	HookConVarChange(g_hCVarAntiRespawn, AntiReJoin_OnSettingsChanged);
+	return 0;
+}
+
+public AntiReJoin_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueAntiRespawn = GetConVarBool(convar);
+	new var1;
+	if (bNewValueAntiRespawn && !g_bAntiRespawn)
+	{
+		AntiReJoin_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueAntiRespawn && g_bAntiRespawn)
+		{
+			AntiReJoin_Disable();
+		}
+	}
+	return 0;
+}
+
+public AntiReJoin_Enable()
+{
+	g_bAntiRespawn = true;
+	g_hClientSpawned = CreateTrie();
+	g_hCvarRestartGame = FindConVar("mp_restartgame");
+	HookConVarChange(g_hCvarRestartGame, AntiReJoin_Hook_RestartGame);
+	AddCommandListener(Command_JoinClass, "joinclass");
+	HookEvent("player_spawn", AntiReJoin_EventPlayerSpawn, EventHookMode:1);
+	HookEvent("player_death", AntiReJoin_EventPlayerDeath, EventHookMode:1);
+	HookEvent("round_start", AntiReJoin_EventRoundStart, EventHookMode:1);
+	HookEvent("round_end", AntiReJoin_EventRoundEnd, EventHookMode:1);
+	return 0;
+}
+
+public AntiReJoin_Disable()
+{
+	g_bAntiRespawn = false;
+	if (g_hClientSpawned)
+	{
+		CloseHandle(g_hClientSpawned);
+		g_hClientSpawned = MissingTAG:0;
+	}
+	UnhookConVarChange(g_hCvarRestartGame, AntiReJoin_Hook_RestartGame);
+	g_hCvarRestartGame = MissingTAG:0;
+	RemoveCommandListener(Command_JoinClass, "joinclass");
+	UnhookEvent("player_spawn", AntiReJoin_EventPlayerSpawn, EventHookMode:1);
+	UnhookEvent("player_death", AntiReJoin_EventPlayerDeath, EventHookMode:1);
+	UnhookEvent("round_start", AntiReJoin_EventRoundStart, EventHookMode:1);
+	UnhookEvent("round_end", AntiReJoin_EventRoundEnd, EventHookMode:1);
+	return 0;
+}
+
+public AntiReJoin_OnMapEnd()
+{
+	g_bClientMapStarted = false;
+	if (g_bAntiRespawn)
+	{
+		ClearData();
+	}
+	return 0;
+}
+
+public Action:Command_JoinClass(client, String:command[], args)
+{
+	new var1;
+	if (!g_bClientMapStarted || !client || IsFakeClient(client) || GetClientTeam(client) < 2)
+	{
+		return Action:0;
+	}
+	decl String:f_sAuthID[64];
+	decl String:f_sTemp[64];
+	new f_iTemp;
+	if (!GetClientAuthString(client, f_sAuthID, 64))
+	{
+		return Action:0;
+	}
+	if (!GetTrieValue(g_hClientSpawned, f_sAuthID, f_iTemp))
+	{
+		return Action:0;
+	}
+	GetCmdArgString(f_sTemp, 64);
+	g_iClientClass[client] = StringToInt(f_sTemp, 10);
+	if (0 > g_iClientClass[client])
+	{
+		g_iClientClass[client] = 0;
+	}
+	FakeClientCommandEx(client, "spec_mode");
+	return Action:3;
+}
+
+public Action:AntiReJoin_EventPlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new String:f_sAuthID[64];
+	new var1;
+	if (!client || GetClientTeam(client) < 2 || !GetClientAuthString(client, f_sAuthID, 64))
+	{
+		return Action:0;
+	}
+	RemoveFromTrie(g_hClientSpawned, f_sAuthID);
+	return Action:0;
+}
+
+public Action:AntiReJoin_EventPlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new String:f_sAuthID[64];
+	new var1;
+	if (!client || !GetClientAuthString(client, f_sAuthID, 64))
+	{
+		return Action:0;
+	}
+	SetTrieValue(g_hClientSpawned, f_sAuthID, any:1, true);
+	return Action:0;
+}
+
+public Action:AntiReJoin_EventRoundStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	g_bClientMapStarted = true;
+	ClearData();
+	return Action:0;
+}
+
+public Action:AntiReJoin_EventRoundEnd(Handle:event, String:name[], bool:dontBroadcast)
+{
+	ClearData();
+	return Action:0;
+}
+
+public AntiReJoin_Hook_RestartGame(Handle:convar, String:oldValue[], String:newValue[])
+{
+	if (0 < StringToInt(newValue, 10))
+	{
+		ClearData();
+	}
+	return 0;
+}
+
+ClearData()
+{
+	ClearTrie(g_hClientSpawned);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && g_iClientClass[i] != -1)
+		{
+			FakeClientCommandEx(i, "joinclass %d", g_iClientClass[i]);
+			g_iClientClass[i] = -1;
+		}
+		i++;
+	}
+	return 0;
+}
+
+public AntiFlash_OnPluginStart()
+{
+	g_hCVarAntiFlash = CreateConVar("kac_antiflash", "1", "����������� No-Flash ����, ����� ����� ���������.\nPrevent No-Flash cheats from working when a player is fully blind", 262144, true, 0.0, true, 1.0);
+	AntiFlash_OnSettingsChanged(g_hCVarAntiFlash, "", "");
+	HookConVarChange(g_hCVarAntiFlash, AntiFlash_OnSettingsChanged);
+	return 0;
+}
+
+public AntiFlash_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValue = GetConVarBool(convar);
+	new var1;
+	if (bNewValue && !g_bFlashEnabled)
+	{
+		if (!g_bSDKHooksLoaded)
+		{
+			LogError("SDKHooks is not running. Cannot enable CS:S Anti-Flash.");
+			SetConVarBool(convar, false, false, false);
+			return 0;
+		}
+		AntiFlash_UnloadNoTeamFlashPlugin();
+		AntiFlash_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValue && g_bFlashEnabled)
+		{
+			AntiFlash_Disable();
+			AntiFlash_LoadNoTeamFlashPlugin();
+		}
+	}
+	return 0;
+}
+
+AntiFlash_Enable()
+{
+	g_bFlashEnabled = true;
+	HookEvent("player_blind", AntiFlash_EventPlayerBlind, EventHookMode:1);
+	if ((g_iFlashDuration = FindSendPropOffs("CCSPlayer", "m_flFlashDuration")) == -1)
+	{
+		SetFailState("Failed to find CCSPlayer::m_flFlashDuration offset");
+	}
+	if ((g_iFlashAlpha = FindSendPropOffs("CCSPlayer", "m_flFlashMaxAlpha")) == -1)
+	{
+		SetFailState("Failed to find CCSPlayer::m_flFlashMaxAlpha offset");
+	}
+	return 0;
+}
+
+AntiFlash_Disable()
+{
+	g_bFlashEnabled = false;
+	UnhookEvent("player_blind", AntiFlash_EventPlayerBlind, EventHookMode:1);
+	g_iFlashDuration = -1;
+	g_iFlashAlpha = -1;
+	return 0;
+}
+
+public AntiFlash_OnClientDisconnect(client)
+{
+	g_fFlashedUntil[client] = 0;
+	return 0;
+}
+
+public AntiFlash_EventPlayerBlind(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (1 <= client <= MaxClients && !IsFakeClient(client) && IsPlayerAlive(client))
+	{
+		new Float:alpha = GetEntDataFloat(client, g_iFlashAlpha);
+		if (alpha < 255.0)
+		{
+			return 0;
+		}
+		new Float:duration = GetEntDataFloat(client, g_iFlashDuration);
+		if (duration > 2.5)
+		{
+			g_fFlashedUntil[client] = GetGameTime() + duration - 2.5;
+		}
+		else
+		{
+			g_fFlashedUntil[client] = GetGameTime() + duration * 0.1;
+		}
+		if (!g_bFlashHooked)
+		{
+			AntiFlash_HookAll();
+		}
+		CreateTimer(duration, Timer_FlashEnded, any:0, 0);
+	}
+	return 0;
+}
+
+public Action:Timer_FlashEnded(Handle:timer)
+{
+	new Float:fGameTime = GetGameTime();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (g_fFlashedUntil[i] > fGameTime)
+		{
+			return Action:4;
+		}
+		i++;
+	}
+	if (g_bFlashHooked)
+	{
+		AntiFlash_UnhookAll();
+	}
+	return Action:4;
+}
+
+public Action:AntiFlash_SetTransmit(entity, client)
+{
+	new var1;
+	if (!1 <= client <= MaxClients || client != entity)
+	{
+		return Action:0;
+	}
+	new var2;
+	if (g_fFlashedUntil[client] && g_fFlashedUntil[client] > GetGameTime())
+	{
+		return Action:3;
+	}
+	g_fFlashedUntil[client] = 0;
+	return Action:0;
+}
+
+AntiFlash_HookAll()
+{
+	g_bFlashHooked = true;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SDKHook(i, SDKHookType:6, AntiFlash_SetTransmit);
+		}
+		i++;
+	}
+	return 0;
+}
+
+AntiFlash_UnhookAll()
+{
+	g_bFlashHooked = false;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SDKUnhook(i, SDKHookType:6, AntiFlash_SetTransmit);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public WallHack_OnPluginStart()
+{
+	g_hCvarWallhack = CreateConVar("kac_antiwallhack", "1", "�������� Anti-Wallhack. ��� �������� ������������� ������������ ���������� ������ �������.\nEnable Anti-Wallhack. This will increase your server's CPU usage.", 262144, true, 0.0, true, 1.0);
+	WallHack_OnSettingsChanged(g_hCvarWallhack, "", "");
+	HookConVarChange(g_hCvarWallhack, WallHack_OnSettingsChanged);
+	g_hTimeToTick = CreateConVar("kac_antiwallhack_ticktime", "0.75", "��������� Tick Anti-WallHack.\nTick Time Anti-WallHack", 262144, true, 0.1, true, 2.0);
+	WallHackTimeToTick_OnSettingsChanged(g_hTimeToTick, "", "");
+	HookConVarChange(g_hTimeToTick, WallHackTimeToTick_OnSettingsChanged);
+	new Handle:hCvar;
+	new iTickRate = RoundToFloor(1.0 / GetTickInterval());
+	if ((hCvar = FindConVar("sv_minupdaterate")))
+	{
+		SetConVarInt(hCvar, iTickRate, false, false);
+	}
+	if ((hCvar = FindConVar("sv_maxupdaterate")))
+	{
+		SetConVarInt(hCvar, iTickRate, false, false);
+	}
+	if ((hCvar = FindConVar("sv_client_min_interp_ratio")))
+	{
+		SetConVarInt(hCvar, 0, false, false);
+	}
+	if ((hCvar = FindConVar("sv_client_max_interp_ratio")))
+	{
+		SetConVarInt(hCvar, 1, false, false);
+	}
+	HookEvent("player_spawn", Event_PlayerStateChanged, EventHookMode:1);
+	HookEvent("player_death", Event_PlayerStateChanged, EventHookMode:1);
+	HookEvent("player_team", Event_PlayerStateChanged, EventHookMode:1);
+	g_bIsMod = false;
+	new i;
+	while (i < 66)
+	{
+		new var1 = g_bIsVisible;
+		var1[0][var1][i] = true;
+		i++;
+	}
+	return 0;
+}
+
+public WallHack_OnClientPutInServer(client)
+{
+	if (g_bEnabled)
+	{
+		Wallhack_Hook(client);
+		Wallhack_UpdateClientCache(client);
+	}
+	return 0;
+}
+
+public WallHack_OnClientDisconnect(client)
+{
+	g_bProcess[client] = 0;
+	g_bIgnore[client] = 0;
+	return 0;
+}
+
+public Event_PlayerStateChanged(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (1 <= client <= MaxClients && IsClientInGame(client))
+	{
+		Wallhack_UpdateClientCache(client);
+	}
+	return 0;
+}
+
+Wallhack_UpdateClientCache(client)
+{
+	g_iTeam[client] = GetClientTeam(client);
+	g_bProcess[client] = IsPlayerAlive(client);
+	new var1;
+	g_bIgnore[client] = g_bIsMod && g_iTeam[client] != 2;
+	return 0;
+}
+
+public WallHack_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValue = GetConVarBool(convar);
+	new var1;
+	if (bNewValue && !g_bEnabled)
+	{
+		if (g_bSDKHooksLoaded)
+		{
+			Wallhack_Enable();
+		}
+		LogError("SDKHooks is not running. Cannot enable Anti-WallHack.");
+		SetConVarInt(convar, 0, false, false);
+		return 0;
+	}
+	else
+	{
+		new var2;
+		if (!bNewValue && g_bEnabled)
+		{
+			Wallhack_Disable();
+		}
+	}
+	return 0;
+}
+
+public WallHackTimeToTick_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_iCacheTicks = RoundToNearest(GetConVarFloat(convar) / GetTickInterval());
+	return 0;
+}
+
+public Wallhack_Enable()
+{
+	g_bEnabled = true;
+	AddNormalSoundHook(Hook_NormalSound);
+	farESP_Enable();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			Wallhack_Hook(i);
+			Wallhack_UpdateClientCache(i);
+		}
+		i++;
+	}
+	new client = -1;
+	new i = MaxClients + 1;
+	while (i < 2048)
+	{
+		new var1;
+		if (IsValidEntity(i) && IsValidEdict(i))
+		{
+			client = GetEntPropEnt(i, PropType:1, "m_hOwnerEntity", 0);
+			if (1 <= client <= MaxClients)
+			{
+				g_iWeaponOwner[i] = client;
+				SDKHook(i, SDKHookType:6, Hook_SetTransmitWeapon);
+			}
+		}
+		i++;
+	}
+	return 0;
+}
+
+public Wallhack_Disable()
+{
+	g_bEnabled = false;
+	RemoveNormalSoundHook(Hook_NormalSound);
+	farESP_Disable();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			Wallhack_Unhook(i);
+		}
+		i++;
+	}
+	new i = MaxClients + 1;
+	while (i < 2048)
+	{
+		if (g_iWeaponOwner[i])
+		{
+			g_iWeaponOwner[i] = 0;
+			SDKUnhook(i, SDKHookType:6, Hook_SetTransmitWeapon);
+		}
+		i++;
+	}
+	return 0;
+}
+
+Wallhack_Hook(client)
+{
+	SDKHook(client, SDKHookType:6, Hook_SetTransmit);
+	SDKHook(client, SDKHookType:16, Hook_WeaponEquip);
+	SDKHook(client, SDKHookType:15, Hook_WeaponDrop);
+	return 0;
+}
+
+Wallhack_Unhook(client)
+{
+	SDKUnhook(client, SDKHookType:6, Hook_SetTransmit);
+	SDKUnhook(client, SDKHookType:16, Hook_WeaponEquip);
+	SDKUnhook(client, SDKHookType:15, Hook_WeaponDrop);
+	return 0;
+}
+
+public OnEntityCreated(entity, String:classname[])
+{
+	new var1;
+	if (entity > MaxClients && entity < 2048)
+	{
+		g_iWeaponOwner[entity] = 0;
+	}
+	return 0;
+}
+
+public OnEntityDestroyed(entity)
+{
+	new var1;
+	if (entity > MaxClients && entity < 2048)
+	{
+		g_iWeaponOwner[entity] = 0;
+	}
+	return 0;
+}
+
+public Action:Hook_WeaponEquip(client, weapon)
+{
+	new var1;
+	if (weapon > MaxClients && weapon < 2048)
+	{
+		g_iWeaponOwner[weapon] = client;
+		SDKHook(weapon, SDKHookType:6, Hook_SetTransmitWeapon);
+	}
+	return Action:0;
+}
+
+public Action:Hook_WeaponDrop(client, weapon)
+{
+	new var1;
+	if (weapon > MaxClients && weapon < 2048)
+	{
+		g_iWeaponOwner[weapon] = 0;
+		SDKUnhook(weapon, SDKHookType:6, Hook_SetTransmitWeapon);
+	}
+	return Action:0;
+}
+
+public Action:Hook_NormalSound(clients[64], &numClients, String:sample[256], &entity, &channel, &Float:volume, &level, &pitch, &flags)
+{
+	new var1;
+	if (!entity || !IsValidEdict(entity) || StrEqual(sample, "radio/terwin.wav", true) || StrEqual(sample, "radio/ctwin.wav", true))
+	{
+		return Action:0;
+	}
+	decl newClients[MaxClients];
+	new newTotal;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var5;
+		if (g_bProcess[i] && ((1 <= entity <= MaxClients && i != entity && !g_bIsVisible[entity][i]) || (entity > MaxClients && g_iWeaponOwner[entity] && i != g_iWeaponOwner[entity] && !g_bIsVisible[g_iWeaponOwner[entity]][i])))
+		{
+			newTotal++;
+			newClients[newTotal] = i;
+		}
+		i++;
+	}
+	if (newTotal)
+	{
+		decl Float:vOrigin[3];
+		GetEntPropVector(entity, PropType:1, "m_vecAbsOrigin", vOrigin, 0);
+		EmitSound(newClients, newTotal, sample, 0, channel, level, flags, volume, pitch, -1, vOrigin, NULL_VECTOR, true, 0.0);
+	}
+	return Action:0;
+}
+
+public OnGameFrame()
+{
+	g_iTickCount += 1;
+	if (!g_bEnabled)
+	{
+		return 0;
+	}
+	static iTotalThreads = 1;
+	new bool:bEvalThreads;
+	g_iCurrentThread += 1;
+	if (g_iCurrentThread > iTotalThreads)
+	{
+		g_iCurrentThread = 1;
+		bEvalThreads = true;
+	}
+	new var1;
+	if (g_iNumChecks && bEvalThreads)
+	{
+		iTotalThreads = RoundToCeil(float(g_iNumChecks) / 128.0);
+		g_fTickDelta = GetTickInterval() * float(iTotalThreads + -1);
+		new iThreadAssign = 1;
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			if (g_bProcess[i])
+			{
+				g_iThread[i] = iThreadAssign;
+				iThreadAssign++;
+				if (iThreadAssign > iTotalThreads)
+				{
+					iThreadAssign = 1;
+				}
+			}
+			i++;
+		}
+	}
+	g_iNumChecks = 0;
+	return 0;
+}
+
+public Action:Hook_SetTransmit(entity, client)
+{
+	static iCacheTick[66][66];
+	static iLastChecked[66][66];
+	if (g_iTickCount == iLastChecked[entity][client])
+	{
+		new var1;
+		if (g_bIsVisible[entity][client])
+		{
+			var1 = MissingTAG:0;
+		}
+		else
+		{
+			var1 = MissingTAG:3;
+		}
+		return var1;
+	}
+	iLastChecked[entity][client] = g_iTickCount;
+	new var2;
+	if (g_bProcess[client] && g_bProcess[entity] && g_iTeam[entity] != g_iTeam[client] && !g_bIgnore[client])
+	{
+		UpdateClientData(client);
+		UpdateClientData(entity);
+		if (g_iCurrentThread == g_iThread[client])
+		{
+			if (IsAbleToSee(entity, client))
+			{
+				g_bIsVisible[entity][client] = true;
+				iCacheTick[entity][client] = g_iCacheTicks + g_iTickCount;
+			}
+			if (iCacheTick[entity][client] < g_iTickCount)
+			{
+				g_bIsVisible[entity][client] = false;
+			}
+		}
+		g_iNumChecks += 1;
+	}
+	else
+	{
+		g_bIsVisible[entity][client] = true;
+	}
+	new var3;
+	if (g_bIsVisible[entity][client])
+	{
+		var3 = MissingTAG:0;
+	}
+	else
+	{
+		var3 = MissingTAG:3;
+	}
+	return var3;
+}
+
+public Action:Hook_SetTransmitWeapon(entity, client)
+{
+	new var1;
+	if (g_bIsVisible[g_iWeaponOwner[entity]][client])
+	{
+		var1 = MissingTAG:0;
+	}
+	else
+	{
+		var1 = MissingTAG:3;
+	}
+	return var1;
+}
+
+public Action:WallHack_OnPlayerRunCmd(client)
+{
+	static iLastReset[66];
+	if (g_iTickCount != iLastReset[client])
+	{
+		g_iCmdTickCount[client] = 0;
+		iLastReset[client] = g_iTickCount;
+	}
+	g_iCmdTickCount[client]++;
+	return Action:0;
+}
+
+UpdateClientData(client)
+{
+	static iLastCached[66];
+	if (g_iTickCount == iLastCached[client])
+	{
+		return 0;
+	}
+	GetClientMins(client, g_vMins[client]);
+	GetClientMaxs(client, g_vMaxs[client]);
+	GetClientAbsOrigin(client, g_vAbsCentre[client]);
+	GetClientEyePosition(client, g_vEyePos[client]);
+	GetClientEyeAngles(client, g_vEyeAngles[client]);
+	g_vMaxs[client][2] /= 2.0;
+	g_vMins[client][2] -= g_vMaxs[client][2];
+	new var1 = g_vAbsCentre[client][2];
+	var1 = var1[g_vMaxs[client][2]];
+	decl Float:vVelocity[3];
+	GetClientAbsVelocity(client, vVelocity);
+	if (!IsVectorZero(vVelocity))
+	{
+		decl Float:vTemp[3];
+		vTemp[0] = FloatAbs(vVelocity[0]) * 0.01;
+		vTemp[1] = FloatAbs(vVelocity[1]) * 0.01;
+		vTemp[2] = FloatAbs(vVelocity[2]) * 0.01;
+		decl Float:fLagDelta;
+		if (IsFakeClient(client))
+		{
+			fLagDelta = GetTickInterval();
+		}
+		else
+		{
+			new Float:fLerpTime = GetEntPropFloat(client, PropType:1, "m_fLerpTime", 0);
+			new Float:fCorrect = GetClientLatency(client, NetFlow:0) + fLerpTime;
+			fLagDelta = FloatAbs(fCorrect - FloatAbs(GetTickInterval() * g_iCmdTickCount[client] - fLerpTime));
+			if (fLagDelta > 0.2)
+			{
+				fLagDelta = fCorrect;
+			}
+		}
+		ScaleVector(vVelocity, g_fTickDelta + fLagDelta);
+		AddVectors(g_vAbsCentre[client], vVelocity, g_vAbsCentre[client]);
+		AddVectors(g_vEyePos[client], vVelocity, g_vEyePos[client]);
+		if (vTemp[0] > 1.0)
+		{
+			new var2 = g_vMins[client];
+			var2[0] = var2[0] * vTemp[0];
+			new var3 = g_vMaxs[client];
+			var3[0] = var3[0] * vTemp[0];
+		}
+		if (vTemp[1] > 1.0)
+		{
+			g_vMins[client][1] *= vTemp[1];
+			g_vMaxs[client][1] *= vTemp[1];
+		}
+		if (vTemp[2] > 1.0)
+		{
+			g_vMins[client][2] *= vTemp[2];
+			g_vMaxs[client][2] *= vTemp[2];
+		}
+	}
+	iLastCached[client] = g_iTickCount;
+	return 0;
+}
+
+bool:IsAbleToSee(entity, client)
+{
+	if (IsPointVisible(g_vEyePos[client], g_vAbsCentre[entity]))
+	{
+		return true;
+	}
+	if (IsFwdVecVisible(g_vEyePos[client], g_vEyeAngles[entity], g_vEyePos[entity]))
+	{
+		return true;
+	}
+	if (IsRectangleVisible(g_vEyePos[client], g_vAbsCentre[entity], g_vMins[entity], g_vMaxs[entity], 1.3))
+	{
+		return true;
+	}
+	if (IsRectangleVisible(g_vEyePos[client], g_vAbsCentre[entity], g_vMins[entity], g_vMaxs[entity], 0.65))
+	{
+		return true;
+	}
+	return false;
+}
+
+public bool:Filter_NoPlayers(entity, mask)
+{
+	new var1;
+	return entity > MaxClients && !1 <= GetEntPropEnt(entity, PropType:1, "m_hOwnerEntity", 0) <= MaxClients;
+}
+
+bool:IsPointVisible(Float:start[3], Float:end[3])
+{
+	TR_TraceRayFilter(start, end, 24705, RayType:0, Filter_NoPlayers, any:0);
+	return 1065353216 == TR_GetFraction(Handle:0);
+}
+
+bool:IsFwdVecVisible(Float:start[3], Float:angles[3], Float:end[3])
+{
+	decl Float:fwd[3];
+	GetAngleVectors(angles, fwd, NULL_VECTOR, NULL_VECTOR);
+	ScaleVector(fwd, 50.0);
+	AddVectors(end, fwd, fwd);
+	return IsPointVisible(start, fwd);
+}
+
+bool:IsRectangleVisible(Float:start[3], Float:end[3], Float:mins[3], Float:maxs[3], Float:scale)
+{
+	new Float:ZpozOffset = maxs[2];
+	new Float:ZnegOffset = mins[2];
+	new Float:WideOffset = maxs[0] - mins[0] + maxs[1] - mins[1] / 4.0;
+	new var1;
+	if (0.0 == ZpozOffset && 0.0 == ZnegOffset && 0.0 == WideOffset)
+	{
+		return IsPointVisible(start, end);
+	}
+	ZpozOffset *= scale;
+	ZnegOffset *= scale;
+	WideOffset *= scale;
+	decl Float:angles[3];
+	decl Float:fwd[3];
+	decl Float:right[3];
+	SubtractVectors(start, end, fwd);
+	NormalizeVector(fwd, fwd);
+	GetVectorAngles(fwd, angles);
+	GetAngleVectors(angles, fwd, right, NULL_VECTOR);
+	new Float:vRectangle[4][3] = {
+		{
+			0, -1, 0
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		},
+		{
+			0, ...
+		}
+	};
+	decl Float:vTemp[3];
+	if (FloatAbs(fwd[2]) <= 1060439169)
+	{
+		ScaleVector(right, WideOffset);
+		new var2 = end;
+		vTemp = var2;
+		vTemp[2] += ZpozOffset;
+		AddVectors(vTemp, right, vRectangle[0][vRectangle]);
+		SubtractVectors(vTemp, right, vRectangle[1]);
+		new var3 = end;
+		vTemp = var3;
+		vTemp[2] += ZnegOffset;
+		AddVectors(vTemp, right, vRectangle[2]);
+		SubtractVectors(vTemp, right, vRectangle[3]);
+	}
+	else
+	{
+		if (fwd[2] > 0.0)
+		{
+			fwd[2] = 0.0;
+			NormalizeVector(fwd, fwd);
+			ScaleVector(fwd, scale);
+			ScaleVector(fwd, WideOffset);
+			ScaleVector(right, WideOffset);
+			new var4 = end;
+			vTemp = var4;
+			vTemp[2] += ZpozOffset;
+			AddVectors(vTemp, right, vTemp);
+			SubtractVectors(vTemp, fwd, vRectangle[0][vRectangle]);
+			new var5 = end;
+			vTemp = var5;
+			vTemp[2] += ZpozOffset;
+			SubtractVectors(vTemp, right, vTemp);
+			SubtractVectors(vTemp, fwd, vRectangle[1]);
+			new var6 = end;
+			vTemp = var6;
+			vTemp[2] += ZnegOffset;
+			AddVectors(vTemp, right, vTemp);
+			AddVectors(vTemp, fwd, vRectangle[2]);
+			new var7 = end;
+			vTemp = var7;
+			vTemp[2] += ZnegOffset;
+			SubtractVectors(vTemp, right, vTemp);
+			AddVectors(vTemp, fwd, vRectangle[3]);
+		}
+		fwd[2] = 0.0;
+		NormalizeVector(fwd, fwd);
+		ScaleVector(fwd, scale);
+		ScaleVector(fwd, WideOffset);
+		ScaleVector(right, WideOffset);
+		new var8 = end;
+		vTemp = var8;
+		vTemp[2] += ZpozOffset;
+		AddVectors(vTemp, right, vTemp);
+		AddVectors(vTemp, fwd, vRectangle[0][vRectangle]);
+		new var9 = end;
+		vTemp = var9;
+		vTemp[2] += ZpozOffset;
+		SubtractVectors(vTemp, right, vTemp);
+		AddVectors(vTemp, fwd, vRectangle[1]);
+		new var10 = end;
+		vTemp = var10;
+		vTemp[2] += ZnegOffset;
+		AddVectors(vTemp, right, vTemp);
+		SubtractVectors(vTemp, fwd, vRectangle[2]);
+		new var11 = end;
+		vTemp = var11;
+		vTemp[2] += ZnegOffset;
+		SubtractVectors(vTemp, right, vTemp);
+		SubtractVectors(vTemp, fwd, vRectangle[3]);
+	}
+	new i;
+	while (i < 4)
+	{
+		if (IsPointVisible(start, vRectangle[i]))
+		{
+			return true;
+		}
+		i++;
+	}
+	return false;
+}
+
+farESP_Enable()
+{
+	if ((g_iPlayerManager = FindEntityByClassname(0, "cs_player_manager")) == -1)
+	{
+		return 0;
+	}
+	g_iPlayerSpotted = FindSendPropOffs("CCSPlayerResource", "m_bPlayerSpotted");
+	SDKHook(g_iPlayerManager, SDKHookType:21, PlayerManager_ThinkPost);
+	g_msgUpdateRadar = GetUserMessageId("UpdateRadar");
+	HookUserMessage(g_msgUpdateRadar, Hook_UpdateRadar, true, MsgPostHook:-1);
+	g_hRadarTimer = CreateTimer(1.0, Timer_UpdateRadar, any:0, 1);
+	g_bFarEspEnabled = true;
+	return 0;
+}
+
+farESP_Disable()
+{
+	SDKUnhook(g_iPlayerManager, SDKHookType:21, PlayerManager_ThinkPost);
+	new i;
+	while (i < 66)
+	{
+		g_bPlayerSpotted[i] = 0;
+		i++;
+	}
+	KillTimer(g_hRadarTimer, false);
+	g_hRadarTimer = MissingTAG:0;
+	UnhookUserMessage(g_msgUpdateRadar, Hook_UpdateRadar, true);
+	g_bFarEspEnabled = false;
+	return 0;
+}
+
+public WallHack_OnMapStart()
+{
+	new var1;
+	if (g_bEnabled && !g_bFarEspEnabled)
+	{
+		farESP_Enable();
+	}
+	return 0;
+}
+
+public WallHack_OnMapEnd()
+{
+	if (g_bFarEspEnabled)
+	{
+		farESP_Disable();
+	}
+	return 0;
+}
+
+public Action:Hook_UpdateRadar(UserMsg:msg_id, Handle:bf, players[], playersNum, bool:reliable, bool:init)
+{
+	return Action:3;
+}
+
+public PlayerManager_ThinkPost(entity)
+{
+	if (!g_bFarEspEnabled)
+	{
+		return 0;
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (g_bProcess[i] && GetEntData(entity, i + g_iPlayerSpotted, 1))
+		{
+			if (!g_bPlayerSpotted[i])
+			{
+				g_bPlayerSpotted[i] = 1;
+				SendClientDataToAll(i);
+			}
+		}
+		else
+		{
+			g_bPlayerSpotted[i] = 0;
+		}
+		i++;
+	}
+	return 0;
+}
+
+public Action:Timer_UpdateRadar(Handle:timer)
+{
+	if (!g_bFarEspEnabled)
+	{
+		return Action:4;
+	}
+	decl allClients[MaxClients];
+	decl tClients[MaxClients];
+	decl ctClients[MaxClients];
+	new numAllClients;
+	new numTClients;
+	new numCTClients;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (g_bProcess[i])
+		{
+			numAllClients++;
+			allClients[numAllClients] = i;
+			switch (g_iTeam[i])
+			{
+				case 2:
+				{
+					numTClients++;
+					tClients[numTClients] = i;
+				}
+				case 3:
+				{
+					numCTClients++;
+					ctClients[numCTClients] = i;
+				}
+				default:
+				{
+				}
+			}
+		}
+		i++;
+	}
+	decl Float:vOrigin[3];
+	decl Float:vAngles[3];
+	decl Handle:bf;
+	decl client;
+	decl count;
+	if (numAllClients)
+	{
+		bf = StartMessageEx(g_msgUpdateRadar, allClients, numAllClients, 128);
+		count = 0;
+		new i = 1;
+		while (i <= MaxClients && count <= 36)
+		{
+			new var2;
+			if (g_bPlayerSpotted[i] && g_bProcess[i])
+			{
+				GetClientAbsOrigin(i, vOrigin);
+				GetClientAbsAngles(i, vAngles);
+				BfWriteByte(bf, i);
+				BfWriteSBitLong(bf, RoundToNearest(vOrigin[0] / 4.0), 13);
+				BfWriteSBitLong(bf, RoundToNearest(vOrigin[1] / 4.0), 13);
+				BfWriteSBitLong(bf, RoundToNearest(vOrigin[2] - MT_GetRandomFloat(500.0, 1000.0) / 4.0), 13);
+				BfWriteSBitLong(bf, RoundToNearest(vAngles[1]), 9);
+				count++;
+			}
+			i++;
+		}
+		BfWriteByte(bf, 0);
+		EndMessage();
+	}
+	if (numTClients)
+	{
+		bf = StartMessageEx(g_msgUpdateRadar, tClients, numTClients, 128);
+		count = 0;
+		new i;
+		while (i < numTClients && count <= 36)
+		{
+			client = tClients[i];
+			GetClientAbsOrigin(client, vOrigin);
+			GetClientAbsAngles(client, vAngles);
+			BfWriteByte(bf, client);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[0] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[1] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[2] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vAngles[1]), 9);
+			count++;
+			i++;
+		}
+		BfWriteByte(bf, 0);
+		EndMessage();
+	}
+	if (numCTClients)
+	{
+		bf = StartMessageEx(g_msgUpdateRadar, ctClients, numCTClients, 128);
+		count = 0;
+		new i;
+		while (i < numCTClients && count <= 36)
+		{
+			client = ctClients[i];
+			GetClientAbsOrigin(client, vOrigin);
+			GetClientAbsAngles(client, vAngles);
+			BfWriteByte(bf, client);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[0] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[1] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vOrigin[2] / 4.0), 13);
+			BfWriteSBitLong(bf, RoundToNearest(vAngles[1]), 9);
+			count++;
+			i++;
+		}
+		BfWriteByte(bf, 0);
+		EndMessage();
+	}
+	return Action:0;
+}
+
+SendClientDataToAll(client)
+{
+	decl iClients[MaxClients];
+	decl Float:vOrigin[3];
+	decl Float:vAngles[3];
+	new numClients;
+	new iTeam = g_iTeam[client];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (g_bProcess[i] && iTeam != g_iTeam[i])
+		{
+			numClients++;
+			iClients[numClients] = i;
+		}
+		i++;
+	}
+	if (numClients)
+	{
+		new Handle:bf = StartMessageEx(g_msgUpdateRadar, iClients, numClients, 128);
+		GetClientAbsOrigin(client, vOrigin);
+		GetClientAbsAngles(client, vAngles);
+		BfWriteByte(bf, client);
+		BfWriteSBitLong(bf, RoundToNearest(vOrigin[0] / 4.0), 13);
+		BfWriteSBitLong(bf, RoundToNearest(vOrigin[1] / 4.0), 13);
+		BfWriteSBitLong(bf, RoundToNearest(vOrigin[2] - MT_GetRandomFloat(500.0, 1000.0) / 4.0), 13);
+		BfWriteSBitLong(bf, RoundToNearest(vAngles[1]), 9);
+		BfWriteByte(bf, 0);
+		EndMessage();
+	}
+	return 0;
+}
+
+public SpeedHack_OnPluginStart()
+{
+	g_hCVarSpeedhack = CreateConVar("kac_speedhack_block", "1", "���������� ����� SpeedHack.\nBlocking cheats SpeedHack.", 262144, true, 0.0, true, 1.0);
+	SpeedHack_OnSettingsChanged(g_hCVarSpeedhack, "", "");
+	HookConVarChange(g_hCVarSpeedhack, SpeedHack_OnSettingsChanged);
+	g_iTickRate = RoundToCeil(1.0 / GetTickInterval() * 1.5);
+	return 0;
+}
+
+public SpeedHack_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValueSh = GetConVarBool(convar);
+	new var1;
+	if (bNewValueSh && !g_bSpeedEnabled)
+	{
+		SpeedHack_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValueSh && g_bSpeedEnabled)
+		{
+			SpeedHack_Disable();
+		}
+	}
+	return 0;
+}
+
+SpeedHack_Enable()
+{
+	g_bSpeedEnabled = true;
+	hShTimerResTicks = CreateTimer(1.0, Timer_ResetTicks, any:0, 1);
+	g_hCvarFutureTicks = FindConVar("sv_max_usercmd_future_ticks");
+	if (g_hCvarFutureTicks)
+	{
+		OnTickCvarChanged(g_hCvarFutureTicks, "", "");
+		HookConVarChange(g_hCvarFutureTicks, OnTickCvarChanged);
+	}
+	return 0;
+}
+
+SpeedHack_Disable()
+{
+	g_bSpeedEnabled = false;
+	if (g_hCvarFutureTicks)
+	{
+		UnhookConVarChange(g_hCvarFutureTicks, OnTickCvarChanged);
+	}
+	if (hShTimerResTicks)
+	{
+		KillTimer(hShTimerResTicks, false);
+		hShTimerResTicks = MissingTAG:0;
+	}
+	return 0;
+}
+
+public SpeedHack_OnClientDisconnect_Post(client)
+{
+	g_iShTickCount[client] = 0;
+	return 0;
+}
+
+public OnTickCvarChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	if (GetConVarInt(convar) != 1)
+	{
+		SetConVarInt(convar, 1, false, false);
+	}
+	return 0;
+}
+
+public Action:Timer_ResetTicks(Handle:timer)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		g_iShTickCount[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:SpeedHack_OnPlayerRunCmd(client)
+{
+	if (!g_bSpeedEnabled)
+	{
+		return Action:0;
+	}
+	new var1 = g_iShTickCount[client];
+	var1++;
+	if (var1 > g_iTickRate)
+	{
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public AntiSmoke_OnPluginStart()
+{
+	g_hCVarAntiSmoke = CreateConVar("kac_antismoke", "0", "1 ��������, 0 ���������. ���������� ��������� No-Smoke. (����������� �� ������ ������, ��� ������ ����� ����)\nPrevent No-Smoke cheats from working when a player is immersed in smoke.", 262144, true, 0.0, true, 1.0);
+	AntiSmoke_OnSettingsChanged(g_hCVarAntiSmoke, "", "");
+	HookConVarChange(g_hCVarAntiSmoke, AntiSmoke_OnSettingsChanged);
+	return 0;
+}
+
+public AntiSmoke_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+{
+	new bool:bNewValue = GetConVarBool(convar);
+	new var1;
+	if (bNewValue && !g_bSmokeEnabled)
+	{
+		if (!g_bSDKHooksLoaded)
+		{
+			LogError("SDKHooks is not running. Cannot enable CS:S Anti-Smoke.");
+			SetConVarBool(convar, false, false, false);
+			return 0;
+		}
+		AntiSmoke_Enable();
+	}
+	else
+	{
+		new var2;
+		if (!bNewValue && g_bSmokeEnabled)
+		{
+			AntiSmoke_Disable();
+		}
+	}
+	return 0;
+}
+
+public AntiSmoke_Enable()
+{
+	g_bSmokeEnabled = true;
+	g_hSmokes = CreateArray(3, 0);
+	HookEvent("smokegrenade_detonate", AntiSmoke_EventSmokeDetonate, EventHookMode:1);
+	HookEvent("round_start", AntiSmoke_EventRoundChanged, EventHookMode:2);
+	HookEvent("round_end", AntiSmoke_EventRoundChanged, EventHookMode:2);
+	return 0;
+}
+
+public AntiSmoke_Disable()
+{
+	g_bSmokeEnabled = false;
+	if (g_hSmokes)
+	{
+		CloseHandle(g_hSmokes);
+		g_hSmokes = MissingTAG:0;
+	}
+	UnhookEvent("smokegrenade_detonate", AntiSmoke_EventSmokeDetonate, EventHookMode:1);
+	UnhookEvent("round_start", AntiSmoke_EventRoundChanged, EventHookMode:2);
+	UnhookEvent("round_end", AntiSmoke_EventRoundChanged, EventHookMode:2);
+	return 0;
+}
+
+public AntiSmoke_OnMapEnd()
+{
+	if (g_bSmokeHooked)
+	{
+		AntiSmoke_UnhookAll();
+	}
+	return 0;
+}
+
+public AntiSmoke_OnClientDisconnect(client)
+{
+	g_bIsInSmoke[client] = 0;
+	return 0;
+}
+
+public AntiSmoke_EventSmokeDetonate(Handle:event, String:name[], bool:dontBroadcast)
+{
+	decl Float:vSmoke[3];
+	vSmoke[0] = GetEventFloat(event, "x");
+	vSmoke[1] = GetEventFloat(event, "y");
+	vSmoke[2] = GetEventFloat(event, "z");
+	PushArrayArray(g_hSmokes, vSmoke, -1);
+	if (!g_bSmokeHooked)
+	{
+		AntiSmoke_HookAll();
+	}
+	CreateTimer(15.0, Timer_SmokeEnded, any:0, 0);
+	return 0;
+}
+
+public AntiSmoke_EventRoundChanged(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (g_bSmokeHooked)
+	{
+		AntiSmoke_UnhookAll();
+	}
+	return 0;
+}
+
+public Action:Timer_SmokeEnded(Handle:timer)
+{
+	if (GetArraySize(g_hSmokes))
+	{
+		RemoveFromArray(g_hSmokes, 0);
+	}
+	new var1;
+	if (!GetArraySize(g_hSmokes) && g_bSmokeHooked)
+	{
+		AntiSmoke_UnhookAll();
+	}
+	return Action:4;
+}
+
+public Action:Timer_SmokeCheck(Handle:timer)
+{
+	decl Float:vClient[3];
+	decl Float:vSmoke[3];
+	decl Float:fDistance;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && !IsFakeClient(i) && IsPlayerAlive(i))
+		{
+			GetClientAbsOrigin(i, vClient);
+			new idx;
+			while (GetArraySize(g_hSmokes) > idx)
+			{
+				GetArrayArray(g_hSmokes, idx, vSmoke, -1);
+				fDistance = GetVectorDistance(vClient, vSmoke, true);
+				if (fDistance < 3.503E-42)
+				{
+					g_bIsInSmoke[i] = 1;
+				}
+				g_bIsInSmoke[i] = 0;
+				idx++;
+			}
+		}
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:AntiSmoke_HookSetTransmit(entity, client)
+{
+	new var1;
+	if (!1 <= client <= MaxClients || client != entity)
+	{
+		return Action:0;
+	}
+	if (g_bIsInSmoke[client])
+	{
+		return Action:3;
+	}
+	return Action:0;
+}
+
+AntiSmoke_HookAll()
+{
+	g_bSmokeHooked = true;
+	if (!g_hSmokeLoop)
+	{
+		g_hSmokeLoop = CreateTimer(0.1, Timer_SmokeCheck, any:0, 1);
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SDKHook(i, SDKHookType:6, AntiSmoke_HookSetTransmit);
+		}
+		i++;
+	}
+	return 0;
+}
+
+AntiSmoke_UnhookAll()
+{
+	g_bSmokeHooked = false;
+	if (g_hSmokeLoop)
+	{
+		KillTimer(g_hSmokeLoop, false);
+		g_hSmokeLoop = MissingTAG:0;
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SDKUnhook(i, SDKHookType:6, AntiSmoke_HookSetTransmit);
+		}
+		i++;
+	}
+	ClearArray(g_hSmokes);
+	return 0;
+}
+
+public Network2_Event_Start()
+{
+	g_hCVarNetUseUpdate = CreateConVar("kac_net_autoupdate", "1", "Use the Auto-Update feature.", 0, false, 0.0, false, 0.0);
+	g_bCVarNetUseUpdate = GetConVarBool(g_hCVarNetUseUpdate);
+	g_hCVarNetAllowUpdateToBeta = CreateConVar("kac_net_allow_update_to_beta", "1", "Allow update to beta version of plugin.", 0, false, 0.0, false, 0.0);
+	g_bCVarNetAllowUpdateToBeta = GetConVarBool(g_hCVarNetAllowUpdateToBeta);
+	HookConVarChange(g_hCVarNetUseUpdate, Network2_ConVarChange);
+	HookConVarChange(g_hCVarNetAllowUpdateToBeta, Network2_ConVarChange);
+	g_hUpdateTimer = CreateTimer(30.0, Network2_UpdateTimer, any:0, 0);
+	return 0;
+}
+
+public Network2_Event_PluginUnload()
+{
+	Network2_ClearValues();
+	return 0;
+}
+
+public Network2_ConVarChange(Handle:convar, String:oldValue[], String:newValue[])
+{
+	g_bCVarNetUseUpdate = GetConVarBool(g_hCVarNetUseUpdate);
+	g_bCVarNetAllowUpdateToBeta = GetConVarBool(g_hCVarNetAllowUpdateToBeta);
+	new var1;
+	if (g_bCVarNetEnabled && g_iUpdateState && g_hUpdateTimer)
+	{
+		g_hUpdateTimer = CreateTimer(5.0, Network2_UpdateTimer, any:0, 0);
+	}
+	return 0;
+}
+
+public Action:Network2_UpdateTimer(Handle:timer, any:we)
+{
+	g_hUpdateTimer = MissingTAG:0;
+	new var1;
+	if (g_iUpdateState && g_bCVarNetUseUpdate && g_bCVarNetEnabled)
+	{
+		g_iUpdateState = MissingTAG:2;
+		g_hUpdateSocket = SocketCreate(SocketType:1, Network2_OnSocketError);
+		SocketConnect(g_hUpdateSocket, Network2_OnSocketConnect, Network2_OnSocketReceive, Network2_OnSocketDisconnect, AutoUpdater_Ip, AutoUpdater_Port);
+		g_hUpdateTimer = CreateTimer(30.0, Network2_TimedOutTimer, any:0, 0);
+	}
+	return Action:0;
+}
+
+public Action:Network2_TimedOutTimer(Handle:timer, any:we)
+{
+	LogError("Updater: Timed out connection!");
+	g_hUpdateTimer = CreateTimer(1800.0, Network2_RetryUpdateTimer, any:0, 0);
+	Network2_ClearValues();
+	return Action:0;
+}
+
+public Action:Network2_RetryUpdateTimer(Handle:timer, any:we)
+{
+	g_hUpdateTimer = MissingTAG:0;
+	g_hUpdateTimer = CreateTimer(1.0, Network2_UpdateTimer, any:0, 0);
+	return Action:0;
+}
+
+public Network2_ClearValues()
+{
+	if (g_hUpdateSocket)
+	{
+		CloseHandle(g_hUpdateSocket);
+	}
+	if (g_hUpdateTimer)
+	{
+		CloseHandle(g_hUpdateTimer);
+	}
+	if (g_hUpdateList)
+	{
+		CloseHandle(g_hUpdateList);
+	}
+	if (g_hUpdateFile)
+	{
+		CloseHandle(g_hUpdateFile);
+	}
+	g_hUpdateSocket = MissingTAG:0;
+	g_hUpdateTimer = MissingTAG:0;
+	g_hUpdateList = MissingTAG:0;
+	g_hUpdateFile = MissingTAG:0;
+	g_iUpdateFile = 0;
+	g_iUpdateFilesCount = 0;
+	g_iUpdateFileGotHeader = false;
+	Format(g_sUpdateFile, 255, "");
+	g_iUpdateState = MissingTAG:5;
+	return 0;
+}
+
+public Network2_OnSocketDisconnect(Handle:socket, any:we)
+{
+	g_hUpdateSocket = MissingTAG:0;
+	CloseHandle(socket);
+	new String:Buffer[256];
+	if (g_iUpdateState == AutoUpdater_States:3)
+	{
+		CloseHandle(g_hUpdateFile);
+		g_hUpdateFile = MissingTAG:0;
+		g_hUpdateList = CreateKeyValues("KAC", "", "");
+		if (!FileToKeyValues(g_hUpdateList, g_sUpdateFile))
+		{
+			LogError("Updater: FileToKeyValues return false. Update failed!");
+			g_iUpdateState = MissingTAG:5;
+			return 0;
+		}
+		DeleteFile(g_sUpdateFile);
+		KvRewind(g_hUpdateList);
+		new bool:BetaUpdate;
+		new String:Channel[12] = "Stable";
+		new LastBetaVersion = KvGetNum(g_hUpdateList, "Beta_Build", 0);
+		new LastVersion = KvGetNum(g_hUpdateList, "Stable_Build", 0);
+		new var1;
+		if (g_bCVarNetAllowUpdateToBeta && LastBetaVersion > 0)
+		{
+			BetaUpdate = true;
+		}
+		if (BetaUpdate)
+		{
+			LastVersion = LastBetaVersion;
+			KvJumpToKey(g_hUpdateList, "Beta_Files", false);
+			Format(Channel, 10, "Beta");
+		}
+		else
+		{
+			KvJumpToKey(g_hUpdateList, "Stable_Files", false);
+		}
+		g_iUpdateFilesCount = KvGetNum(g_hUpdateList, "Count", 0);
+		new bool:UpdateFound;
+		if (0 < g_iUpdateFilesCount)
+		{
+			if (LastVersion > 1015)
+			{
+				KAC_PrintAdminNotice("{lightgreen}%t", "KAC_NewUpdateAnnonce", "Kigen's Anti-Cheat", LastVersion);
+				LogMessage("Updater: Received that KAC is out of date, updating to newest version...\nChannel is using: %s", Channel);
+				UpdateFound = true;
+			}
+			else
+			{
+				Network2_ClearValues();
+			}
+		}
+		else
+		{
+			Network2_ClearValues();
+		}
+		if (!UpdateFound)
+		{
+			g_iUpdateState = MissingTAG:0;
+			g_hUpdateTimer = CreateTimer(1800.0, Network2_RetryUpdateTimer, any:0, 0);
+			if (!g_bMessageShown)
+			{
+				LogMessage("Updater: This version is actual!");
+				g_bMessageShown = true;
+			}
+			return 0;
+		}
+		g_iUpdateFile = 1;
+		KvGetString(g_hUpdateList, "1", g_sUpdateFileURI, 255, "");
+		KvGetString(g_hUpdateList, "Local_1", Buffer, 256, "");
+		BuildPath(PathType:0, g_sUpdateFile, 255, "%s", Buffer);
+		Format(Buffer, 256, "%s.tmp", g_sUpdateFile);
+		g_hUpdateFile = OpenFile(Buffer, "ab");
+		if (g_hUpdateFile)
+		{
+			LogMessage("Updater: Downloading %s...", g_sUpdateFile);
+			g_iUpdateState = MissingTAG:4;
+			g_hUpdateSocket = SocketCreate(SocketType:1, Network2_OnSocketError);
+			SocketConnect(g_hUpdateSocket, Network2_OnSocketConnect, Network2_OnSocketReceive, Network2_OnSocketDisconnect, AutoUpdater_Ip, AutoUpdater_Port);
+		}
+		LogError("Updater: Failed to create %s", g_sUpdateFile);
+		Network2_ClearValues();
+		return 0;
+	}
+	else
+	{
+		if (g_iUpdateState == AutoUpdater_States:4)
+		{
+			CloseHandle(g_hUpdateFile);
+			g_hUpdateFile = MissingTAG:0;
+			Format(Buffer, 256, "%s.tmp", g_sUpdateFile);
+			if (FileExists(g_sUpdateFile, false))
+			{
+				if (!DeleteFile(g_sUpdateFile))
+				{
+					LogError("Updater: Delete file failed! Update failed!");
+					Network2_ClearValues();
+					return 0;
+				}
+			}
+			if (!RenameFile(g_sUpdateFile, Buffer))
+			{
+				LogError("Updater: Rename file failed! Update failed!");
+				Network2_ClearValues();
+				return 0;
+			}
+			if (g_iUpdateFilesCount == g_iUpdateFile)
+			{
+				GetPluginFilename(GetMyHandle(), Buffer, 256);
+				Buffer[strlen(Buffer) + -4] = MissingTAG:0;
+				g_iUpdateState = MissingTAG:1;
+				KAC_PrintAdminNotice("{lightgreen}%t", "KAC_NewUpdateSuccess", "Kigen's Anti-Cheat");
+				InsertServerCommand("sm plugins reload %s", Buffer);
+				LogMessage("Updater: Update successful! Plugin reloaded.");
+			}
+			else
+			{
+				g_iUpdateFile += 1;
+				Format(Buffer, 256, "%d", g_iUpdateFile);
+				KvGetString(g_hUpdateList, Buffer, g_sUpdateFileURI, 255, "");
+				Format(Buffer, 256, "Local_%d", g_iUpdateFile);
+				KvGetString(g_hUpdateList, Buffer, Buffer, 256, "");
+				BuildPath(PathType:0, g_sUpdateFile, 255, "%s", Buffer);
+				Format(Buffer, 256, "%s.tmp", g_sUpdateFile);
+				g_hUpdateFile = OpenFile(Buffer, "ab");
+				if (g_hUpdateFile)
+				{
+					LogMessage("Updater: Downloading %s...", g_sUpdateFile);
+					g_iUpdateFileGotHeader = false;
+					g_hUpdateSocket = SocketCreate(SocketType:1, Network2_OnSocketError);
+					SocketConnect(g_hUpdateSocket, Network2_OnSocketConnect, Network2_OnSocketReceive, Network2_OnSocketDisconnect, AutoUpdater_Ip, AutoUpdater_Port);
+				}
+				LogError("Updater: Failed to create %s", g_sUpdateFile);
+				Network2_ClearValues();
+				return 0;
+			}
+		}
+		Network2_ClearValues();
+	}
+	return 0;
+}
+
+public Network2_OnSocketError(Handle:socket, errorType, errorNum, any:we)
+{
+	new String:Buffer[256];
+	switch (errorType)
+	{
+		case 2:
+		{
+			Format(Buffer, 255, "unknown host! (NO_HOST)");
+		}
+		case 3:
+		{
+			Format(Buffer, 255, "connection error! (CONNECT_ERROR)");
+		}
+		case 4:
+		{
+			Format(Buffer, 255, "send data error! (SEND_ERROR)");
+		}
+		case 5:
+		{
+			Format(Buffer, 255, "bind to local port error! (BIND_ERROR)");
+		}
+		case 6:
+		{
+			Format(Buffer, 255, "receive data error! (RECV_ERROR)");
+		}
+		default:
+		{
+		}
+	}
+	LogError("Updater: Socket raised error: %s", Buffer);
+	Network2_ClearValues();
+	return 0;
+}
+
+public Network2_OnSocketConnect(Handle:socket, any:we)
+{
+	new String:Buffer[1024];
+	if (g_hUpdateTimer)
+	{
+		CloseHandle(g_hUpdateTimer);
+	}
+	g_hUpdateTimer = CreateTimer(30.0, Network2_TimedOutTimer, any:0, 0);
+	if (g_iUpdateState == AutoUpdater_States:2)
+	{
+		Format(Buffer, 1024, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: KAC-Socket/1.0\r\n\r\n", AutoUpdater_Url, AutoUpdater_Host);
+		SocketSend(socket, Buffer, -1);
+	}
+	else
+	{
+		if (g_iUpdateState == AutoUpdater_States:4)
+		{
+			Format(Buffer, 1024, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: KAC-Socket/1.0\r\n\r\n", g_sUpdateFileURI, AutoUpdater_Host);
+			SocketSend(socket, Buffer, -1);
+		}
+		Network2_ClearValues();
+	}
+	return 0;
+}
+
+public Network2_OnSocketReceive(Handle:socket, String:data[], size, any:we)
+{
+	new Pos;
+	if (g_iUpdateState == AutoUpdater_States:2)
+	{
+		if (StrContains(data, "HTTP/1.1 200 OK", true) == -1)
+		{
+			LogError("Updater: Received unknown HTTP code from server during version check. Update failed!");
+			Network2_ClearValues();
+		}
+		else
+		{
+			Pos = StrContains(data, "\r\n\r\n", true);
+			if (Pos == -1)
+			{
+				LogError("Updater: Received empty request during version check!");
+				Network2_ClearValues();
+				return 0;
+			}
+			Pos += 4;
+			BuildPath(PathType:0, g_sUpdateFile, 255, "plugins\kigenac_%d.tmp", GetRandomInt(10000, 99999));
+			g_hUpdateFile = OpenFile(g_sUpdateFile, "ab");
+			if (g_hUpdateFile)
+			{
+				g_iUpdateState = MissingTAG:3;
+				new i = Pos;
+				while (i < size)
+				{
+					WriteFileCell(g_hUpdateFile, data[i], 1);
+					i++;
+				}
+			}
+			LogError("Updater: Failed to create %s", g_sUpdateFile);
+			Network2_ClearValues();
+			return 0;
+		}
+	}
+	else
+	{
+		if (g_iUpdateState == AutoUpdater_States:3)
+		{
+			new i;
+			while (i < size)
+			{
+				WriteFileCell(g_hUpdateFile, data[i], 1);
+				i++;
+			}
+		}
+		if (g_iUpdateState == AutoUpdater_States:4)
+		{
+			if (!g_iUpdateFileGotHeader)
+			{
+				if (StrContains(data, "HTTP/1.1 200 OK", true) == -1)
+				{
+					LogError("Updater: Received unknown HTTP code from server during download file. Update failed!");
+					Network2_ClearValues();
+					return 0;
+				}
+				Pos = StrContains(data, "\r\n\r\n", true);
+				if (Pos == -1)
+				{
+					LogError("Updater: Received empty request during download file!");
+					Network2_ClearValues();
+					return 0;
+				}
+				Pos += 4;
+				g_iUpdateFileGotHeader = true;
+			}
+			new i = Pos;
+			while (i < size)
+			{
+				WriteFileCell(g_hUpdateFile, data[i], 1);
+				i++;
+			}
+		}
+		Network2_ClearValues();
+	}
+	return 0;
+}
+
+public Network4_Event_AllPluginsLoaded()
+{
+	if (g_bCVarNetEnabled)
+	{
+		g_hListSocket = SocketCreate(SocketType:1, Network4_OnSocketError);
+		SocketConnect(g_hListSocket, Network4_OnSocketConnect, Network4_OnSocketReceive, Network4_OnSocketDisconnect, ServersList_Ip, ServersList_Port);
+	}
+	return 0;
+}
+
+public Network4_OnSocketDisconnect(Handle:socket, any:we)
+{
+	g_hListSocket = MissingTAG:0;
+	CloseHandle(socket);
+	return 0;
+}
+
+public Network4_OnSocketError(Handle:socket, errorType, errorNum, any:we)
+{
+	g_hListSocket = MissingTAG:0;
+	CloseHandle(socket);
+	return 0;
+}
+
+public Network4_OnSocketConnect(Handle:socket, any:we)
+{
+	new String:Buffer[1024];
+	new String:ServerHost[1024];
+	new String:ServerPort[1024];
+	new Handle:hostip = FindConVar("hostip");
+	new Handle:hostport = FindConVar("hostport");
+	GetConVarString(hostip, ServerHost, 1024);
+	GetConVarString(hostport, ServerPort, 1024);
+	Format(Buffer, 1024, "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\nUser-Agent: KAC-Socket/1.0\r\nCookie: __ip=%s; __port=%s\r\n\r\n", ServersList_AddUrl, ServersList_Host, ServerHost, ServerPort);
+	SocketSend(socket, Buffer, -1);
+	return 0;
+}
+

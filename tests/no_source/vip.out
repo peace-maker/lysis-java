@@ -1,0 +1,6858 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.2",
+	date = "12/19/2012",
+	time = "10:01:32"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new TEST_VERSION = 1;
+new String:PLUGIN_NAME[12] = "VIP Plugin";
+new String:PLUGIN_VERS[8] = "v2.0";
+new g_Num;
+new String:FOR_IP_PORT[4];
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_cstrike =
+{
+	name = "cstrike",
+	file = "games/game.cstrike.ext",
+	autoload = 0,
+	required = 1,
+};
+public Plugin:myinfo =
+{
+	name = "VIP Plugin",
+	description = "",
+	author = "wS (World-Source.Ru)",
+	version = "v2.0",
+	url = "http://world-source.ru/"
+};
+new String:g_ErrorLogFile[20] = "cfg/vip/errors.log";
+new bool:g_VipHave[66][32];
+new bool:g_VipFeatureOn[66][32];
+new g_VipValue[66][59];
+new Handle:g_CookieTrie[22];
+new Handle:g_Event_VIP_Removed;
+new Handle:g_Event_VIP_Added;
+new Handle:g_Event_VIP_TimeChanged;
+new Handle:g_Event_VIP_Joined;
+new Handle:g_SQL;
+new bool:g_MYSQL;
+new String:g_SteamId[66][28];
+new Handle:g_VipDelTimerTrie;
+new g_VipGroups_Count;
+new Handle:g_VipGroupTrie;
+new Handle:g_VipGroupTrie_hp;
+new Handle:g_VipGroupTrie_speed;
+new Handle:g_VipGroupTrie_color;
+new Handle:g_VipGroupTrie_skin_t;
+new Handle:g_VipGroupTrie_skin_ct;
+new Handle:g_VipGroupTrie_rehp;
+new Handle:g_VipGroupTrie_chat;
+new Handle:g_VipGroupTrie_gravity;
+new Handle:g_VipGroupTrie_cash;
+new Handle:g_VipGroupTrie_armor;
+new Handle:g_VipGroupTrie_noblind;
+new Handle:g_VipGroupTrie_defuse;
+new Handle:g_VipGroupTrie_trail;
+new Handle:g_VipGroupTrie_team;
+new Handle:g_VipGroupTrie_overlay;
+new Handle:g_VipGroupTrie_he;
+new Handle:g_VipGroupTrie_sg;
+new Handle:g_VipGroupTrie_fb;
+new Handle:g_VipGroupTrie_laser;
+new Handle:g_VipGroupTrie_c4;
+new Handle:g_VipGroupTrie_fraghp;
+new Handle:g_VipGroupTrie_water;
+new Handle:g_VipGroupTrie_immun;
+new Handle:g_VipGroupTrie_admin;
+new Handle:g_VipGroupTrie_respawn;
+new Handle:g_VipGroupTrie_tele;
+new Handle:g_VipGroupTrie_dropgren;
+new Handle:g_VipGroupTrie_barrel;
+new Handle:g_VipGroupTrie_beam;
+new Handle:g_VipGroupTrie_ammo;
+new Handle:g_VipGroupTrie_hostage;
+new Handle:g_VipGroupTrie_gren_effect;
+new bool:g_VipAccess[66];
+new g_VipTime[66];
+new Handle:g_VipMenu[66];
+new String:g_MyVipGroup[66][68];
+new Float:g_MyGameTimeWhenSelectOption[66];
+new Handle:g_ChatCommandsTrie;
+new Handle:g_Array_Overlays;
+new g_OverlaysCount;
+new Handle:g_RehpTimer[66];
+new bool:g_MyVipGroupExists[66];
+new Handle:g_Trie_AdminFlagName;
+new g_MyOverlayItem[66];
+new g_MyTrailIndex[66];
+new g_FlashDuration_Offs = -1;
+new g_FlashAlpha_Offs = -1;
+new g_LaserIndex;
+new g_Dissolver;
+new bool:g_MapType_de;
+new g_Hurt_Attacker;
+new g_Hurt_Victim;
+new g_MyLastVipMenuItem[66];
+new Handle:g_Trails_Menu;
+new g_MyTrailNum[66];
+new Handle:g_RedVipSkinsMenu;
+new Handle:g_BluVipSkinsMenu;
+new g_MyRedSkinNum[66];
+new g_MyBluSkinNum[66];
+new g_HeColor[4] =
+{
+	255, 0, 0, 255
+};
+new g_SgColor[4] =
+{
+	0, 255, 0, 255
+};
+new g_FbColor[4] =
+{
+	255, ...
+};
+new Handle:g_TeamPanel;
+new Handle:g_VipSkinColorsMenu;
+new g_MySkinColorItem[66];
+new g_MySkinColor[66][4];
+new Handle:vip_cvar_hide_options;
+new Handle:vip_cvar_flood_protect_sec;
+new Handle:vip_cvar_test_menu;
+new Handle:vip_cvar_join_open_menu;
+new Handle:vip_cvar_functions_status;
+new Handle:vip_cvar_trail_lifetime;
+new Handle:vip_cvar_trail_startwidth;
+new Handle:vip_cvar_trail_endwidth;
+new Handle:vip_cvar_trail_height;
+new Handle:vip_cvar_laser_width;
+new Handle:vip_cvar_laser_life;
+new Handle:vip_cvar_laser_clear;
+new Handle:vip_cvar_laser_team;
+new Handle:vip_cvar_he_rgba;
+new Handle:vip_cvar_sg_rgba;
+new Handle:vip_cvar_fb_rgba;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) != 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+CharToLower(chr)
+{
+	if (IsCharUpper(chr))
+	{
+		return chr | 32;
+	}
+	return chr;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+Handle:CreateDataTimer(Float:interval, Timer:func, &Handle:datapack, flags)
+{
+	datapack = CreateDataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
+}
+
+Handle:SQLite_UseDatabase(String:database[], String:error[], maxlength)
+{
+	new Handle:kv;
+	new Handle:db;
+	kv = CreateKeyValues("", "", "");
+	KvSetString(kv, "driver", "sqlite");
+	KvSetString(kv, "database", database);
+	db = SQL_ConnectCustom(kv, error, maxlength, false);
+	CloseHandle(kv);
+	return db;
+}
+
+Handle:StartMessageAll(String:msgname[], flags)
+{
+	new total;
+	new clients[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientConnected(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	return StartMessage(msgname, clients, total, flags);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
+{
+	decl String:cls[64];
+	if (!GetEntityNetClass(ent, cls, 64))
+	{
+		return -1;
+	}
+	if (actual)
+	{
+		return FindSendPropInfo(cls, prop, 0, 0, 0);
+	}
+	return FindSendPropOffs(cls, prop);
+}
+
+bool:GetEntityClassname(entity, String:clsname[], maxlength)
+{
+	return !!GetEntPropString(entity, PropType:1, "m_iClassname", clsname, maxlength, 0);
+}
+
+SetEntityMoveType(entity, MoveType:mt)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_MoveType");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:1, datamap, mt, 4, 0);
+	return 0;
+}
+
+SetEntityRenderMode(entity, RenderMode:mode)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderMode", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderMode");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:0, prop, mode, 1, 0);
+	return 0;
+}
+
+SetEntityRenderColor(entity, r, g, b, a)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_clrRender", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_clrRender");
+		}
+		gotconfig = true;
+	}
+	new offset = GetEntSendPropOffs(entity, prop, false);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityRenderColor not supported by this mod");
+	}
+	SetEntData(entity, offset, r, 1, true);
+	SetEntData(entity, offset + 1, g, 1, true);
+	SetEntData(entity, offset + 2, b, 1, true);
+	SetEntData(entity, offset + 3, a, 1, true);
+	return 0;
+}
+
+Float:GetEntityGravity(entity)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_flGravity");
+		}
+		gotconfig = true;
+	}
+	return GetEntPropFloat(entity, PropType:1, datamap, 0);
+}
+
+SetEntityGravity(entity, Float:amount)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_flGravity");
+		}
+		gotconfig = true;
+	}
+	SetEntPropFloat(entity, PropType:1, datamap, amount, 0);
+	return 0;
+}
+
+String:wS_GetMyNick(_arg0)
+{
+	static String:wS[4] = "wS";
+	return String:684;
+}
+
+wS_Protect_IpPort()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+	}
+	if (TEST_VERSION == 1)
+	{
+		return 0;
+	}
+	static Handle:cvar_hostip;
+	static Handle:cvar_hostport;
+	static bool:cvar_hook;
+	if (!cvar_hostip)
+	{
+		cvar_hostip = FindConVar("hostip");
+		cvar_hostport = FindConVar("hostport");
+	}
+	new var1;
+	if (cvar_hostip && cvar_hostport)
+	{
+		SetFailState("hostip || hostport == INVALID_HANDLE");
+		return 0;
+	}
+	new hostip = GetConVarInt(cvar_hostip);
+	new ip1 = hostip >> 24 & 255;
+	new ip2 = hostip >> 16 & 255;
+	new ip3 = hostip >> 8 & 255;
+	new ip4 = hostip & 255;
+	decl String:current_ip_port[76];
+	Format(current_ip_port, 75, "%d_%d_%d_%d_%d", ip1, ip2, ip3, ip4, GetConVarInt(cvar_hostport));
+	if (!StrEqual(current_ip_port, FOR_IP_PORT, false))
+	{
+		SetFailState("\nPlugin is not for this server!\nYour server: \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97", current_ip_port, FOR_IP_PORT);
+		return 0;
+	}
+	if (!cvar_hook)
+	{
+		cvar_hook = true;
+		HookConVarChange(cvar_hostip, cvar_hostip_ip_port_changed);
+		HookConVarChange(cvar_hostport, cvar_hostip_ip_port_changed);
+	}
+	return 0;
+}
+
+public cvar_hostip_ip_port_changed(Handle:cVar, String:OldValue[], String:NewValue[])
+{
+	wS_Protect_IpPort();
+	return 0;
+}
+
+wS_Protect_Kick(wait_sec)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsValidEntity(i) && IsClientInGame(i))
+		{
+			KickClient(i, "[ World-Source.Ru ] ЖДИТЕ %d сек! (%s %s - ТЕСТОВАЯ ВЕРСИЯ!)", wait_sec, PLUGIN_NAME, PLUGIN_VERS);
+		}
+		i++;
+	}
+	return 0;
+}
+
+bool:wS_Protect_GameAllowed()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+	}
+	if (TEST_VERSION != 1)
+	{
+		return true;
+	}
+	static need_wait_sec = 30;
+	static old_time;
+	new cur_time = GetTime({0,0});
+	if (!old_time)
+	{
+		old_time = cur_time;
+	}
+	new sec = cur_time - old_time;
+	if (sec < need_wait_sec)
+	{
+		wS_Protect_Kick(need_wait_sec - sec);
+		return false;
+	}
+	if (need_wait_sec + 240 <= sec)
+	{
+		old_time = cur_time;
+		wS_Protect_Kick(need_wait_sec);
+		return false;
+	}
+	return true;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+TE_SendToAll(Float:delay)
+{
+	new total;
+	new clients[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	return TE_Send(clients, total, delay);
+}
+
+TE_SetupExplosion(Float:pos[3], Model, Float:Scale, Framerate, Flags, Radius, Magnitude, Float:normal[3], MaterialType)
+{
+	TE_Start("Explosion");
+	TE_WriteVector("m_vecOrigin[0]", pos);
+	TE_WriteVector("m_vecNormal", normal);
+	TE_WriteNum("m_nModelIndex", Model);
+	TE_WriteFloat("m_fScale", Scale);
+	TE_WriteNum("m_nFrameRate", Framerate);
+	TE_WriteNum("m_nFlags", Flags);
+	TE_WriteNum("m_nRadius", Radius);
+	TE_WriteNum("m_nMagnitude", Magnitude);
+	TE_WriteNum("m_chMaterialType", MaterialType);
+	return 0;
+}
+
+TE_SetupBeamRingPoint(Float:center[3], Float:Start_Radius, Float:End_Radius, ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:Amplitude, Color[4], Speed, Flags)
+{
+	TE_Start("BeamRingPoint");
+	TE_WriteVector("m_vecCenter", center);
+	TE_WriteFloat("m_flStartRadius", Start_Radius);
+	TE_WriteFloat("m_flEndRadius", End_Radius);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", Width);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[1]);
+	TE_WriteNum("b", Color[2]);
+	TE_WriteNum("a", Color[3]);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFlags", Flags);
+	TE_WriteNum("m_nFadeLength", 0);
+	return 0;
+}
+
+TE_SetupBeamPoints(Float:start[3], Float:end[3], ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:EndWidth, FadeLength, Float:Amplitude, Color[4], Speed)
+{
+	TE_Start("BeamPoints");
+	TE_WriteVector("m_vecStartPoint", start);
+	TE_WriteVector("m_vecEndPoint", end);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", EndWidth);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[1]);
+	TE_WriteNum("b", Color[2]);
+	TE_WriteNum("a", Color[3]);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFadeLength", FadeLength);
+	return 0;
+}
+
+wS_PrecacheModelsFromMenu(Handle:menu, bad_item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (menu)
+	{
+		new items = GetMenuItemCount(menu);
+		if (items < 1)
+		{
+			return 0;
+		}
+		decl String:model[128];
+		new i;
+		while (i < items)
+		{
+			new var1;
+			if (i > bad_item && GetMenuItem(menu, i, model, 125, 0, "", 0))
+			{
+				PrecacheModel(model, true);
+			}
+			i++;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+wS_Precache()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	PrecacheModel("models/player/t_phoenix.mdl", true);
+	PrecacheModel("models/player/ct_sas.mdl", true);
+	PrecacheModel("sprites/laser.vmt", true);
+	PrecacheSound("ambient/office/button1.wav", true);
+	PrecacheSound("weapons/hegrenade/explode5.wav", true);
+	PrecacheModel("models/props/cs_office/vending_machine.mdl", true);
+	g_LaserIndex = PrecacheModel("materials/sprites/laser.vmt", true);
+	wS_PrecacheModelsFromMenu(g_Trails_Menu, 0);
+	wS_PrecacheModelsFromMenu(g_RedVipSkinsMenu, 0);
+	wS_PrecacheModelsFromMenu(g_BluVipSkinsMenu, 0);
+	PrecacheModel("models/props_c17/oildrum001_explosive.mdl", true);
+	PrecacheModel("models/props_c17/oildrumchunk01a.mdl", true);
+	PrecacheModel("models/props_c17/oildrumchunk01b.mdl", true);
+	PrecacheModel("models/props_c17/oildrumchunk01c.mdl", true);
+	PrecacheModel("models/props_c17/oildrumchunk01d.mdl", true);
+	PrecacheModel("models/props_c17/oildrumchunk01e.mdl", true);
+	if (0 < g_OverlaysCount)
+	{
+		decl String:model[128];
+		new i = 1;
+		while (i <= g_OverlaysCount)
+		{
+			if (GetArrayString(g_Array_Overlays, i, model, 125) > 5)
+			{
+				PrecacheModel(model, true);
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+wS_CreateServerVars()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	vip_cvar_hide_options = CreateConVar("vip_cvar_hide_options", "0", "1 = показывать только те опции, к которым есть доступ; 0 = показывать все", 256, true, 0.0, true, 1.0);
+	vip_cvar_flood_protect_sec = CreateConVar("vip_cvar_flood_protect_sec", "0.2", "Задержка между повторным выбором опции", 256, true, 0.1, true, 1.0);
+	vip_cvar_test_menu = CreateConVar("vip_cvar_test_menu", "1", "1 = игрок без VIP доступа видит список функций в меню (тест-меню); 0 = нет", 256, true, 0.0, true, 1.0);
+	vip_cvar_join_open_menu = CreateConVar("vip_cvar_join_open_menu", "1", "1 = открывать vip меню зашедшим игрокам; 0 = нет", 256, true, 0.0, true, 1.0);
+	vip_cvar_functions_status = CreateConVar("vip_cvar_functions_status", "1", "Статус VIP функций по умолчанию: 1 = вкл: 0 = откл", 256, true, 0.0, true, 1.0);
+	vip_cvar_trail_lifetime = CreateConVar("vip_cvar_trail_lifetime", "1.5", "Как быстро исчезает хвост", 256, true, 1.0, true, 5.0);
+	vip_cvar_trail_startwidth = CreateConVar("vip_cvar_trail_startwidth", "25.0", "Начальная ширина хвоста", 256, true, 1.0, true, 25.0);
+	vip_cvar_trail_endwidth = CreateConVar("vip_cvar_trail_endwidth", "1.0", "Конечная ширина хвоста", 256, true, 1.0, true, 25.0);
+	vip_cvar_trail_height = CreateConVar("vip_cvar_trail_height", "3", "Позволяет поднять (положительное число) или опустить хвост (отрицательное)", 256, true, -50.0, true, 150.0);
+	vip_cvar_laser_width = CreateConVar("vip_cvar_laser_width", "2.0", "Ширина лазера от 1.0 до 25.0", 256, true, 1.0, true, 25.0);
+	vip_cvar_laser_life = CreateConVar("vip_cvar_laser_life", "60.0", "Через сколько секунд удалить лазер, после создания; 0 = не удалять", 256, true, 0.0, true, 540.0);
+	vip_cvar_laser_clear = CreateConVar("vip_cvar_laser_clear", "1", "1 = удалять лазер, если он убил игрока; 0 = нет", 256, true, 0.0, true, 1.0);
+	vip_cvar_laser_team = CreateConVar("vip_cvar_laser_team", "1", "1 = лазер убивает только врагов; 0 = всех", 256, true, 0.0, true, 1.0);
+	vip_cvar_he_rgba = CreateConVar("vip_cvar_he_rgba", "255 0 0 255", "Цвет лучей при взрыве боевой гранаты", 256, false, 0.0, false, 0.0);
+	vip_cvar_sg_rgba = CreateConVar("vip_cvar_sg_rgba", "0 255 0 255", "Цвет лучей (дымовая граната)", 256, false, 0.0, false, 0.0);
+	vip_cvar_fb_rgba = CreateConVar("vip_cvar_fb_rgba", "255 255 255 255", "Цвет лучей (флешка)", 256, false, 0.0, false, 0.0);
+	AutoExecConfig(true, "vip", "vip");
+	return 0;
+}
+
+wS_ReloadVipGroups()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	static bool:trie_created;
+	static old_change_time = -1;
+	if (!trie_created)
+	{
+		trie_created = true;
+		g_VipGroupTrie = CreateTrie();
+		g_VipGroupTrie_hp = CreateTrie();
+		g_VipGroupTrie_speed = CreateTrie();
+		g_VipGroupTrie_color = CreateTrie();
+		g_VipGroupTrie_skin_t = CreateTrie();
+		g_VipGroupTrie_skin_ct = CreateTrie();
+		g_VipGroupTrie_rehp = CreateTrie();
+		g_VipGroupTrie_chat = CreateTrie();
+		g_VipGroupTrie_gravity = CreateTrie();
+		g_VipGroupTrie_cash = CreateTrie();
+		g_VipGroupTrie_armor = CreateTrie();
+		g_VipGroupTrie_noblind = CreateTrie();
+		g_VipGroupTrie_defuse = CreateTrie();
+		g_VipGroupTrie_trail = CreateTrie();
+		g_VipGroupTrie_team = CreateTrie();
+		g_VipGroupTrie_overlay = CreateTrie();
+		g_VipGroupTrie_he = CreateTrie();
+		g_VipGroupTrie_sg = CreateTrie();
+		g_VipGroupTrie_fb = CreateTrie();
+		g_VipGroupTrie_laser = CreateTrie();
+		g_VipGroupTrie_c4 = CreateTrie();
+		g_VipGroupTrie_fraghp = CreateTrie();
+		g_VipGroupTrie_water = CreateTrie();
+		g_VipGroupTrie_immun = CreateTrie();
+		g_VipGroupTrie_admin = CreateTrie();
+		g_VipGroupTrie_respawn = CreateTrie();
+		g_VipGroupTrie_tele = CreateTrie();
+		g_VipGroupTrie_dropgren = CreateTrie();
+		g_VipGroupTrie_barrel = CreateTrie();
+		g_VipGroupTrie_beam = CreateTrie();
+		g_VipGroupTrie_ammo = CreateTrie();
+		g_VipGroupTrie_hostage = CreateTrie();
+		g_VipGroupTrie_gren_effect = CreateTrie();
+	}
+	new new_change_time = GetFileTime("cfg/vip/vip_groups.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/vip_groups.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	g_VipGroups_Count = 0;
+	ClearTrie(g_VipGroupTrie);
+	ClearTrie(g_VipGroupTrie_hp);
+	ClearTrie(g_VipGroupTrie_speed);
+	ClearTrie(g_VipGroupTrie_color);
+	ClearTrie(g_VipGroupTrie_skin_t);
+	ClearTrie(g_VipGroupTrie_skin_ct);
+	ClearTrie(g_VipGroupTrie_rehp);
+	ClearTrie(g_VipGroupTrie_chat);
+	ClearTrie(g_VipGroupTrie_gravity);
+	ClearTrie(g_VipGroupTrie_cash);
+	ClearTrie(g_VipGroupTrie_armor);
+	ClearTrie(g_VipGroupTrie_noblind);
+	ClearTrie(g_VipGroupTrie_defuse);
+	ClearTrie(g_VipGroupTrie_trail);
+	ClearTrie(g_VipGroupTrie_team);
+	ClearTrie(g_VipGroupTrie_overlay);
+	ClearTrie(g_VipGroupTrie_he);
+	ClearTrie(g_VipGroupTrie_sg);
+	ClearTrie(g_VipGroupTrie_fb);
+	ClearTrie(g_VipGroupTrie_laser);
+	ClearTrie(g_VipGroupTrie_c4);
+	ClearTrie(g_VipGroupTrie_fraghp);
+	ClearTrie(g_VipGroupTrie_water);
+	ClearTrie(g_VipGroupTrie_immun);
+	ClearTrie(g_VipGroupTrie_admin);
+	ClearTrie(g_VipGroupTrie_respawn);
+	ClearTrie(g_VipGroupTrie_tele);
+	ClearTrie(g_VipGroupTrie_dropgren);
+	ClearTrie(g_VipGroupTrie_barrel);
+	ClearTrie(g_VipGroupTrie_beam);
+	ClearTrie(g_VipGroupTrie_ammo);
+	ClearTrie(g_VipGroupTrie_hostage);
+	ClearTrie(g_VipGroupTrie_gren_effect);
+	new Handle:kv = CreateKeyValues("vip_groups", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/vip/vip_groups.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		LogToFileEx(g_ErrorLogFile, "cfg/vip/vip_groups.txt KeyValues Error (UTF-8 без BOM!)");
+		return 0;
+	}
+	decl String:group_name[68];
+	decl String:str_value[76];
+	decl String:str_group_num[8];
+	decl String:str_flags[48];
+	new int_value;
+	new Float:float_value = 0.0;
+	new AdminFlag:flag;
+	new chr;
+	do {
+		new var3;
+		if (!KvGetSectionName(kv, group_name, 65) || wS_VipGroupExist(group_name))
+		{
+		}
+		else
+		{
+			new var4;
+			if ((int_value = KvGetNum(kv, "hp", 0)) < 0 || int_value > 500)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_hp, group_name, int_value, true);
+			new var5;
+			if ((float_value = KvGetFloat(kv, "speed", 0.0)) < 0 || float_value > 5.0)
+			{
+				float_value = 0.0;
+			}
+			SetTrieValue(g_VipGroupTrie_speed, group_name, float_value, true);
+			new var6;
+			if ((int_value = KvGetNum(kv, "rehp", 0)) < 0 || int_value > 99)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_rehp, group_name, int_value, true);
+			new var7;
+			if ((float_value = KvGetFloat(kv, "gravity", 0.0)) < 0 || float_value > 3.0)
+			{
+				float_value = 0.0;
+			}
+			SetTrieValue(g_VipGroupTrie_gravity, group_name, float_value, true);
+			new var8;
+			if ((int_value = KvGetNum(kv, "cash", 0)) < 0 || int_value > 16000)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_cash, group_name, int_value, true);
+			new var9;
+			if ((int_value = KvGetNum(kv, "armor", 0)) < 0 || int_value > 250)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_armor, group_name, int_value, true);
+			SetTrieValue(g_VipGroupTrie_color, group_name, KvGetNum(kv, "color", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_skin_t, group_name, KvGetNum(kv, "skin_t", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_skin_ct, group_name, KvGetNum(kv, "skin_ct", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_chat, group_name, KvGetNum(kv, "chat", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_noblind, group_name, KvGetNum(kv, "noblind", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_defuse, group_name, KvGetNum(kv, "defuse", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_trail, group_name, KvGetNum(kv, "trail", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_team, group_name, KvGetNum(kv, "team", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_overlay, group_name, KvGetNum(kv, "overlay", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_c4, group_name, KvGetNum(kv, "c4", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_water, group_name, KvGetNum(kv, "water", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_dropgren, group_name, KvGetNum(kv, "dropgren", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_barrel, group_name, KvGetNum(kv, "barrel", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_beam, group_name, KvGetNum(kv, "beam", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_ammo, group_name, KvGetNum(kv, "ammo", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_hostage, group_name, KvGetNum(kv, "hostage", 0) == 1, true);
+			SetTrieValue(g_VipGroupTrie_gren_effect, group_name, KvGetNum(kv, "gren_effect", 0) == 1, true);
+			new var10;
+			if ((int_value = KvGetNum(kv, "he", 0)) < 0 || int_value > 999)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_he, group_name, int_value, true);
+			new var11;
+			if ((int_value = KvGetNum(kv, "sg", 0)) < 0 || int_value > 999)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_sg, group_name, int_value, true);
+			new var12;
+			if ((int_value = KvGetNum(kv, "fb", 0)) < 0 || int_value > 999)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_fb, group_name, int_value, true);
+			new var13;
+			if ((int_value = KvGetNum(kv, "laser", 0)) < 0 || int_value > 99)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_laser, group_name, int_value, true);
+			new var14;
+			if ((int_value = KvGetNum(kv, "fraghp", 0)) < 0 || int_value > 99)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_fraghp, group_name, int_value, true);
+			new var15;
+			if ((int_value = KvGetNum(kv, "immun", 0)) < 0 || int_value > 99)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_immun, group_name, int_value, true);
+			str_flags[0] = MissingTAG:0;
+			str_value[0] = MissingTAG:0;
+			KvGetString(kv, "admin", str_value, 45, "");
+			if (0 < (int_value = strlen(str_value)))
+			{
+				new i;
+				while (i < int_value)
+				{
+					chr = CharToLower(str_value[i]);
+					if (FindFlagByChar(chr, flag))
+					{
+						if (str_flags[0])
+						{
+							Format(str_flags, 45, "%s%c", str_flags, chr);
+						}
+						Format(str_flags, 45, "%c", chr);
+					}
+					i++;
+				}
+			}
+			SetTrieString(g_VipGroupTrie_admin, group_name, str_flags, true);
+			new var16;
+			if ((int_value = KvGetNum(kv, "respawn", 0)) < 0 || int_value > 999)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_respawn, group_name, int_value, true);
+			new var17;
+			if ((int_value = KvGetNum(kv, "tele", 0)) < 0 || int_value > 999)
+			{
+				int_value = 0;
+			}
+			SetTrieValue(g_VipGroupTrie_tele, group_name, int_value, true);
+			g_VipGroups_Count += 1;
+			IntToString(g_VipGroups_Count, str_group_num, 5);
+			SetTrieString(g_VipGroupTrie, str_group_num, group_name, true);
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	return 0;
+}
+
+public Action:vip_groups_list(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args > 1)
+	{
+		return Action:3;
+	}
+	if (g_VipGroups_Count < 1)
+	{
+		PrintToConsole(client, "You must create at least 1 VIP group..");
+		return Action:3;
+	}
+	decl String:str_group_num[8];
+	decl String:group_name[68];
+	new i = 1;
+	while (i <= g_VipGroups_Count)
+	{
+		IntToString(i, str_group_num, 5);
+		if (GetTrieString(g_VipGroupTrie, str_group_num, group_name, 65, 0))
+		{
+			PrintToConsole(client, "%02d. %s", i, group_name);
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+bool:wS_VipGroupExist(String:group_name[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	static wS;
+	return GetTrieValue(g_VipGroupTrie_hp, group_name, wS);
+}
+
+public Action:vip_command(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (client > 0 && args < 1)
+	{
+		if (g_VipAccess[client])
+		{
+			if (g_VipMenu[client])
+			{
+				DisplayMenu(g_VipMenu[client], client, 0);
+			}
+			else
+			{
+				if (!g_MyVipGroupExists[client])
+				{
+					PrintToChat(client, "\x04%t", "vip_group_not_exists", g_MyVipGroup[client]);
+				}
+				PrintToChat(client, "g_VipMenu INVALID_HANDLE");
+			}
+			return Action:3;
+		}
+		if (GetConVarBool(vip_cvar_test_menu))
+		{
+			if (g_VipMenu[client])
+			{
+				DisplayMenu(g_VipMenu[client], client, 0);
+			}
+			wS_Create_g_VipMenu_ForVipClient(client, true, false, true);
+		}
+		PrintToChat(client, "%t", "vip_no_access");
+	}
+	return Action:3;
+}
+
+wS_GetClientGrenadeCount(client, grenade_slot)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (grenade_slot < 3 || grenade_slot > 5)
+	{
+		return 0;
+	}
+	static grenade_type[6];
+	if (!grenade_type[grenade_slot])
+	{
+		grenade_type[3] = 12;
+		grenade_type[4] = 11;
+		grenade_type[5] = 13;
+	}
+	new offset = grenade_type[grenade_slot] * 4 + FindDataMapOffs(client, "m_iAmmo", 0, 0);
+	return GetEntData(client, offset, 4);
+}
+
+wS_GetCvarColor(Handle:cVar, color[4], default_color[4])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new i;
+	while (i < 4)
+	{
+		color[i] = default_color[i];
+		i++;
+	}
+	decl String:str_rgba[36];
+	GetConVarString(cVar, str_rgba, 35);
+	TrimString(str_rgba);
+	if (0 < strlen(str_rgba))
+	{
+		new String:buffer[4][12] = {
+			" ",
+			"/",
+			"%d",
+			"\x04%t"
+		};
+		if (ExplodeString(str_rgba, " ", buffer, 4, 9, false) > 3)
+		{
+			decl value;
+			i = 0;
+			while (i < 4)
+			{
+				new var1;
+				if ((value = StringToInt(buffer[i], 10)) < 0 || value > 255)
+				{
+					i = 0;
+					while (i < 4)
+					{
+						color[i] = default_color[i];
+						i++;
+					}
+					return 0;
+				}
+				color[i] = value;
+				i++;
+			}
+		}
+	}
+	return 0;
+}
+
+bool:wS_EditVipSkin(String:path[128])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (path[0] == 'm')
+	{
+		ReplaceString(path, 125, "\", "/", true);
+		new var1;
+		if (StrContains(path, "models/", true) && FileExists(path, false))
+		{
+			return true;
+		}
+	}
+	path[0] = MissingTAG:0;
+	return false;
+}
+
+wS_ClearHandle(&Handle:hdl)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (hdl)
+	{
+		CloseHandle(hdl);
+		hdl = 0;
+	}
+	return 0;
+}
+
+wS_KillTimer(&Handle:timer)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (timer)
+	{
+		KillTimer(timer, false);
+		timer = 0;
+	}
+	return 0;
+}
+
+bool:wS_VipMenuFloodDetected(client, bool:msg_and_sound)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Float:GameTime_value = GetGameTime();
+	if (GameTime_value - g_MyGameTimeWhenSelectOption[client] < GetConVarFloat(vip_cvar_flood_protect_sec))
+	{
+		if (msg_and_sound)
+		{
+			PrintToChat(client, "\x04%t", "flood_protect_msg");
+			ClientCommand(client, "playgamesound \"resource/warning.wav\"");
+		}
+		return true;
+	}
+	g_MyGameTimeWhenSelectOption[client] = GameTime_value;
+	return false;
+}
+
+wS_ShowClientMsgInPanel(client, String:msg[], bool:playsound)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	DrawPanelText(panel, msg);
+	SetPanelCurrentKey(panel, 10);
+	DrawPanelItem(panel, "Выход", 0);
+	SendPanelToClient(panel, client, Panel_CallBack, 0);
+	CloseHandle(panel);
+	if (playsound)
+	{
+		ClientCommand(client, "playgamesound resource/warning.wav");
+	}
+	return 0;
+}
+
+public Panel_CallBack(Handle:panel, MenuAction:action, client, option)
+{
+	return 0;
+}
+
+bool:wS_CorrectSteamSyntax(String:steamid[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (StrContains(steamid, "STEAM_", true))
+	{
+		return false;
+	}
+	new max = strlen(steamid);
+	new i = 6;
+	while (i < max)
+	{
+		new var1;
+		if (!IsCharNumeric(steamid[i]) && steamid[i] != ':')
+		{
+			return false;
+		}
+		i++;
+	}
+	return true;
+}
+
+bool:wS_GetSteamIdFromArgNum(client, String:steamid[28], ArgNum)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (GetCmdArg(ArgNum, steamid, 28) > 5 && wS_CorrectSteamSyntax(steamid))
+	{
+		return true;
+	}
+	PrintToConsole(client, "Bad steamid.. '%s'", steamid);
+	return false;
+}
+
+wS_GetClientBySteamId(String:steamid[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsValidEntity(i) && IsClientInGame(i) && strcmp(g_SteamId[i], steamid, true))
+		{
+			return i;
+		}
+		i++;
+	}
+	return 0;
+}
+
+bool:wS_OpenFileAndLoadFiles(String:path[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Handle:file = OpenFile(path, "r");
+	if (file)
+	{
+		decl String:str_value[88];
+		while (!IsEndOfFile(file) && ReadFileLine(file, str_value, 85))
+		{
+			TrimString(str_value);
+			new var2;
+			if (str_value[0] == 'm' || str_value[0] == 's')
+			{
+				AddFileToDownloadsTable(str_value);
+			}
+		}
+		CloseHandle(file);
+		return true;
+	}
+	LogToFileEx(g_ErrorLogFile, "Could not open file \"%s\"", path);
+	return false;
+}
+
+wS_DissolveEntityByName(index, String:name[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (g_Dissolver > 0 && IsValidEntity(g_Dissolver))
+	{
+		DispatchKeyValue(g_Dissolver, "target", name);
+		DispatchKeyValue(g_Dissolver, "magnitude", "1");
+		DispatchKeyValue(g_Dissolver, "dissolvetype", "0");
+		AcceptEntityInput(g_Dissolver, "Dissolve", -1, -1, 0);
+	}
+	else
+	{
+		if (0 < index)
+		{
+			AcceptEntityInput(index, "Kill", -1, -1, 0);
+		}
+	}
+	return 0;
+}
+
+wS_SetColor(entity, r, g, b, a)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	SetEntityRenderMode(entity, RenderMode:1);
+	SetEntityRenderColor(entity, r, g, b, a);
+	return 0;
+}
+
+wS_TeamColorMsg(client_author, String:msg[], client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Handle:h;
+	if (0 < client)
+	{
+		h = StartMessageOne("SayText2", client, 0);
+	}
+	else
+	{
+		h = StartMessageAll("SayText2", 0);
+	}
+	if (h)
+	{
+		BfWriteByte(h, client_author);
+		BfWriteByte(h, 1);
+		BfWriteString(h, msg);
+		EndMessage();
+		return 0;
+	}
+	if (0 < client)
+	{
+		PrintToChat(client, msg);
+	}
+	else
+	{
+		PrintToChatAll(msg);
+	}
+	return 0;
+}
+
+AdminId:wS_GetAdminId(client, bool:create_admin)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new AdminId:id = GetUserAdmin(client);
+	new var1;
+	if (id == AdminId:-1 && create_admin)
+	{
+		id = CreateAdmin("");
+		SetUserAdmin(client, id, true);
+	}
+	return id;
+}
+
+wS_TrySetImmunAndAdminFlags(client, bool:status)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new AdminId:id = -1;
+	new var1;
+	if (g_VipHave[client][28] && g_VipFeatureOn[client][28])
+	{
+		if ((id = wS_GetAdminId(client, true)) != -1)
+		{
+			new var2;
+			if (status)
+			{
+				var2 = g_VipValue[client][11];
+			}
+			else
+			{
+				var2 = 0;
+			}
+			SetAdminImmunityLevel(id, var2);
+		}
+	}
+	if (g_VipHave[client][31])
+	{
+		if (id == AdminId:-1)
+		{
+			id = wS_GetAdminId(client, true);
+		}
+		if (id != AdminId:-1)
+		{
+			decl String:str_flags[48];
+			strcopy(str_flags, 45, g_VipValue[client][14]);
+			new flags_count = strlen(str_flags);
+			if (0 < flags_count)
+			{
+				decl AdminFlag:flag;
+				new i;
+				while (i < flags_count)
+				{
+					if (FindFlagByChar(CharToLower(str_flags[i]), flag))
+					{
+						SetAdminFlag(id, flag, status);
+					}
+					i++;
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+wS_GetAimInfo(client, bool:get_index, bool:get_origin, Float:end_origin[3])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl Float:origin[3];
+	decl Float:angles[3];
+	GetClientEyePosition(client, origin);
+	GetClientEyeAngles(client, angles);
+	TR_TraceRayFilter(origin, angles, 33570827, RayType:1, wS_GetAimInfo_TraceFilter, client);
+	if (TR_DidHit(Handle:0))
+	{
+		if (get_origin)
+		{
+			TR_GetEndPosition(end_origin, Handle:0);
+		}
+		if (get_index)
+		{
+			return TR_GetEntityIndex(Handle:0);
+		}
+	}
+	return -1;
+}
+
+public bool:wS_GetAimInfo_TraceFilter(TraceEnt, mask, any:entity)
+{
+	return entity != TraceEnt;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	RegPluginLibrary("vip");
+	CreateNative("VIP_IsVipPlayer", VIP_IsVipPlayer_CallBack);
+	CreateNative("VIP_GetAccessSeconds", VIP_GetAccessSeconds_CallBack);
+	CreateNative("VIP_HaveFeature", VIP_HaveFeature_CallBack);
+	CreateNative("VIP_FeatureOn", VIP_FeatureOn_CallBack);
+	return APLRes:0;
+}
+
+wS_Create_GlobalFunctions()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_Event_VIP_Removed = CreateGlobalForward("Event_VIP_Removed", ExecType:0, 2, 7, 2, 7);
+	g_Event_VIP_Added = CreateGlobalForward("Event_VIP_Added", ExecType:0, 2, 7, 7, 2, 2);
+	g_Event_VIP_TimeChanged = CreateGlobalForward("Event_VIP_TimeChanged", ExecType:0, 2, 7, 2, 2);
+	g_Event_VIP_Joined = CreateGlobalForward("Event_VIP_Joined", ExecType:0, 2, 7, 2);
+	return 0;
+}
+
+bool:ItsVipIndex(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	return 0 < client <= MaxClients && g_VipAccess[client];
+}
+
+public VIP_IsVipPlayer_CallBack(Handle:plugin, args)
+{
+	return ItsVipIndex(GetNativeCell(1));
+}
+
+public VIP_GetAccessSeconds_CallBack(Handle:plugin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetNativeCell(1);
+	if (!ItsVipIndex(client))
+	{
+		return -2;
+	}
+	if (0 < g_VipTime[client])
+	{
+		return g_VipTime[client] - GetTime({0,0});
+	}
+	return -1;
+}
+
+public VIP_HaveFeature_CallBack(Handle:plugin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetNativeCell(1);
+	new var1;
+	return ItsVipIndex(client) && g_VipHave[client][GetNativeCell(2)];
+}
+
+public VIP_FeatureOn_CallBack(Handle:plugin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetNativeCell(1);
+	new VIP_FeatureType:t = GetNativeCell(2);
+	new var1;
+	return ItsVipIndex(client) && g_VipHave[client][t] && g_VipFeatureOn[client][t];
+}
+
+bool:wS_Update_g_VipMenuTitle(client, bool:test_menu)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (g_VipMenu[client])
+	{
+		decl String:title[76];
+		if (test_menu)
+		{
+			Format(title, 75, "%T\n \n", "vip_menu_title_test", client);
+		}
+		else
+		{
+			if (0 < g_VipTime[client])
+			{
+				decl String:info[36];
+				FormatTime(info, 35, "%d/%m/%Y - %H:%M", g_VipTime[client]);
+				Format(title, 75, "%T\n \n", "vip_menu_title_time", client, info);
+			}
+			Format(title, 75, "%T\n \n", "vip_menu_title_forever", client);
+		}
+		SetMenuTitle(g_VipMenu[client], title);
+		return true;
+	}
+	return false;
+}
+
+wS_AddDisabledItem(Handle:menu, String:buffer[76], String:key[], client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	Format(buffer, 75, "%T", key, client);
+	AddMenuItem(menu, "", buffer, 1);
+	return 0;
+}
+
+wS_Create_g_VipMenu_ForVipClient(client, bool:test_menu, bool:player_join, bool:open_menu)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (g_VipMenu[client])
+	{
+		CloseHandle(g_VipMenu[client]);
+	}
+	g_VipMenu[client] = CreateMenu(g_VipMenu_CallBack, MenuAction:28);
+	new Handle:menu = g_VipMenu[client];
+	SetMenuExitButton(menu, true);
+	decl String:text[76];
+	wS_Update_g_VipMenuTitle(client, test_menu);
+	decl bool:NeedAddDisabledItem;
+	new var1;
+	NeedAddDisabledItem = test_menu || !GetConVarBool(vip_cvar_hide_options);
+	decl String:str_ON[20];
+	decl String:str_OFF[20];
+	Format(str_ON, 20, "%T", "vip_feature_status_on", client);
+	Format(str_OFF, 20, "%T", "vip_feature_status_off", client);
+	if (g_VipHave[client][20])
+	{
+		new var2;
+		if (g_VipFeatureOn[client][20])
+		{
+			var2 = str_ON;
+		}
+		else
+		{
+			var2 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_hp", client, g_VipValue[client][3], var2);
+		AddMenuItem(menu, "hp", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_hp_no_access", client);
+		}
+	}
+	if (g_VipHave[client][18])
+	{
+		new var3;
+		if (g_VipFeatureOn[client][18])
+		{
+			var3 = str_ON;
+		}
+		else
+		{
+			var3 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_speed", client, g_VipValue[client][1], var3);
+		AddMenuItem(menu, "speed", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_speed_no_access", client);
+		}
+	}
+	if (g_VipHave[client][16])
+	{
+		Format(text, 75, "%T", "vip_menu_color", client);
+		AddMenuItem(menu, "color", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_color_no_access", client);
+		}
+	}
+	if (g_VipHave[client][0])
+	{
+		Format(text, 75, "%T", "vip_menu_skin_t", client);
+		AddMenuItem(menu, "skin_t", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_skin_t_no_access", client);
+		}
+	}
+	if (g_VipHave[client][1])
+	{
+		Format(text, 75, "%T", "vip_menu_skin_ct", client);
+		AddMenuItem(menu, "skin_ct", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_skin_ct_no_access", client);
+		}
+	}
+	if (g_VipHave[client][22])
+	{
+		new var4;
+		if (g_VipFeatureOn[client][22])
+		{
+			var4 = str_ON;
+		}
+		else
+		{
+			var4 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_rehp", client, g_VipValue[client][5], var4);
+		AddMenuItem(menu, "rehp", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_rehp_no_access", client);
+		}
+	}
+	if (g_VipHave[client][8])
+	{
+		new var5;
+		if (g_VipFeatureOn[client][8])
+		{
+			var5[0] = str_ON;
+		}
+		else
+		{
+			var5[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_chat", client, var5);
+		AddMenuItem(menu, "chat", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_chat_no_access", client);
+		}
+	}
+	if (g_VipHave[client][17])
+	{
+		new var6;
+		if (g_VipFeatureOn[client][17])
+		{
+			var6 = str_ON;
+		}
+		else
+		{
+			var6 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_gravity", client, g_VipValue[client], var6);
+		AddMenuItem(menu, "gravity", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_gravity_no_access", client);
+		}
+	}
+	if (g_VipHave[client][19])
+	{
+		new var7;
+		if (g_VipFeatureOn[client][19])
+		{
+			var7 = str_ON;
+		}
+		else
+		{
+			var7 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_cash", client, g_VipValue[client][2], var7);
+		AddMenuItem(menu, "cash", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_cash_no_access", client);
+		}
+	}
+	if (g_VipHave[client][21])
+	{
+		new var8;
+		if (g_VipFeatureOn[client][21])
+		{
+			var8 = str_ON;
+		}
+		else
+		{
+			var8 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_armor", client, g_VipValue[client][4], var8);
+		AddMenuItem(menu, "armor", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_armor_no_access", client);
+		}
+	}
+	if (g_VipHave[client][9])
+	{
+		new var9;
+		if (g_VipFeatureOn[client][9])
+		{
+			var9[0] = str_ON;
+		}
+		else
+		{
+			var9[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_noblind", client, var9);
+		AddMenuItem(menu, "noblind", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_noblind_no_access", client);
+		}
+	}
+	if (g_VipHave[client][10])
+	{
+		new var10;
+		if (g_VipFeatureOn[client][10])
+		{
+			var10[0] = str_ON;
+		}
+		else
+		{
+			var10[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_defuse", client, var10);
+		AddMenuItem(menu, "defuse", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_defuse_no_access", client);
+		}
+	}
+	if (g_VipHave[client][11])
+	{
+		Format(text, 75, "%T", "vip_menu_trail", client);
+		AddMenuItem(menu, "trail", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_trail_no_access", client);
+		}
+	}
+	if (g_VipHave[client][12])
+	{
+		Format(text, 75, "%T", "vip_menu_team", client);
+		AddMenuItem(menu, "team", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_team_no_access", client);
+		}
+	}
+	if (g_VipHave[client][15])
+	{
+		Format(text, 75, "%T", "vip_menu_overlay", client, g_MyOverlayItem[client], g_OverlaysCount);
+		AddMenuItem(menu, "overlay", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_overlay_no_access", client);
+		}
+	}
+	if (g_VipHave[client][23])
+	{
+		Format(text, 75, "%T", "vip_menu_he", client, g_VipValue[client][6]);
+		AddMenuItem(menu, "he", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_he_no_access", client);
+		}
+	}
+	if (g_VipHave[client][24])
+	{
+		Format(text, 75, "%T", "vip_menu_sg", client, g_VipValue[client][7]);
+		AddMenuItem(menu, "sg", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_sg_no_access", client);
+		}
+	}
+	if (g_VipHave[client][25])
+	{
+		Format(text, 75, "%T", "vip_menu_fb", client, g_VipValue[client][8]);
+		AddMenuItem(menu, "fb", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_fb_no_access", client);
+		}
+	}
+	if (g_VipHave[client][26])
+	{
+		Format(text, 75, "%T", "vip_menu_laser", client, g_VipValue[client][9]);
+		AddMenuItem(menu, "laser", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_laser_no_access", client);
+		}
+	}
+	if (g_VipHave[client][13])
+	{
+		new var11;
+		if (g_VipFeatureOn[client][13])
+		{
+			var11[0] = str_ON;
+		}
+		else
+		{
+			var11[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_c4", client, var11);
+		AddMenuItem(menu, "c4", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_c4_no_access", client);
+		}
+	}
+	if (g_VipHave[client][27])
+	{
+		new var12;
+		if (g_VipFeatureOn[client][27])
+		{
+			var12 = str_ON;
+		}
+		else
+		{
+			var12 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_fraghp", client, g_VipValue[client][10], var12);
+		AddMenuItem(menu, "fraghp", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_fraghp_no_access", client);
+		}
+	}
+	if (g_VipHave[client][14])
+	{
+		new var13;
+		if (g_VipFeatureOn[client][14])
+		{
+			var13[0] = str_ON;
+		}
+		else
+		{
+			var13[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_water", client, var13);
+		AddMenuItem(menu, "water", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_water_no_access", client);
+		}
+	}
+	if (g_VipHave[client][28])
+	{
+		new var14;
+		if (g_VipFeatureOn[client][28])
+		{
+			var14 = str_ON;
+		}
+		else
+		{
+			var14 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_immun", client, g_VipValue[client][11], var14);
+		AddMenuItem(menu, "immun", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_immun_no_access", client);
+		}
+	}
+	if (g_VipHave[client][31])
+	{
+		Format(text, 75, "%T", "vip_menu_admin", client);
+		AddMenuItem(menu, "admin", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_admin_no_access", client);
+		}
+	}
+	if (g_VipHave[client][29])
+	{
+		Format(text, 75, "%T", "vip_menu_respawn", client, g_VipValue[client][12]);
+		AddMenuItem(menu, "respawn", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_respawn_no_access", client);
+		}
+	}
+	if (g_VipHave[client][30])
+	{
+		Format(text, 75, "%T", "vip_menu_tele", client, g_VipValue[client][13]);
+		AddMenuItem(menu, "tele", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_tele_no_access", client);
+		}
+	}
+	if (g_VipHave[client][2])
+	{
+		Format(text, 75, "%T", "vip_menu_dropgren", client);
+		AddMenuItem(menu, "dropgren", text, 1);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_dropgren_no_access", client);
+		}
+	}
+	if (g_VipHave[client][3])
+	{
+		new var15;
+		if (g_VipFeatureOn[client][3])
+		{
+			var15[0] = str_ON;
+		}
+		else
+		{
+			var15[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_barrel", client, var15);
+		AddMenuItem(menu, "barrel", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_barrel_no_access", client);
+		}
+	}
+	if (g_VipHave[client][4])
+	{
+		new var16;
+		if (g_VipFeatureOn[client][4])
+		{
+			var16[0] = str_ON;
+		}
+		else
+		{
+			var16[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_beam", client, var16);
+		AddMenuItem(menu, "beam", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_beam_no_access", client);
+		}
+	}
+	if (g_VipHave[client][5])
+	{
+		Format(text, 75, "%T", "vip_menu_ammo", client);
+		AddMenuItem(menu, "ammo", text, 1);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_ammo_no_access", client);
+		}
+	}
+	if (g_VipHave[client][6])
+	{
+		new var17;
+		if (g_VipFeatureOn[client][6])
+		{
+			var17[0] = str_ON;
+		}
+		else
+		{
+			var17[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_hostage", client, var17);
+		AddMenuItem(menu, "hostage", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_hostage_no_access", client);
+		}
+	}
+	if (g_VipHave[client][7])
+	{
+		new var18;
+		if (g_VipFeatureOn[client][7])
+		{
+			var18[0] = str_ON;
+		}
+		else
+		{
+			var18[0] = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_gren_effect", client, var18);
+		AddMenuItem(menu, "gren_effect", text, 0);
+	}
+	else
+	{
+		if (NeedAddDisabledItem)
+		{
+			wS_AddDisabledItem(menu, text, "vip_menu_gren_effect_no_access", client);
+		}
+	}
+	new var20;
+	if (open_menu && (!player_join || GetConVarBool(vip_cvar_join_open_menu)))
+	{
+		DisplayMenu(menu, client, 0);
+	}
+	return 0;
+}
+
+public g_VipMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:4 && !g_VipAccess[client] && wS_VipMenuFloodDetected(client, true))
+	{
+		return 0;
+	}
+	decl String:info[16];
+	decl String:text[76];
+	decl String:str_ON[20];
+	decl String:str_OFF[20];
+	decl bool:enabled;
+	GetMenuItem(menu, item, info, 15, 0, "", 0);
+	Format(str_ON, 20, "%T", "vip_feature_status_on", client);
+	Format(str_OFF, 20, "%T", "vip_feature_status_off", client);
+	new bool:need_edit_item;
+	new bool:player_alive = IsPlayerAlive(client);
+	new ITEM_TYPE;
+	if (strcmp(info, "hp", true))
+	{
+		if (strcmp(info, "speed", true))
+		{
+			if (strcmp(info, "color", true))
+			{
+				new var5;
+				if (strcmp(info, "skin_t", true) && strcmp(info, "skin_ct", true))
+				{
+					g_MyLastVipMenuItem[client] = GetMenuSelectionPosition();
+					wS_ShowVipSkinsPanel(client);
+					return 0;
+				}
+				if (strcmp(info, "rehp", true))
+				{
+					if (strcmp(info, "chat", true))
+					{
+						if (strcmp(info, "gravity", true))
+						{
+							if (strcmp(info, "cash", true))
+							{
+								if (strcmp(info, "armor", true))
+								{
+									if (strcmp(info, "noblind", true))
+									{
+										if (strcmp(info, "defuse", true))
+										{
+											if (strcmp(info, "trail", true))
+											{
+												if (strcmp(info, "overlay", true))
+												{
+													if (strcmp(info, "laser", true))
+													{
+														if (strcmp(info, "c4", true))
+														{
+															if (strcmp(info, "fraghp", true))
+															{
+																if (strcmp(info, "water", true))
+																{
+																	if (strcmp(info, "immun", true))
+																	{
+																		if (strcmp(info, "admin", true))
+																		{
+																			if (strcmp(info, "respawn", true))
+																			{
+																				if (strcmp(info, "tele", true))
+																				{
+																					if (strcmp(info, "barrel", true))
+																					{
+																						if (strcmp(info, "beam", true))
+																						{
+																							if (strcmp(info, "hostage", true))
+																							{
+																								if (strcmp(info, "gren_effect", true))
+																								{
+																									if (strcmp(info, "team", true))
+																									{
+																										new var27;
+																										if (strcmp(info, "he", true) && strcmp(info, "sg", true) && strcmp(info, "fb", true))
+																										{
+																											if (IsPlayerAlive(client))
+																											{
+																												decl gren_slot;
+																												if (info[0] == 'h')
+																												{
+																													gren_slot = 4;
+																												}
+																												else
+																												{
+																													if (info[0] == 's')
+																													{
+																														gren_slot = 5;
+																													}
+																													gren_slot = 3;
+																												}
+																												new gren_count = wS_GetClientGrenadeCount(client, gren_slot);
+																												new var29;
+																												if (gren_count < 1 || (gren_slot == 3 && gren_count < 2))
+																												{
+																													if (gren_slot == 3)
+																													{
+																														new var34 = g_VipValue[client][8];
+																														var34--;
+																														gren_count = var34;
+																														if (gren_count < 1)
+																														{
+																															g_VipFeatureOn[client][25] = false;
+																														}
+																														Format(text, 75, "%T", "vip_menu_fb", client, g_VipValue[client][8]);
+																														GivePlayerItem(client, "weapon_flashbang", 0);
+																													}
+																													else
+																													{
+																														if (gren_slot == 4)
+																														{
+																															new var35 = g_VipValue[client][6];
+																															var35--;
+																															gren_count = var35;
+																															if (gren_count < 1)
+																															{
+																																g_VipFeatureOn[client][23] = false;
+																															}
+																															Format(text, 75, "%T", "vip_menu_he", client, g_VipValue[client][6]);
+																															GivePlayerItem(client, "weapon_hegrenade", 0);
+																														}
+																														new var36 = g_VipValue[client][7];
+																														var36--;
+																														gren_count = var36;
+																														if (gren_count < 1)
+																														{
+																															g_VipFeatureOn[client][24] = false;
+																														}
+																														Format(text, 75, "%T", "vip_menu_sg", client, g_VipValue[client][7]);
+																														GivePlayerItem(client, "weapon_smokegrenade", 0);
+																													}
+																													if (gren_count < 1)
+																													{
+																														ITEM_TYPE = 1;
+																													}
+																													need_edit_item = true;
+																												}
+																											}
+																										}
+																									}
+																									g_MyLastVipMenuItem[client] = GetMenuSelectionPosition();
+																									SendPanelToClient(g_TeamPanel, client, TeamPanel_CallBack, 0);
+																									return 0;
+																								}
+																								enabled = !g_VipFeatureOn[client][7];
+																								g_VipFeatureOn[client][7] = enabled;
+																								SetTrieValue(g_CookieTrie[21], g_SteamId[client], enabled, true);
+																								new var26;
+																								if (enabled)
+																								{
+																									var26[0] = str_ON;
+																								}
+																								else
+																								{
+																									var26[0] = str_OFF;
+																								}
+																								Format(text, 75, "%T %s", "vip_menu_gren_effect", client, var26);
+																								need_edit_item = true;
+																							}
+																							enabled = !g_VipFeatureOn[client][6];
+																							g_VipFeatureOn[client][6] = enabled;
+																							SetTrieValue(g_CookieTrie[16], g_SteamId[client], enabled, true);
+																							new var25;
+																							if (enabled)
+																							{
+																								var25[0] = str_ON;
+																							}
+																							else
+																							{
+																								var25[0] = str_OFF;
+																							}
+																							Format(text, 75, "%T %s", "vip_menu_hostage", client, var25);
+																							need_edit_item = true;
+																						}
+																						enabled = !g_VipFeatureOn[client][4];
+																						g_VipFeatureOn[client][4] = enabled;
+																						SetTrieValue(g_CookieTrie[15], g_SteamId[client], enabled, true);
+																						new var24;
+																						if (enabled)
+																						{
+																							var24[0] = str_ON;
+																						}
+																						else
+																						{
+																							var24[0] = str_OFF;
+																						}
+																						Format(text, 75, "%T %s", "vip_menu_beam", client, var24);
+																						need_edit_item = true;
+																					}
+																					enabled = !g_VipFeatureOn[client][3];
+																					g_VipFeatureOn[client][3] = enabled;
+																					SetTrieValue(g_CookieTrie[14], g_SteamId[client], enabled, true);
+																					new var23;
+																					if (enabled)
+																					{
+																						var23[0] = str_ON;
+																					}
+																					else
+																					{
+																						var23[0] = str_OFF;
+																					}
+																					Format(text, 75, "%T %s", "vip_menu_barrel", client, var23);
+																					need_edit_item = true;
+																				}
+																				new var22;
+																				if (g_VipFeatureOn[client][30] && IsPlayerAlive(client))
+																				{
+																					new var33 = g_VipValue[client][13];
+																					var33--;
+																					if (var33 < 1)
+																					{
+																						g_VipFeatureOn[client][30] = false;
+																					}
+																					decl Float:origin[3];
+																					wS_GetAimInfo(client, false, true, origin);
+																					origin[2] += 25.0;
+																					TeleportEntity(client, origin, NULL_VECTOR, NULL_VECTOR);
+																					Format(text, 75, "%T", "vip_menu_tele", client, g_VipValue[client][13]);
+																					if (g_VipValue[client][13] < 1)
+																					{
+																						ITEM_TYPE = 1;
+																					}
+																					need_edit_item = true;
+																				}
+																			}
+																			new var21;
+																			if (g_VipFeatureOn[client][29] && !IsPlayerAlive(client) && GetClientTeam(client) > 1)
+																			{
+																				new var32 = g_VipValue[client][12];
+																				var32--;
+																				if (var32 < 1)
+																				{
+																					g_VipFeatureOn[client][29] = false;
+																				}
+																				CS_RespawnPlayer(client);
+																				Format(text, 75, "%T", "vip_menu_respawn", client, g_VipValue[client][12]);
+																				if (g_VipValue[client][12] < 1)
+																				{
+																					ITEM_TYPE = 1;
+																				}
+																				need_edit_item = true;
+																			}
+																		}
+																		g_MyLastVipMenuItem[client] = GetMenuSelectionPosition();
+																		wS_ShowAdminFlagsPanel(client);
+																		return 0;
+																	}
+																	enabled = !g_VipFeatureOn[client][28];
+																	g_VipFeatureOn[client][28] = enabled;
+																	SetTrieValue(g_CookieTrie[13], g_SteamId[client], enabled, true);
+																	new var19;
+																	if (enabled)
+																	{
+																		var19 = str_ON;
+																	}
+																	else
+																	{
+																		var19 = str_OFF;
+																	}
+																	Format(text, 75, "%T %s", "vip_menu_immun", client, g_VipValue[client][11], var19);
+																	need_edit_item = true;
+																	new AdminId:id = wS_GetAdminId(client, true);
+																	if (id != AdminId:-1)
+																	{
+																		new var20;
+																		if (enabled)
+																		{
+																			var20 = g_VipValue[client][11];
+																		}
+																		else
+																		{
+																			var20 = 0;
+																		}
+																		SetAdminImmunityLevel(id, var20);
+																	}
+																}
+																enabled = !g_VipFeatureOn[client][14];
+																g_VipFeatureOn[client][14] = enabled;
+																SetTrieValue(g_CookieTrie[12], g_SteamId[client], enabled, true);
+																new var18;
+																if (enabled)
+																{
+																	var18[0] = str_ON;
+																}
+																else
+																{
+																	var18[0] = str_OFF;
+																}
+																Format(text, 75, "%T %s", "vip_menu_water", client, var18);
+																need_edit_item = true;
+															}
+															enabled = !g_VipFeatureOn[client][27];
+															g_VipFeatureOn[client][27] = enabled;
+															SetTrieValue(g_CookieTrie[11], g_SteamId[client], enabled, true);
+															new var17;
+															if (enabled)
+															{
+																var17 = str_ON;
+															}
+															else
+															{
+																var17 = str_OFF;
+															}
+															Format(text, 75, "%T %s", "vip_menu_fraghp", client, g_VipValue[client][10], var17);
+															need_edit_item = true;
+														}
+														enabled = !g_VipFeatureOn[client][13];
+														g_VipFeatureOn[client][13] = enabled;
+														SetTrieValue(g_CookieTrie[10], g_SteamId[client], enabled, true);
+														new var16;
+														if (enabled)
+														{
+															var16[0] = str_ON;
+														}
+														else
+														{
+															var16[0] = str_OFF;
+														}
+														Format(text, 75, "%T %s", "vip_menu_c4", client, var16);
+														need_edit_item = true;
+													}
+													new var15;
+													if (IsPlayerAlive(client) && g_VipFeatureOn[client][26] && wS_VipTryCreateLaser(client))
+													{
+														new var31 = g_VipValue[client][9];
+														var31--;
+														if (var31 < 1)
+														{
+															g_VipFeatureOn[client][26] = false;
+														}
+														Format(text, 75, "%T", "vip_menu_laser", client, g_VipValue[client][9]);
+														if (g_VipValue[client][9] < 1)
+														{
+															ITEM_TYPE = 1;
+														}
+														need_edit_item = true;
+													}
+												}
+												if (g_OverlaysCount < 1)
+												{
+													PrintToChat(client, "cfg/vip/overlays.txt не найден или пуст");
+													ITEM_TYPE = 1;
+												}
+												else
+												{
+													new overlay_item = g_MyOverlayItem[client] + 1;
+													if (overlay_item > g_OverlaysCount)
+													{
+														overlay_item = 0;
+													}
+													new var30 = overlay_item;
+													g_MyOverlayItem[client] = var30;
+													SetTrieValue(g_CookieTrie[20], g_SteamId[client], var30, true);
+													g_VipFeatureOn[client][15] = overlay_item > 0;
+													Format(text, 75, "%T", "vip_menu_overlay", client, overlay_item, g_OverlaysCount);
+													if (IsPlayerAlive(client))
+													{
+														if (overlay_item)
+														{
+															wS_TrySetOverlay(client, overlay_item);
+														}
+														wS_ClearOverlay(client);
+													}
+												}
+												need_edit_item = true;
+											}
+											g_MyLastVipMenuItem[client] = GetMenuSelectionPosition();
+											DisplayMenu(g_Trails_Menu, client, 0);
+											return 0;
+										}
+										enabled = !g_VipFeatureOn[client][10];
+										g_VipFeatureOn[client][10] = enabled;
+										SetTrieValue(g_CookieTrie[9], g_SteamId[client], enabled, true);
+										new var14;
+										if (enabled)
+										{
+											var14[0] = str_ON;
+										}
+										else
+										{
+											var14[0] = str_OFF;
+										}
+										Format(text, 75, "%T %s", "vip_menu_defuse", client, var14);
+										need_edit_item = true;
+									}
+									enabled = !g_VipFeatureOn[client][9];
+									g_VipFeatureOn[client][9] = enabled;
+									SetTrieValue(g_CookieTrie[8], g_SteamId[client], enabled, true);
+									new var13;
+									if (enabled)
+									{
+										var13[0] = str_ON;
+									}
+									else
+									{
+										var13[0] = str_OFF;
+									}
+									Format(text, 75, "%T %s", "vip_menu_noblind", client, var13);
+									need_edit_item = true;
+								}
+								enabled = !g_VipFeatureOn[client][21];
+								g_VipFeatureOn[client][21] = enabled;
+								SetTrieValue(g_CookieTrie[7], g_SteamId[client], enabled, true);
+								new var12;
+								if (enabled)
+								{
+									var12 = str_ON;
+								}
+								else
+								{
+									var12 = str_OFF;
+								}
+								Format(text, 75, "%T %s", "vip_menu_armor", client, g_VipValue[client][4], var12);
+								need_edit_item = true;
+							}
+							enabled = !g_VipFeatureOn[client][19];
+							g_VipFeatureOn[client][19] = enabled;
+							SetTrieValue(g_CookieTrie[4], g_SteamId[client], enabled, true);
+							new var11;
+							if (enabled)
+							{
+								var11 = str_ON;
+							}
+							else
+							{
+								var11 = str_OFF;
+							}
+							Format(text, 75, "%T %s", "vip_menu_cash", client, g_VipValue[client][2], var11);
+							need_edit_item = true;
+						}
+						if (GetEntityGravity(client) != g_VipValue[client][0])
+						{
+							enabled = true;
+							SetEntityGravity(client, g_VipValue[client][0]);
+						}
+						else
+						{
+							enabled = false;
+							SetEntityGravity(client, 1.0);
+						}
+						g_VipFeatureOn[client][17] = enabled;
+						SetTrieValue(g_CookieTrie[3], g_SteamId[client], enabled, true);
+						new var10;
+						if (enabled)
+						{
+							var10 = str_ON;
+						}
+						else
+						{
+							var10 = str_OFF;
+						}
+						Format(text, 75, "%T %s", "vip_menu_gravity", client, g_VipValue[client], var10);
+						need_edit_item = true;
+					}
+					enabled = !g_VipFeatureOn[client][8];
+					g_VipFeatureOn[client][8] = enabled;
+					SetTrieValue(g_CookieTrie[2], g_SteamId[client], enabled, true);
+					new var9;
+					if (enabled)
+					{
+						var9[0] = str_ON;
+					}
+					else
+					{
+						var9[0] = str_OFF;
+					}
+					Format(text, 75, "%T %s", "vip_menu_chat", client, var9);
+					need_edit_item = true;
+				}
+				enabled = !g_VipFeatureOn[client][22];
+				g_VipFeatureOn[client][22] = enabled;
+				SetTrieValue(g_CookieTrie[1], g_SteamId[client], enabled, true);
+				new var6;
+				if (enabled)
+				{
+					var6 = str_ON;
+				}
+				else
+				{
+					var6 = str_OFF;
+				}
+				Format(text, 75, "%T %s", "vip_menu_rehp", client, g_VipValue[client][5], var6);
+				need_edit_item = true;
+				if (player_alive)
+				{
+					wS_KillTimer(g_RehpTimer[client]);
+					if (enabled)
+					{
+						decl max_hp;
+						new var7;
+						if (g_VipHave[client][20] && g_VipFeatureOn[client][20])
+						{
+							var8 = g_VipValue[client][3];
+						}
+						else
+						{
+							var8 = 100;
+						}
+						max_hp = var8;
+						if (GetEntProp(client, PropType:0, "m_iHealth", 4, 0) < max_hp)
+						{
+							g_RehpTimer[client] = CreateTimer(1.0, g_RehpTimer_CallBack, client, 1);
+						}
+					}
+				}
+			}
+			g_MyLastVipMenuItem[client] = GetMenuSelectionPosition();
+			wS_Show_g_VipSkinColorsMenu(client, 0);
+			return 0;
+		}
+		enabled = !g_VipFeatureOn[client][18];
+		g_VipFeatureOn[client][18] = enabled;
+		SetTrieValue(g_CookieTrie[5], g_SteamId[client], enabled, true);
+		new var3;
+		if (enabled)
+		{
+			var3 = str_ON;
+		}
+		else
+		{
+			var3 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_speed", client, g_VipValue[client][1], var3);
+		need_edit_item = true;
+		if (player_alive)
+		{
+			new var4;
+			if (enabled)
+			{
+				var4 = g_VipValue[client][1];
+			}
+			else
+			{
+				var4 = 1.0;
+			}
+			SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", var4, 0);
+		}
+	}
+	else
+	{
+		enabled = !g_VipFeatureOn[client][20];
+		g_VipFeatureOn[client][20] = enabled;
+		SetTrieValue(g_CookieTrie[0], g_SteamId[client], enabled, true);
+		new var2;
+		if (enabled)
+		{
+			var2 = str_ON;
+		}
+		else
+		{
+			var2 = str_OFF;
+		}
+		Format(text, 75, "%T %s", "vip_menu_hp", client, g_VipValue[client][3], var2);
+		need_edit_item = true;
+	}
+	if (need_edit_item)
+	{
+		InsertMenuItem(menu, item, info, text, ITEM_TYPE);
+		RemoveMenuItem(menu, item + 1);
+	}
+	DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+	return 0;
+}
+
+wS_ReloadVipChatIgnoreCommands()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (!g_ChatCommandsTrie)
+	{
+		g_ChatCommandsTrie = CreateTrie();
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/vip/vip_chat_ignore_commands.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/vip_chat_ignore_commands.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	ClearTrie(g_ChatCommandsTrie);
+	new Handle:file = OpenFile("cfg/vip/vip_chat_ignore_commands.txt", "r");
+	if (file)
+	{
+		decl String:command[128];
+		while (!IsEndOfFile(file) && ReadFileLine(file, command, 125))
+		{
+			TrimString(command);
+			new var3;
+			if ((command[0] == '/' && command[0] == '/') && strlen(command) > 0)
+			{
+				SetTrieValue(g_ChatCommandsTrie, command, any:1, true);
+			}
+		}
+		CloseHandle(file);
+		return 0;
+	}
+	LogToFileEx(g_ErrorLogFile, "cfg/vip/vip_chat_ignore_commands.txt not found");
+	return 0;
+}
+
+wS_ShowAdminFlagsPanel(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	decl String:str_value[68];
+	Format(str_value, 65, "%T\n \n", "vip_menu_admin_flagslist", client);
+	SetPanelTitle(panel, str_value, false);
+	if (GetTrieString(g_VipGroupTrie_admin, g_MyVipGroup[client], str_value, 45, 0))
+	{
+		new flags_count = strlen(str_value);
+		if (0 < flags_count)
+		{
+			decl String:str_flags[252];
+			decl String:flag_name[20];
+			decl String:trie_flag[4];
+			str_flags[0] = MissingTAG:0;
+			new i;
+			while (i < flags_count)
+			{
+				Format(trie_flag, 3, "%c", str_value[i]);
+				if (GetTrieString(g_Trie_AdminFlagName, trie_flag, flag_name, 20, 0))
+				{
+					if (str_flags[0])
+					{
+						Format(str_flags, 250, "%s\n%s", str_flags, flag_name);
+					}
+					strcopy(str_flags, 20, flag_name);
+				}
+				i++;
+			}
+			DrawPanelText(panel, str_flags);
+		}
+	}
+	DrawPanelText(panel, " ");
+	SetPanelCurrentKey(panel, 8);
+	DrawPanelItem(panel, "<-", 0);
+	SendPanelToClient(panel, client, wS_ShowAdminFlagsPanel_CallBack, 0);
+	CloseHandle(panel);
+	return 0;
+}
+
+public wS_ShowAdminFlagsPanel_CallBack(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:4 && g_VipAccess[param1] && g_VipMenu[param1])
+	{
+		DisplayMenuAtItem(g_VipMenu[param1], param1, g_MyLastVipMenuItem[param1], 0);
+	}
+	return 0;
+}
+
+wS_Create_AdminFlags_Trie()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_Trie_AdminFlagName = CreateTrie();
+	SetTrieString(g_Trie_AdminFlagName, "a", "reservation (a)", true);
+	SetTrieString(g_Trie_AdminFlagName, "b", "generic (b)", true);
+	SetTrieString(g_Trie_AdminFlagName, "c", "kick (c)", true);
+	SetTrieString(g_Trie_AdminFlagName, "d", "ban (d)", true);
+	SetTrieString(g_Trie_AdminFlagName, "e", "unban (e)", true);
+	SetTrieString(g_Trie_AdminFlagName, "f", "slay (f)", true);
+	SetTrieString(g_Trie_AdminFlagName, "g", "changemap (g)", true);
+	SetTrieString(g_Trie_AdminFlagName, "h", "cvars (h)", true);
+	SetTrieString(g_Trie_AdminFlagName, "i", "config (i)", true);
+	SetTrieString(g_Trie_AdminFlagName, "j", "chat (j)", true);
+	SetTrieString(g_Trie_AdminFlagName, "k", "vote (k)", true);
+	SetTrieString(g_Trie_AdminFlagName, "l", "password (l)", true);
+	SetTrieString(g_Trie_AdminFlagName, "m", "rcon (m)", true);
+	SetTrieString(g_Trie_AdminFlagName, "n", "cheats (n)", true);
+	SetTrieString(g_Trie_AdminFlagName, "o", "custom1 (o)", true);
+	SetTrieString(g_Trie_AdminFlagName, "p", "custom2 (p)", true);
+	SetTrieString(g_Trie_AdminFlagName, "q", "custom3 (q)", true);
+	SetTrieString(g_Trie_AdminFlagName, "r", "custom4 (r)", true);
+	SetTrieString(g_Trie_AdminFlagName, "s", "custom5 (s)", true);
+	SetTrieString(g_Trie_AdminFlagName, "t", "custom6 (t)", true);
+	SetTrieString(g_Trie_AdminFlagName, "z", "ROOT (z)", true);
+	return 0;
+}
+
+wS_ReloadVipSkinsMenu()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (!g_RedVipSkinsMenu)
+	{
+		g_RedVipSkinsMenu = CreateMenu(g_VipSkinsMenu_CallBack, MenuAction:28);
+		SetMenuTitle(g_RedVipSkinsMenu, "Выбор скина (T):\n \n");
+		SetMenuExitBackButton(g_RedVipSkinsMenu, true);
+		AddMenuItem(g_RedVipSkinsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+		g_BluVipSkinsMenu = CreateMenu(g_VipSkinsMenu_CallBack, MenuAction:28);
+		SetMenuTitle(g_BluVipSkinsMenu, "Выбор скина (CT):\n \n");
+		SetMenuExitBackButton(g_BluVipSkinsMenu, true);
+		AddMenuItem(g_BluVipSkinsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/vip/skins.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/skins.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	RemoveAllMenuItems(g_RedVipSkinsMenu);
+	RemoveAllMenuItems(g_BluVipSkinsMenu);
+	AddMenuItem(g_RedVipSkinsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	AddMenuItem(g_BluVipSkinsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	new Handle:kv = CreateKeyValues("skins", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/vip/skins.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		LogToFileEx(g_ErrorLogFile, "cfg/vip/skins.txt KeyValues Error (UTF-8 без BOM!)");
+		return 0;
+	}
+	decl String:model_name[68];
+	decl String:model_path[128];
+	decl String:str_team[8];
+	decl team;
+	do {
+		if (KvGetSectionName(kv, model_name, 65))
+		{
+			KvGetString(kv, "team", str_team, 5, "");
+			if (strcmp(str_team, "t", false))
+			{
+				if (!(strcmp(str_team, "ct", false)))
+				{
+					team = 3;
+				}
+			}
+			else
+			{
+				team = 2;
+			}
+			KvGetString(kv, "model", model_path, 125, "");
+			if (wS_EditVipSkin(model_path))
+			{
+				new var3;
+				if (team == 2)
+				{
+					var3 = g_RedVipSkinsMenu;
+				}
+				else
+				{
+					var3 = g_BluVipSkinsMenu;
+				}
+				AddMenuItem(var3, model_path, model_name, 0);
+			}
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	return 0;
+}
+
+wS_ShowVipSkinsPanel(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	decl String:text[96];
+	Format(text, 95, "%T\n \n", "vipskin_title", client);
+	SetPanelTitle(panel, text, false);
+	if (0 < g_MyRedSkinNum[client])
+	{
+		text[0] = MissingTAG:0;
+		decl String:temp[4];
+		GetMenuItem(g_RedVipSkinsMenu, g_MyRedSkinNum[client], temp, 1, 0, text, 95);
+		Format(text, 95, "%T", "vipskin_t", client, text);
+	}
+	else
+	{
+		Format(text, 95, "%T", "vipskin_t_off", client);
+	}
+	new var1;
+	if (g_VipHave[client][0])
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	DrawPanelItem(panel, text, var1);
+	if (0 < g_MyBluSkinNum[client])
+	{
+		text[0] = MissingTAG:0;
+		decl String:temp[4];
+		GetMenuItem(g_BluVipSkinsMenu, g_MyBluSkinNum[client], temp, 1, 0, text, 95);
+		Format(text, 95, "%T", "vipskin_ct", client, text);
+	}
+	else
+	{
+		Format(text, 95, "%T", "vipskin_ct_off", client);
+	}
+	new var2;
+	if (g_VipHave[client][1])
+	{
+		var2 = 0;
+	}
+	else
+	{
+		var2 = 1;
+	}
+	DrawPanelItem(panel, text, var2);
+	DrawPanelText(panel, " ");
+	SetPanelCurrentKey(panel, 8);
+	DrawPanelItem(panel, "<-", 0);
+	SetPanelCurrentKey(panel, 10);
+	DrawPanelItem(panel, "Выход", 0);
+	SendPanelToClient(panel, client, vipskin_PaneL_CallBack, 0);
+	CloseHandle(panel);
+	return 0;
+}
+
+public vipskin_PaneL_CallBack(Handle:panel, MenuAction:action, client, option)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:4 && g_VipAccess[client])
+	{
+		new var2;
+		if (option == 1 && g_VipHave[client][0])
+		{
+			DisplayMenu(g_RedVipSkinsMenu, client, 0);
+		}
+		else
+		{
+			new var3;
+			if (option == 2 && g_VipHave[client][1])
+			{
+				DisplayMenu(g_BluVipSkinsMenu, client, 0);
+			}
+			if (option == 8)
+			{
+				DisplayMenuAtItem(g_VipMenu[client], client, g_MyLastVipMenuItem[client], 0);
+			}
+		}
+		ClientCommand(client, "playgamesound \"buttons/button14.wav\"");
+	}
+	return 0;
+}
+
+public g_VipSkinsMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:8 && item == -6)
+	{
+		wS_ShowVipSkinsPanel(client);
+		return 0;
+	}
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	if (g_RedVipSkinsMenu == menu)
+	{
+		g_VipFeatureOn[client][0] = item > 0;
+		g_MyRedSkinNum[client] = item;
+		SetTrieValue(g_CookieTrie[18], g_SteamId[client], item, true);
+	}
+	else
+	{
+		g_VipFeatureOn[client][1] = item > 0;
+		g_MyBluSkinNum[client] = item;
+		SetTrieValue(g_CookieTrie[19], g_SteamId[client], item, true);
+	}
+	if (IsPlayerAlive(client))
+	{
+		new T = GetClientTeam(client);
+		new var2;
+		if ((T == 2 && g_RedVipSkinsMenu == menu && g_VipHave[client][0]) || (T == 3 && g_BluVipSkinsMenu == menu && g_VipHave[client][1]))
+		{
+			if (item)
+			{
+				wS_SetVipSkin(client, true, item, menu);
+			}
+			new var5;
+			if (T == 2)
+			{
+				var5[0] = 54540;
+			}
+			else
+			{
+				var5[0] = 54568;
+			}
+			SetEntityModel(client, var5);
+		}
+	}
+	wS_ShowVipSkinsPanel(client);
+	return 0;
+}
+
+wS_SetVipSkin(client, bool:access, item, Handle:menu)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (access && item > 0)
+	{
+		decl String:model[128];
+		new var2;
+		if (GetMenuItem(menu, item, model, 125, 0, "", 0) && model[0] == 'm')
+		{
+			SetEntityModel(client, model);
+		}
+	}
+	return 0;
+}
+
+wS_Create_TeamPanel()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_TeamPanel = CreatePanel(Handle:0);
+	SetPanelTitle(g_TeamPanel, "Смена Команды\n \n", false);
+	DrawPanelItem(g_TeamPanel, "Spectator", 0);
+	DrawPanelItem(g_TeamPanel, "Terrorist (T)", 0);
+	DrawPanelItem(g_TeamPanel, "Counter-Terrorist (CT)\n \n", 0);
+	SetPanelCurrentKey(g_TeamPanel, 8);
+	DrawPanelItem(g_TeamPanel, "<-", 0);
+	SetPanelCurrentKey(g_TeamPanel, 10);
+	DrawPanelItem(g_TeamPanel, "Выход", 0);
+	return 0;
+}
+
+public TeamPanel_CallBack(Handle:panel, MenuAction:action, client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:4 && item > 8 && !g_VipAccess[client])
+	{
+		return 0;
+	}
+	if (item == 8)
+	{
+		DisplayMenuAtItem(g_VipMenu[client], client, g_MyLastVipMenuItem[client], 0);
+		return 0;
+	}
+	if (GetClientTeam(client) != item)
+	{
+		ChangeClientTeam(client, item);
+	}
+	SendPanelToClient(g_TeamPanel, client, TeamPanel_CallBack, 0);
+	return 0;
+}
+
+wS_ReloadVipSkinColorsMenu()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (!g_VipSkinColorsMenu)
+	{
+		g_VipSkinColorsMenu = CreateMenu(g_VipSkinColorsMenu_CallBack, MenuAction:28);
+		SetMenuExitBackButton(g_VipSkinColorsMenu, true);
+		AddMenuItem(g_VipSkinColorsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/vip/colors.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/colors.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	RemoveAllMenuItems(g_VipSkinColorsMenu);
+	AddMenuItem(g_VipSkinColorsMenu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	new Handle:kv = CreateKeyValues("colors", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/vip/colors.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		LogToFileEx(g_ErrorLogFile, "cfg/vip/colors.txt KeyValues Error (UTF-8 без BOM!)");
+		return 0;
+	}
+	decl String:ColorName[68];
+	decl String:ColorInfo[28];
+	decl r;
+	decl g;
+	decl b;
+	decl a;
+	do {
+		if (KvGetSectionName(kv, ColorName, 65))
+		{
+			r = 0;
+			g = 0;
+			b = 0;
+			a = 0;
+			KvGetColor(kv, "rgba", r, g, b, a);
+			if (0 < g + r + b + a)
+			{
+				Format(ColorInfo, 25, "%d %d %d %d", r, g, b, a);
+				AddMenuItem(g_VipSkinColorsMenu, ColorInfo, ColorName, 0);
+			}
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	return 0;
+}
+
+public g_VipSkinColorsMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:8 && item == -6)
+	{
+		DisplayMenuAtItem(g_VipMenu[client], client, g_MyLastVipMenuItem[client], 0);
+		return 0;
+	}
+	new var2;
+	if (action == MenuAction:4 && !g_VipHave[client][16])
+	{
+		return 0;
+	}
+	if (g_MySkinColorItem[client] == item)
+	{
+		wS_Show_g_VipSkinColorsMenu(client, GetMenuSelectionPosition());
+		return 0;
+	}
+	if (item < 1)
+	{
+		g_MySkinColor[client][0] = 255;
+		g_MySkinColor[client][1] = 255;
+		g_MySkinColor[client][2] = 255;
+		g_MySkinColor[client][3] = 255;
+	}
+	else
+	{
+		decl String:str_rgba[28];
+		new String:buffer[4][12] = {
+			" ",
+			"андартный\n \n",
+			"ный\n \n",
+			"%s\n \n"
+		};
+		GetMenuItem(menu, item, str_rgba, 25, 0, "", 0);
+		ExplodeString(str_rgba, " ", buffer, 4, 9, false);
+		new i;
+		while (i < 4)
+		{
+			g_MySkinColor[client][i] = StringToInt(buffer[i], 10);
+			i++;
+		}
+	}
+	if (IsPlayerAlive(client))
+	{
+		wS_SetColor(client, g_MySkinColor[client][0], g_MySkinColor[client][1], g_MySkinColor[client][2], g_MySkinColor[client][3]);
+	}
+	g_MySkinColorItem[client] = item;
+	SetTrieValue(g_CookieTrie[6], g_SteamId[client], item, true);
+	g_VipFeatureOn[client][16] = item > 0;
+	wS_Show_g_VipSkinColorsMenu(client, GetMenuSelectionPosition());
+	return 0;
+}
+
+wS_Show_g_VipSkinColorsMenu(client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:title[68];
+	if (g_MySkinColorItem[client] < 1)
+	{
+		strcopy(title, 65, "Стандартный\n \n");
+	}
+	else
+	{
+		decl String:temp[4];
+		title[0] = MissingTAG:0;
+		GetMenuItem(g_VipSkinColorsMenu, g_MySkinColorItem[client], temp, 1, 0, title, 65);
+		Format(title, 65, "%s\n \n", title);
+	}
+	SetMenuTitle(g_VipSkinColorsMenu, title);
+	DisplayMenuAtItem(g_VipSkinColorsMenu, client, item, 0);
+	return 0;
+}
+
+wS_TryRegen(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (g_VipAccess[client] && g_RehpTimer[client] && g_VipHave[client][22] && g_VipFeatureOn[client][22])
+	{
+		g_RehpTimer[client] = CreateTimer(1.0, g_RehpTimer_CallBack, client, 1);
+	}
+	return 0;
+}
+
+public Action:g_RehpTimer_CallBack(Handle:timer, any:client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (IsPlayerAlive(client))
+	{
+		new hp = GetEntProp(client, PropType:0, "m_iHealth", 4, 0);
+		decl max_hp;
+		new var1;
+		if (g_VipHave[client][20] && g_VipFeatureOn[client][20])
+		{
+			var2 = g_VipValue[client][3];
+		}
+		else
+		{
+			var2 = 100;
+		}
+		max_hp = var2;
+		if (hp < max_hp)
+		{
+			hp = g_VipValue[client][5][hp];
+			if (hp > max_hp)
+			{
+				hp = max_hp;
+			}
+			SetEntProp(client, PropType:0, "m_iHealth", hp, 4, 0);
+			if (hp < max_hp)
+			{
+				return Action:0;
+			}
+		}
+	}
+	g_RehpTimer[client] = 0;
+	return Action:4;
+}
+
+wS_ReloadVipTrails()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (!g_Trails_Menu)
+	{
+		g_Trails_Menu = CreateMenu(g_Trails_Menu_CallBack, MenuAction:28);
+		SetMenuTitle(g_Trails_Menu, "Выбор Хвоста (TraiL)\n \n");
+		SetMenuExitBackButton(g_Trails_Menu, true);
+		AddMenuItem(g_Trails_Menu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/vip/trails.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/trails.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	RemoveAllMenuItems(g_Trails_Menu);
+	AddMenuItem(g_Trails_Menu, "", "ОТКЛЮЧИТЬ (OFF)\n \n", 0);
+	new Handle:kv = CreateKeyValues("trails", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/vip/trails.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		LogToFileEx(g_ErrorLogFile, "cfg/vip/trails.txt KeyValues Error (UTF-8 без BOM!)");
+		return 0;
+	}
+	decl String:trail_name[68];
+	decl String:trail_material[128];
+	do {
+		if (KvGetSectionName(kv, trail_name, 65))
+		{
+			KvGetString(kv, "material", trail_material, 125, "");
+			if (0 < StrContains(trail_material, ".vmt", false))
+			{
+				AddMenuItem(g_Trails_Menu, trail_material, trail_name, 0);
+			}
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	return 0;
+}
+
+public g_Trails_Menu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (action == MenuAction:8 && item == -6)
+	{
+		DisplayMenuAtItem(g_VipMenu[client], client, g_MyLastVipMenuItem[client], 0);
+		return 0;
+	}
+	new var2;
+	if (action == MenuAction:4 && wS_VipMenuFloodDetected(client, true))
+	{
+		return 0;
+	}
+	if (item == g_MyTrailNum[client])
+	{
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	g_MyTrailNum[client] = item;
+	SetTrieValue(g_CookieTrie[17], g_SteamId[client], item, true);
+	g_VipFeatureOn[client][11] = item > 0;
+	if (IsPlayerAlive(client))
+	{
+		new trail = wS_GetClientTrailIndex(client);
+		if (0 < trail)
+		{
+			AcceptEntityInput(trail, "HideSprite", -1, -1, 0);
+			if (0 < item)
+			{
+				wS_SetTrailModelByPosInMenu(trail, item);
+				AcceptEntityInput(trail, "ShowSprite", -1, -1, 0);
+			}
+		}
+	}
+	DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+	return 0;
+}
+
+wS_SetTrailModelByPosInMenu(trail, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:material[128];
+	if (GetMenuItem(g_Trails_Menu, item, material, 125, 0, "", 0))
+	{
+		DispatchKeyValue(trail, "spritename", material);
+		SetEntityModel(trail, material);
+	}
+	return 0;
+}
+
+wS_GetClientTrailIndex(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new trail = g_MyTrailIndex[client];
+	new var1;
+	if (trail < 1 || !IsValidEntity(trail))
+	{
+		trail = wS_CreateVipTrail(client, false);
+		g_MyTrailIndex[client] = trail;
+	}
+	return trail;
+}
+
+wS_TryKillPlayerTrail(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (0 < client)
+	{
+		new ent = g_MyTrailIndex[client];
+		if (ent > MaxClients)
+		{
+			g_MyTrailIndex[client] = 0;
+			if (IsValidEntity(ent))
+			{
+				AcceptEntityInput(ent, "Kill", -1, -1, 0);
+			}
+		}
+	}
+	return 0;
+}
+
+wS_CreateVipTrail(client, bool:show_sprite)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new trail = CreateEntityByName("env_spritetrail", -1);
+	if (trail < 1)
+	{
+		g_MyTrailIndex[client] = -1;
+		PrintToChat(client, "error: env_spritetrail not created");
+		return -1;
+	}
+	decl Float:trail_origin[3];
+	GetClientAbsOrigin(client, trail_origin);
+	trail_origin[2] += GetConVarFloat(vip_cvar_trail_height);
+	DispatchKeyValueVector(trail, "origin", trail_origin);
+	decl String:ParentName[20];
+	Format(ParentName, 20, "plr_%d", client);
+	DispatchKeyValue(client, "targetname", ParentName);
+	SetEntPropFloat(trail, PropType:0, "m_flTextureRes", 0.01, 0);
+	wS_SetTrailModelByPosInMenu(trail, g_MyTrailNum[client]);
+	DispatchKeyValueFloat(trail, "lifetime", GetConVarFloat(vip_cvar_trail_lifetime));
+	DispatchKeyValueFloat(trail, "startwidth", GetConVarFloat(vip_cvar_trail_startwidth));
+	DispatchKeyValueFloat(trail, "endwidth", GetConVarFloat(vip_cvar_trail_endwidth));
+	DispatchKeyValue(trail, "rendermode", "3");
+	DispatchKeyValue(trail, "renderamt", "255");
+	DispatchKeyValue(trail, "rendercolor", "255 255 255");
+	DispatchSpawn(trail);
+	SetVariantString(ParentName);
+	AcceptEntityInput(trail, "SetParent", -1, -1, 0);
+	new var1;
+	if (show_sprite)
+	{
+		var1[0] = 55564;
+	}
+	else
+	{
+		var1[0] = 55576;
+	}
+	AcceptEntityInput(trail, var1, -1, -1, 0);
+	g_MyTrailIndex[client] = trail;
+	return trail;
+}
+
+wS_ReloadVipOverlays()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	static old_change_time = -1;
+	if (!g_Array_Overlays)
+	{
+		g_Array_Overlays = CreateArray(125, 0);
+		PushArrayString(g_Array_Overlays, "");
+	}
+	new new_change_time = GetFileTime("cfg/vip/overlays.txt", FileTimeMode:2);
+	new var1;
+	if (old_change_time != new_change_time && new_change_time == -1)
+	{
+		if (new_change_time == -1)
+		{
+			LogToFileEx(g_ErrorLogFile, "cfg/vip/overlays.txt not found");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	g_OverlaysCount = 0;
+	ClearArray(g_Array_Overlays);
+	PushArrayString(g_Array_Overlays, "");
+	new Handle:file = OpenFile("cfg/vip/overlays.txt", "r");
+	if (file)
+	{
+		decl String:overlay[128];
+		while (!IsEndOfFile(file) && ReadFileLine(file, overlay, 125))
+		{
+			TrimString(overlay);
+			new var3;
+			if ((overlay[0] == '/' && overlay[0] == '/') && strlen(overlay) > 5)
+			{
+				PushArrayString(g_Array_Overlays, overlay);
+				g_OverlaysCount += 1;
+			}
+		}
+		CloseHandle(file);
+		return 0;
+	}
+	LogToFileEx(g_ErrorLogFile, "cfg/vip/overlays.txt not found");
+	return 0;
+}
+
+wS_ClearOverlay(client)
+{
+	ClientCommand(client, "r_screenoverlay \"\"");
+	return 0;
+}
+
+wS_TrySetOverlayPause(client)
+{
+	new var1;
+	if (g_VipHave[client][15] && g_VipFeatureOn[client][15])
+	{
+		wS_ClearOverlay(client);
+	}
+	return 0;
+}
+
+wS_TrySetOverlay(client, item)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (0 < item)
+	{
+		decl String:material[128];
+		material[0] = MissingTAG:0;
+		GetArrayString(g_Array_Overlays, item, material, 125);
+		ClientCommand(client, "r_screenoverlay \"%s\"", material);
+	}
+	return 0;
+}
+
+bool:wS_VipTryCreateLaser(vip_client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl Float:start_pos[3];
+	decl Float:normal[3];
+	GetClientEyePosition(vip_client, start_pos);
+	GetClientEyeAngles(vip_client, normal);
+	TR_TraceRayFilter(start_pos, normal, 33570827, RayType:1, wS_LaserFilter, vip_client);
+	if (!TR_DidHit(Handle:0))
+	{
+		return false;
+	}
+	decl Float:laser_start_pos[3];
+	TR_GetEndPosition(laser_start_pos, Handle:0);
+	TR_GetPlaneNormal(Handle:0, normal);
+	GetVectorAngles(normal, normal);
+	TR_TraceRayFilter(laser_start_pos, normal, 33570827, RayType:1, wS_LaserFilter, vip_client);
+	decl Float:laser_end_pos[3];
+	TR_GetEndPosition(laser_end_pos, Handle:0);
+	if (!TR_DidHit(Handle:0))
+	{
+		return false;
+	}
+	new index = CreateEntityByName("env_beam", -1);
+	if (index < 1)
+	{
+		return false;
+	}
+	DispatchKeyValueVector(index, "origin", laser_start_pos);
+	SetEntityModel(index, "sprites/laser.vmt");
+	DispatchKeyValue(index, "texture", "sprites/laser.vmt");
+	DispatchKeyValue(index, "life", "0");
+	DispatchKeyValue(index, "renderamt", "255");
+	if (GetClientTeam(vip_client) == 2)
+	{
+		DispatchKeyValue(index, "rendercolor", "255 0 0");
+		DispatchKeyValue(index, "targetname", "vip_laser_2");
+	}
+	else
+	{
+		DispatchKeyValue(index, "rendercolor", "0 0 255");
+		DispatchKeyValue(index, "targetname", "vip_laser_3");
+	}
+	decl String:str_width[8];
+	str_width[0] = MissingTAG:0;
+	GetConVarString(vip_cvar_laser_width, str_width, 7);
+	DispatchKeyValue(index, "BoltWidth", str_width);
+	DispatchKeyValue(index, "StrikeTime", "0");
+	DispatchKeyValue(index, "TouchType", "4");
+	SetEntPropVector(index, PropType:1, "m_vecEndPos", laser_end_pos, 0);
+	DispatchKeyValue(index, "spawnflags", "1");
+	DispatchSpawn(index);
+	EmitAmbientSound("ambient/office/button1.wav", NULL_VECTOR, index, 75, 0, 1.0, 100, 0.0);
+	new Float:laser_life = GetConVarFloat(vip_cvar_laser_life);
+	if (laser_life > 0.0)
+	{
+		decl String:info[56];
+		Format(info, 55, "OnUser1 !self:kill::%f:1", laser_life);
+		SetVariantString(info);
+		AcceptEntityInput(index, "AddOutput", -1, -1, 0);
+		AcceptEntityInput(index, "FireUser1", -1, -1, 0);
+	}
+	HookSingleEntityOutput(index, "OnTouchedByEntity", Event_LaserTouched, false);
+	return true;
+}
+
+public bool:wS_LaserFilter(ent, mask, any:client)
+{
+	new var2;
+	return client != ent && (ent <= MaxClients && ent > 0);
+}
+
+public Event_LaserTouched(String:output[], ent, activator, Float:delay)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (activator < 1 || activator > MaxClients)
+	{
+		return 0;
+	}
+	decl String:laser_name[16];
+	laser_name[0] = MissingTAG:0;
+	GetEntPropString(ent, PropType:1, "m_iName", laser_name, 15, 0);
+	new var2;
+	if (GetClientTeam(activator) == StringToInt(laser_name[2], 10) && !GetConVarBool(vip_cvar_laser_team))
+	{
+		decl Float:origin[3];
+		GetClientAbsOrigin(activator, origin);
+		ForcePlayerSuicide(activator);
+		TE_SetupExplosion(origin, g_LaserIndex, 50.0, 0, 0, 150, 1, 56140, 67);
+		TE_SendToAll(0.0);
+		EmitAmbientSound("weapons/hegrenade/explode5.wav", NULL_VECTOR, activator, 75, 0, 1.0, 100, 0.0);
+		new ragdoll = GetEntPropEnt(activator, PropType:0, "m_hRagdoll", 0);
+		new var3;
+		if (ragdoll > 0 && IsValidEntity(ragdoll))
+		{
+			IgniteEntity(ragdoll, 3.0, false, 0.0, false);
+			CreateTimer(3.0, KillRagdoll_Timer, ragdoll, 0);
+		}
+		if (GetConVarBool(vip_cvar_laser_clear))
+		{
+			AcceptEntityInput(ent, "Kill", -1, -1, 0);
+			return 0;
+		}
+	}
+	AcceptEntityInput(ent, "TurnOff", -1, -1, 0);
+	CreateTimer(0.1, ActivateLaser_Timer, ent, 0);
+	return 0;
+}
+
+public Action:ActivateLaser_Timer(Handle:timer, any:laser)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (IsValidEntity(laser))
+	{
+		AcceptEntityInput(laser, "TurnOn", -1, -1, 0);
+	}
+	return Action:0;
+}
+
+public Action:KillRagdoll_Timer(Handle:timer, any:ragdoll)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (IsValidEntity(ragdoll))
+	{
+		decl String:name[16];
+		new var1;
+		if (GetEntityClassname(ragdoll, name, 15) && strcmp(name, "cs_ragdoll", true))
+		{
+			Format(name, 15, "rgd_%d", ragdoll);
+			DispatchKeyValue(ragdoll, "targetname", name);
+			wS_DissolveEntityByName(ragdoll, name);
+		}
+	}
+	return Action:0;
+}
+
+public Action:drop(client, String:command[], args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (client > 0 && g_VipHave[client][2] && IsPlayerAlive(client))
+	{
+		new index = GetEntPropEnt(client, PropType:1, "m_hActiveWeapon", 0);
+		if (0 < index)
+		{
+			decl String:class[28];
+			if (GetEntityClassname(index, class, 25))
+			{
+				new var2;
+				if (strcmp(class[1], "hegrenade", true) && strcmp(class[1], "smokegrenade", true) && strcmp(class[1], "flashbang", true))
+				{
+					CS_DropWeapon(client, index, true, false);
+					return Action:3;
+				}
+			}
+		}
+	}
+	return Action:0;
+}
+
+wS_CreateBarrel(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new index = CreateEntityByName("prop_physics", -1);
+	if (0 < index)
+	{
+		decl Float:origin[3];
+		GetClientEyePosition(client, origin);
+		TR_TraceRayFilter(origin, 56340, 33570827, RayType:1, wS_CreateBarrel_TraceRayFilter, client);
+		if (TR_DidHit(Handle:0))
+		{
+			TR_GetEndPosition(origin, Handle:0);
+			origin[2] -= 30.0;
+			DispatchKeyValueVector(index, "origin", origin);
+			DispatchKeyValue(index, "model", "models/props_c17/oildrum001_explosive.mdl");
+			DispatchSpawn(index);
+		}
+		else
+		{
+			AcceptEntityInput(index, "Kill", -1, -1, 0);
+		}
+	}
+	return 0;
+}
+
+public bool:wS_CreateBarrel_TraceRayFilter(ent, mask, any:client)
+{
+	return client != ent;
+}
+
+wS_CreateBeam(vip_attacker, victim, att_team)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl Float:start[3];
+	decl Float:end[3];
+	GetClientEyePosition(vip_attacker, start);
+	GetClientEyePosition(victim, end);
+	new var1;
+	if (att_team == 3)
+	{
+		var1[0] = 56424;
+	}
+	else
+	{
+		var1[0] = 56440;
+	}
+	TE_SetupBeamPoints(start, end, g_LaserIndex, g_LaserIndex, 0, 0, 1.0, 2.0, 2.0, 0, 0.0, var1, 10);
+	TE_SendToAll(0.0);
+	return 0;
+}
+
+wS_TryRescueHostage(hostage)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new zone = CreateEntityByName("func_hostage_rescue", -1);
+	if (zone < 1)
+	{
+		LogToFileEx(g_ErrorLogFile, "func_hostage_rescue error (CreateEntityByName)");
+		return 0;
+	}
+	decl Float:origin[3];
+	GetEntPropVector(hostage, PropType:0, "m_vecOrigin", origin, 0);
+	DispatchSpawn(zone);
+	ActivateEntity(zone);
+	SetEntityModel(zone, "models/props/cs_office/vending_machine.mdl");
+	SetEntPropVector(zone, PropType:0, "m_vecMins", 56596, 0);
+	SetEntPropVector(zone, PropType:0, "m_vecMaxs", 56620, 0);
+	SetEntProp(zone, PropType:0, "m_nSolidType", any:2, 4, 0);
+	SetEntProp(zone, PropType:0, "m_fEffects", GetEntProp(zone, PropType:0, "m_fEffects", 4, 0) | 32, 4, 0);
+	TeleportEntity(zone, origin, NULL_VECTOR, NULL_VECTOR);
+	AcceptEntityInput(zone, "Enable", -1, -1, 0);
+	SetEntityMoveType(hostage, MoveType:4);
+	TeleportEntity(hostage, origin, NULL_VECTOR, origin);
+	decl String:info[56];
+	Format(info, 55, "OnUser1 !self:kill::0.2:1");
+	SetVariantString(info);
+	AcceptEntityInput(zone, "AddOutput", -1, -1, 0);
+	AcceptEntityInput(zone, "FireUser1", -1, -1, 0);
+	return 0;
+}
+
+wS_Create_Cookie_Trie()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_CookieTrie[0] = CreateTrie();
+	g_CookieTrie[1] = CreateTrie();
+	g_CookieTrie[2] = CreateTrie();
+	g_CookieTrie[3] = CreateTrie();
+	g_CookieTrie[4] = CreateTrie();
+	g_CookieTrie[5] = CreateTrie();
+	g_CookieTrie[6] = CreateTrie();
+	g_CookieTrie[7] = CreateTrie();
+	g_CookieTrie[8] = CreateTrie();
+	g_CookieTrie[9] = CreateTrie();
+	g_CookieTrie[10] = CreateTrie();
+	g_CookieTrie[11] = CreateTrie();
+	g_CookieTrie[12] = CreateTrie();
+	g_CookieTrie[13] = CreateTrie();
+	g_CookieTrie[14] = CreateTrie();
+	g_CookieTrie[15] = CreateTrie();
+	g_CookieTrie[16] = CreateTrie();
+	g_CookieTrie[17] = CreateTrie();
+	g_CookieTrie[18] = CreateTrie();
+	g_CookieTrie[19] = CreateTrie();
+	g_CookieTrie[20] = CreateTrie();
+	g_CookieTrie[21] = CreateTrie();
+	return 0;
+}
+
+wS_LoadVipValuesFromCookie(client, String:steamid[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new bool:def_status = GetConVarBool(vip_cvar_functions_status);
+	decl bool:enabled;
+	if (g_VipHave[client][20])
+	{
+		new var1;
+		if (GetTrieValue(g_CookieTrie[0], steamid, enabled))
+		{
+			var1 = enabled;
+		}
+		else
+		{
+			var1 = def_status;
+		}
+		g_VipFeatureOn[client][20] = var1;
+	}
+	if (g_VipHave[client][22])
+	{
+		new var2;
+		if (GetTrieValue(g_CookieTrie[1], steamid, enabled))
+		{
+			var2 = enabled;
+		}
+		else
+		{
+			var2 = def_status;
+		}
+		g_VipFeatureOn[client][22] = var2;
+	}
+	if (g_VipHave[client][8])
+	{
+		new var3;
+		if (GetTrieValue(g_CookieTrie[2], steamid, enabled))
+		{
+			var3 = enabled;
+		}
+		else
+		{
+			var3 = def_status;
+		}
+		g_VipFeatureOn[client][8] = var3;
+	}
+	if (g_VipHave[client][17])
+	{
+		new var4;
+		if (GetTrieValue(g_CookieTrie[3], steamid, enabled))
+		{
+			var4 = enabled;
+		}
+		else
+		{
+			var4 = def_status;
+		}
+		g_VipFeatureOn[client][17] = var4;
+	}
+	if (g_VipHave[client][19])
+	{
+		new var5;
+		if (GetTrieValue(g_CookieTrie[4], steamid, enabled))
+		{
+			var5 = enabled;
+		}
+		else
+		{
+			var5 = def_status;
+		}
+		g_VipFeatureOn[client][19] = var5;
+	}
+	if (g_VipHave[client][18])
+	{
+		new var6;
+		if (GetTrieValue(g_CookieTrie[5], steamid, enabled))
+		{
+			var6 = enabled;
+		}
+		else
+		{
+			var6 = def_status;
+		}
+		g_VipFeatureOn[client][18] = var6;
+	}
+	if (g_VipHave[client][21])
+	{
+		new var7;
+		if (GetTrieValue(g_CookieTrie[7], steamid, enabled))
+		{
+			var7 = enabled;
+		}
+		else
+		{
+			var7 = def_status;
+		}
+		g_VipFeatureOn[client][21] = var7;
+	}
+	if (g_VipHave[client][9])
+	{
+		new var8;
+		if (GetTrieValue(g_CookieTrie[8], steamid, enabled))
+		{
+			var8 = enabled;
+		}
+		else
+		{
+			var8 = def_status;
+		}
+		g_VipFeatureOn[client][9] = var8;
+	}
+	if (g_VipHave[client][10])
+	{
+		new var9;
+		if (GetTrieValue(g_CookieTrie[9], steamid, enabled))
+		{
+			var9 = enabled;
+		}
+		else
+		{
+			var9 = def_status;
+		}
+		g_VipFeatureOn[client][10] = var9;
+	}
+	if (g_VipHave[client][13])
+	{
+		new var10;
+		if (GetTrieValue(g_CookieTrie[10], steamid, enabled))
+		{
+			var10 = enabled;
+		}
+		else
+		{
+			var10 = def_status;
+		}
+		g_VipFeatureOn[client][13] = var10;
+	}
+	if (g_VipHave[client][27])
+	{
+		new var11;
+		if (GetTrieValue(g_CookieTrie[11], steamid, enabled))
+		{
+			var11 = enabled;
+		}
+		else
+		{
+			var11 = def_status;
+		}
+		g_VipFeatureOn[client][27] = var11;
+	}
+	if (g_VipHave[client][14])
+	{
+		new var12;
+		if (GetTrieValue(g_CookieTrie[12], steamid, enabled))
+		{
+			var12 = enabled;
+		}
+		else
+		{
+			var12 = def_status;
+		}
+		g_VipFeatureOn[client][14] = var12;
+	}
+	if (g_VipHave[client][28])
+	{
+		new var13;
+		if (GetTrieValue(g_CookieTrie[13], steamid, enabled))
+		{
+			var13 = enabled;
+		}
+		else
+		{
+			var13 = def_status;
+		}
+		g_VipFeatureOn[client][28] = var13;
+	}
+	if (g_VipHave[client][3])
+	{
+		new var14;
+		if (GetTrieValue(g_CookieTrie[14], steamid, enabled))
+		{
+			var14 = enabled;
+		}
+		else
+		{
+			var14 = def_status;
+		}
+		g_VipFeatureOn[client][3] = var14;
+	}
+	if (g_VipHave[client][4])
+	{
+		new var15;
+		if (GetTrieValue(g_CookieTrie[15], steamid, enabled))
+		{
+			var15 = enabled;
+		}
+		else
+		{
+			var15 = def_status;
+		}
+		g_VipFeatureOn[client][4] = var15;
+	}
+	if (g_VipHave[client][6])
+	{
+		new var16;
+		if (GetTrieValue(g_CookieTrie[16], steamid, enabled))
+		{
+			var16 = enabled;
+		}
+		else
+		{
+			var16 = def_status;
+		}
+		g_VipFeatureOn[client][6] = var16;
+	}
+	if (g_VipHave[client][7])
+	{
+		new var17;
+		if (GetTrieValue(g_CookieTrie[21], steamid, enabled))
+		{
+			var17 = enabled;
+		}
+		else
+		{
+			var17 = def_status;
+		}
+		g_VipFeatureOn[client][7] = var17;
+	}
+	decl value;
+	decl String:temp[4];
+	if (g_VipHave[client][11])
+	{
+		new var18;
+		if (GetTrieValue(g_CookieTrie[17], steamid, value) && GetMenuItem(g_Trails_Menu, value, temp, 1, 0, "", 0))
+		{
+			g_MyTrailNum[client] = value;
+			g_VipFeatureOn[client][11] = value > 0;
+		}
+	}
+	new var19;
+	if (g_VipHave[client][0] && GetTrieValue(g_CookieTrie[18], steamid, value))
+	{
+		new var20;
+		if (value > 0 && GetMenuItem(g_RedVipSkinsMenu, value, temp, 1, 0, "", 0))
+		{
+			g_MyRedSkinNum[client] = value;
+			g_VipFeatureOn[client][0] = true;
+		}
+	}
+	new var21;
+	if (g_VipHave[client][1] && GetTrieValue(g_CookieTrie[19], steamid, value) && value > 0)
+	{
+		if (GetMenuItem(g_BluVipSkinsMenu, value, temp, 1, 0, "", 0))
+		{
+			g_MyBluSkinNum[client] = value;
+			g_VipFeatureOn[client][1] = true;
+		}
+	}
+	new var22;
+	if (g_VipHave[client][15] && GetTrieValue(g_CookieTrie[20], steamid, value))
+	{
+		if (0 < value <= g_OverlaysCount)
+		{
+			g_MyOverlayItem[client] = value;
+			g_VipFeatureOn[client][15] = true;
+		}
+	}
+	new var23;
+	if (g_VipHave[client][16] && GetTrieValue(g_CookieTrie[6], steamid, value) && value > 0)
+	{
+		decl String:str_rgba[28];
+		if (GetMenuItem(g_VipSkinColorsMenu, value, str_rgba, 25, 0, "", 0))
+		{
+			new String:buffer[4][12] = {
+				" ",
+				"%T\n \n",
+				"group_not_exists",
+				"ists"
+			};
+			ExplodeString(str_rgba, " ", buffer, 4, 9, false);
+			new i;
+			while (i < 4)
+			{
+				g_MySkinColor[client][i] = StringToInt(buffer[i], 10);
+				i++;
+			}
+			g_MySkinColorItem[client] = value;
+			g_VipFeatureOn[client][16] = true;
+		}
+	}
+	return 0;
+}
+
+wS_ClearVipVars(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_VipHave[client][0] = false;
+	g_VipHave[client][1] = false;
+	g_VipHave[client][2] = false;
+	g_VipHave[client][3] = false;
+	g_VipHave[client][4] = false;
+	g_VipHave[client][5] = false;
+	g_VipHave[client][6] = false;
+	g_VipHave[client][7] = false;
+	g_VipHave[client][8] = false;
+	g_VipHave[client][9] = false;
+	g_VipHave[client][10] = false;
+	g_VipHave[client][11] = false;
+	g_VipHave[client][12] = false;
+	g_VipHave[client][13] = false;
+	g_VipHave[client][14] = false;
+	g_VipHave[client][15] = false;
+	g_VipHave[client][16] = false;
+	g_VipHave[client][17] = false;
+	g_VipHave[client][18] = false;
+	g_VipHave[client][19] = false;
+	g_VipHave[client][21] = false;
+	g_VipHave[client][23] = false;
+	g_VipHave[client][24] = false;
+	g_VipHave[client][25] = false;
+	g_VipHave[client][26] = false;
+	g_VipHave[client][27] = false;
+	g_VipHave[client][28] = false;
+	g_VipHave[client][29] = false;
+	g_VipHave[client][30] = false;
+	g_VipHave[client][20] = false;
+	g_VipHave[client][22] = false;
+	g_VipHave[client][31] = false;
+	g_VipValue[client][0] = 0;
+	g_VipValue[client][1] = 0;
+	g_VipValue[client][2] = 0;
+	g_VipValue[client][3] = 0;
+	g_VipValue[client][4] = 0;
+	g_VipValue[client][5] = 0;
+	g_VipValue[client][6] = 0;
+	g_VipValue[client][7] = 0;
+	g_VipValue[client][8] = 0;
+	g_VipValue[client][9] = 0;
+	g_VipValue[client][10] = 0;
+	g_VipValue[client][11] = 0;
+	g_VipValue[client][12] = 0;
+	g_VipValue[client][13] = 0;
+	g_VipValue[client][14] = 0;
+	g_VipFeatureOn[client][0] = false;
+	g_VipFeatureOn[client][1] = false;
+	g_VipFeatureOn[client][3] = false;
+	g_VipFeatureOn[client][4] = false;
+	g_VipFeatureOn[client][5] = false;
+	g_VipFeatureOn[client][6] = false;
+	g_VipFeatureOn[client][7] = false;
+	g_VipFeatureOn[client][8] = false;
+	g_VipFeatureOn[client][9] = false;
+	g_VipFeatureOn[client][10] = false;
+	g_VipFeatureOn[client][11] = false;
+	g_VipFeatureOn[client][13] = false;
+	g_VipFeatureOn[client][14] = false;
+	g_VipFeatureOn[client][15] = false;
+	g_VipFeatureOn[client][16] = false;
+	g_VipFeatureOn[client][17] = false;
+	g_VipFeatureOn[client][18] = false;
+	g_VipFeatureOn[client][19] = false;
+	g_VipFeatureOn[client][21] = false;
+	g_VipFeatureOn[client][27] = false;
+	g_VipFeatureOn[client][28] = false;
+	g_VipFeatureOn[client][20] = false;
+	g_VipFeatureOn[client][22] = false;
+	g_VipFeatureOn[client][31] = true;
+	g_VipFeatureOn[client][2] = true;
+	g_VipFeatureOn[client][29] = true;
+	g_VipFeatureOn[client][30] = true;
+	g_VipFeatureOn[client][23] = true;
+	g_VipFeatureOn[client][24] = true;
+	g_VipFeatureOn[client][25] = true;
+	g_VipFeatureOn[client][26] = true;
+	g_VipFeatureOn[client][12] = true;
+	g_MyRedSkinNum[client] = 0;
+	g_MyBluSkinNum[client] = 0;
+	g_MyOverlayItem[client] = 0;
+	return 0;
+}
+
+wS_SetAccessFromVipGroup(client, String:vip_group[], bool:player_join)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new bool:vip_group_exist = wS_VipGroupExist(vip_group);
+	if (!vip_group_exist)
+	{
+		g_MyVipGroupExists[client] = 0;
+		wS_ClearHandle(g_VipMenu[client]);
+		decl String:panel_text[500];
+		Format(panel_text, 500, "%T\n \n", "vip_group_not_exists", client, vip_group);
+		wS_ShowClientMsgInPanel(client, panel_text, true);
+		PrintToChat(client, "\x04%s", panel_text);
+	}
+	if (player_join)
+	{
+		Call_StartForward(g_Event_VIP_Joined);
+		Call_PushCell(client);
+		Call_PushString(vip_group);
+		Call_PushCell(vip_group_exist);
+		Call_Finish(0);
+	}
+	if (!vip_group_exist)
+	{
+		return 0;
+	}
+	GetTrieValue(g_VipGroupTrie_skin_t, vip_group, g_VipHave[client]);
+	GetTrieValue(g_VipGroupTrie_skin_ct, vip_group, g_VipHave[client][1]);
+	GetTrieValue(g_VipGroupTrie_dropgren, vip_group, g_VipHave[client][2]);
+	GetTrieValue(g_VipGroupTrie_barrel, vip_group, g_VipHave[client][3]);
+	GetTrieValue(g_VipGroupTrie_beam, vip_group, g_VipHave[client][4]);
+	GetTrieValue(g_VipGroupTrie_ammo, vip_group, g_VipHave[client][5]);
+	GetTrieValue(g_VipGroupTrie_hostage, vip_group, g_VipHave[client][6]);
+	GetTrieValue(g_VipGroupTrie_gren_effect, vip_group, g_VipHave[client][7]);
+	GetTrieValue(g_VipGroupTrie_chat, vip_group, g_VipHave[client][8]);
+	GetTrieValue(g_VipGroupTrie_noblind, vip_group, g_VipHave[client][9]);
+	GetTrieValue(g_VipGroupTrie_defuse, vip_group, g_VipHave[client][10]);
+	GetTrieValue(g_VipGroupTrie_trail, vip_group, g_VipHave[client][11]);
+	GetTrieValue(g_VipGroupTrie_team, vip_group, g_VipHave[client][12]);
+	GetTrieValue(g_VipGroupTrie_overlay, vip_group, g_VipHave[client][15]);
+	GetTrieValue(g_VipGroupTrie_c4, vip_group, g_VipHave[client][13]);
+	GetTrieValue(g_VipGroupTrie_water, vip_group, g_VipHave[client][14]);
+	GetTrieValue(g_VipGroupTrie_color, vip_group, g_VipHave[client][16]);
+	new var1;
+	g_VipHave[client][17] = GetTrieValue(g_VipGroupTrie_gravity, vip_group, g_VipValue[client]) && g_VipValue[client][0] > 0;
+	new var2;
+	g_VipHave[client][18] = GetTrieValue(g_VipGroupTrie_speed, vip_group, g_VipValue[client][1]) && g_VipValue[client][1] > 0;
+	new var3;
+	g_VipHave[client][19] = GetTrieValue(g_VipGroupTrie_cash, vip_group, g_VipValue[client][2]) && g_VipValue[client][2] > 0;
+	new var4;
+	g_VipHave[client][20] = GetTrieValue(g_VipGroupTrie_hp, vip_group, g_VipValue[client][3]) && g_VipValue[client][3] > 0;
+	new var5;
+	g_VipHave[client][21] = GetTrieValue(g_VipGroupTrie_armor, vip_group, g_VipValue[client][4]) && g_VipValue[client][4] > 0;
+	new var6;
+	g_VipHave[client][22] = GetTrieValue(g_VipGroupTrie_rehp, vip_group, g_VipValue[client][5]) && g_VipValue[client][5] > 0;
+	new var7;
+	g_VipHave[client][23] = GetTrieValue(g_VipGroupTrie_he, vip_group, g_VipValue[client][6]) && g_VipValue[client][6] > 0;
+	new var8;
+	g_VipHave[client][24] = GetTrieValue(g_VipGroupTrie_sg, vip_group, g_VipValue[client][7]) && g_VipValue[client][7] > 0;
+	new var9;
+	g_VipHave[client][25] = GetTrieValue(g_VipGroupTrie_fb, vip_group, g_VipValue[client][8]) && g_VipValue[client][8] > 0;
+	new var10;
+	g_VipHave[client][26] = GetTrieValue(g_VipGroupTrie_laser, vip_group, g_VipValue[client][9]) && g_VipValue[client][9] > 0;
+	new var11;
+	g_VipHave[client][27] = GetTrieValue(g_VipGroupTrie_fraghp, vip_group, g_VipValue[client][10]) && g_VipValue[client][10] > 0;
+	new var12;
+	g_VipHave[client][28] = GetTrieValue(g_VipGroupTrie_immun, vip_group, g_VipValue[client][11]) && g_VipValue[client][11] > 0;
+	new var13;
+	g_VipHave[client][29] = GetTrieValue(g_VipGroupTrie_respawn, vip_group, g_VipValue[client][12]) && g_VipValue[client][12] > 0;
+	new var14;
+	g_VipHave[client][30] = GetTrieValue(g_VipGroupTrie_tele, vip_group, g_VipValue[client][13]) && g_VipValue[client][13] > 0;
+	new var15;
+	g_VipHave[client][31] = GetTrieString(g_VipGroupTrie_admin, vip_group, g_VipValue[client][14], 45, 0) && IsCharAlpha(g_VipValue[client][14]);
+	if (player_join)
+	{
+		wS_LoadVipValuesFromCookie(client, g_SteamId[client]);
+	}
+	wS_Create_g_VipMenu_ForVipClient(client, false, player_join, true);
+	g_MyVipGroupExists[client] = 1;
+	if (IsPlayerAlive(client))
+	{
+		wS_SetVipFeaturesForAliveVip(client);
+	}
+	wS_TrySetImmunAndAdminFlags(client, true);
+	return 0;
+}
+
+wS_SetStandartClient(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (g_VipHave[client][17] && g_VipFeatureOn[client][17])
+	{
+		SetEntityGravity(client, 1.0);
+	}
+	new var2;
+	if (g_VipHave[client][16] && g_VipFeatureOn[client][16])
+	{
+		wS_SetColor(client, 255, 255, 255, 255);
+	}
+	new var3;
+	if (g_VipHave[client][15] && g_VipFeatureOn[client][15])
+	{
+		wS_ClearOverlay(client);
+	}
+	wS_KillTimer(g_RehpTimer[client]);
+	wS_ClearHandle(g_VipMenu[client]);
+	wS_TrySetImmunAndAdminFlags(client, false);
+	if (IsPlayerAlive(client))
+	{
+		new var4;
+		if (g_VipHave[client][20] && GetEntProp(client, PropType:0, "m_iHealth", 4, 0) > 100)
+		{
+			SetEntProp(client, PropType:0, "m_iHealth", any:100, 4, 0);
+		}
+		new var5;
+		if (g_VipHave[client][18] && g_VipFeatureOn[client][18])
+		{
+			SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 1.0, 0);
+		}
+		new team = GetClientTeam(client);
+		new var6;
+		if (team == 2 && g_VipHave[client][0] && g_VipFeatureOn[client][0])
+		{
+			SetEntityModel(client, "models/player/t_phoenix.mdl");
+		}
+		else
+		{
+			new var7;
+			if (team == 3 && g_VipHave[client][1] && g_VipFeatureOn[client][1])
+			{
+				SetEntityModel(client, "models/player/ct_sas.mdl");
+			}
+		}
+		wS_TryKillPlayerTrail(client);
+	}
+	wS_ClearVipVars(client);
+	return 0;
+}
+
+bool:VIP_HaveTime(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new vip_timestamp = g_VipTime[client];
+	if (vip_timestamp < 1)
+	{
+		return true;
+	}
+	new cur_timestamp = GetTime({0,0});
+	if (vip_timestamp <= cur_timestamp)
+	{
+		VIP_Remove(client, g_SteamId[client], "auto", 0);
+		return false;
+	}
+	wS_TryCreateVipDelTimer(g_SteamId[client], float(vip_timestamp - cur_timestamp));
+	return true;
+}
+
+wS_TryCreateVipDelTimer(String:steamid[], Float:sec)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl Handle:timer;
+	if (!GetTrieValue(g_VipDelTimerTrie, steamid, timer))
+	{
+		new Handle:pack;
+		timer = CreateDataTimer(sec, g_VipDelTimerTrie_CallBack, pack, 0);
+		WritePackString(pack, steamid);
+		SetTrieValue(g_VipDelTimerTrie, steamid, timer, true);
+	}
+	return 0;
+}
+
+public Action:g_VipDelTimerTrie_CallBack(Handle:timer, Handle:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	decl String:steamid[28];
+	ReadPackString(pack, steamid, 28);
+	RemoveFromTrie(g_VipDelTimerTrie, steamid);
+	VIP_Remove(0, steamid, "auto", 0);
+	return Action:0;
+}
+
+wS_SQL_Connect()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:error[256];
+	if (SQL_CheckConfig("wS_VIP"))
+	{
+		g_SQL = SQL_Connect("wS_VIP", true, error, 256);
+		if (!g_SQL)
+		{
+			LogToFileEx(g_ErrorLogFile, "Could not connect to Mysql. The error text:");
+			LogToFileEx(g_ErrorLogFile, error);
+		}
+	}
+	new var1;
+	if (g_SQL && (g_SQL = SQLite_UseDatabase("wS_VIP", error, 256)))
+	{
+		LogToFileEx(g_ErrorLogFile, error);
+		SetFailState("Error, unable to establish MYSQL and SQLite connection");
+		return 0;
+	}
+	new String:driver[16];
+	SQL_ReadDriver(g_SQL, driver, 15);
+	g_MYSQL = StrEqual(driver, "mysql", false);
+	new var2;
+	if (g_MYSQL)
+	{
+		var2[0] = 57116;
+	}
+	else
+	{
+		var2[0] = 57124;
+	}
+	LogMessage("The connection is successful! Type: %s", var2);
+	if (g_MYSQL)
+	{
+		SQL_TQuery(g_SQL, SQL_Default_CallBack, "CREATE TABLE IF NOT EXISTS `wS_vip_tab` (`steamid` varchar(28) NOT NULL, `time` int(20) NOT NULL, `group` varchar(65) NOT NULL, PRIMARY KEY (`steamid`))", any:0, DBPriority:1);
+	}
+	else
+	{
+		SQL_TQuery(g_SQL, SQL_Default_CallBack, "CREATE TABLE IF NOT EXISTS `wS_vip_tab` (`steamid` TEXT NOT NULL, `time` INTEGER NOT NULL, `group` TEXT NOT NULL, PRIMARY KEY (`steamid`))", any:0, DBPriority:1);
+	}
+	return 0;
+}
+
+public SQL_Default_CallBack(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	if (!hndl)
+	{
+		LogToFileEx(g_ErrorLogFile, error);
+	}
+	return 0;
+}
+
+public Action:vip_add(admin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args != 3)
+	{
+		PrintToConsole(admin, "Syntax: vip_add \"steamid\" \"min (0 = forever)\" \"group\"");
+		if (admin < 1)
+		{
+			LogToFileEx(g_ErrorLogFile, "Syntax: vip_add \"steamid\" \"min (0 = forever)\" \"group\"");
+		}
+		return Action:3;
+	}
+	decl String:vip_steamid[28];
+	if (!wS_GetSteamIdFromArgNum(admin, vip_steamid, 1))
+	{
+		return Action:3;
+	}
+	decl String:vip_group[68];
+	GetCmdArg(3, vip_group, 65);
+	if (!wS_VipGroupExist(vip_group))
+	{
+		PrintToConsole(admin, "Group \"%s\" not exists", vip_group);
+		if (admin < 1)
+		{
+			LogToFileEx(g_ErrorLogFile, "Group \"%s\" not exists", vip_group);
+		}
+		return Action:3;
+	}
+	decl String:str_min[16];
+	GetCmdArg(2, str_min, 15);
+	new int_value = strlen(str_min);
+	new i;
+	while (i < int_value)
+	{
+		if (!IsCharNumeric(str_min[i]))
+		{
+			PrintToConsole(admin, "Bad value \"%s\"", str_min);
+			if (admin < 1)
+			{
+				LogToFileEx(g_ErrorLogFile, "Bad value \"%s\"", str_min);
+			}
+			return Action:3;
+		}
+		i++;
+	}
+	if ((int_value = StringToInt(str_min, 10)) < 1)
+	{
+		int_value = 0;
+	}
+	else
+	{
+		int_value = GetTime({0,0}) + int_value * 60;
+	}
+	new Handle:pack = CreateDataPack();
+	new var1;
+	if (admin > 0)
+	{
+		var1 = GetClientUserId(admin);
+	}
+	else
+	{
+		var1 = 0;
+	}
+	WritePackCell(pack, var1);
+	WritePackString(pack, vip_steamid);
+	WritePackString(pack, vip_group);
+	WritePackCell(pack, int_value);
+	decl String:str_query[200];
+	new var2;
+	if (g_MYSQL)
+	{
+		var2[0] = 57676;
+	}
+	else
+	{
+		var2[0] = 57684;
+	}
+	Format(str_query, 200, "INSERT %s INTO `wS_vip_tab` VALUES ('%s', %d, '%s')", var2, vip_steamid, int_value, vip_group);
+	SQL_TQuery(g_SQL, vip_add_CallBack, str_query, pack, DBPriority:1);
+	return Action:3;
+}
+
+public vip_add_CallBack(Handle:sql, Handle:result, String:error[], any:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	new admin = ReadPackCell(pack);
+	if (0 < admin)
+	{
+		admin = GetClientOfUserId(admin);
+	}
+	if (result)
+	{
+		decl String:vip_steamid[28];
+		ReadPackString(pack, vip_steamid, 28);
+		if (SQL_GetAffectedRows(result) < 1)
+		{
+			CloseHandle(pack);
+			PrintToConsole(admin, "%s already exists in database", vip_steamid);
+			if (admin < 1)
+			{
+				LogToFileEx(g_ErrorLogFile, "%s already exists in database", vip_steamid);
+			}
+			return 0;
+		}
+		decl String:vip_group[68];
+		ReadPackString(pack, vip_group, 65);
+		new vip_timestamp = ReadPackCell(pack);
+		CloseHandle(pack);
+		if (0 < vip_timestamp)
+		{
+			new sec = vip_timestamp - GetTime({0,0});
+			if (sec < 1)
+			{
+				VIP_Remove(0, vip_steamid, "auto", 0);
+				return 0;
+			}
+			wS_TryCreateVipDelTimer(vip_steamid, float(sec));
+		}
+		decl String:info[48];
+		if (0 < vip_timestamp)
+		{
+			FormatTime(info, 45, "%d/%m/%Y - %H:%M", vip_timestamp);
+		}
+		else
+		{
+			strcopy(info, 45, "forever");
+		}
+		PrintToConsole(admin, "VIP \"%s\" successfully added to the group \"%s\" (access: %s)", vip_steamid, vip_group, info);
+		new vip_client = wS_GetClientBySteamId(vip_steamid);
+		if (0 < vip_client)
+		{
+			g_VipTime[vip_client] = vip_timestamp;
+			g_VipAccess[vip_client] = 1;
+			strcopy(g_MyVipGroup[vip_client], 65, vip_group);
+			wS_SetAccessFromVipGroup(vip_client, vip_group, false);
+			info[0] = MissingTAG:0;
+			GetClientName(vip_client, info, 45);
+			PrintToChatAll("\x04%t", "vip_added_msg", info);
+		}
+		Call_StartForward(g_Event_VIP_Added);
+		Call_PushCell(vip_client);
+		Call_PushString(vip_steamid);
+		Call_PushString(vip_group);
+		Call_PushCell(vip_timestamp);
+		Call_PushCell(admin);
+		Call_Finish(0);
+		return 0;
+	}
+	CloseHandle(pack);
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+public Action:vip_del(admin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args != 1)
+	{
+		PrintToConsole(admin, "Syntax: vip_del \"steamid\"");
+		return Action:3;
+	}
+	decl String:steamid[28];
+	if (wS_GetSteamIdFromArgNum(admin, steamid, 1))
+	{
+		if (0 < admin)
+		{
+			decl String:by[76];
+			Format(by, 75, "admin: %N, %s", admin, g_SteamId[admin]);
+			VIP_Remove(0, steamid, by, GetClientUserId(admin));
+		}
+		VIP_Remove(0, steamid, "rcon", 0);
+	}
+	return Action:3;
+}
+
+public Action:vip_add_time(admin, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:command[20];
+	GetCmdArg(0, command, 20);
+	if (args != 2)
+	{
+		PrintToConsole(admin, "Syntax: %s \"steamid\" \"min\"", command);
+		return Action:3;
+	}
+	new bool:need_add_time = strcmp(command, "vip_add_time", false) == 0;
+	decl String:str_min[16];
+	GetCmdArg(2, str_min, 15);
+	new min = StringToInt(str_min, 10);
+	new var1;
+	if (min < 1 && need_add_time)
+	{
+		PrintToConsole(admin, "The minimum number of minutes: 1");
+		return Action:3;
+	}
+	decl String:vip_steamid[28];
+	if (wS_GetSteamIdFromArgNum(admin, vip_steamid, 1))
+	{
+		new Handle:pack = CreateDataPack();
+		new var2;
+		if (admin > 0)
+		{
+			var2 = GetClientUserId(admin);
+		}
+		else
+		{
+			var2 = 0;
+		}
+		WritePackCell(pack, var2);
+		WritePackString(pack, vip_steamid);
+		WritePackCell(pack, min * 60);
+		new var3;
+		if (need_add_time)
+		{
+			var3 = 1;
+		}
+		else
+		{
+			var3 = 0;
+		}
+		WritePackCell(pack, var3);
+		decl String:str_query[128];
+		Format(str_query, 125, "SELECT `time` FROM `wS_vip_tab` WHERE `steamid` = '%s' LIMIT 1", vip_steamid);
+		SQL_TQuery(g_SQL, vip_add_time_CallBack, str_query, pack, DBPriority:1);
+	}
+	return Action:3;
+}
+
+public vip_add_time_CallBack(Handle:sql, Handle:result, String:error[], any:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	new admin = ReadPackCell(pack);
+	if (0 < admin)
+	{
+		admin = GetClientOfUserId(admin);
+	}
+	if (result)
+	{
+		decl String:vip_steamid[28];
+		ReadPackString(pack, vip_steamid, 28);
+		if (!SQL_FetchRow(result))
+		{
+			CloseHandle(pack);
+			PrintToConsole(admin, "VIP '%s' not exists", vip_steamid);
+			if (admin < 1)
+			{
+				LogToFileEx(g_ErrorLogFile, "VIP '%s' not exists", vip_steamid);
+			}
+			return 0;
+		}
+		new new_vip_timestamp = SQL_FetchInt(result, 0, 0);
+		new sec = ReadPackCell(pack);
+		new bool:need_add_time = ReadPackCell(pack) == 1;
+		CloseHandle(pack);
+		new var1;
+		if (new_vip_timestamp < 1 && need_add_time)
+		{
+			PrintToConsole(admin, "VIP '%s' имеет постоянный доступ (vip_add_time)", vip_steamid);
+			if (admin < 1)
+			{
+				LogToFileEx(g_ErrorLogFile, "VIP '%s' имеет постоянный доступ (vip_add_time)", vip_steamid);
+			}
+			return 0;
+		}
+		new old_vip_timestamp = new_vip_timestamp;
+		new current_timestamp = GetTime({0,0});
+		if (new_vip_timestamp < current_timestamp)
+		{
+			new_vip_timestamp = current_timestamp;
+		}
+		if (need_add_time)
+		{
+			new_vip_timestamp = sec + new_vip_timestamp;
+		}
+		else
+		{
+			if (0 < sec)
+			{
+				new_vip_timestamp = sec + current_timestamp;
+			}
+			new_vip_timestamp = 0;
+		}
+		decl String:info[152];
+		if (0 < new_vip_timestamp)
+		{
+			FormatTime(info, 150, "%d/%m/%Y - %H:%M", new_vip_timestamp);
+		}
+		else
+		{
+			strcopy(info, 150, "forever");
+		}
+		PrintToConsole(admin, "VIP time for \"%s\" successfully changed (%s)", vip_steamid, info);
+		new var2;
+		if (g_MYSQL)
+		{
+			var2[0] = 58400;
+		}
+		else
+		{
+			var2[0] = 58408;
+		}
+		Format(info, 150, "UPDATE %s `wS_vip_tab` SET `time` = %d WHERE `steamid` = '%s'", var2, new_vip_timestamp, vip_steamid);
+		SQL_TQuery(g_SQL, SQL_Default_CallBack, info, any:0, DBPriority:1);
+		decl Handle:timer;
+		if (GetTrieValue(g_VipDelTimerTrie, vip_steamid, timer))
+		{
+			KillTimer(timer, false);
+			RemoveFromTrie(g_VipDelTimerTrie, vip_steamid);
+		}
+		if (0 < new_vip_timestamp)
+		{
+			sec = new_vip_timestamp - current_timestamp;
+			if (sec < 1)
+			{
+				VIP_Remove(0, vip_steamid, "auto", 0);
+				return 0;
+			}
+			new Handle:pack2;
+			timer = CreateDataTimer(float(sec), g_VipDelTimerTrie_CallBack, pack2, 0);
+			WritePackString(pack2, vip_steamid);
+			SetTrieValue(g_VipDelTimerTrie, vip_steamid, timer, true);
+		}
+		new vip_client = wS_GetClientBySteamId(vip_steamid);
+		new var3;
+		if (vip_client > 0 && g_VipAccess[vip_client])
+		{
+			g_VipTime[vip_client] = new_vip_timestamp;
+			if (wS_Update_g_VipMenuTitle(vip_client, false))
+			{
+				DisplayMenu(g_VipMenu[vip_client], vip_client, 0);
+			}
+			PrintToChat(vip_client, "\x04%t", "your_vip_time_changed");
+		}
+		else
+		{
+			vip_client = 0;
+		}
+		Call_StartForward(g_Event_VIP_TimeChanged);
+		Call_PushCell(vip_client);
+		Call_PushString(vip_steamid);
+		Call_PushCell(old_vip_timestamp);
+		Call_PushCell(new_vip_timestamp);
+		Call_Finish(0);
+		return 0;
+	}
+	CloseHandle(pack);
+	LogToFileEx(g_ErrorLogFile, error);
+	PrintToConsole(admin, error);
+	return 0;
+}
+
+public Action:vip_groups_rename(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args != 2)
+	{
+		PrintToConsole(client, "Syntax: vip_groups_rename \"bad group name\" \"good group name\"");
+		return Action:3;
+	}
+	decl String:bad_group[68];
+	GetCmdArg(1, bad_group, 65);
+	if (wS_VipGroupExist(bad_group))
+	{
+		PrintToConsole(client, "You can not change the name of an existing group");
+		return Action:3;
+	}
+	decl String:new_group[68];
+	GetCmdArg(2, new_group, 65);
+	if (!wS_VipGroupExist(new_group))
+	{
+		PrintToConsole(client, "Group \"%s\" not exist", new_group);
+		return Action:3;
+	}
+	new Handle:pack = CreateDataPack();
+	WritePackCell(pack, client);
+	WritePackString(pack, bad_group);
+	WritePackString(pack, new_group);
+	decl String:str_query[200];
+	new var1;
+	if (g_MYSQL)
+	{
+		var1[0] = 58656;
+	}
+	else
+	{
+		var1[0] = 58664;
+	}
+	Format(str_query, 200, "UPDATE %s `wS_vip_tab` SET `group` = '%s' WHERE `group` = '%s'", var1, new_group, bad_group);
+	SQL_TQuery(g_SQL, vip_groups_rename_CallBack, str_query, pack, DBPriority:1);
+	return Action:3;
+}
+
+public vip_groups_rename_CallBack(Handle:owner, Handle:query, String:error[], any:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	new admin = ReadPackCell(pack);
+	new var1;
+	if (admin > 0 && IsClientInGame(admin))
+	{
+		var2 = admin;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	admin = var2;
+	if (query)
+	{
+		new strok = SQL_GetAffectedRows(query);
+		PrintToConsole(admin, "Renamed groups: %d", strok);
+		LogMessage("Renamed groups: %d (vip_groups_rename)", strok);
+		if (strok < 1)
+		{
+			return 0;
+		}
+		decl String:bad_group[68];
+		decl String:new_group[68];
+		ReadPackString(pack, bad_group, 65);
+		ReadPackString(pack, new_group, 65);
+		CloseHandle(pack);
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var3;
+			if (g_VipAccess[i] && !g_MyVipGroupExists[i] && IsClientInGame(i) && strcmp(g_MyVipGroup[i], bad_group, true))
+			{
+				strcopy(g_MyVipGroup[i], 65, new_group);
+				wS_SetAccessFromVipGroup(i, new_group, false);
+				PrintToChat(i, "\x04%t", "your_group_changed");
+			}
+			i++;
+		}
+		return 0;
+	}
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+public Action:vip_info(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args != 1)
+	{
+		PrintToConsole(client, "Syntax: vip_info \"steamid\"");
+		return Action:3;
+	}
+	decl String:steamid[28];
+	if (wS_GetSteamIdFromArgNum(client, steamid, 1))
+	{
+		decl String:str_query[108];
+		Format(str_query, 105, "SELECT `group`, `time` FROM `wS_vip_tab` WHERE `steamid` = '%s' LIMIT 1", steamid);
+		SQL_TQuery(g_SQL, vip_info_CallBack, str_query, client, DBPriority:1);
+	}
+	return Action:3;
+}
+
+public vip_info_CallBack(Handle:owner, Handle:query, String:error[], any:client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl admin;
+	new var1;
+	if (client > any:0 && IsClientInGame(client))
+	{
+		var2 = client;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	admin = var2;
+	if (query)
+	{
+		if (!SQL_FetchRow(query))
+		{
+			PrintToConsole(admin, "VIP not exists");
+			return 0;
+		}
+		decl String:vip_group[68];
+		decl String:access_info[76];
+		SQL_FetchString(query, 0, vip_group, 65, 0);
+		new vip_time = SQL_FetchInt(query, 1, 0);
+		if (0 < vip_time)
+		{
+			FormatTime(access_info, 75, "%d/%m/%Y - %H:%M", vip_time);
+			new var3;
+			if (vip_time <= GetTime({0,0}))
+			{
+				var3[0] = 58916;
+			}
+			else
+			{
+				var3[0] = 58928;
+			}
+			Format(access_info, 75, "%s (%s)", var3, access_info);
+		}
+		else
+		{
+			strcopy(access_info, 75, "unlimited");
+		}
+		PrintToConsole(admin, "group: \"%s\"\naccess: \"%s\"\n", vip_group, access_info);
+		return 0;
+	}
+	LogToFileEx(g_ErrorLogFile, error);
+	PrintToConsole(admin, error);
+	return 0;
+}
+
+public Action:vip_list(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args < 1)
+	{
+		SQL_TQuery(g_SQL, vip_list_CallBack, "SELECT `steamid`, `group`, `time` FROM `wS_vip_tab`", client, DBPriority:1);
+	}
+	return Action:3;
+}
+
+public vip_list_CallBack(Handle:owner, Handle:query, String:error[], any:client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl admin;
+	new var1;
+	if (client > any:0 && IsClientInGame(client))
+	{
+		var2 = client;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	admin = var2;
+	if (query)
+	{
+		new strok = SQL_GetRowCount(query);
+		if (strok < 1)
+		{
+			PrintToConsole(admin, "Number of VIP players: 0");
+			return 0;
+		}
+		PrintToConsole(admin, "Number of VIP players: %d\n \n", strok);
+		decl String:vip_steamid[28];
+		decl String:vip_group[68];
+		decl String:access_info[76];
+		decl vip_time;
+		new GetTime_value = GetTime({0,0});
+		while (SQL_FetchRow(query))
+		{
+			vip_time = SQL_FetchInt(query, 2, 0);
+			if (vip_time < 1)
+			{
+				strcopy(access_info, 75, "unlimited");
+			}
+			else
+			{
+				FormatTime(access_info, 75, "%d/%m/%Y - %H:%M", vip_time);
+				new var3;
+				if (vip_time <= GetTime_value)
+				{
+					var3[0] = 59132;
+				}
+				else
+				{
+					var3[0] = 59144;
+				}
+				Format(access_info, 75, "%s (%s)", var3, access_info);
+			}
+			SQL_FetchString(query, 0, vip_steamid, 28, 0);
+			SQL_FetchString(query, 1, vip_group, 65, 0);
+			PrintToConsole(admin, "%s\ngroup: %s\naccess: %s\n \n", vip_steamid, vip_group, access_info);
+		}
+		return 0;
+	}
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+public Action:vip_past_remove(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args < 1)
+	{
+		new GetTime_Value = GetTime({0,0});
+		decl String:str_query[96];
+		Format(str_query, 95, "DELETE FROM `wS_vip_tab` WHERE `time` > 0 AND `time` < %d", GetTime_Value);
+		SQL_TQuery(g_SQL, vip_past_remove_CallBack, str_query, client, DBPriority:1);
+	}
+	return Action:3;
+}
+
+public vip_past_remove_CallBack(Handle:owner, Handle:query, String:error[], any:client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl admin;
+	new var1;
+	if (client > any:0 && IsClientInGame(client))
+	{
+		var2 = client;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	admin = var2;
+	if (query)
+	{
+		new strok = SQL_GetAffectedRows(query);
+		PrintToConsole(admin, "Removed VIP players: %d", strok);
+		LogMessage("Removed VIP players: %d (vip_past_remove)", strok);
+		return 0;
+	}
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+public Action:vip_set_group(client, args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (args != 2)
+	{
+		PrintToConsole(client, "Syntax: vip_set_group \"steamid\" \"new group\"");
+		return Action:3;
+	}
+	decl String:new_group[68];
+	GetCmdArg(2, new_group, 65);
+	if (!wS_VipGroupExist(new_group))
+	{
+		PrintToConsole(client, "Group \"%s\" not exists", new_group);
+		return Action:3;
+	}
+	decl String:steamid[28];
+	if (!wS_GetSteamIdFromArgNum(client, steamid, 1))
+	{
+		return Action:3;
+	}
+	new Handle:pack = CreateDataPack();
+	WritePackCell(pack, client);
+	WritePackString(pack, steamid);
+	WritePackString(pack, new_group);
+	decl String:str_query[152];
+	new var1;
+	if (g_MYSQL)
+	{
+		var1[0] = 59472;
+	}
+	else
+	{
+		var1[0] = 59480;
+	}
+	Format(str_query, 150, "UPDATE %s `wS_vip_tab` SET `group` = '%s' WHERE `steamid` = '%s' AND `group` != '%s'", var1, new_group, steamid, new_group);
+	SQL_TQuery(g_SQL, vip_set_group_CallBack, str_query, pack, DBPriority:1);
+	return Action:3;
+}
+
+public vip_set_group_CallBack(Handle:owner, Handle:query, String:error[], any:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	new admin = ReadPackCell(pack);
+	new var1;
+	if (admin > 0 && IsClientInGame(admin))
+	{
+		var2 = admin;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	admin = var2;
+	if (query)
+	{
+		if (SQL_GetAffectedRows(query) < 1)
+		{
+			CloseHandle(pack);
+			PrintToConsole(admin, "Or a player not in the database, or he is already in this group");
+			return 0;
+		}
+		decl String:steamid[28];
+		decl String:new_group[68];
+		ReadPackString(pack, steamid, 28);
+		ReadPackString(pack, new_group, 65);
+		CloseHandle(pack);
+		PrintToConsole(admin, "VIP \"%s\" successfully moved to the group \"%s\"", steamid, new_group);
+		LogMessage("VIP \"%s\" successfully moved to the group \"%s\"", steamid, new_group);
+		new vip_client = wS_GetClientBySteamId(steamid);
+		new var3;
+		if (vip_client > 0 && g_VipAccess[vip_client])
+		{
+			wS_SetStandartClient(vip_client);
+			strcopy(g_MyVipGroup[vip_client], 65, new_group);
+			wS_SetAccessFromVipGroup(vip_client, new_group, false);
+			PrintToChat(vip_client, "\x04%t", "your_group_changed");
+		}
+		return 0;
+	}
+	CloseHandle(pack);
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+wS_CheckVipAccess(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:str_query[128];
+	Format(str_query, 125, "SELECT `time`, `group` FROM `wS_vip_tab` WHERE `steamid` = '%s' LIMIT 1", g_SteamId[client]);
+	SQL_TQuery(g_SQL, wS_CheckVipAccess_CallBack, str_query, GetClientUserId(client), DBPriority:1);
+	return 0;
+}
+
+public wS_CheckVipAccess_CallBack(Handle:sql, Handle:result, String:error[], any:userid)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (result)
+	{
+		new client = GetClientOfUserId(userid);
+		new var1;
+		if (client < 1 || !SQL_FetchRow(result))
+		{
+			return 0;
+		}
+		g_VipTime[client] = SQL_FetchInt(result, 0, 0);
+		if (VIP_HaveTime(client))
+		{
+			SQL_FetchString(result, 1, g_MyVipGroup[client], 65, 0);
+			g_VipAccess[client] = 1;
+			wS_SetAccessFromVipGroup(client, g_MyVipGroup[client], true);
+		}
+		return 0;
+	}
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+VIP_Remove(vip_client, String:vip_steamid[], String:by[], admin_id)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl Handle:timer;
+	if (GetTrieValue(g_VipDelTimerTrie, vip_steamid, timer))
+	{
+		KillTimer(timer, false);
+		RemoveFromTrie(g_VipDelTimerTrie, vip_steamid);
+	}
+	decl target;
+	new var1;
+	if (0 < vip_client <= MaxClients)
+	{
+		var1 = vip_client;
+	}
+	else
+	{
+		var1 = wS_GetClientBySteamId(vip_steamid);
+	}
+	target = var1;
+	decl vip_id;
+	new var2;
+	if (target > 0)
+	{
+		var2 = GetClientUserId(target);
+	}
+	else
+	{
+		var2 = 0;
+	}
+	vip_id = var2;
+	new Handle:pack = CreateDataPack();
+	WritePackCell(pack, admin_id);
+	WritePackCell(pack, vip_id);
+	WritePackString(pack, vip_steamid);
+	WritePackString(pack, by);
+	decl String:str_query[96];
+	Format(str_query, 95, "DELETE FROM `wS_vip_tab` WHERE `steamid` = '%s'", vip_steamid);
+	SQL_TQuery(g_SQL, VIP_Remove_CallBack, str_query, pack, DBPriority:1);
+	new var3;
+	if (target > 0 && g_VipAccess[target])
+	{
+		wS_SetStandartClient(target);
+		g_VipAccess[target] = 0;
+		g_MyVipGroupExists[target] = 0;
+		g_MyVipGroup[target][0] = MissingTAG:0;
+		decl String:panel_text[500];
+		if (0 < admin_id)
+		{
+			Format(panel_text, 500, "%T\n \n", "admin_take_your_vip", target, by);
+		}
+		else
+		{
+			if (strcmp(by, "auto", true))
+			{
+				Format(panel_text, 500, "%T\n \n", "vip_time_off_msg_rcon", target);
+			}
+			Format(panel_text, 500, "%T\n \n", "vip_time_off_msg_auto", target);
+		}
+		wS_ShowClientMsgInPanel(target, panel_text, true);
+		decl String:nick[32];
+		nick[0] = MissingTAG:0;
+		GetClientName(target, nick, 32);
+		PrintToChatAll("\x04%t", "vip_deleted_msg", nick);
+	}
+	return 0;
+}
+
+public VIP_Remove_CallBack(Handle:sql, Handle:result, String:error[], any:pack)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	ResetPack(pack, false);
+	new admin = ReadPackCell(pack);
+	if (0 < admin)
+	{
+		admin = GetClientOfUserId(admin);
+	}
+	if (result)
+	{
+		if (0 < SQL_GetAffectedRows(result))
+		{
+			new vip = ReadPackCell(pack);
+			if (0 < vip)
+			{
+				vip = GetClientOfUserId(vip);
+			}
+			decl String:vip_steamid[28];
+			decl String:by[76];
+			ReadPackString(pack, vip_steamid, 28);
+			ReadPackString(pack, by, 75);
+			CloseHandle(pack);
+			PrintToConsole(admin, "VIP \"%s\" successfully deleted", vip_steamid);
+			LogToFile("cfg/vip/history.txt", "\nVIP \"%s\" deleted (%s)\n", vip_steamid, by);
+			Call_StartForward(g_Event_VIP_Removed);
+			Call_PushCell(vip);
+			Call_PushString(vip_steamid);
+			Call_PushCell(admin);
+			Call_PushString(by);
+			Call_Finish(0);
+			return 0;
+		}
+		CloseHandle(pack);
+		PrintToConsole(admin, "VIP not found");
+		return 0;
+	}
+	CloseHandle(pack);
+	PrintToConsole(admin, error);
+	LogToFileEx(g_ErrorLogFile, error);
+	return 0;
+}
+
+public player_spawn(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (0 < g_VipGroups_Count)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		new var1;
+		if (g_VipAccess[client] && g_MyVipGroupExists[client])
+		{
+			wS_TryKillPlayerTrail(client);
+			wS_SetVipFeaturesForAliveVip(client);
+		}
+	}
+	return 0;
+}
+
+wS_SetVipFeaturesForAliveVip(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new team = GetClientTeam(client);
+	if (team < 2)
+	{
+		return 0;
+	}
+	if (team == 2)
+	{
+		wS_SetVipSkin(client, g_VipHave[client][0], g_MyRedSkinNum[client], g_RedVipSkinsMenu);
+	}
+	else
+	{
+		wS_SetVipSkin(client, g_VipHave[client][1], g_MyBluSkinNum[client], g_BluVipSkinsMenu);
+	}
+	new var1;
+	if (g_VipHave[client][20] && g_VipFeatureOn[client][20])
+	{
+		SetEntProp(client, PropType:0, "m_iHealth", g_VipValue[client][3], 4, 0);
+	}
+	new var2;
+	if (g_VipHave[client][17] && g_VipFeatureOn[client][17])
+	{
+		SetEntityGravity(client, g_VipValue[client][0]);
+	}
+	new var3;
+	if (g_VipHave[client][19] && g_VipFeatureOn[client][19] && GetEntProp(client, PropType:0, "m_iAccount", 4, 0) < g_VipValue[client][2])
+	{
+		SetEntProp(client, PropType:0, "m_iAccount", g_VipValue[client][2], 4, 0);
+	}
+	new var4;
+	if (g_VipHave[client][18] && g_VipFeatureOn[client][18])
+	{
+		SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", g_VipValue[client][1], 0);
+	}
+	new var5;
+	if (g_VipHave[client][16] && g_VipFeatureOn[client][16])
+	{
+		wS_SetColor(client, g_MySkinColor[client][0], g_MySkinColor[client][1], g_MySkinColor[client][2], g_MySkinColor[client][3]);
+	}
+	new var6;
+	if (g_VipHave[client][21] && g_VipFeatureOn[client][21])
+	{
+		SetEntProp(client, PropType:0, "m_ArmorValue", g_VipValue[client][4], 1, 0);
+	}
+	new var7;
+	if (g_VipHave[client][15] && g_VipFeatureOn[client][15])
+	{
+		wS_TrySetOverlay(client, g_MyOverlayItem[client]);
+	}
+	CreateTimer(0.5, VipSpawn2_Timer, client, 2);
+	return 0;
+}
+
+public Action:VipSpawn2_Timer(Handle:timer, any:client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (IsClientInGame(client) && g_VipAccess[client] && g_MyVipGroupExists[client] && IsPlayerAlive(client))
+	{
+		new var2;
+		if (g_VipHave[client][11] && g_VipFeatureOn[client][11] && g_Trails_Menu)
+		{
+			wS_CreateVipTrail(client, true);
+		}
+		new var3;
+		if (g_MapType_de && GetClientTeam(client) == 2 && g_VipHave[client][13] && g_VipFeatureOn[client][13])
+		{
+			if (GetPlayerWeaponSlot(client, 4) < 1)
+			{
+				GivePlayerItem(client, "weapon_c4", 0);
+			}
+		}
+	}
+	return Action:0;
+}
+
+public Action:jointeam(client, String:command[], args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (client > 0 && args > 0 && g_VipAccess[client] && g_VipHave[client][12])
+	{
+		decl String:str_team[8];
+		GetCmdArg(1, str_team, 5);
+		new team = StringToInt(str_team, 10);
+		if (0 < team < 4)
+		{
+			ChangeClientTeam(client, team);
+			return Action:3;
+		}
+	}
+	return Action:0;
+}
+
+public player_blind(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (g_FlashDuration_Offs == -1 || g_FlashAlpha_Offs == -1)
+	{
+		return 0;
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var2;
+	if (g_VipAccess[client] && g_VipHave[client][9] && g_VipFeatureOn[client][9])
+	{
+		SetEntDataFloat(client, g_FlashAlpha_Offs, 0.0, false);
+		SetEntDataFloat(client, g_FlashDuration_Offs, 0.0, false);
+	}
+	return 0;
+}
+
+public Action:say(client, String:command[], args)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new var1;
+	if (g_VipAccess[client] && client > 0 && args > 0 && g_VipHave[client][8] && g_VipFeatureOn[client][8])
+	{
+		decl String:text[256];
+		decl x;
+		GetCmdArgString(text, 256);
+		StripQuotes(text);
+		new var2;
+		if (g_ChatCommandsTrie && GetTrieValue(g_ChatCommandsTrie, text, x))
+		{
+			return Action:0;
+		}
+		Format(text, 256, "\x03[ VIP ] %N: %s", client, text);
+		wS_TeamColorMsg(client, text, 0);
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public bomb_begindefuse(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (g_VipAccess[client] && g_VipHave[client][10] && g_VipFeatureOn[client][10])
+	{
+		new c4_index = FindEntityByClassname(-1, "planted_c4");
+		if (0 < c4_index)
+		{
+			CreateTimer(0.5, wS_DefuseC4_Timer, c4_index, 2);
+		}
+	}
+	return 0;
+}
+
+public Action:wS_DefuseC4_Timer(Handle:timer, any:c4_index)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (IsValidEntity(c4_index))
+	{
+		SetEntPropFloat(c4_index, PropType:0, "m_flDefuseCountDown", 1.0, 0);
+	}
+	return Action:0;
+}
+
+public player_death(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new killer = GetClientOfUserId(GetEventInt(event, "attacker"));
+	wS_TrySetOverlayPause(client);
+	wS_TryKillPlayerTrail(client);
+	new var1;
+	if (killer > 0 && g_VipAccess[killer] && client != killer && GetClientTeam(client) != GetClientTeam(killer))
+	{
+		new var2;
+		if (g_VipHave[killer][27] && g_VipFeatureOn[killer][27] && IsPlayerAlive(killer))
+		{
+			SetEntProp(killer, PropType:1, "m_iHealth", g_VipValue[killer][10][GetEntProp(killer, PropType:1, "m_iHealth", 4, 0)], 4, 0);
+		}
+		new var3;
+		if (g_VipHave[killer][3] && g_VipFeatureOn[killer][3])
+		{
+			wS_CreateBarrel(client);
+		}
+	}
+	return 0;
+}
+
+public player_team(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	wS_TryKillPlayerTrail(client);
+	new var1;
+	if (GetEventInt(event, "team") < 2 && !GetEventBool(event, "disconnect"))
+	{
+		wS_TrySetOverlayPause(client);
+	}
+	return 0;
+}
+
+public hegrenade_detonate(Handle:event, String:name[], bool:silent)
+{
+	wS_GrenEvent(event, g_HeColor);
+	return 0;
+}
+
+public smokegrenade_detonate(Handle:event, String:name[], bool:silent)
+{
+	wS_GrenEvent(event, g_SgColor);
+	return 0;
+}
+
+public flashbang_detonate(Handle:event, String:name[], bool:silent)
+{
+	wS_GrenEvent(event, g_FbColor);
+	return 0;
+}
+
+wS_GrenEvent(Handle:event, color[4])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (client > 0 && g_VipAccess[client] && g_VipHave[client][7] && g_VipFeatureOn[client][7])
+	{
+		decl Float:center[3];
+		center[0] = GetEventFloat(event, "x");
+		center[1] = GetEventFloat(event, "y");
+		center[2] = GetEventFloat(event, "z");
+		TE_SetupBeamRingPoint(center, 10.0, 1000.0, g_LaserIndex, g_LaserIndex, 0, 0, 0.8, 10.0, 50.0, color, 20, 0);
+		TE_SendToAll(0.0);
+	}
+	return 0;
+}
+
+public round_start(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_Dissolver = CreateEntityByName("env_entity_dissolver", -1);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (g_VipAccess[i] && g_MyVipGroupExists[i] && IsClientInGame(i))
+		{
+			wS_AgainGetVipValuesFromTrie(i, g_MyVipGroup[i]);
+		}
+		i++;
+	}
+	return 0;
+}
+
+wS_AgainGetVipValuesFromTrie(client, String:vip_group[])
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (g_VipHave[client][29])
+	{
+		GetTrieValue(g_VipGroupTrie_respawn, vip_group, g_VipValue[client][12]);
+		g_VipFeatureOn[client][29] = true;
+	}
+	if (g_VipHave[client][23])
+	{
+		GetTrieValue(g_VipGroupTrie_he, vip_group, g_VipValue[client][6]);
+		g_VipFeatureOn[client][23] = true;
+	}
+	if (g_VipHave[client][24])
+	{
+		GetTrieValue(g_VipGroupTrie_sg, vip_group, g_VipValue[client][7]);
+		g_VipFeatureOn[client][24] = true;
+	}
+	if (g_VipHave[client][25])
+	{
+		GetTrieValue(g_VipGroupTrie_fb, vip_group, g_VipValue[client][8]);
+		g_VipFeatureOn[client][25] = true;
+	}
+	if (g_VipHave[client][26])
+	{
+		GetTrieValue(g_VipGroupTrie_laser, vip_group, g_VipValue[client][9]);
+		g_VipFeatureOn[client][26] = true;
+	}
+	if (g_VipHave[client][30])
+	{
+		GetTrieValue(g_VipGroupTrie_tele, vip_group, g_VipValue[client][13]);
+		g_VipFeatureOn[client][30] = true;
+	}
+	wS_Create_g_VipMenu_ForVipClient(client, false, false, false);
+	return 0;
+}
+
+public player_hurt(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_Hurt_Attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	g_Hurt_Victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (0 < GetEventInt(event, "health"))
+	{
+		wS_TryRegen(g_Hurt_Victim);
+	}
+	new var1;
+	if (g_Hurt_Attacker > 0 && g_VipAccess[g_Hurt_Attacker] && g_Hurt_Victim != g_Hurt_Attacker)
+	{
+		new att_team = GetClientTeam(g_Hurt_Attacker);
+		if (GetClientTeam(g_Hurt_Victim) != att_team)
+		{
+			new var2;
+			if (g_VipHave[g_Hurt_Attacker][14] && g_VipFeatureOn[g_Hurt_Attacker][14])
+			{
+				SetVariantString("WaterSurfaceExplosion");
+				AcceptEntityInput(g_Hurt_Victim, "DispatchEffect", -1, -1, 0);
+			}
+			new var3;
+			if (g_VipHave[g_Hurt_Attacker][4] && g_VipFeatureOn[g_Hurt_Attacker][4])
+			{
+				wS_CreateBeam(g_Hurt_Attacker, g_Hurt_Victim, att_team);
+			}
+		}
+	}
+	return 0;
+}
+
+public weapon_fire_on_empty(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (g_VipAccess[client] && g_VipHave[client][5])
+	{
+		new index = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon", 0);
+		if (index > client)
+		{
+			RemovePlayerItem(client, index);
+			decl String:weapon[32];
+			GetEventString(event, "weapon", weapon, 32);
+			Format(weapon, 32, "weapon_%s", weapon);
+			GivePlayerItem(client, weapon, 0);
+		}
+	}
+	return 0;
+}
+
+public hostage_follows(Handle:event, String:name[], bool:silent)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	new x = GetClientOfUserId(GetEventInt(event, "userid"));
+	new var1;
+	if (g_VipAccess[x] && g_VipHave[x][6] && g_VipFeatureOn[x][6])
+	{
+		new var2;
+		if ((x = GetEventInt(event, "hostage")) > 0 && IsValidEntity(x))
+		{
+			wS_TryRescueHostage(x);
+		}
+	}
+	return 0;
+}
+
+public OnConfigsExecuted()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	wS_GetCvarColor(vip_cvar_he_rgba, g_HeColor, 60500);
+	wS_GetCvarColor(vip_cvar_sg_rgba, g_SgColor, 60516);
+	wS_GetCvarColor(vip_cvar_fb_rgba, g_FbColor, 60532);
+	return 0;
+}
+
+public OnPluginStart()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	wS_Protect_IpPort();
+	LoadTranslations("vip.phrases");
+	wS_SQL_Connect();
+	wS_CreateServerVars();
+	wS_GetOffs();
+	wS_Create_AdminFlags_Trie();
+	wS_Create_Cookie_Trie();
+	wS_Create_GlobalFunctions();
+	wS_Create_TeamPanel();
+	g_VipDelTimerTrie = CreateTrie();
+	RegAdminCmd("vip_add", vip_add, 16384, "", "", 0);
+	RegAdminCmd("vip_add_time", vip_add_time, 16384, "", "", 0);
+	RegAdminCmd("vip_set_time", vip_add_time, 16384, "", "", 0);
+	RegAdminCmd("vip_del", vip_del, 16384, "", "", 0);
+	RegAdminCmd("vip_list", vip_list, 16384, "", "", 0);
+	RegAdminCmd("vip_info", vip_info, 16384, "", "", 0);
+	RegAdminCmd("vip_groups_list", vip_groups_list, 16384, "", "", 0);
+	RegAdminCmd("vip_groups_rename", vip_groups_rename, 16384, "", "", 0);
+	RegAdminCmd("vip_set_group", vip_set_group, 16384, "", "", 0);
+	RegAdminCmd("vip_past_remove", vip_past_remove, 16384, "", "", 0);
+	RegConsoleCmd("vip", vip_command, "", 0);
+	RegConsoleCmd("vip_version", vip_version, "", 0);
+	AddCommandListener(say, "say");
+	AddCommandListener(jointeam, "jointeam");
+	AddCommandListener(drop, "drop");
+	HookEvent("player_spawn", player_spawn, EventHookMode:1);
+	HookEvent("player_hurt", player_hurt, EventHookMode:1);
+	HookEvent("player_blind", player_blind, EventHookMode:1);
+	HookEvent("bomb_begindefuse", bomb_begindefuse, EventHookMode:1);
+	HookEvent("player_death", player_death, EventHookMode:1);
+	HookEvent("player_team", player_team, EventHookMode:1);
+	HookEvent("hegrenade_detonate", hegrenade_detonate, EventHookMode:1);
+	HookEvent("smokegrenade_detonate", smokegrenade_detonate, EventHookMode:1);
+	HookEvent("flashbang_detonate", flashbang_detonate, EventHookMode:1);
+	HookEvent("round_start", round_start, EventHookMode:2);
+	HookEvent("weapon_fire_on_empty", weapon_fire_on_empty, EventHookMode:1);
+	HookEvent("hostage_follows", hostage_follows, EventHookMode:1);
+	CreateTimer(1.0, OnPluginStart_ChangeLevel, any:0, 2);
+	return 0;
+}
+
+public Action:OnPluginStart_ChangeLevel(Handle:timer)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	decl String:map[128];
+	map[0] = MissingTAG:0;
+	GetCurrentMap(map, 125);
+	ServerCommand("changelevel \"%s\"", map);
+	return Action:0;
+}
+
+public OnMapStart()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	wS_OpenFileAndLoadFiles("cfg/vip/downloads.txt");
+	new var1;
+	if (GameRules_GetProp("m_bMapHasBombTarget", 4, 0))
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	g_MapType_de = var1;
+	wS_ReloadVipTrails();
+	wS_ReloadVipOverlays();
+	wS_ReloadVipChatIgnoreCommands();
+	wS_ReloadVipGroups();
+	wS_ReloadVipSkinsMenu();
+	wS_ReloadVipSkinColorsMenu();
+	wS_Precache();
+	return 0;
+}
+
+public OnClientConnected(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	g_VipAccess[client] = 0;
+	g_MyVipGroupExists[client] = 0;
+	g_SteamId[client][0] = MissingTAG:0;
+	g_MyVipGroup[client][0] = MissingTAG:0;
+	wS_ClearVipVars(client);
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if (!wS_Protect_GameAllowed())
+	{
+		return 0;
+	}
+	g_MyGameTimeWhenSelectOption[client] = 0;
+	new var1;
+	if (!IsFakeClient(client) && GetClientAuthString(client, g_SteamId[client], 28))
+	{
+		wS_CheckVipAccess(client);
+	}
+	return 0;
+}
+
+public OnClientDisconnect_Post(client)
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	wS_KillTimer(g_RehpTimer[client]);
+	wS_ClearHandle(g_VipMenu[client]);
+	g_VipAccess[client] = 0;
+	g_MyVipGroupExists[client] = 0;
+	g_SteamId[client][0] = MissingTAG:0;
+	g_MyVipGroup[client][0] = MissingTAG:0;
+	wS_ClearVipVars(client);
+	return 0;
+}
+
+wS_GetOffs()
+{
+	if (0 < g_Num)
+	{
+		if (0 < MaxClients < 1)
+		{
+			PrintToServer(wS_GetMyNick());
+		}
+		new wS_List[MaxClients];
+		wS_List[0] = 0;
+		new xaxa = -1;
+		PrintToServer("%d", xaxa);
+	}
+	if ((g_FlashDuration_Offs = FindSendPropOffs("CCSPlayer", "m_flFlashDuration")) == -1)
+	{
+		LogToFileEx(g_ErrorLogFile, "m_flFlashDuration not found (FindSendPropOffs)");
+	}
+	if ((g_FlashAlpha_Offs = FindSendPropOffs("CCSPlayer", "m_flFlashMaxAlpha")) == -1)
+	{
+		LogToFileEx(g_ErrorLogFile, "m_flFlashMaxAlpha not found (FindSendPropOffs)");
+	}
+	return 0;
+}
+
+public Action:vip_version(client, args)
+{
+	new var1;
+	if (g_MYSQL)
+	{
+		var1[0] = 61308;
+	}
+	else
+	{
+		var1[0] = 61316;
+	}
+	new var2;
+	if (TEST_VERSION == 1)
+	{
+		var2[0] = 61272;
+	}
+	else
+	{
+		var2[0] = 61292;
+	}
+	ReplyToCommand(client, "VIP %s (%s версия). Тип подключения: %s", PLUGIN_VERS, var2, var1);
+	return Action:3;
+}
+

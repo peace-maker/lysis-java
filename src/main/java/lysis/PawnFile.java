@@ -231,7 +231,7 @@ public abstract class PawnFile {
 		if (var == null)
 			return null;
 
-		return new Argument(var.type(), var.name(), (int) var.tag().tag_id(), var.tag(), var.dims());
+		return new Argument(var.type(), var.name(), (int) var.tag_id(), var.tag(), var.dims());
 	}
 
 	public void addGlobal(long addr) {

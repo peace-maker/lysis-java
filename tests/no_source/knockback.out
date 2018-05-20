@@ -1,0 +1,238 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.3-dev",
+	date = "05/22/2012",
+	time = "00:00:22"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Plugin:myinfo =
+{
+	name = "KnockBack",
+	description = "Weapon Knock Back",
+	author = "��ο���",
+	version = "1.0",
+	url = ""
+};
+new String:weaponKB[28][2][256] =
+{
+	{
+		"knife",
+		"0.0"
+	},
+	{
+		"glock",
+		"1000.0"
+	},
+	{
+		"usp",
+		"1000.0"
+	},
+	{
+		"p228",
+		"1000.0"
+	},
+	{
+		"deagle",
+		"1500.0"
+	},
+	{
+		"elite",
+		"1000.0"
+	},
+	{
+		"fiveseven",
+		"1000.0"
+	},
+	{
+		"m3",
+		"500.0"
+	},
+	{
+		"xm1014",
+		"500.0"
+	},
+	{
+		"galil",
+		"1000.0"
+	},
+	{
+		"ak47",
+		"1000.0"
+	},
+	{
+		"scout",
+		"3000.0"
+	},
+	{
+		"sg552",
+		"1500.0"
+	},
+	{
+		"awp",
+		"3000.0"
+	},
+	{
+		"g3sg1",
+		"3000.0"
+	},
+	{
+		"famas",
+		"1000.0"
+	},
+	{
+		"m4a1",
+		"1000.0"
+	},
+	{
+		"aug",
+		"1000.0"
+	},
+	{
+		"sg550",
+		"1500.0"
+	},
+	{
+		"mac10",
+		"1000.0"
+	},
+	{
+		"tmp",
+		"1000.0"
+	},
+	{
+		"mp5navy",
+		"1000.0"
+	},
+	{
+		"ump45",
+		"1000.0"
+	},
+	{
+		"p90",
+		"1000.0"
+	},
+	{
+		"m249",
+		"1000.0"
+	},
+	{
+		"flashbang",
+		"10000.0"
+	},
+	{
+		"hegrenade",
+		"1000.0"
+	},
+	{
+		"smokegrenade",
+		"10000.0"
+	}
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+ScaleVector(Float:vec[3], Float:scale)
+{
+	new var1 = vec;
+	var1[0] = var1[0] * scale;
+	vec[1] *= scale;
+	vec[2] *= scale;
+	return 0;
+}
+
+MakeVectorFromPoints(Float:pt1[3], Float:pt2[3], Float:output[3])
+{
+	output[0] = pt2[0] - pt1[0];
+	output[1] = pt2[1] - pt1[1];
+	output[2] = pt2[2] - pt1[2];
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+public OnPluginStart()
+{
+	CreateConVar("knockback_version", "1.0", "knockback plugin info cvar", 8448, false, 0.0, false, 0.0);
+	HookEvent("player_hurt", Player_Hurt, EventHookMode:1);
+	return 0;
+}
+
+public Action:Player_Hurt(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new Client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new Attacker = GetClientOfUserId(GetEventInt(event, "Attacker"));
+	new var1;
+	if (AliveCheck(Client) == 1 && AliveCheck(Attacker) == 1)
+	{
+		decl String:k_weapon[32];
+		GetEventString(event, "weapon", k_weapon, 32);
+		new i;
+		while (i < 28)
+		{
+			if (StrEqual(weaponKB[i][0], k_weapon, true))
+			{
+				decl Float:Clientposition[3];
+				decl Float:targetposition[3];
+				decl Float:vector[3];
+				GetClientEyePosition(Attacker, Clientposition);
+				GetClientEyePosition(Client, targetposition);
+				MakeVectorFromPoints(Clientposition, targetposition, vector);
+				NormalizeVector(vector, vector);
+				ScaleVector(vector, StringToFloat(weaponKB[i][1]));
+				TeleportEntity(Client, NULL_VECTOR, NULL_VECTOR, vector);
+			}
+			i++;
+		}
+	}
+	return Action:0;
+}
+
+public bool:AliveCheck(Client)
+{
+	new var1;
+	if (Client > 0 && Client <= MaxClients)
+	{
+		if (IsClientConnected(Client) == 1)
+		{
+			if (IsClientInGame(Client) == 1)
+			{
+				if (IsPlayerAlive(Client) == 1)
+				{
+					return true;
+				}
+				return false;
+			}
+			return false;
+		}
+		return false;
+	}
+	return false;
+}
+

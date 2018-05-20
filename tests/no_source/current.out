@@ -1,0 +1,336 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.0-dev+4177",
+	date = "08/17/2014",
+	time = "17:00:43"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:L4D2_InfectedNames[8][32];
+new String:L4D2_InfectedTimerEntities[8][];
+new String:L4D2_InfectedVictimNetprops[8][];
+new String:MeleeWeaponModels[15][];
+new String:MeleeWeaponNames[15][];
+new String:SurvivorModels[8][];
+new String:SurvivorNames[8][];
+new String:WeaponModels[56][];
+new String:WeaponNames[56][];
+new WeaponSlots[56] =
+{
+	0, 0, 0, 0, 843330636, 1920291616, 1870031222, 1917853810, 1701996399, 29555, 1634623811, 1867669860, 1444949112, 1919906665, 0, 1852404304, 1970479220, 1986623090, 1881174639, 1919381362, 544437093, 1713401449, 544698220, 1668441456, 1937010277, 32, 774909490, 49, 1886680168, 791624307, 1752459623, 1663984245, 1093627247, 1851880564, 1917857647, 1685015919, 0, 1356, 1400, 1380, 1444, 1452, 1936876918, 1650422645, 1601401711, 1717990754, 29285, 1600402540, 1651469415, 1885301857, 1701016165, 29806, 49, 1886611780, 544825708, 1936944994
+};
+new Handle:hCvarPrintToEveryone;
+new Handle:hMeleeWeaponModelsTrie;
+new Handle:hMeleeWeaponNamesTrie;
+new Handle:hSurvivorModelsTrie;
+new Handle:hWeaponNamesTrie;
+new Handle:survivor_limit;
+new Handle:z_max_player_zombies;
+new Handle:g_hVsBossBuffer;
+public Plugin:myinfo =
+{
+	name = "L4D2 Survivor Progress",
+	description = "Print survivor progress in flow percents ",
+	author = "CanadaRox, Visor",
+	version = "2.0.1",
+	url = "https://github.com/Attano/ProMod"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbReadRepeatedInt");
+	MarkNativeAsOptional("PbReadRepeatedFloat");
+	MarkNativeAsOptional("PbReadRepeatedBool");
+	MarkNativeAsOptional("PbReadRepeatedString");
+	MarkNativeAsOptional("PbReadRepeatedColor");
+	MarkNativeAsOptional("PbReadRepeatedAngle");
+	MarkNativeAsOptional("PbReadRepeatedVector");
+	MarkNativeAsOptional("PbReadRepeatedVector2D");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+Float:operator+(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 + float(oper2);
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+Handle:L4D2Direct_GetGameConf()
+{
+	static Handle:g_hGameConf_l4d2dir;
+	if (!g_hGameConf_l4d2dir)
+	{
+		g_hGameConf_l4d2dir = LoadGameConfigFile("l4d2_direct");
+	}
+	return g_hGameConf_l4d2dir;
+}
+
+Address:L4D2Direct_GetTerrorNavMesh()
+{
+	static Address:TheNavMesh;
+	if (!TheNavMesh)
+	{
+		TheNavMesh = GameConfGetAddress(L4D2Direct_GetGameConf(), "TerrorNavMesh");
+	}
+	return TheNavMesh;
+}
+
+Address:L4D2Direct_GetMapMaxFlowDistanceAddr()
+{
+	static Address:pMapMaxFlowDistance;
+	if (!pMapMaxFlowDistance)
+	{
+		new offs = GameConfGetOffset(L4D2Direct_GetGameConf(), "TerrorNavMesh::m_fMapMaxFlowDistance");
+		if (offs == -1)
+		{
+			return Address:0;
+		}
+		pMapMaxFlowDistance = L4D2Direct_GetTerrorNavMesh() + offs;
+	}
+	return pMapMaxFlowDistance;
+}
+
+Float:L4D2Direct_GetMapMaxFlowDistance()
+{
+	return LoadFromAddress(L4D2Direct_GetMapMaxFlowDistanceAddr(), NumberType:2);
+}
+
+Address:L4D2Direct_GetTerrorNavArea(Float:pos[3], Float:beneathLimit)
+{
+	static Handle:GetNavAreaSDKCall;
+	if (!GetNavAreaSDKCall)
+	{
+		StartPrepSDKCall(SDKCallType:5);
+		if (!PrepSDKCall_SetFromConf(L4D2Direct_GetGameConf(), SDKFuncConfSource:1, "CNavMesh::GetNavArea"))
+		{
+			return Address:0;
+		}
+		PrepSDKCall_AddParameter(SDKType:2, SDKPassMethod:3, 0, 0);
+		PrepSDKCall_AddParameter(SDKType:5, SDKPassMethod:1, 0, 0);
+		PrepSDKCall_SetReturnInfo(SDKType:4, SDKPassMethod:1, 0, 0);
+		GetNavAreaSDKCall = EndPrepSDKCall();
+		if (!GetNavAreaSDKCall)
+		{
+			return Address:0;
+		}
+	}
+	return SDKCall(GetNavAreaSDKCall, L4D2Direct_GetTerrorNavMesh(), pos, beneathLimit);
+}
+
+Float:L4D2Direct_GetTerrorNavAreaFlow(Address:pTerrorNavArea)
+{
+	if (pTerrorNavArea)
+	{
+		new offs = GameConfGetOffset(L4D2Direct_GetGameConf(), "TerrorNavArea::m_flow");
+		if (offs == -1)
+		{
+			return 0.0;
+		}
+		return LoadFromAddress(offs + pTerrorNavArea, NumberType:2);
+	}
+	return 0.0;
+}
+
+public OnPluginStart()
+{
+	g_hVsBossBuffer = FindConVar("versus_boss_buffer");
+	L4D2_InfectedNames[0] = CreateConVar("l4d_global_percent", "1", "Display boss percentages to entire team when using commands", 262144, false, 0.0, false, 0.0);
+	RegConsoleCmd("sm_cur", CurrentCmd, "", 0);
+	RegConsoleCmd("sm_current", CurrentCmd, "", 0);
+	survivor_limit = FindConVar("survivor_limit");
+	z_max_player_zombies = FindConVar("z_max_player_zombies");
+	return 0;
+}
+
+public Action:CurrentCmd(client, args)
+{
+	new L4D2_Team:team = GetClientTeam(client);
+	if (team == L4D2_Team:1)
+	{
+		PrintCurrentToClient(client);
+	}
+	else
+	{
+		if (GetConVarBool(L4D2_InfectedNames[0]))
+		{
+			PrintCurrentToTeam(team);
+		}
+		PrintCurrentToClient(client);
+	}
+	return Action:0;
+}
+
+PrintCurrentToClient(client)
+{
+	new boss_proximity = RoundToNearest(GetBossProximity() * 100.0);
+	PrintToChat(client, "\x01Current: \x04%d%%", boss_proximity);
+	return 0;
+}
+
+PrintCurrentToTeam(L4D2_Team:team)
+{
+	new members_found;
+	new team_max = GetTeamMaxHumans(team);
+	new boss_proximity = RoundToNearest(GetBossProximity() * 100.0);
+	new client = 1;
+	while (client <= MaxClients && members_found < team_max)
+	{
+		new var2;
+		if (IsClientInGame(client) && !IsFakeClient(client) && team == GetClientTeam(client))
+		{
+			members_found++;
+			PrintToChat(client, "\x01Current: \x04%d%%", boss_proximity);
+		}
+		client++;
+	}
+	return 0;
+}
+
+Float:GetBossProximity()
+{
+	new Float:proximity = GetMaxSurvivorCompletion() + GetConVarFloat(g_hVsBossBuffer) / L4D2Direct_GetMapMaxFlowDistance();
+	new var1;
+	if (proximity > 1.0)
+	{
+		var1 = 1.0;
+	}
+	else
+	{
+		var1 = proximity;
+	}
+	return var1;
+}
+
+Float:GetMaxSurvivorCompletion()
+{
+	new Float:flow = 0.0;
+	decl Float:tmp_flow;
+	decl Float:origin[3];
+	decl Address:pNavArea;
+	new client = 1;
+	while (client <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(client) && GetClientTeam(client) == 2)
+		{
+			GetClientAbsOrigin(client, origin);
+			pNavArea = L4D2Direct_GetTerrorNavArea(origin, 120.0);
+			if (pNavArea)
+			{
+				tmp_flow = L4D2Direct_GetTerrorNavAreaFlow(pNavArea);
+				new var2;
+				if (flow > tmp_flow)
+				{
+					var2 = flow;
+				}
+				else
+				{
+					var2 = tmp_flow;
+				}
+				flow = var2;
+			}
+		}
+		client++;
+	}
+	return flow / L4D2Direct_GetMapMaxFlowDistance();
+}
+
+GetTeamMaxHumans(L4D2_Team:team)
+{
+	if (team == L4D2_Team:2)
+	{
+		return GetConVarInt(survivor_limit);
+	}
+	if (team == L4D2_Team:3)
+	{
+		return GetConVarInt(z_max_player_zombies);
+	}
+	return MaxClients;
+}
+

@@ -1,0 +1,676 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.7.3-dev+5292",
+	date = "02/19/2016",
+	time = "17:17:50"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_cstrike =
+{
+	name = "cstrike",
+	file = "games/game.cstrike.ext",
+	autoload = 0,
+	required = 1,
+};
+new String:CTag[12][] =
+{
+	"{default}",
+	"{darkred}",
+	"{green}",
+	"{lightgreen}",
+	"{red}",
+	"{blue}",
+	"{olive}",
+	"{lime}",
+	"{lightred}",
+	"{purple}",
+	"{grey}",
+	"{orange}"
+};
+new String:CTagCode[12][16] =
+{
+	"\x01",
+	"\x02",
+	"\x04",
+	"\x03",
+	"\x03",
+	"\x03",
+	"\x05",
+	"\x06",
+	"\x07",
+	"\x03",
+	"\x08",
+	"\x09"
+};
+new bool:CTagReqSayText2[12] =
+{
+	0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0
+};
+new bool:CEventIsHooked;
+new bool:CSkipList[66];
+new bool:CProfile_Colors[12] =
+{
+	1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new CProfile_TeamIndex[10] =
+{
+	-1, ...
+};
+new bool:CProfile_SayText2;
+new Handle:sm_show_activity = 1635151433;
+public Extension:__ext_topmenus =
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+	autoload = 1,
+	required = 1,
+};
+public SharedPlugin:__pl_adminmenu =
+{
+	name = "adminmenu",
+	file = "adminmenu.smx",
+	required = 1,
+};
+new Handle:hAdminMenu;
+public Plugin:myinfo =
+{
+	name = "Revmenu Plugini",
+	description = "Jailbreak Modu Icin Revmenu Plugin'idir",
+	author = "Ak0",
+	version = "1.0",
+	url = "www.frmakdag.com"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.GetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+CPrintToChat(client, String:szMessage[])
+{
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError(sm_show_activity, client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %d is not in game", client);
+	}
+	decl String:szBuffer[252];
+	decl String:szCMessage[252];
+	SetGlobalTransTarget(client);
+	Format(szBuffer, 250, "\x01%s", szMessage);
+	VFormat(szCMessage, 250, szBuffer, 3);
+	new index = CFormat(szCMessage, 250, -1);
+	if (index == -1)
+	{
+		PrintToChat(client, "%s", szCMessage);
+	}
+	else
+	{
+		CSayText2(client, index, szCMessage);
+	}
+	return 0;
+}
+
+CFormat(String:szMessage[], maxlength, author)
+{
+	decl String:szGameName[32];
+	GetGameFolderName(szGameName, 30);
+	if (!CEventIsHooked)
+	{
+		CSetupProfile();
+		HookEvent("server_spawn", CEvent_MapStart, EventHookMode:2);
+		CEventIsHooked = true;
+	}
+	new iRandomPlayer = -1;
+	if (StrEqual(szGameName, "csgo", false))
+	{
+		Format(szMessage, maxlength, " \x01\x0B\x01%s", szMessage);
+	}
+	if (author != -1)
+	{
+		if (CProfile_SayText2)
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", "\x03", false);
+			iRandomPlayer = author;
+		}
+		else
+		{
+			ReplaceString(szMessage, maxlength, "{teamcolor}", CTagCode[2], false);
+		}
+	}
+	else
+	{
+		ReplaceString(szMessage, maxlength, "{teamcolor}", "", false);
+	}
+	new i;
+	while (i < 12)
+	{
+		if (!(StrContains(szMessage, CTag[i], false) == -1))
+		{
+			if (!CProfile_Colors[i])
+			{
+				ReplaceString(szMessage, maxlength, CTag[i], CTagCode[2], false);
+			}
+			else
+			{
+				if (!CTagReqSayText2[i])
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], false);
+				}
+				if (!CProfile_SayText2)
+				{
+					ReplaceString(szMessage, maxlength, CTag[i], CTagCode[2], false);
+				}
+				if (iRandomPlayer == -1)
+				{
+					iRandomPlayer = CFindRandomPlayerByTeam(CProfile_TeamIndex[i]);
+					if (iRandomPlayer == -2)
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[2], false);
+					}
+					else
+					{
+						ReplaceString(szMessage, maxlength, CTag[i], CTagCode[i], false);
+					}
+				}
+				ThrowError("Using two team colors in one message is not allowed");
+			}
+		}
+		i++;
+	}
+	return iRandomPlayer;
+}
+
+CFindRandomPlayerByTeam(color_team)
+{
+	if (color_team)
+	{
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && color_team == GetClientTeam(i))
+			{
+				return i;
+			}
+			i++;
+		}
+		return -2;
+	}
+	return 0;
+}
+
+CSayText2(client, author, String:szMessage[])
+{
+	new Handle:hBuffer = StartMessageOne("SayText2", client, 132);
+	new var1;
+	if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+	{
+		PbSetInt(hBuffer, "ent_idx", author, -1);
+		PbSetBool(hBuffer, "chat", true, -1);
+		PbSetString(hBuffer, "msg_name", szMessage, -1);
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+		PbAddString(hBuffer, "params", "");
+	}
+	else
+	{
+		BfWriteByte(hBuffer, author);
+		BfWriteByte(hBuffer, 1);
+		BfWriteString(hBuffer, szMessage);
+	}
+	EndMessage();
+	return 0;
+}
+
+CSetupProfile()
+{
+	decl String:szGameName[32];
+	GetGameFolderName(szGameName, 30);
+	if (StrEqual(szGameName, "cstrike", false))
+	{
+		CProfile_Colors[3] = 1;
+		CProfile_Colors[4] = 1;
+		CProfile_Colors[5] = 1;
+		CProfile_Colors[6] = 1;
+		CProfile_TeamIndex[3] = 0;
+		CProfile_TeamIndex[4] = 2;
+		CProfile_TeamIndex[5] = 3;
+		CProfile_SayText2 = true;
+	}
+	else
+	{
+		if (StrEqual(szGameName, "csgo", false))
+		{
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_Colors[6] = 1;
+			CProfile_Colors[1] = 1;
+			CProfile_Colors[7] = 1;
+			CProfile_Colors[8] = 1;
+			CProfile_Colors[9] = 1;
+			CProfile_Colors[10] = 1;
+			CProfile_Colors[11] = 1;
+			CProfile_TeamIndex[4] = 2;
+			CProfile_TeamIndex[5] = 3;
+			CProfile_SayText2 = true;
+		}
+		if (StrEqual(szGameName, "tf", false))
+		{
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_Colors[6] = 1;
+			CProfile_TeamIndex[3] = 0;
+			CProfile_TeamIndex[4] = 2;
+			CProfile_TeamIndex[5] = 3;
+			CProfile_SayText2 = true;
+		}
+		new var1;
+		if (StrEqual(szGameName, "left4dead", false) || StrEqual(szGameName, "left4dead2", false))
+		{
+			CProfile_Colors[3] = 1;
+			CProfile_Colors[4] = 1;
+			CProfile_Colors[5] = 1;
+			CProfile_Colors[6] = 1;
+			CProfile_TeamIndex[3] = 0;
+			CProfile_TeamIndex[4] = 3;
+			CProfile_TeamIndex[5] = 2;
+			CProfile_SayText2 = true;
+		}
+		if (StrEqual(szGameName, "hl2mp", false))
+		{
+			if (GetConVarBool(FindConVar("mp_teamplay")))
+			{
+				CProfile_Colors[4] = 1;
+				CProfile_Colors[5] = 1;
+				CProfile_Colors[6] = 1;
+				CProfile_TeamIndex[4] = 3;
+				CProfile_TeamIndex[5] = 2;
+				CProfile_SayText2 = true;
+			}
+			else
+			{
+				CProfile_SayText2 = false;
+				CProfile_Colors[6] = 1;
+			}
+		}
+		if (StrEqual(szGameName, "dod", false))
+		{
+			CProfile_Colors[6] = 1;
+			CProfile_SayText2 = false;
+		}
+		if (GetUserMessageId("SayText2") == -1)
+		{
+			CProfile_SayText2 = false;
+		}
+		CProfile_Colors[4] = 1;
+		CProfile_Colors[5] = 1;
+		CProfile_TeamIndex[4] = 2;
+		CProfile_TeamIndex[5] = 3;
+		CProfile_SayText2 = true;
+	}
+	return 0;
+}
+
+public Action:CEvent_MapStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	CSetupProfile();
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		CSkipList[i] = 0;
+		i++;
+	}
+	return Action:0;
+}
+
+public void:OnPluginStart()
+{
+	decl String:game[40];
+	GetGameFolderName(game, 40);
+	RegConsoleCmd("revmenu", revdevam, "", 0);
+	CreateTimer(120.0, Reklamida_Cakarim, any:0, 1);
+	CreateTimer(120.1, Reklamida_Cakarim2, any:0, 1);
+	return void:0;
+}
+
+public Action:revdevam(client, args)
+{
+	new var1;
+	if (GetClientTeam(client) != 2 && IsPlayerAlive(client))
+	{
+		RevAk0(client);
+	}
+	else
+	{
+		CPrintToChat(client, "\x02[FrmAkDaG] \x04Bu Komut Sadece Yasayan GARDIYAN'lar icindir");
+	}
+	return Action:0;
+}
+
+public Action:RevAk0(clientId)
+{
+	new Handle:menu = CreateMenu(Ak0Devam, MenuAction:28);
+	SetMenuTitle(menu, "GARDIYAN Revleme Menusu");
+	decl String:opcionmenu[124];
+	Format(opcionmenu, 124, "Olu Olan Oyunculari Tek Tek Revle");
+	AddMenuItem(menu, "option2", opcionmenu, 0);
+	Format(opcionmenu, 124, "Olu Olan Tum Mahkumlari Revle");
+	AddMenuItem(menu, "option3", opcionmenu, 0);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, clientId, 0);
+	return Action:3;
+}
+
+public Ak0Devam(Handle:menu, MenuAction:action, client, itemNum)
+{
+	decl String:isim[32];
+	GetClientName(client, isim, 32);
+	decl String:game[40];
+	GetGameFolderName(game, 40);
+	if (action == MenuAction:4)
+	{
+		new String:info[32];
+		GetMenuItem(menu, itemNum, info, 32, 0, "", 0);
+		if (strcmp(info, "option2", true))
+		{
+			if (!(strcmp(info, "option3", true)))
+			{
+				new i = 1;
+				new iClients = GetClientCount(true);
+				while (i <= iClients)
+				{
+					CPrintToChat(i, "\x02[ FrmAkDaG ] \x04%s : Olu Olan Tum Mahkumlar Revlendi.", isim);
+					if (GetClientTeam(i) != 2)
+					{
+					}
+					else
+					{
+						new var1;
+						if (StrEqual(game, "cstrike", true) || StrEqual(game, "csgo", true))
+						{
+							if (!IsPlayerAlive(i))
+							{
+								CS_RespawnPlayer(i);
+							}
+						}
+					}
+					i++;
+				}
+			}
+		}
+		else
+		{
+			RevAk0baba(client);
+		}
+	}
+	return 0;
+}
+
+public Action:RevAk0baba(client)
+{
+	new Handle:menu = CreateMenu(MenuHandler_Players, MenuAction:28);
+	decl String:title[100];
+	Format(title, 100, "Canlandirilicak Oyuncu Sec:");
+	SetMenuTitle(menu, title);
+	SetMenuExitBackButton(menu, true);
+	AddTargetsToMenu2(menu, client, 10);
+	DisplayMenu(menu, client, 0);
+	return Action:0;
+}
+
+public MenuHandler_Players(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	else
+	{
+		if (action == MenuAction:8)
+		{
+			CPrintToChat(param1, "\x02[FrmAkDaG]\x04 Olu Oyuncu Yok !");
+			new var1;
+			if (param2 == -6 && hAdminMenu)
+			{
+				DisplayTopMenu(hAdminMenu, param1, TopMenuPosition:3);
+			}
+		}
+		if (action == MenuAction:4)
+		{
+			decl String:info[32];
+			new userid;
+			new target;
+			GetMenuItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
+			{
+				if (!CanUserTarget(param1, target))
+				{
+					new String:name[32];
+					GetClientName(target, name, 32);
+					new String:isim[32];
+					GetClientName(param1, isim, 32);
+					RespawnPlayer(param1, target);
+					RevAk0baba(param1);
+					new i = 1;
+					new iClients = GetClientCount(true);
+					while (i <= iClients)
+					{
+						CPrintToChat(i, "\x02[ FrmAkDaG ] %s : \x04%s isimli oyuncu revlendi.", isim, name);
+						i++;
+					}
+				}
+				new String:name[32];
+				GetClientName(target, name, 32);
+				new String:isim[32];
+				GetClientName(param1, isim, 32);
+				RespawnPlayer(param1, target);
+				RevAk0baba(param1);
+				new i = 1;
+				new iClients = GetClientCount(true);
+				while (i <= iClients)
+				{
+					CPrintToChat(i, "\x02[ FrmAkDaG ] %s : \x04%s isimli oyuncu revlendi.", isim, name);
+					i++;
+				}
+			}
+			else
+			{
+				CPrintToChat(param1, "\x02[FrmAkDaG] %t", "Mevcut Oyuncu Bulunamadi.");
+			}
+		}
+	}
+	return 0;
+}
+
+public RespawnPlayer(client, target)
+{
+	decl String:game[40];
+	GetGameFolderName(game, 40);
+	new var1;
+	if (StrEqual(game, "cstrike", true) || StrEqual(game, "csgo", true))
+	{
+		CS_RespawnPlayer(target);
+	}
+	return 0;
+}
+
+public Action:Reklamida_Cakarim(Handle:timer)
+{
+	new i = 1;
+	new iClients = GetClientCount(true);
+	while (i <= iClients)
+	{
+		CPrintToChat(i, "\x02www.FrmAkDaG.Com Ucretli - Ucretsiz Tum Pluginler ...");
+		i++;
+	}
+	return Action:0;
+}
+
+public Action:Reklamida_Cakarim2(Handle:timer)
+{
+	new i = 1;
+	new iClients = GetClientCount(true);
+	while (i <= iClients)
+	{
+		CPrintToChat(i, "\x04Coded By Ak0 | Steam ID: STEAM_0:0:156961425");
+		i++;
+	}
+	return Action:0;
+}
+

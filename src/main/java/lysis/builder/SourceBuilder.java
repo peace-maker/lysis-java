@@ -1123,16 +1123,16 @@ public class SourceBuilder {
 	private void writeGlobal(Variable var) throws IOException {
 		String decl = var.scope() == Scope.Global ? "new" : "static";
 		if (var.name().equals("myinfo")) {
-			long nameOffset = file_.int32FromData(var.address() + 0);
-			long descriptionOffset = file_.int32FromData(var.address() + 4);
-			long authorOffset = file_.int32FromData(var.address() + 8);
-			long versionOffset = file_.int32FromData(var.address() + 12);
-			long urlOffset = file_.int32FromData(var.address() + 16);
-			String name = file_.stringFromData(nameOffset);
-			String description = file_.stringFromData(descriptionOffset);
-			String author = file_.stringFromData(authorOffset);
-			String version = file_.stringFromData(versionOffset);
-			String url = file_.stringFromData(urlOffset);
+			int nameOffset = file_.int32FromData(var.address() + 0);
+			int descriptionOffset = file_.int32FromData(var.address() + 4);
+			int authorOffset = file_.int32FromData(var.address() + 8);
+			int versionOffset = file_.int32FromData(var.address() + 12);
+			int urlOffset = file_.int32FromData(var.address() + 16);
+			String name = file_.isValidDataAddress(nameOffset) ? file_.stringFromData(nameOffset) : "[INVALID_STRING]";
+			String description = file_.isValidDataAddress(descriptionOffset) ? file_.stringFromData(descriptionOffset) : "[INVALID_STRING]";
+			String author = file_.isValidDataAddress(authorOffset) ? file_.stringFromData(authorOffset) : "[INVALID_STRING]";
+			String version = file_.isValidDataAddress(versionOffset) ? file_.stringFromData(versionOffset) : "[INVALID_STRING]";
+			String url = file_.isValidDataAddress(urlOffset) ? file_.stringFromData(urlOffset) : "[INVALID_STRING]";
 
 			outputLine("public Plugin:myinfo =");
 			outputLine("{");
@@ -1149,12 +1149,12 @@ public class SourceBuilder {
 			 * struct _ext { cell_t name; cell_t file; cell_t autoload; cell_t required; }
 			 * *ext;
 			 */
-			long nameOffset = file_.int32FromData(var.address() + 0);
-			long fileOffset = file_.int32FromData(var.address() + 4);
-			long autoload = file_.int32FromData(var.address() + 8);
-			long required = file_.int32FromData(var.address() + 12);
-			String name = file_.stringFromData(nameOffset);
-			String file = file_.stringFromData(fileOffset);
+			int nameOffset = file_.int32FromData(var.address() + 0);
+			int fileOffset = file_.int32FromData(var.address() + 4);
+			int autoload = file_.int32FromData(var.address() + 8);
+			int required = file_.int32FromData(var.address() + 12);
+			String name = file_.isValidDataAddress(nameOffset) ? file_.stringFromData(nameOffset) : "[INVALID_STRING]";
+			String file = file_.isValidDataAddress(fileOffset) ? file_.stringFromData(fileOffset) : "[INVALID_STRING]";
 			outputLine("public Extension:" + var.name() + " =");
 			outputLine("{");
 			increaseIndent();
@@ -1168,11 +1168,11 @@ public class SourceBuilder {
 			/*
 			 * struct _pl { cell_t name; cell_t file; cell_t required; } *pl;
 			 */
-			long nameOffset = file_.int32FromData(var.address() + 0);
-			long fileOffset = file_.int32FromData(var.address() + 4);
-			long required = file_.int32FromData(var.address() + 8);
-			String name = file_.stringFromData(nameOffset);
-			String file = file_.stringFromData(fileOffset);
+			int nameOffset = file_.int32FromData(var.address() + 0);
+			int fileOffset = file_.int32FromData(var.address() + 4);
+			int required = file_.int32FromData(var.address() + 8);
+			String name = file_.isValidDataAddress(nameOffset) ? file_.stringFromData(nameOffset) : "[INVALID_STRING]";
+			String file = file_.isValidDataAddress(fileOffset) ? file_.stringFromData(fileOffset) : "[INVALID_STRING]";
 			outputLine("public SharedPlugin:" + var.name() + " =");
 			outputLine("{");
 			increaseIndent();
@@ -1185,13 +1185,13 @@ public class SourceBuilder {
 			/*
 			 * struct PlVers { version, String:filevers[], String:date[], String:time[] };
 			 */
-			long version = file_.int32FromData(var.address() + 0);
-			long fileversOffset = file_.int32FromData(var.address() + 4);
-			long dateOffset = file_.int32FromData(var.address() + 8);
-			long timeOffset = file_.int32FromData(var.address() + 12);
-			String filevers = file_.stringFromData(fileversOffset);
-			String date = file_.stringFromData(dateOffset);
-			String time = file_.stringFromData(timeOffset);
+			int version = file_.int32FromData(var.address() + 0);
+			int fileversOffset = file_.int32FromData(var.address() + 4);
+			int dateOffset = file_.int32FromData(var.address() + 8);
+			int timeOffset = file_.int32FromData(var.address() + 12);
+			String filevers = file_.isValidDataAddress(fileversOffset) ? file_.stringFromData(fileversOffset) : "[INVALID_STRING]";
+			String date = file_.isValidDataAddress(dateOffset) ? file_.stringFromData(dateOffset) : "[INVALID_STRING]";
+			String time = file_.isValidDataAddress(timeOffset) ? file_.stringFromData(timeOffset) : "[INVALID_STRING]";
 			outputLine("public PlVers:__version =");
 			outputLine("{");
 			increaseIndent();

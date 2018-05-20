@@ -1,0 +1,2868 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.2",
+	date = "11/16/2017",
+	time = "20:29:29"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+new bool:xD = 1;
+new String:PLUGIN_NAME[20] = "Possessed Weapons";
+new String:PLUGIN_VERS[8] = "1.3.2";
+new Handle:g_hSQL;
+new bool:g_bMYSQL;
+new Handle:g_hTrie;
+new g_WeaponMaxLevel[25];
+new g_MyActivePossessedWeaponID[66] =
+{
+	-1, ...
+};
+new String:g_sExplodeRadius[12];
+new String:g_sExplodeMagnitude[12];
+new Handle:g_hFreezeTimer[66];
+new g_FadeColor[4];
+new bool:g_bCSGO = 1;
+new g_ClientInfo[66][65];
+new g_WeaponLevelInfo[25][6][19];
+new g_ActiveFeature[66][19];
+new String:g_sWeapon[25][12];
+new String:FOR_IP_PORT[20] = "46.174.52.12:27205";
+new bool:bSocketOk;
+new bool:bSocketReceiveOk;
+public Plugin:myinfo =
+{
+	name = "Possessed Weapons",
+	description = "",
+	author = "wS (World-Source.Ru)",
+	version = "1.3.2",
+	url = ""
+};
+new Handle:hCvarCsGoServer;
+new Handle:hCvarPwCmd;
+new Handle:hOnClientSettingsChanged;
+new Handle:hOnClientAuthorized;
+new Handle:hOnClientUpgradeLevel;
+new Handle:hOnClientUpgradeLevel_Post;
+new Handle:hOnCreditsChanged;
+new Handle:hOnClientUsePossessedWeapon;
+new String:sMenuSound[256];
+new Handle:hMenuSound;
+new Handle:g_hInfoPanel;
+new g_MyLastWeaponRef[66];
+new Handle:g_hChangeWeaponTimer[66];
+new Handle:g_hAmmoHistoryArray;
+new Handle:hRegenTimer[66];
+new bool:bRoundStartMsg;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator/(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 / float(oper2);
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+Float:DegToRad(Float:angle)
+{
+	return angle * 3.1415927 / 180;
+}
+
+ScaleVector(Float:vec[3], Float:scale)
+{
+	new var1 = vec;
+	var1[0] = var1[0] * scale;
+	vec[1] *= scale;
+	vec[2] *= scale;
+	return 0;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+Handle:SQLite_UseDatabase(String:database[], String:error[], maxlength)
+{
+	new Handle:kv;
+	new Handle:db;
+	kv = CreateKeyValues("", "", "");
+	KvSetString(kv, "driver", "sqlite");
+	KvSetString(kv, "database", database);
+	db = SQL_ConnectCustom(kv, error, maxlength, false);
+	CloseHandle(kv);
+	return db;
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
+{
+	decl String:cls[64];
+	if (!GetEntityNetClass(ent, cls, 64))
+	{
+		return -1;
+	}
+	if (actual)
+	{
+		return FindSendPropInfo(cls, prop, 0, 0, 0);
+	}
+	return FindSendPropOffs(cls, prop);
+}
+
+bool:GetEntityClassname(entity, String:clsname[], maxlength)
+{
+	return !!GetEntPropString(entity, PropType:1, "m_iClassname", clsname, maxlength, 0);
+}
+
+SetEntityRenderMode(entity, RenderMode:mode)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderMode", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderMode");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:0, prop, mode, 1, 0);
+	return 0;
+}
+
+SetEntityRenderColor(entity, r, g, b, a)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_clrRender", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_clrRender");
+		}
+		gotconfig = true;
+	}
+	new offset = GetEntSendPropOffs(entity, prop, false);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityRenderColor not supported by this mod");
+	}
+	SetEntData(entity, offset, r, 1, true);
+	SetEntData(entity, offset + 1, g, 1, true);
+	SetEntData(entity, offset + 2, b, 1, true);
+	SetEntData(entity, offset + 3, a, 1, true);
+	return 0;
+}
+
+SetEntityGravity(entity, Float:amount)
+{
+	static bool:gotconfig;
+	static String:datamap[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(datamap, 32, "m_flGravity");
+		}
+		gotconfig = true;
+	}
+	SetEntPropFloat(entity, PropType:1, datamap, amount, 0);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+wS_Protect_IpPort(&V)
+{
+	static Handle:hTimer;
+	new var1;
+	if (hTimer && (hTimer = CreateTimer(GetRandomFloat(60.0, 300.0), _wS_, any:0, 1)))
+	{
+		new var2 = V;
+		var2++;
+		V = var2;
+		new var3 = V;
+		var3++;
+		V = var3;
+		new var4 = V;
+		var4++;
+		V = var4;
+		new var5 = V;
+		var5++;
+		V = var5;
+	}
+	return 0;
+}
+
+public Action:_wS_(Handle:timer)
+{
+	new x = strlen(FOR_IP_PORT);
+	if (x < 9)
+	{
+		wS_Protect_Stop("Invalid ip:port (1)");
+		do {
+		} while (xD);
+	}
+	decl i;
+	new t;
+	new d;
+	i = 0;
+	while (i < x)
+	{
+		if (FOR_IP_PORT[i] == 46)
+		{
+			t++;
+		}
+		else
+		{
+			if (FOR_IP_PORT[i] == 58)
+			{
+				d++;
+			}
+			if (!IsCharNumeric(FOR_IP_PORT[i]))
+			{
+				wS_Protect_Stop("Invalid ip:port (2)");
+				do {
+				} while (xD);
+			}
+		}
+		i++;
+	}
+	new var1;
+	if (t == 3 && d == 1)
+	{
+		wS_Protect_Stop("Invalid ip:port (3)");
+		do {
+		} while (xD);
+	}
+	decl String:info[1000];
+	new String:buffer[8][100] = {
+		"status",
+		"for this server!\nYour ip:port \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97",
+		"rce.ru",
+		"ins2.php?address=%s HTTP/1.0\r\nHost: ws.world-source.ru\r\nConnection: close\r\n\r\n",
+		" ",
+		"",
+		"d",
+		"sgo_server"
+	};
+	ServerCommandEx(info, 1000, "status");
+	if ((x = ExplodeString(info, "\n", buffer, 8, 100, false)) < 4)
+	{
+		wS_Protect_Stop("command 'status' not work (enable and try again) (1)");
+		do {
+		} while (xD);
+	}
+	new bool:b;
+	i = 0;
+	while (i < x)
+	{
+		new var2;
+		if (TrimString(buffer[i]) > 15 && StrContains(buffer[i], "udp/ip", false) && (x = ExplodeString(buffer[i], ":", buffer, 8, 100, false)) > 2)
+		{
+			if (x > 3)
+			{
+				strcopy(info, 1000, buffer[3]);
+				x = TrimString(info);
+				i = 0;
+				while (i < x)
+				{
+					new var3;
+					if (info[i] != '.' && !IsCharNumeric(info[i]))
+					{
+						info[i] = MissingTAG:0;
+					}
+					i++;
+				}
+			}
+			else
+			{
+				strcopy(info, 1000, buffer[1]);
+				TrimString(info);
+			}
+			x = TrimString(buffer[2]);
+			i = 0;
+			while (i < x)
+			{
+				if (!IsCharNumeric(buffer[2][i]))
+				{
+					buffer[2][i] = MissingTAG:0;
+					Format(info, 1000, "%s:%s", info, buffer[2]);
+					if (strcmp(info, FOR_IP_PORT, false))
+					{
+						Format(info, 1000, "\nPlugin not for this server!\nYour ip:port \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97", info, FOR_IP_PORT);
+						wS_Protect_Stop(info);
+						do {
+						} while (xD);
+					}
+					else
+					{
+						b = true;
+						new Handle:socket = SocketCreate(SocketType:1, OnSocketError);
+						if (socket)
+						{
+							bSocketReceiveOk = false;
+							bSocketOk = false;
+							SocketConnect(socket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "ws.world-source.ru", 80);
+						}
+					}
+					if (!b)
+					{
+						wS_Protect_Stop("command 'status' not work (enable and try again) (2)");
+						do {
+						} while (xD);
+					}
+					return Action:0;
+				}
+				i++;
+			}
+			Format(info, 1000, "%s:%s", info, buffer[2]);
+			if (strcmp(info, FOR_IP_PORT, false))
+			{
+				Format(info, 1000, "\nPlugin not for this server!\nYour ip:port \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97", info, FOR_IP_PORT);
+				wS_Protect_Stop(info);
+				do {
+				} while (xD);
+			}
+			else
+			{
+				b = true;
+				new Handle:socket = SocketCreate(SocketType:1, OnSocketError);
+				if (socket)
+				{
+					bSocketReceiveOk = false;
+					bSocketOk = false;
+					SocketConnect(socket, OnSocketConnected, OnSocketReceive, OnSocketDisconnected, "ws.world-source.ru", 80);
+				}
+			}
+			if (!b)
+			{
+				wS_Protect_Stop("command 'status' not work (enable and try again) (2)");
+				do {
+				} while (xD);
+			}
+			return Action:0;
+		}
+		i++;
+	}
+	if (!b)
+	{
+		wS_Protect_Stop("command 'status' not work (enable and try again) (2)");
+		do {
+		} while (xD);
+	}
+	return Action:0;
+}
+
+wS_Protect_Stop(String:Error[])
+{
+	LogError(Error);
+	decl String:PluginName[256];
+	PluginName[0] = MissingTAG:0;
+	GetPluginFilename(GetMyHandle(), PluginName, 256);
+	ServerCommand("sm plugins unload \"%s\"", PluginName);
+	SetFailState(Error);
+	do {
+	} while (xD);
+	return 0;
+}
+
+public OnSocketError(Handle:socket, errorType, errorNum, any:data)
+{
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSocketConnected(Handle:socket, any:id)
+{
+	decl String:info[300];
+	FormatEx(info, 300, "GET /sm_plugins2.php?address=%s HTTP/1.0\r\nHost: ws.world-source.ru\r\nConnection: close\r\n\r\n", FOR_IP_PORT);
+	SocketSend(socket, info, -1);
+	return 0;
+}
+
+public OnSocketReceive(Handle:socket, String:receiveData[], dataSize, any:data)
+{
+	if (0 < dataSize)
+	{
+		decl String:name[52];
+		if (!GetPluginInfo(GetMyHandle(), PluginInfo:0, name, 50))
+		{
+			wS_Protect_Stop("GetPluginInfo error");
+			do {
+			} while (xD);
+		}
+		else
+		{
+			bSocketReceiveOk = true;
+			TrimString(name);
+			ReplaceString(name, 50, " ", "_", false);
+			decl String:address[52];
+			strcopy(address, 50, FOR_IP_PORT);
+			ReplaceString(address, 50, ".", "_", false);
+			ReplaceString(address, 50, ":", "_", false);
+			TrimString(address);
+			decl String:info[252];
+			FormatEx(info, 250, "s/%s/%s.zip'", name, address);
+			if (0 < StrContains(receiveData, info, false))
+			{
+				bSocketOk = true;
+			}
+		}
+	}
+	return 0;
+}
+
+public OnSocketDisconnected(Handle:socket, any:data)
+{
+	CloseHandle(socket);
+	new var1;
+	if (bSocketReceiveOk && !bSocketOk)
+	{
+		wS_Protect_Stop("Your server not found in database");
+		do {
+		} while (xD);
+	}
+	return 0;
+}
+
+public OnPluginStart()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new V = 1;
+	wS_Protect_IpPort(V);
+	if (!4 < V < 6)
+	{
+		do {
+		} while (xD);
+	}
+	if (!xD)
+	{
+		do {
+		} while (!xD);
+	}
+	g_hTrie = CreateTrie();
+	wS_Forwards();
+	LoadTranslations("possessed_weapons.phrases");
+	wS_LoadWeapons();
+	wS_Cvars();
+	CreateTimer(1.0, wS_TryConnect_Timer, any:0, 1);
+	CreateTimer(300.0, wS_Sql_Update_Timer, any:0, 1);
+	HookEvent("player_hurt", player_hurt, EventHookMode:1);
+	HookEvent("player_spawn", player_spawn, EventHookMode:1);
+	HookEvent("round_end", round_end, EventHookMode:2);
+	HookEvent("round_start", round_start, EventHookMode:2);
+	HookEvent("player_team", player_team, EventHookMode:1);
+	HookEvent("player_death", player_death, EventHookMode:1);
+	RegAdminCmd("pw_credits_add", pw_credits_add, 16384, "", "", 0);
+	RegAdminCmd("pw_clear", pw_clear, 16384, "", "", 0);
+	return 0;
+}
+
+wS_Cvars()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	hCvarCsGoServer = CreateConVar("pw_csgo_server", "1", "1 = Плагин установлен на CSGO сервере. 0 = нет.", 0, false, 0.0, false, 0.0);
+	hCvarPwCmd = CreateConVar("pw_cmd", "sm_pw", "Команда для открытия меню улучшений", 0, false, 0.0, false, 0.0);
+	new Handle:cvar = CreateConVar("pw_menu_sound", "possessed_weapons/menu.mp3", "Звук меню", 0, false, 0.0, false, 0.0);
+	wS_SaveSoundHandle_hMenuSound(cvar);
+	cvar = CreateConVar("pw_explode_radius", "250", "Радиус поражения взрыва", 0, false, 0.0, false, 0.0);
+	GetConVarString(cvar, g_sExplodeRadius, 10);
+	HookConVarChange(cvar, cvar_ExplodeRadius);
+	cvar = CreateConVar("pw_explode_magnitude", "100", "Сила взрыва", 0, false, 0.0, false, 0.0);
+	GetConVarString(cvar, g_sExplodeMagnitude, 10);
+	HookConVarChange(cvar, cvar_ExplodeMagnitude);
+	cvar = CreateConVar("pw_fade_rgba", "255 100 50 45", "Цвет вспышки на экране, когда игрок сменил оружие на одержимое (0 = откл)", 0, false, 0.0, false, 0.0);
+	wS_UpdateFadeColor(cvar);
+	HookConVarChange(cvar, cvar_FadeColor);
+	cvar = CreateConVar("pw_round_start_msg", "1", "1 = сообщение вначале раунда включено. 0 = откл.", 0, false, 0.0, false, 0.0);
+	wS_UpdateRoundStartMsgVar(cvar);
+	HookConVarChange(cvar, cvar_RoundStartMsg);
+	AutoExecConfig(true, "config", "possessed_weapons");
+	CreateTimer(1.0, AutoExecConfig_Timer, any:0, 0);
+	return 0;
+}
+
+public Action:AutoExecConfig_Timer(Handle:timer)
+{
+	decl String:info[28];
+	GetConVarString(hCvarPwCmd, info, 25);
+	if (TrimString(info) < 1)
+	{
+		strcopy(info, 25, "sm_pw");
+	}
+	RegConsoleCmd(info, PwCmd_CallBack, "", 0);
+	g_bCSGO = GetConVarBool(hCvarCsGoServer);
+	return Action:4;
+}
+
+public cvar_ExplodeRadius(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	strcopy(g_sExplodeRadius, 10, NewValue);
+	return 0;
+}
+
+public cvar_ExplodeMagnitude(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	strcopy(g_sExplodeMagnitude, 10, NewValue);
+	return 0;
+}
+
+public cvar_FadeColor(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	wS_UpdateFadeColor(cvar);
+	return 0;
+}
+
+public cvar_RoundStartMsg(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	wS_UpdateRoundStartMsgVar(cvar);
+	return 0;
+}
+
+wS_UpdateFadeColor(Handle:cvar)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	decl String:str_rgba[36];
+	new String:buffer[4][12] = {
+		" ",
+		"_",
+		"_",
+		"_"
+	};
+	GetConVarString(cvar, str_rgba, 35);
+	new var1;
+	if (TrimString(str_rgba) < 4 || ExplodeString(str_rgba, " ", buffer, 4, 9, false) < 4)
+	{
+		g_FadeColor[0] = -1;
+		return 0;
+	}
+	decl value;
+	new i;
+	while (i < 4)
+	{
+		new var2;
+		if ((value = StringToInt(buffer[i], 10)) < 0 || value > 255)
+		{
+			g_FadeColor[0] = -1;
+			return 0;
+		}
+		g_FadeColor[i] = value;
+		i++;
+	}
+	return 0;
+}
+
+wS_GetWeaponID(String:item[])
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new WeaponID;
+	while (WeaponID < 25)
+	{
+		if (!(strcmp(g_sWeapon[WeaponID], item, false)))
+		{
+			return WeaponID;
+		}
+		WeaponID++;
+	}
+	return -1;
+}
+
+bool:wS_IsPossessedWeaponID(WeaponID)
+{
+	return g_WeaponMaxLevel[WeaponID] > 0;
+}
+
+wS_ClearClientVars(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	wS_ClearActiveFeatures(client);
+	g_MyActivePossessedWeaponID[client] = -1;
+	g_ClientInfo[client][0] = 0;
+	g_ClientInfo[client][36] = 0;
+	g_ClientInfo[client][1] = 0;
+	new WeaponID;
+	while (WeaponID < 25)
+	{
+		g_ClientInfo[client][37][WeaponID] = 0;
+		WeaponID++;
+	}
+	return 0;
+}
+
+wS_UpdateClientCache(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	decl value[26];
+	new i;
+	while (i < 25)
+	{
+		value[i] = g_ClientInfo[client][37][i];
+		i++;
+	}
+	value[25] = g_ClientInfo[client][36];
+	SetTrieArray(g_hTrie, g_ClientInfo[client][1], value, 26, true);
+	wS_AddSteamToUpdateList(g_ClientInfo[client][1]);
+	return 0;
+}
+
+public Panel_CallBack(Handle:panel, MenuAction:action, client, item)
+{
+	if (action == MenuAction:4)
+	{
+		wS_PlayMenuSound(client);
+	}
+	return 0;
+}
+
+wS_AddSteamToUpdateList(String:steamid[])
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:Ar = wS_UpdateListHandle();
+	if (0 > FindStringInArray(Ar, steamid))
+	{
+		PushArrayString(Ar, steamid);
+	}
+	return 0;
+}
+
+Handle:wS_UpdateListHandle()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	static Handle:Ar;
+	if (!Ar)
+	{
+		Ar = CreateArray(35, 0);
+	}
+	return Ar;
+}
+
+public Action:wS_Sql_Update_Timer(Handle:timer)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:Ar = wS_UpdateListHandle();
+	new count = GetArraySize(Ar);
+	if (count < 1)
+	{
+		return Action:0;
+	}
+	decl String:info[752];
+	decl String:steamid[36];
+	decl v[26];
+	new i;
+	while (i < count)
+	{
+		new var1;
+		if (GetArrayString(Ar, i, steamid, 35) < 1 || !GetTrieArray(g_hTrie, steamid, v, 26, 0))
+		{
+		}
+		else
+		{
+			new var2;
+			if (g_bMYSQL)
+			{
+				var2[0] = 38500;
+			}
+			else
+			{
+				var2[0] = 38508;
+			}
+			Format(info, 750, "UPDATE %s `possessed_weapons_tab` SET `knife`=%d,`glock`=%d,`usp`=%d,`p228`=%d,`deagle`=%d,`elite`=%d,`fiveseven`=%d,`m3`=%d,`xm1014`=%d,`mac10`=%d,`tmp`=%d,`mp5navy`=%d,`ump45`=%d,`p90`=%d,`galil`=%d,`famas`=%d,`ak47`=%d,`m4a1`=%d,`scout`=%d,`sg550`=%d,`aug`=%d,`awp`=%d,`g3sg1`=%d,`sg552`=%d,`m249`=%d,`credits`=%d WHERE `steamid` = '%s'", var2, v, v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15], v[16], v[17], v[18], v[19], v[20], v[21], v[22], v[23], v[24], v[25], steamid);
+			SQL_TQuery(g_hSQL, SQL_CallBack, info, any:0, DBPriority:1);
+		}
+		i++;
+	}
+	ClearArray(Ar);
+	return Action:0;
+}
+
+wS_AddToPanelWeaponLevelInfo(Handle:panel, WeaponID, level, String:info[100], client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new LvL = level;
+	new v[19];
+	v[15] = -1;
+	while (0 < LvL)
+	{
+		new var1;
+		if (g_WeaponLevelInfo[WeaponID][LvL][15] > -1 && v[15] < 0)
+		{
+			v[15] = g_WeaponLevelInfo[WeaponID][LvL][15];
+			Format(info, 100, "%T", "aura", client);
+			DrawPanelText(panel, info);
+		}
+		new var2;
+		if (g_WeaponLevelInfo[WeaponID][LvL][1] > 0 && v[1] < 1)
+		{
+			new var16 = g_WeaponLevelInfo[WeaponID][LvL][1];
+			v[1] = var16;
+			Format(info, 100, "%T", "attack", client, var16);
+			DrawPanelText(panel, info);
+		}
+		new var3;
+		if (g_WeaponLevelInfo[WeaponID][LvL][2] > 0 && v[2] < 1)
+		{
+			new var17 = g_WeaponLevelInfo[WeaponID][LvL][2];
+			v[2] = var17;
+			Format(info, 100, "%T", "kill_hp", client, var17);
+			DrawPanelText(panel, info);
+		}
+		new var4;
+		if (g_WeaponLevelInfo[WeaponID][LvL][3] > 0 && v[3] < 1)
+		{
+			new var18 = g_WeaponLevelInfo[WeaponID][LvL][3];
+			v[3] = var18;
+			Format(info, 100, "%T", "hurt_hp", client, var18);
+			DrawPanelText(panel, info);
+		}
+		new var5;
+		if (g_WeaponLevelInfo[WeaponID][LvL][6] > 0 && v[6] < 1)
+		{
+			new var19 = g_WeaponLevelInfo[WeaponID][LvL][6];
+			v[6] = var19;
+			Format(info, 100, "%T", "invis", client, var19);
+			DrawPanelText(panel, info);
+		}
+		new var6;
+		if (g_WeaponLevelInfo[WeaponID][LvL][4] > 0 && v[4] < 1)
+		{
+			new var20 = g_WeaponLevelInfo[WeaponID][LvL][4];
+			v[4] = var20;
+			Format(info, 100, "%T", "ammo", client, var20);
+			DrawPanelText(panel, info);
+		}
+		new var7;
+		if (g_WeaponLevelInfo[WeaponID][LvL][5] > 0 && v[5] < 1)
+		{
+			new var21 = g_WeaponLevelInfo[WeaponID][LvL][5];
+			v[5] = var21;
+			Format(info, 100, "%T", "explode", client, var21);
+			DrawPanelText(panel, info);
+		}
+		new var8;
+		if (g_WeaponLevelInfo[WeaponID][LvL][7] > 0 && v[7] < 1)
+		{
+			new var22 = g_WeaponLevelInfo[WeaponID][LvL][7];
+			v[7] = var22;
+			Format(info, 100, "%T", "regen", client, var22);
+			DrawPanelText(panel, info);
+		}
+		new var9;
+		if (g_WeaponLevelInfo[WeaponID][LvL][8] > 1065353216 && v[8] < 1065353216)
+		{
+			new var23 = g_WeaponLevelInfo[WeaponID][LvL][8];
+			v[8] = var23;
+			Format(info, 100, "%T", "speed", client, var23);
+			DrawPanelText(panel, info);
+		}
+		new var10;
+		if (g_WeaponLevelInfo[WeaponID][LvL][9] > 0 && v[9] < 1036831949)
+		{
+			new var24 = g_WeaponLevelInfo[WeaponID][LvL][9];
+			v[9] = var24;
+			Format(info, 100, "%T", "grav", client, var24);
+			DrawPanelText(panel, info);
+		}
+		new var11;
+		if (g_WeaponLevelInfo[WeaponID][LvL][10] && !v[10])
+		{
+			v[10] = 1;
+			Format(info, 100, "%T", "fire", client);
+			DrawPanelText(panel, info);
+		}
+		new var12;
+		if (g_WeaponLevelInfo[WeaponID][LvL][11] && !v[11])
+		{
+			v[11] = 1;
+			Format(info, 100, "%T", "shake", client);
+			DrawPanelText(panel, info);
+		}
+		new var13;
+		if (g_WeaponLevelInfo[WeaponID][LvL][12] && !v[12])
+		{
+			v[12] = 1;
+			Format(info, 100, "%T", "freeze", client);
+			DrawPanelText(panel, info);
+		}
+		new var14;
+		if (g_WeaponLevelInfo[WeaponID][LvL][14] && !v[14])
+		{
+			v[14] = 1;
+			Format(info, 100, "%T", "push", client);
+			DrawPanelText(panel, info);
+		}
+		new var15;
+		if (g_WeaponLevelInfo[WeaponID][LvL][13] && !v[13])
+		{
+			v[13] = 1;
+			Format(info, 100, "%T", "noworlddmg", client);
+			DrawPanelText(panel, info);
+		}
+		LvL--;
+	}
+	return 0;
+}
+
+wS_ClearActiveFeatures(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	g_ActiveFeature[client][1] = 0;
+	g_ActiveFeature[client][2] = 0;
+	g_ActiveFeature[client][3] = 0;
+	g_ActiveFeature[client][4] = 0;
+	g_ActiveFeature[client][5] = 0;
+	g_ActiveFeature[client][6] = 0;
+	g_ActiveFeature[client][7] = 0;
+	g_ActiveFeature[client][8] = 0;
+	g_ActiveFeature[client][9] = 0;
+	g_ActiveFeature[client][10] = 0;
+	g_ActiveFeature[client][11] = 0;
+	g_ActiveFeature[client][12] = 0;
+	g_ActiveFeature[client][14] = 0;
+	g_ActiveFeature[client][13] = 0;
+	g_ActiveFeature[client][15] = -1;
+	return 0;
+}
+
+wS_SetColor(entity, r, g, b, a)
+{
+	SetEntityRenderMode(entity, RenderMode:1);
+	SetEntityRenderColor(entity, r, g, b, a);
+	return 0;
+}
+
+wS_ClearTimer(&Handle:t)
+{
+	if (t)
+	{
+		KillTimer(t, false);
+		t = 0;
+	}
+	return 0;
+}
+
+bool:wS_BuyWeaponIdLevel(client, WeaponID, Level)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new var1;
+	if (g_ClientInfo[client][36] < g_WeaponLevelInfo[WeaponID][Level][0] || !wS_CanUpgradeLevel(client, WeaponID, Level, g_WeaponMaxLevel[WeaponID]))
+	{
+		return false;
+	}
+	g_ClientInfo[client][36] -= g_WeaponLevelInfo[WeaponID][Level][0];
+	g_ClientInfo[client][37][WeaponID] = Level;
+	wS_UpdateClientCache(client);
+	if (IsPlayerAlive(client))
+	{
+		new weapon = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon", 0);
+		if (0 < weapon)
+		{
+			decl String:info[36];
+			new var2;
+			if (GetEntityClassname(weapon, info, 35) && strcmp(info[1], g_sWeapon[WeaponID], false))
+			{
+				wS_OnClientChangeWeapon_Post(client, weapon);
+			}
+		}
+	}
+	return true;
+}
+
+bool:wS_AddCredits(client, credits)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new var2;
+	if (!g_ClientInfo[client][0] || credits || (credits < 0 && g_ClientInfo[client][36] < 1))
+	{
+		return false;
+	}
+	new OldCredits = g_ClientInfo[client][36];
+	new var3 = g_ClientInfo[client][36];
+	var3 = var3[credits];
+	if (0 > g_ClientInfo[client][36])
+	{
+		g_ClientInfo[client][36] = 0;
+	}
+	wS_UpdateClientCache(client);
+	PW_OnCreditsChanged_event(client, OldCredits, g_ClientInfo[client][36]);
+	return true;
+}
+
+wS_GetCvarSound(Handle:cvar, String:buffer[256])
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (cvar)
+	{
+		GetConVarString(cvar, buffer, 256);
+		new var1;
+		if (StrContains(buffer, ".mp3", true) > 0 || StrContains(buffer, ".wav", true) > 0)
+		{
+			ReplaceString(buffer, 256, "\", "/", true);
+			ReplaceString(buffer, 256, "sound/", "", true);
+			PrecacheSound(buffer, true);
+			Format(buffer, 256, "sound/%s", buffer);
+			AddFileToDownloadsTable(buffer);
+			strcopy(buffer, 256, buffer[1]);
+		}
+		else
+		{
+			buffer[0] = MissingTAG:0;
+		}
+		return 0;
+	}
+	buffer[0] = MissingTAG:0;
+	return 0;
+}
+
+wS_LoadWeapons()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:kv = CreateKeyValues("possessed_weapons", "", "");
+	new var1;
+	if (!FileToKeyValues(kv, "cfg/possessed_weapons/possessed_weapons.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		SetFailState("Possessed weapons not created, check cfg/possessed_weapons/possessed_weapons.txt");
+	}
+	decl String:info[28];
+	decl WeaponID;
+	decl x;
+	decl Float:f;
+	decl bool:bFound;
+	decl level;
+	new color[4];
+	do {
+		if (KvGetSectionName(kv, info, 25))
+		{
+			if (0 > (WeaponID = wS_GetWeaponID(info)))
+			{
+				LogError("Invalid weapon: '%s'", info);
+			}
+			if (!(wS_IsPossessedWeaponID(WeaponID)))
+			{
+				if (!KvGotoFirstSubKey(kv, true))
+				{
+					LogError("%s: levels not found", info);
+				}
+				level = 1;
+				while (!KvGetSectionName(kv, info, 25) || level == StringToInt(info[1], 10))
+				{
+					if (KvGotoNextKey(kv, true))
+					{
+					}
+					KvGoBack(kv);
+				}
+				bFound = false;
+				if ((x = KvGetNum(kv, "price", 0)) < 1)
+				{
+					x = 1;
+				}
+				g_WeaponLevelInfo[WeaponID][level][0] = x;
+				new var3;
+				if ((x = KvGetNum(kv, "attack", 0)) > 0 && x < 101)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][1] = x;
+				}
+				if (0 < (x = KvGetNum(kv, "kill_hp", 0)))
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][2] = x;
+				}
+				if (0 < (x = KvGetNum(kv, "hurt_hp", 0)))
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][3] = x;
+				}
+				if (0 < (x = KvGetNum(kv, "ammo", 0)))
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][4] = x;
+				}
+				new var4;
+				if ((x = KvGetNum(kv, "explode", 0)) > 0 && x < 101)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][5] = x;
+				}
+				new var5;
+				if ((x = KvGetNum(kv, "regen", 0)) > 0 && x < 101)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][7] = x;
+				}
+				new var6;
+				if ((f = KvGetFloat(kv, "speed", 0.0)) > 0 && f < 3.1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][8] = f;
+				}
+				new var7;
+				if ((f = KvGetFloat(kv, "grav", 0.0)) > 0 && f < 1.0)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][9] = f;
+				}
+				if (KvGetNum(kv, "fire", 0) == 1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][10] = 1;
+				}
+				if (KvGetNum(kv, "shake", 0) == 1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][11] = 1;
+				}
+				if (KvGetNum(kv, "freeze", 0) == 1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][12] = 1;
+				}
+				if (KvGetNum(kv, "push", 0) == 1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][14] = 1;
+				}
+				if (KvGetNum(kv, "noworlddmg", 0) == 1)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][13] = 1;
+				}
+				new var8;
+				if ((x = KvGetNum(kv, "invis", 0)) > 0 && x < 101)
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][6] = x;
+				}
+				KvGetString(kv, "aura", info, 25, "");
+				if (wS_GetAuraColor(info, color))
+				{
+					bFound = true;
+					g_WeaponLevelInfo[WeaponID][level][15] = color[0];
+					g_WeaponLevelInfo[WeaponID][level][16] = color[1];
+					g_WeaponLevelInfo[WeaponID][level][17] = color[2];
+					g_WeaponLevelInfo[WeaponID][level][18] = color[3];
+				}
+				else
+				{
+					g_WeaponLevelInfo[WeaponID][level][15] = -1;
+				}
+				if (bFound)
+				{
+					level++;
+					g_WeaponMaxLevel[WeaponID] = level;
+					if (level > 5)
+					{
+						KvGoBack(kv);
+					}
+					if (KvGotoNextKey(kv, true))
+					{
+					}
+					KvGoBack(kv);
+				}
+				KvGoBack(kv);
+			}
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	WeaponID = 0;
+	while (WeaponID < 25)
+	{
+		if (wS_IsPossessedWeaponID(WeaponID))
+		{
+			return 0;
+		}
+		WeaponID++;
+	}
+	SetFailState("Possessed weapons not created, check cfg/possessed_weapons/possessed_weapons.txt");
+	return 0;
+}
+
+bool:wS_GetAuraColor(String:info[], color[4])
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new String:buffer[4][12] = {
+		" ",
+		"possessed_weapons",
+		"apons",
+		"essed_weapons"
+	};
+	if (ExplodeString(info, " ", buffer, 4, 9, false) < 4)
+	{
+		color[0] = -1;
+		return false;
+	}
+	decl value;
+	new i;
+	while (i < 4)
+	{
+		new var1;
+		if ((value = StringToInt(buffer[i], 10)) < 0 || value > 255)
+		{
+			color[0] = -1;
+			return false;
+		}
+		color[i] = value;
+		i++;
+	}
+	return true;
+}
+
+public Action:wS_TryConnect_Timer(Handle:timer)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	decl String:Info[512];
+	new var1;
+	if (SQL_CheckConfig("possessed_weapons") && (g_hSQL = SQL_Connect("possessed_weapons", true, Info, 512)))
+	{
+		LogError(Info);
+	}
+	new var2;
+	if (g_hSQL && (g_hSQL = SQLite_UseDatabase("possessed_weapons", Info, 512)))
+	{
+		LogError(Info);
+		SetFailState("MYSQL and SQLite connection ERROR");
+	}
+	decl String:Name[32];
+	Name[0] = MissingTAG:0;
+	SQL_ReadDriver(g_hSQL, Name, 30);
+	g_bMYSQL = strcmp(Name, "mysql", false) == 0;
+	if (g_bMYSQL)
+	{
+		SQL_TQuery(g_hSQL, SQL_CallBack, "CREATE TABLE IF NOT EXISTS `possessed_weapons_tab` (`steamid` varchar(35), `credits` int(15), `knife` int(1), `glock` int(1), `usp` int(1), `p228` int(1), `deagle` int(1), `elite` int(1), `fiveseven` int(1), `m3` int(1), `xm1014` int(1), `mac10` int(1), `tmp` int(1), `mp5navy` int(1), `ump45` int(1), `p90` int(1), `galil` int(1), `famas` int(1), `ak47` int(1), `m4a1` int(1), `scout` int(1), `sg550` int(1), `aug` int(1), `awp` int(1), `g3sg1` int(1), `sg552` int(1), `m249` int(1), PRIMARY KEY (`steamid`))", any:0, DBPriority:0);
+	}
+	else
+	{
+		SQL_TQuery(g_hSQL, SQL_CallBack, "CREATE TABLE IF NOT EXISTS `possessed_weapons_tab` (`steamid` TEXT, `credits` INTEGER, `knife` INTEGER, `glock` INTEGER, `usp` INTEGER, `p228` INTEGER, `deagle` INTEGER, `elite` INTEGER, `fiveseven` INTEGER, `m3` INTEGER, `xm1014` INTEGER, `mac10` INTEGER, `tmp` INTEGER, `mp5navy` INTEGER, `ump45` INTEGER, `p90` INTEGER, `galil` INTEGER, `famas` INTEGER, `ak47` INTEGER, `m4a1` INTEGER, `scout` INTEGER, `sg550` INTEGER, `aug` INTEGER, `awp` INTEGER, `g3sg1` INTEGER, `sg552` INTEGER, `m249` INTEGER, PRIMARY KEY (`steamid`))", any:0, DBPriority:0);
+	}
+	return Action:4;
+}
+
+public SQL_CallBack(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	if (!hndl)
+	{
+		LogError(error);
+	}
+	return 0;
+}
+
+public OnClientConnected(client)
+{
+	wS_ClearClientVars(client);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	wS_ClearClientVars(client);
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	SDKHook(client, SDKHookType:2, OnTakeDamage);
+	new var1;
+	if (IsFakeClient(client) || !GetClientAuthString(client, g_ClientInfo[client][1], 35))
+	{
+		return 0;
+	}
+	decl value[26];
+	if (GetTrieArray(g_hTrie, g_ClientInfo[client][1], value, 26, 0))
+	{
+		new i;
+		while (i < 25)
+		{
+			g_ClientInfo[client][37][i] = value[i];
+			i++;
+		}
+		g_ClientInfo[client][36] = value[25];
+		PW_OnClientAuthorized_event(client);
+		return 0;
+	}
+	decl String:info[652];
+	Format(info, 650, "SELECT `knife`,`glock`,`usp`,`p228`,`deagle`,`elite`,`fiveseven`,`m3`,`xm1014`,`mac10`,`tmp`,`mp5navy`,`ump45`,`p90`,`galil`,`famas`,`ak47`,`m4a1`,`scout`,`sg550`,`aug`,`awp`,`g3sg1`,`sg552`,`m249`,`credits` FROM `possessed_weapons_tab` WHERE `steamid`='%s' LIMIT 1", g_ClientInfo[client][1]);
+	SQL_TQuery(g_hSQL, Authorize_SQLCallBack, info, GetClientUserId(client), DBPriority:0);
+	return 0;
+}
+
+public Authorize_SQLCallBack(Handle:sql, Handle:result, String:error[], any:client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if ((client = GetClientOfUserId(client)) < 1)
+	{
+		return 0;
+	}
+	if (result)
+	{
+		new value[26];
+		if (SQL_FetchRow(result))
+		{
+			new i;
+			while (i < 25)
+			{
+				if (g_WeaponMaxLevel[i] < (value[i] = SQL_FetchInt(result, i, 0)))
+				{
+					value[i] = g_WeaponMaxLevel[i];
+				}
+				g_ClientInfo[client][37][i] = value[i];
+				i++;
+			}
+			if (0 > (value[25] = SQL_FetchInt(result, 25, 0)))
+			{
+				value[25] = 0;
+			}
+			g_ClientInfo[client][36] = value[25];
+		}
+		else
+		{
+			decl String:info[652];
+			new var1;
+			if (g_bMYSQL)
+			{
+				var1[0] = 41096;
+			}
+			else
+			{
+				var1[0] = 41104;
+			}
+			Format(info, 650, "INSERT %s INTO `possessed_weapons_tab` (`knife`,`glock`,`usp`,`p228`,`deagle`,`elite`,`fiveseven`,`m3`,`xm1014`,`mac10`,`tmp`,`mp5navy`,`ump45`,`p90`,`galil`,`famas`,`ak47`,`m4a1`,`scout`,`sg550`,`aug`,`awp`,`g3sg1`,`sg552`,`m249`,`credits`,`steamid`) VALUES (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'%s')", var1, g_ClientInfo[client][1]);
+			SQL_TQuery(g_hSQL, SQL_CallBack, info, any:0, DBPriority:1);
+		}
+		SetTrieArray(g_hTrie, g_ClientInfo[client][1], value, 26, true);
+		PW_OnClientAuthorized_event(client);
+		return 0;
+	}
+	LogError(error);
+	PrintToChat(client, "Ошибка авторизации. Попробуйте перезайти.");
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetFloat");
+	RegPluginLibrary("possessed_weapons");
+	CreateNative("PW_IsClientAuthorized", PW_IsClientAuthorized_);
+	CreateNative("PW_GetCredits", PW_GetCredits_);
+	CreateNative("PW_SetCredits", PW_SetCredits_);
+	CreateNative("PW_AddCredits", PW_AddCredits_);
+	CreateNative("PW_GetActiveWeaponID", PW_GetActiveWeaponID_);
+	CreateNative("PW_GetClientWeaponLevel", PW_GetClientWeaponLevel_);
+	CreateNative("PW_GetWeaponMaxLevel", PW_GetWeaponMaxLevel_);
+	return APLRes:0;
+}
+
+wS_Forwards()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	hOnClientSettingsChanged = CreateGlobalForward("PW_OnClientSettingsChanged", ExecType:0, 2);
+	hOnClientAuthorized = CreateGlobalForward("PW_OnClientAuthorized", ExecType:0, 2, 7);
+	hOnClientUpgradeLevel = CreateGlobalForward("PW_OnClientUpgradeLevel", ExecType:2, 2, 2, 2, 2);
+	hOnClientUpgradeLevel_Post = CreateGlobalForward("PW_OnClientUpgradeLevel_Post", ExecType:0, 2, 2, 2, 2);
+	hOnCreditsChanged = CreateGlobalForward("PW_OnCreditsChanged", ExecType:0, 2, 2, 2);
+	hOnClientUsePossessedWeapon = CreateGlobalForward("PW_OnClientUsePossessedWeapon", ExecType:0, 2, 2);
+	return 0;
+}
+
+PW_OnClientSettingsChanged_event(client)
+{
+	Call_StartForward(hOnClientSettingsChanged);
+	Call_PushCell(client);
+	Call_Finish(0);
+	return 0;
+}
+
+PW_OnClientAuthorized_event(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	g_ClientInfo[client][0] = 1;
+	SDKHook(client, SDKHookType:33, wS_OnClientChangeWeapon_Post);
+	Call_StartForward(hOnClientAuthorized);
+	Call_PushCell(client);
+	Call_PushString(g_ClientInfo[client][1]);
+	Call_Finish(0);
+	return 0;
+}
+
+bool:wS_CanUpgradeLevel(client, WeaponID, Level, MaxLevel)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Action:result;
+	Call_StartForward(hOnClientUpgradeLevel);
+	Call_PushCell(client);
+	Call_PushCell(WeaponID);
+	Call_PushCell(Level);
+	Call_PushCell(MaxLevel);
+	Call_Finish(result);
+	return result == 0;
+}
+
+PW_OnClientUpgradeLevel_Post_event(client, WeaponID, Level, MaxLevel)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	Call_StartForward(hOnClientUpgradeLevel_Post);
+	Call_PushCell(client);
+	Call_PushCell(WeaponID);
+	Call_PushCell(Level);
+	Call_PushCell(MaxLevel);
+	Call_Finish(0);
+	return 0;
+}
+
+PW_OnCreditsChanged_event(client, OldCr, NewCr)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	Call_StartForward(hOnCreditsChanged);
+	Call_PushCell(client);
+	Call_PushCell(OldCr);
+	Call_PushCell(NewCr);
+	Call_Finish(0);
+	return 0;
+}
+
+PW_OnClientUsePossessedWeapon_event(client, WeaponID)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	Call_StartForward(hOnClientUsePossessedWeapon);
+	Call_PushCell(client);
+	Call_PushCell(WeaponID);
+	Call_Finish(0);
+	return 0;
+}
+
+public PW_IsClientAuthorized_(Handle:plugin, args)
+{
+	return g_ClientInfo[GetNativeCell(1)][0];
+}
+
+public PW_GetCredits_(Handle:plugin, args)
+{
+	return g_ClientInfo[GetNativeCell(1)][36];
+}
+
+public PW_SetCredits_(Handle:plugin, args)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new client = GetNativeCell(1);
+	if (!g_ClientInfo[client][0])
+	{
+		return 0;
+	}
+	new credits = GetNativeCell(2);
+	if (0 > credits)
+	{
+		return 0;
+	}
+	if (g_ClientInfo[client][36] != credits)
+	{
+		new OldCredits = g_ClientInfo[client][36];
+		g_ClientInfo[client][36] = credits;
+		wS_UpdateClientCache(client);
+		PW_OnCreditsChanged_event(client, OldCredits, g_ClientInfo[client][36]);
+	}
+	return 1;
+}
+
+public PW_AddCredits_(Handle:plugin, args)
+{
+	return wS_AddCredits(GetNativeCell(1), GetNativeCell(2));
+}
+
+public PW_GetActiveWeaponID_(Handle:plugin, args)
+{
+	return g_MyActivePossessedWeaponID[GetNativeCell(1)];
+}
+
+public PW_GetClientWeaponLevel_(Handle:plugin, args)
+{
+	return g_ClientInfo[GetNativeCell(1)][37][GetNativeCell(2)];
+}
+
+public PW_GetWeaponMaxLevel_(Handle:plugin, args)
+{
+	return g_WeaponMaxLevel[GetNativeCell(1)];
+}
+
+wS_SaveSoundHandle_hMenuSound(Handle:cvar)
+{
+	hMenuSound = cvar;
+	return 0;
+}
+
+wS_LoadSounds()
+{
+	wS_GetCvarSound(hMenuSound, sMenuSound);
+	return 0;
+}
+
+wS_PlayMenuSound(client)
+{
+	if (strlen(sMenuSound) > 4)
+	{
+		ClientCommand(client, "play \"%s\"", sMenuSound);
+	}
+	return 0;
+}
+
+wS_ClearAura(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	decl ent;
+	new var1;
+	if ((ent = g_ClientInfo[client][64]) > MaxClients && IsValidEntity(ent))
+	{
+		decl String:name[12];
+		GetEntPropString(ent, PropType:1, "m_iName", name, 10, 0);
+		if (StrContains(name, "pw_aura", false))
+		{
+		}
+		else
+		{
+			AcceptEntityInput(ent, "Kill", -1, -1, 0);
+		}
+	}
+	g_ClientInfo[client][64] = -1;
+	return 0;
+}
+
+wS_CreateAura(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new ent = CreateEntityByName("env_sprite", -1);
+	if (ent < 1)
+	{
+		LogError("Can't create env_sprite");
+		return 0;
+	}
+	g_ClientInfo[client][64] = ent;
+	decl String:info[16];
+	Format(info, 15, "pw_aura%d", ent);
+	DispatchKeyValue(ent, "targetname", info);
+	decl Float:pos[3];
+	GetClientAbsOrigin(client, pos);
+	pos[2] += 40.0;
+	DispatchKeyValueVector(ent, "origin", pos);
+	DispatchKeyValue(ent, "model", "sprites/glow01.spr");
+	DispatchKeyValue(ent, "rendermode", "5");
+	Format(info, 15, "%d %d %d", g_ActiveFeature[client][15], g_ActiveFeature[client][16], g_ActiveFeature[client][17]);
+	DispatchKeyValue(ent, "rendercolor", info);
+	IntToString(g_ActiveFeature[client][18], info, 15);
+	DispatchKeyValue(ent, "renderamt", info);
+	DispatchKeyValue(ent, "scale", "3");
+	DispatchSpawn(ent);
+	AcceptEntityInput(ent, "ShowSprite", -1, -1, 0);
+	SetVariantString("!activator");
+	AcceptEntityInput(ent, "SetParent", client, ent, 0);
+	SDKHook(ent, SDKHookType:6, Transmit_Aura);
+	return 0;
+}
+
+public Action:Transmit_Aura(entity, client)
+{
+	new var1;
+	if (g_ClientInfo[client][64] == entity)
+	{
+		var1 = MissingTAG:3;
+	}
+	else
+	{
+		var1 = MissingTAG:0;
+	}
+	return var1;
+}
+
+public Action:pw_credits_add(admin, args)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (args != 2)
+	{
+		PrintToConsole(admin, "pw_credits_add \"steamid or userid\" \"credits\"");
+		return Action:3;
+	}
+	decl String:info[36];
+	GetCmdArg(2, info, 35);
+	new credits = StringToInt(info, 10);
+	if (credits)
+	{
+		GetCmdArg(1, info, 35);
+		new target = StringToInt(info, 10);
+		if (0 < target)
+		{
+			if ((target = GetClientOfUserId(target)) < 1)
+			{
+				PrintToConsole(admin, "userid '%s' not found", info);
+				return Action:3;
+			}
+		}
+		else
+		{
+			decl String:steamid[36];
+			new i = 1;
+			while (i <= MaxClients)
+			{
+				new var1;
+				if (IsClientInGame(i) && !IsFakeClient(i) && GetClientAuthString(i, steamid, 35) && strcmp(steamid, info, false))
+				{
+					target = i;
+					if (target < 1)
+					{
+						PrintToConsole(admin, "steamid '%s' not found", info);
+						return Action:3;
+					}
+				}
+				i++;
+			}
+			if (target < 1)
+			{
+				PrintToConsole(admin, "steamid '%s' not found", info);
+				return Action:3;
+			}
+		}
+		if (!wS_AddCredits(target, credits))
+		{
+			PrintToConsole(admin, "Fail");
+		}
+		else
+		{
+			PrintToConsole(admin, "Credits successfully given for '%N'", target);
+		}
+		return Action:3;
+	}
+	PrintToConsole(admin, "Invalid 'credits'");
+	return Action:3;
+}
+
+public Action:pw_clear(admin, args)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (args != 1)
+	{
+		PrintToConsole(admin, "pw_clear \"steamid or userid\"");
+		return Action:3;
+	}
+	decl String:info[36];
+	GetCmdArg(1, info, 35);
+	new target = StringToInt(info, 10);
+	if (0 < target)
+	{
+		if ((target = GetClientOfUserId(target)) < 1)
+		{
+			PrintToConsole(admin, "userid '%s' not found", info);
+			return Action:3;
+		}
+	}
+	else
+	{
+		decl String:steamid[36];
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && !IsFakeClient(i) && GetClientAuthString(i, steamid, 35) && strcmp(steamid, info, false))
+			{
+				target = i;
+				if (target < 1)
+				{
+					PrintToConsole(admin, "steamid '%s' not found", info);
+					return Action:3;
+				}
+			}
+			i++;
+		}
+		if (target < 1)
+		{
+			PrintToConsole(admin, "steamid '%s' not found", info);
+			return Action:3;
+		}
+	}
+	if (!g_ClientInfo[target][0])
+	{
+		PrintToConsole(admin, "Player '%N' not authorized, try later", target);
+		return Action:3;
+	}
+	g_ClientInfo[target][36] = 0;
+	new i;
+	while (i < 25)
+	{
+		g_ClientInfo[target][37][i] = 0;
+		i++;
+	}
+	wS_UpdateClientCache(target);
+	if (g_MyActivePossessedWeaponID[target] > -1)
+	{
+		new weapon = GetEntPropEnt(target, PropType:0, "m_hActiveWeapon", 0);
+		if (0 < weapon)
+		{
+			wS_OnClientChangeWeapon_Post(target, weapon);
+		}
+	}
+	PrintToConsole(admin, "Data has been successfully cleaned for '%N'", target);
+	return Action:3;
+}
+
+public Action:PwCmd_CallBack(client, args)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new var1;
+	if (client < 1 || client > MaxClients)
+	{
+		return Action:3;
+	}
+	static last_time[66];
+	new curr_time = GetTime({0,0});
+	if (curr_time - last_time[client] < 2)
+	{
+		return Action:3;
+	}
+	last_time[client] = curr_time;
+	if (!g_ClientInfo[client][0])
+	{
+		PrintToChat(client, "%t", "not_authorized");
+		return Action:3;
+	}
+	wS_ShowMainMenu(client);
+	wS_PlayMenuSound(client);
+	return Action:3;
+}
+
+wS_ShowMainMenu(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:menu = CreateMenu(MainMenu_CallBack, MenuAction:28);
+	SetMenuTitle(menu, "%T\n \n", "balance", client, g_ClientInfo[client][36]);
+	decl String:info[68];
+	Format(info, 65, "%T", "sm_pw_item_info", client);
+	AddMenuItem(menu, "info", info, 0);
+	Format(info, 65, "%T", "sm_pw_item_list", client);
+	AddMenuItem(menu, "list", info, 0);
+	Format(info, 65, "%T", "sm_pw_item_inventory", client);
+	AddMenuItem(menu, "inventory", info, 0);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+	return 0;
+}
+
+public MainMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+		return 0;
+	}
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	decl String:info[16];
+	if (!GetMenuItem(menu, item, info, 15, 0, "", 0))
+	{
+		return 0;
+	}
+	if (strcmp(info, "info", false))
+	{
+		if (strcmp(info, "list", false))
+		{
+			if (!(strcmp(info, "inventory", false)))
+			{
+				wS_ShowInventoryMenu(client);
+			}
+		}
+		wS_ShowWeaponListMenu(client, 0);
+	}
+	else
+	{
+		wS_ShowInfoPanel(client);
+	}
+	wS_PlayMenuSound(client);
+	return 0;
+}
+
+wS_ShowInfoPanel(client)
+{
+	SendPanelToClient(g_hInfoPanel, client, g_hInfoPanel_CallBack, 0);
+	return 0;
+}
+
+wS_InfoPanel()
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (g_hInfoPanel)
+	{
+		CloseHandle(g_hInfoPanel);
+	}
+	g_hInfoPanel = CreatePanel(Handle:0);
+	new Handle:hFile = OpenFile("cfg/possessed_weapons/info_menu.txt", "r");
+	if (hFile)
+	{
+		new bool:bAdded;
+		decl String:info[512];
+		while (!IsEndOfFile(hFile) && ReadFileLine(hFile, info, 512))
+		{
+			if (0 < TrimString(info))
+			{
+				bAdded = true;
+				DrawPanelText(g_hInfoPanel, info);
+			}
+			else
+			{
+				DrawPanelText(g_hInfoPanel, " ");
+			}
+		}
+		CloseHandle(hFile);
+		if (!bAdded)
+		{
+			wS_AddDefaultInfoToInfoPanel();
+		}
+	}
+	else
+	{
+		LogError("OpenFile error: cfg/possessed_weapons/info_menu.txt");
+		wS_AddDefaultInfoToInfoPanel();
+	}
+	DrawPanelText(g_hInfoPanel, " ");
+	SetPanelCurrentKey(g_hInfoPanel, 8);
+	DrawPanelItem(g_hInfoPanel, "<-", 0);
+	return 0;
+}
+
+wS_AddDefaultInfoToInfoPanel()
+{
+	CloseHandle(g_hInfoPanel);
+	g_hInfoPanel = CreatePanel(Handle:0);
+	DrawPanelText(g_hInfoPanel, "ОДЕРЖИМОЕ ОРУЖИЕ\n \nДает своему владельцу определенные навыки");
+	DrawPanelText(g_hInfoPanel, "У каждого такого оружия может быть до 5 уровней");
+	DrawPanelText(g_hInfoPanel, "Чем выше уровень одержимого оружия, тем большей силой оно обладает");
+	DrawPanelText(g_hInfoPanel, "Если есть одержимый ak47, то в момент покупки обычного ak47 вам предложат его");
+	return 0;
+}
+
+public g_hInfoPanel_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (action == MenuAction:4)
+	{
+		wS_ShowMainMenu(client);
+	}
+	return 0;
+}
+
+wS_ShowWeaponListMenu(client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:menu = CreateMenu(WeaponListMenu_CallBack, MenuAction:28);
+	SetMenuTitle(menu, "%T\n \n", "possessed", client);
+	decl String:info[68];
+	decl String:str_id[8];
+	new WeaponID;
+	while (WeaponID < 25)
+	{
+		if (wS_IsPossessedWeaponID(WeaponID))
+		{
+			IntToString(WeaponID, str_id, 5);
+			Format(info, 65, "%s [%d] [%d]", g_sWeapon[WeaponID], g_WeaponLevelInfo[WeaponID][1], g_WeaponMaxLevel[WeaponID]);
+			new var1;
+			if (g_ClientInfo[client][37][WeaponID] < 1)
+			{
+				var1 = 0;
+			}
+			else
+			{
+				var1 = 1;
+			}
+			AddMenuItem(menu, str_id, info, var1);
+		}
+		WeaponID++;
+	}
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, true);
+	DisplayMenuAtItem(menu, client, item, 0);
+	return 0;
+}
+
+public WeaponListMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	else
+	{
+		new var1;
+		if (action == MenuAction:8 && item == -6)
+		{
+			wS_ShowMainMenu(client);
+			wS_PlayMenuSound(client);
+		}
+		if (action == MenuAction:4)
+		{
+			decl String:info[8];
+			if (GetMenuItem(menu, item, info, 5, 0, "", 0))
+			{
+				g_ClientInfo[client][63] = GetMenuSelectionPosition();
+				wS_ShowBuyPanel(client, StringToInt(info, 10));
+				wS_PlayMenuSound(client);
+			}
+		}
+	}
+	return 0;
+}
+
+wS_ShowBuyPanel(client, WeaponID)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	g_ClientInfo[client][62] = WeaponID;
+	decl String:info[100];
+	Format(info, 100, "%T", "balance", client, g_ClientInfo[client][36]);
+	SetPanelTitle(panel, info, false);
+	Format(info, 100, "%T\n \n", "possessed_title", client, g_sWeapon[WeaponID], g_WeaponMaxLevel[WeaponID]);
+	DrawPanelText(panel, info);
+	wS_AddToPanelWeaponLevelInfo(panel, WeaponID, 1, info, client);
+	DrawPanelText(panel, " ");
+	Format(info, 100, "%T", "buy", client, g_WeaponLevelInfo[WeaponID][1]);
+	SetPanelCurrentKey(panel, 3);
+	new var1;
+	if (g_ClientInfo[client][37][WeaponID] < 1 && g_ClientInfo[client][36] >= g_WeaponLevelInfo[WeaponID][1][0])
+	{
+		var2 = 0;
+	}
+	else
+	{
+		var2 = 1;
+	}
+	DrawPanelItem(panel, info, var2);
+	SetPanelCurrentKey(panel, 8);
+	DrawPanelItem(panel, "<-", 0);
+	SendPanelToClient(panel, client, BuyPanel_CallBack, 0);
+	CloseHandle(panel);
+	return 0;
+}
+
+public BuyPanel_CallBack(Handle:panel, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	wS_PlayMenuSound(client);
+	if (item == 8)
+	{
+		wS_ShowWeaponListMenu(client, g_ClientInfo[client][63]);
+		return 0;
+	}
+	if (item != 3)
+	{
+		return 0;
+	}
+	new WeaponID = g_ClientInfo[client][62];
+	if (wS_BuyWeaponIdLevel(client, WeaponID, 1))
+	{
+		panel = CreatePanel(Handle:0);
+		decl String:info[512];
+		Format(info, 512, "%T\n \n", "buy_successfully", client, g_sWeapon[WeaponID], 1, g_WeaponMaxLevel[WeaponID]);
+		DrawPanelText(panel, info);
+		Format(info, 512, "%T", "sm_pw_item_inventory", client);
+		SetPanelCurrentKey(panel, 8);
+		DrawPanelItem(panel, info, 0);
+		SendPanelToClient(panel, client, BuyPanelFinish_CallBack, 0);
+		CloseHandle(panel);
+		PW_OnClientUpgradeLevel_Post_event(client, WeaponID, 1, g_WeaponMaxLevel[WeaponID]);
+	}
+	return 0;
+}
+
+public BuyPanelFinish_CallBack(Handle:panel, MenuAction:action, client, item)
+{
+	if (action == MenuAction:4)
+	{
+		wS_ShowInventoryMenu(client);
+		wS_PlayMenuSound(client);
+	}
+	return 0;
+}
+
+wS_ShowInventoryMenu(client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:menu = CreateMenu(InventoryMenu_CallBack, MenuAction:28);
+	SetMenuTitle(menu, "%T\n \n", "sm_pw_item_inventory", client);
+	decl String:str_id[8];
+	decl String:info[68];
+	new bool:bFound;
+	new WeaponID;
+	while (WeaponID < 25)
+	{
+		new var1;
+		if (g_ClientInfo[client][37][WeaponID] > 0 && wS_IsPossessedWeaponID(WeaponID))
+		{
+			IntToString(WeaponID, str_id, 5);
+			Format(info, 65, "%T", "inventory_weapon", client, g_sWeapon[WeaponID], g_ClientInfo[client][37][WeaponID], g_WeaponMaxLevel[WeaponID]);
+			AddMenuItem(menu, str_id, info, 0);
+			bFound = true;
+		}
+		WeaponID++;
+	}
+	if (!bFound)
+	{
+		Format(info, 65, "%T", "inventory_noweapon", client);
+		AddMenuItem(menu, "", info, 1);
+	}
+	SetMenuExitBackButton(menu, true);
+	SetMenuExitButton(menu, true);
+	DisplayMenu(menu, client, 0);
+	return 0;
+}
+
+public InventoryMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+		return 0;
+	}
+	new var1;
+	if (action == MenuAction:8 && item == -6)
+	{
+		wS_ShowMainMenu(client);
+		wS_PlayMenuSound(client);
+		return 0;
+	}
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	decl String:str_id[8];
+	if (!GetMenuItem(menu, item, str_id, 5, 0, "", 0))
+	{
+		return 0;
+	}
+	new WeaponID = StringToInt(str_id, 10);
+	g_ClientInfo[client][62] = WeaponID;
+	wS_ShowUpgradePanel(client, WeaponID, g_ClientInfo[client][37][WeaponID]);
+	wS_PlayMenuSound(client);
+	return 0;
+}
+
+wS_ShowUpgradePanel(client, WeaponID, CurrentLevel)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new Handle:panel = CreatePanel(Handle:0);
+	decl String:info[100];
+	Format(info, 100, "%T\n \n", "inventory_weapon", client, g_sWeapon[WeaponID], CurrentLevel, g_WeaponMaxLevel[WeaponID]);
+	SetPanelTitle(panel, info, false);
+	wS_AddToPanelWeaponLevelInfo(panel, WeaponID, CurrentLevel, info, client);
+	DrawPanelText(panel, " ");
+	if (g_WeaponMaxLevel[WeaponID] > CurrentLevel)
+	{
+		new price = g_WeaponLevelInfo[WeaponID][CurrentLevel + 1][0];
+		Format(info, 100, "%T", "upgrade", client, price);
+		SetPanelCurrentKey(panel, 3);
+		new var1;
+		if (g_ClientInfo[client][36] >= price)
+		{
+			var1 = 0;
+		}
+		else
+		{
+			var1 = 1;
+		}
+		DrawPanelItem(panel, info, var1);
+	}
+	SetPanelCurrentKey(panel, 8);
+	DrawPanelItem(panel, "<-", 0);
+	SendPanelToClient(panel, client, Upgrade_Panel, 0);
+	CloseHandle(panel);
+	return 0;
+}
+
+public Upgrade_Panel(Handle:panel, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	if (action != MenuAction:4)
+	{
+		return 0;
+	}
+	if (item == 3)
+	{
+		new WeaponID = g_ClientInfo[client][62];
+		if (wS_BuyWeaponIdLevel(client, WeaponID, g_ClientInfo[client][37][WeaponID][0]))
+		{
+			PW_OnClientUpgradeLevel_Post_event(client, WeaponID, g_ClientInfo[client][37][WeaponID], g_WeaponMaxLevel[WeaponID]);
+		}
+		wS_ShowUpgradePanel(client, WeaponID, g_ClientInfo[client][37][WeaponID]);
+	}
+	else
+	{
+		wS_ShowInventoryMenu(client);
+	}
+	wS_PlayMenuSound(client);
+	return 0;
+}
+
+public wS_OnClientChangeWeapon_Post(client, weapon)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	wS_StopRegen(client);
+	wS_ClearAura(client);
+	if (g_hChangeWeaponTimer[client])
+	{
+		KillTimer(g_hChangeWeaponTimer[client], false);
+	}
+	g_hChangeWeaponTimer[client] = CreateTimer(0.2, wS_OnClientChangeWeapon_Timer, client, 0);
+	g_MyLastWeaponRef[client] = EntIndexToEntRef(weapon);
+	return 0;
+}
+
+public Action:wS_OnClientChangeWeapon_Timer(Handle:timer, any:client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	g_hChangeWeaponTimer[client] = 0;
+	new var1;
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		return Action:4;
+	}
+	new weapon = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon", 0);
+	new var2;
+	if (weapon < 1 || EntRefToEntIndex(g_MyLastWeaponRef[client]) == weapon)
+	{
+		return Action:4;
+	}
+	g_MyActivePossessedWeaponID[client] = -1;
+	new bool:bChanged;
+	new var3;
+	if (g_ActiveFeature[client][6] > 0 && !g_bCSGO)
+	{
+		wS_SetColor(client, 255, 255, 255, 255);
+		bChanged = true;
+	}
+	if (g_ActiveFeature[client][8] > 1065353216)
+	{
+		SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 1.0, 0);
+		bChanged = true;
+	}
+	if (g_ActiveFeature[client][9] > 0)
+	{
+		SetEntityGravity(client, 1.0);
+		bChanged = true;
+	}
+	wS_ClearActiveFeatures(client);
+	decl String:info[32];
+	decl WeaponID;
+	decl LvL;
+	new var4;
+	if (GetEntityClassname(weapon, info, 32) && (WeaponID = wS_GetWeaponID(info[1])) > -1 && (LvL = g_ClientInfo[client][37][WeaponID]) > 0)
+	{
+		g_MyActivePossessedWeaponID[client] = WeaponID;
+		while (0 < LvL)
+		{
+			if (g_ActiveFeature[client][1] < 1)
+			{
+				g_ActiveFeature[client][1] = g_WeaponLevelInfo[WeaponID][LvL][1];
+			}
+			if (g_ActiveFeature[client][2] < 1)
+			{
+				g_ActiveFeature[client][2] = g_WeaponLevelInfo[WeaponID][LvL][2];
+			}
+			if (g_ActiveFeature[client][3] < 1)
+			{
+				g_ActiveFeature[client][3] = g_WeaponLevelInfo[WeaponID][LvL][3];
+			}
+			if (g_ActiveFeature[client][4] < 1)
+			{
+				g_ActiveFeature[client][4] = g_WeaponLevelInfo[WeaponID][LvL][4];
+			}
+			if (g_ActiveFeature[client][5] < 1)
+			{
+				g_ActiveFeature[client][5] = g_WeaponLevelInfo[WeaponID][LvL][5];
+			}
+			if (g_ActiveFeature[client][6] < 1)
+			{
+				g_ActiveFeature[client][6] = g_WeaponLevelInfo[WeaponID][LvL][6];
+			}
+			if (g_ActiveFeature[client][7] < 1)
+			{
+				g_ActiveFeature[client][7] = g_WeaponLevelInfo[WeaponID][LvL][7];
+			}
+			if (g_ActiveFeature[client][8] < 1066192077)
+			{
+				g_ActiveFeature[client][8] = g_WeaponLevelInfo[WeaponID][LvL][8];
+			}
+			if (g_ActiveFeature[client][9] < 1036831949)
+			{
+				g_ActiveFeature[client][9] = g_WeaponLevelInfo[WeaponID][LvL][9];
+			}
+			if (!g_ActiveFeature[client][10])
+			{
+				g_ActiveFeature[client][10] = g_WeaponLevelInfo[WeaponID][LvL][10];
+			}
+			if (!g_ActiveFeature[client][11])
+			{
+				g_ActiveFeature[client][11] = g_WeaponLevelInfo[WeaponID][LvL][11];
+			}
+			if (!g_ActiveFeature[client][12])
+			{
+				g_ActiveFeature[client][12] = g_WeaponLevelInfo[WeaponID][LvL][12];
+			}
+			if (!g_ActiveFeature[client][14])
+			{
+				g_ActiveFeature[client][14] = g_WeaponLevelInfo[WeaponID][LvL][14];
+			}
+			if (!g_ActiveFeature[client][13])
+			{
+				g_ActiveFeature[client][13] = g_WeaponLevelInfo[WeaponID][LvL][13];
+			}
+			if (0 > g_ActiveFeature[client][15])
+			{
+				g_ActiveFeature[client][15] = g_WeaponLevelInfo[WeaponID][LvL][15];
+				g_ActiveFeature[client][16] = g_WeaponLevelInfo[WeaponID][LvL][16];
+				g_ActiveFeature[client][17] = g_WeaponLevelInfo[WeaponID][LvL][17];
+				g_ActiveFeature[client][18] = g_WeaponLevelInfo[WeaponID][LvL][18];
+			}
+			LvL--;
+		}
+		new var5;
+		if (g_ActiveFeature[client][6] > 0 && !g_bCSGO)
+		{
+			new a = RoundToCeil(255.0 / 100.0 * float(g_ActiveFeature[client][6]));
+			if (a > 255)
+			{
+				a = 255;
+			}
+			else
+			{
+				if (a < 1)
+				{
+					a = 1;
+				}
+			}
+			a = 255 - a;
+			if (0 > a)
+			{
+				a = 0;
+			}
+			wS_SetColor(client, 255, 255, 255, a);
+			bChanged = true;
+		}
+		if (g_ActiveFeature[client][8] > 1065353216)
+		{
+			SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", g_ActiveFeature[client][8], 0);
+			bChanged = true;
+		}
+		if (g_ActiveFeature[client][9] > 0)
+		{
+			SetEntityGravity(client, g_ActiveFeature[client][9]);
+			bChanged = true;
+		}
+		if (g_FadeColor[0] != -1)
+		{
+			new Handle:hMsg = StartMessageOne("Fade", client, 0);
+			if (hMsg)
+			{
+				if (g_bCSGO)
+				{
+					PbSetInt(hMsg, "duration", 300, -1);
+					PbSetInt(hMsg, "hold_time", 0, -1);
+					PbSetInt(hMsg, "flags", 1, -1);
+					PbSetColor(hMsg, "clr", g_FadeColor, -1);
+				}
+				else
+				{
+					BfWriteShort(hMsg, 300);
+					BfWriteShort(hMsg, 0);
+					BfWriteShort(hMsg, 1);
+					BfWriteByte(hMsg, g_FadeColor[0]);
+					BfWriteByte(hMsg, g_FadeColor[1]);
+					BfWriteByte(hMsg, g_FadeColor[2]);
+					BfWriteByte(hMsg, g_FadeColor[3]);
+				}
+				EndMessage();
+			}
+		}
+		if (0 < g_ActiveFeature[client][4])
+		{
+			if (!g_hAmmoHistoryArray)
+			{
+				g_hAmmoHistoryArray = CreateArray(1, 0);
+			}
+			if (0 > FindValueInArray(g_hAmmoHistoryArray, g_MyLastWeaponRef[client]))
+			{
+				PushArrayCell(g_hAmmoHistoryArray, g_MyLastWeaponRef[client]);
+				new x = GetEntProp(weapon, PropType:0, "m_iPrimaryAmmoType", 4, 0);
+				if (x > -1)
+				{
+					SetEntProp(client, PropType:0, "m_iAmmo", g_ActiveFeature[client][4][GetEntProp(client, PropType:0, "m_iAmmo", 4, x)], 4, x);
+				}
+			}
+		}
+		wS_TryRegen(client);
+		if (g_ActiveFeature[client][15] > -1)
+		{
+			wS_CreateAura(client);
+		}
+		PW_OnClientUsePossessedWeapon_event(client, WeaponID);
+	}
+	if (bChanged)
+	{
+		PW_OnClientSettingsChanged_event(client);
+	}
+	return Action:4;
+}
+
+wS_ClearAmmoHistory()
+{
+	if (g_hAmmoHistoryArray)
+	{
+		ClearArray(g_hAmmoHistoryArray);
+	}
+	return 0;
+}
+
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+	if (0 < attacker <= MaxClients)
+	{
+		new var1;
+		if (damagetype == 4098 && g_ActiveFeature[attacker][1] > 0)
+		{
+			damage = damage + damage / 100.0 * float(g_ActiveFeature[attacker][1]);
+			return Action:1;
+		}
+	}
+	else
+	{
+		if (g_ActiveFeature[victim][13])
+		{
+			return Action:3;
+		}
+	}
+	return Action:0;
+}
+
+public player_spawn(Handle:event, String:name[], bool:silent)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	wS_ClearTimer(g_hFreezeTimer[client]);
+	ClientCommand(client, "lastinv");
+	return 0;
+}
+
+public player_hurt(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	decl attacker;
+	decl victim;
+	new var5 = GetClientOfUserId(GetEventInt(event, "userid"));
+	victim = var5;
+	wS_TryRegen(var5);
+	new var1;
+	if ((attacker = GetClientOfUserId(GetEventInt(event, "attacker"))) < 1 || g_MyActivePossessedWeaponID[attacker] < 0 || GetClientTeam(victim) != GetClientTeam(attacker))
+	{
+		return 0;
+	}
+	decl String:info[12];
+	GetEventString(event, "weapon", info, 12);
+	if (strcmp(info, "hegrenade", false))
+	{
+		new hp = g_ActiveFeature[attacker][3];
+		if (GetEventInt(event, "health") < 1)
+		{
+			hp = g_ActiveFeature[attacker][2][hp];
+			new chance = g_ActiveFeature[attacker][5];
+			new var3;
+			if (chance < 1 || (chance < 100 && chance < GetRandomInt(1, 100)))
+			{
+				decl Float:v[3];
+				GetClientAbsOrigin(victim, v);
+				v[2] += 10.0;
+				new Handle:hPack = CreateDataPack();
+				WritePackFloat(hPack, v[0]);
+				WritePackFloat(hPack, v[1]);
+				WritePackFloat(hPack, v[2]);
+				CreateTimer(0.1, Explosion_Timer, hPack, 0);
+			}
+		}
+		if (0 < hp)
+		{
+			SetEntProp(attacker, PropType:0, "m_iHealth", GetEntProp(attacker, PropType:0, "m_iHealth", 4, 0) + hp, 4, 0);
+		}
+		if (g_ActiveFeature[attacker][10])
+		{
+			IgniteEntity(victim, 2.0, false, 0.0, false);
+		}
+		if (g_ActiveFeature[attacker][11])
+		{
+			new Handle:hMsg = StartMessageOne("Shake", victim, 0);
+			if (hMsg)
+			{
+				if (g_bCSGO)
+				{
+					PbSetInt(hMsg, "command", 0, -1);
+					PbSetFloat(hMsg, "local_amplitude", 50.0, -1);
+					PbSetFloat(hMsg, "frequency", 35.0, -1);
+					PbSetFloat(hMsg, "duration", 1.0, -1);
+				}
+				else
+				{
+					BfWriteByte(hMsg, 0);
+					BfWriteFloat(hMsg, 50.0);
+					BfWriteFloat(hMsg, 35.0);
+					BfWriteFloat(hMsg, 1.0);
+				}
+				EndMessage();
+			}
+		}
+		if (g_ActiveFeature[attacker][14])
+		{
+			decl Float:angles[3];
+			if (GetClientEyeAngles(victim, angles))
+			{
+				decl Float:vel[3];
+				vel[0] = Cosine(DegToRad(angles[1])) * -50.0;
+				vel[1] = Sine(DegToRad(angles[1])) * -50.0;
+				vel[2] = Sine(DegToRad(angles[0])) * -50.0;
+				ScaleVector(vel, 50.0);
+				TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vel);
+			}
+		}
+		new var4;
+		if (g_ActiveFeature[attacker][12] && g_hFreezeTimer[victim])
+		{
+			SetEntPropFloat(victim, PropType:1, "m_flLaggedMovementValue", 0.2, 0);
+			g_hFreezeTimer[victim] = CreateTimer(2.0, g_hFreezeTimer_CallBack, victim, 0);
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public Action:Explosion_Timer(Handle:timer, Handle:hPack)
+{
+	ResetPack(hPack, false);
+	decl Float:v[3];
+	v[0] = ReadPackFloat(hPack);
+	v[1] = ReadPackFloat(hPack);
+	v[2] = ReadPackFloat(hPack);
+	CloseHandle(hPack);
+	new ent = CreateEntityByName("env_explosion", -1);
+	if (ent < 1)
+	{
+		return Action:4;
+	}
+	DispatchKeyValue(ent, "iMagnitude", g_sExplodeMagnitude);
+	DispatchKeyValue(ent, "iRadiusOverride", g_sExplodeRadius);
+	DispatchKeyValueVector(ent, "origin", v);
+	DispatchSpawn(ent);
+	AcceptEntityInput(ent, "Explode", -1, -1, 0);
+	AcceptEntityInput(ent, "Kill", -1, -1, 0);
+	return Action:4;
+}
+
+public Action:g_hFreezeTimer_CallBack(Handle:timer, any:client)
+{
+	g_hFreezeTimer[client] = 0;
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 1.0, 0);
+		PW_OnClientSettingsChanged_event(client);
+	}
+	return Action:4;
+}
+
+wS_TryRegen(client)
+{
+	new var1;
+	if (g_ActiveFeature[client][7] > 0 && hRegenTimer[client] && GetEntProp(client, PropType:0, "m_iHealth", 4, 0) < 100)
+	{
+		hRegenTimer[client] = CreateTimer(1.0, hRegenTimer_CallBack, client, 1);
+	}
+	return 0;
+}
+
+wS_StopRegen(client)
+{
+	wS_ClearTimer(hRegenTimer[client]);
+	return 0;
+}
+
+public Action:hRegenTimer_CallBack(Handle:timer, any:client)
+{
+	if (!xD)
+	{
+		decl x_[1];
+		if (GetTrieArray(Handle:0, "_", x_, 1, 0) && SetTrieArray(Handle:0, "_", x_, 1, true))
+		{
+		}
+	}
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client) && g_ActiveFeature[client][7] > 0)
+	{
+		new hp = GetEntProp(client, PropType:0, "m_iHealth", 4, 0);
+		if (hp < 100)
+		{
+			hp = g_ActiveFeature[client][7][hp];
+			if (hp > 100)
+			{
+				hp = 100;
+			}
+			SetEntProp(client, PropType:0, "m_iHealth", hp, 4, 0);
+			if (hp < 100)
+			{
+				return Action:0;
+			}
+		}
+	}
+	hRegenTimer[client] = 0;
+	return Action:4;
+}
+
+public player_team(Handle:event, String:name[], bool:silent)
+{
+	if (GetEventInt(event, "team") < 1)
+	{
+		new client = GetClientOfUserId(GetEventInt(event, "userid"));
+		if (0 < client)
+		{
+			wS_ClearAura(client);
+		}
+	}
+	return 0;
+}
+
+public player_death(Handle:event, String:name[], bool:silent)
+{
+	wS_ClearAura(GetClientOfUserId(GetEventInt(event, "userid")));
+	return 0;
+}
+
+public round_end(Handle:event, String:name[], bool:silent)
+{
+	wS_ClearAmmoHistory();
+	return 0;
+}
+
+wS_UpdateRoundStartMsgVar(Handle:cvar)
+{
+	bRoundStartMsg = GetConVarBool(cvar);
+	return 0;
+}
+
+public round_start(Handle:event, String:name[], bool:silent)
+{
+	if (bRoundStartMsg)
+	{
+		PrintToChatAll("\x04%t", "round_start_msg");
+	}
+	return 0;
+}
+
+public OnMapStart()
+{
+	PrecacheModel("sprites/glow01.spr", true);
+	wS_InfoPanel();
+	return 0;
+}
+
+public OnConfigsExecuted()
+{
+	wS_LoadSounds();
+	return 0;
+}
+

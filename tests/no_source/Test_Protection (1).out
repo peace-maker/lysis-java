@@ -1,0 +1,78 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.5-dev",
+	date = "12/02/2012",
+	time = "22:26:18"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new g_Num;
+public Plugin:myinfo =
+{
+	name = "Test recompilation :D",
+	description = "",
+	author = "Beelzebub",
+	version = "1.0",
+	url = ""
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public OnPluginStart()
+{
+	if (0 < g_Num)
+	{
+		PrintToServer(wS_GetMyNick());
+	}
+	CreateConVar("sm_mapconfigjuggler", "1", "Sets whether my plugin is enabled", 0, false, 0.0, false, 0.0);
+	return 0;
+}
+
+public OnMapStart()
+{
+	if (0 < g_Num)
+	{
+		PrintToServer(wS_GetMyNick());
+	}
+	new String:MapName[32];
+	GetCurrentMap(MapName, 32);
+	if (StrContains(MapName, "35hp_", true) != -1)
+	{
+		SetConVarInt(FindConVar("ammo_flashbang_max"), 0, false, false);
+	}
+	return 0;
+}
+
+String:wS_GetMyNick(_arg0)
+{
+	if (0 < g_Num)
+	{
+		PrintToServer(wS_GetMyNick());
+	}
+	static String:wS[4] = "wS";
+	return String:388;
+}
+

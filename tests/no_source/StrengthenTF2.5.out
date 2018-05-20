@@ -1,0 +1,3242 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.3.8",
+	date = "08/27/2011",
+	time = "15:37:05"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Plugin:myinfo =
+{
+	name = "Billy's Strengthen System plugin",
+	description = "You can strengthen the knife! and You can add damage for knife",
+	author = "NEF.K.Guren._. <CrystalRelease>",
+	version = "2.5.0",
+	url = "http://cssnef.x-y.net/"
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_geoip =
+{
+	name = "GeoIP",
+	file = "geoip.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+new String:TFResourceNames[18][];
+public Extension:__ext_sdkhooks =
+{
+	name = "sdkhooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+new BOMB_FUSE = 21;
+new bool:bIsNuking;
+new bool:lethal = 1;
+new nuke_tmr;
+new Float:start_cor[3];
+new fire;
+new white;
+new g_HaloSprite;
+new g_ExplosionSprite;
+new righthud[66] =
+{
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new String:steamID2[128];
+new String:playerName2[152];
+new Knifeon[66] =
+{
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+new PointK[66];
+new String:Path[68];
+new String:Path2[68];
+new String:Path3[68];
+new LoadCheck[66];
+new strengthenevent;
+new teamalive[2];
+new strengthenfor = 1;
+new highdamage = 44;
+new watime;
+new eventcheck;
+new muattacker;
+new ismakedamage[66];
+new Muattack[66];
+new STRANGTHENTO[66];
+new STRENGTHEN[66];
+new strengthentime[66];
+new String:ServerName[20] = "와갤";
+new Insurance[66];
+new Handle:g_cvarMeleeWeaponList;
+new pointevent;
+new Float:nextgivetime[66];
+new bool:waitforcredit[66];
+new Float:nextgivetime2[66];
+new bool:waitforcredit2[66];
+new Float:nextsensoractivetime[66];
+new Accountgive = 1;
+new timepergive = 15;
+new Accountgive2 = 500;
+new timepergive2 = 360;
+new spawncheck[66];
+new Float:STRENGTHENcrits[20] =
+{
+	1017370378, 1022739087, 1025758986, 1028443341, 1031127695, 1032805417, 1035489772, 1036831949, 1038174126, 1039516303, 1040522936, 1041865114, 1043207291, 1045220557, 1047904911, 1049918177, 1051595899, 1053944709, 1056293519, 1058139013
+};
+new STRENGTHENMINUSFAIL[31] =
+{
+	0, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 100
+};
+new STRENGTHENSUCCESS[31] =
+{
+	68, 65, 62, 59, 56, 53, 50, 47, 44, 41, 38, 35, 32, 29, 26, 23, 20, 17, 14, 11, 8, 5, 2, 2, 2, 2, 2, 2, 2, 2, 0
+};
+new STRENGTHENSUCCESS2[31] =
+{
+	74, 71, 68, 64, 61, 58, 55, 51, 48, 45, 41, 38, 35, 31, 28, 25, 22, 18, 15, 12, 10, 8, 6, 4, 2, 2, 2, 2, 2, 2, 0
+};
+new Lottoamount;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+Float:operator+(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 + float(oper2);
+}
+
+Float:operator-(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 - float(oper2);
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) <= 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+Handle:StartMessageAll(String:msgname[], flags)
+{
+	new total;
+	new clients[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientConnected(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	return StartMessage(msgname, clients, total, flags);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+PrintCenterTextAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintCenterText(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+SetEntityHealth(entity, amount)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_iHealth", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_iHealth");
+		}
+		gotconfig = true;
+	}
+	decl String:cls[64];
+	new PropFieldType:type;
+	new offset;
+	if (!GetEntityNetClass(entity, cls, 64))
+	{
+		ThrowError("SetEntityHealth not supported by this mod: Could not get serverclass name");
+		return 0;
+	}
+	offset = FindSendPropInfo(cls, prop, type, 0, 0);
+	if (0 >= offset)
+	{
+		ThrowError("SetEntityHealth not supported by this mod");
+		return 0;
+	}
+	if (type == PropFieldType:2)
+	{
+		SetEntDataFloat(entity, offset, float(amount), false);
+	}
+	else
+	{
+		SetEntProp(entity, PropType:0, prop, amount, 4);
+	}
+	return 0;
+}
+
+EmitSoundToClient(client, String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[1];
+	clients[0] = client;
+	new var1;
+	if (entity == -2)
+	{
+		var1 = client;
+	}
+	else
+	{
+		var1 = entity;
+	}
+	entity = var1;
+	EmitSound(clients, 1, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[MaxClients];
+	new total;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+TE_SendToAll(Float:delay)
+{
+	new total;
+	new clients[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	return TE_Send(clients, total, delay);
+}
+
+TE_SetupExplosion(Float:pos[3], Model, Float:Scale, Framerate, Flags, Radius, Magnitude, Float:normal[3], MaterialType)
+{
+	TE_Start("Explosion");
+	TE_WriteVector("m_vecOrigin[0]", pos);
+	TE_WriteVector("m_vecNormal", normal);
+	TE_WriteNum("m_nModelIndex", Model);
+	TE_WriteFloat("m_fScale", Scale);
+	TE_WriteNum("m_nFrameRate", Framerate);
+	TE_WriteNum("m_nFlags", Flags);
+	TE_WriteNum("m_nRadius", Radius);
+	TE_WriteNum("m_nMagnitude", Magnitude);
+	TE_WriteNum("m_chMaterialType", MaterialType);
+	return 0;
+}
+
+TE_SetupBeamRingPoint(Float:center[3], Float:Start_Radius, Float:End_Radius, ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:Amplitude, Color[4], Speed, Flags)
+{
+	TE_Start("BeamRingPoint");
+	TE_WriteVector("m_vecCenter", center);
+	TE_WriteFloat("m_flStartRadius", Start_Radius);
+	TE_WriteFloat("m_flEndRadius", End_Radius);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", Width);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[1]);
+	TE_WriteNum("b", Color[2]);
+	TE_WriteNum("a", Color[3]);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFlags", Flags);
+	TE_WriteNum("m_nFadeLength", 0);
+	return 0;
+}
+
+TFClassType:TF2_GetPlayerClass(client)
+{
+	return GetEntProp(client, PropType:0, TFResourceNames, 4);
+}
+
+bool:isClientConnectedIngameAlive(client)
+{
+	if (isClientConnectedIngame(client))
+	{
+		new var1;
+		if (IsPlayerAlive(client) == 1 && IsClientObserver(client))
+		{
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
+
+bool:isClientConnectedIngame(client)
+{
+	new var1;
+	if (client > 0 && client <= MaxClients)
+	{
+		if (IsClientInGame(client) == 1)
+		{
+			return true;
+		}
+		return false;
+	}
+	return false;
+}
+
+bool:makeDamage(attacker, target, damage, damagetype, Float:damageradius, Float:attackposition[3], String:weaponname[])
+{
+	new pointhurt = CreateEntityByName("point_hurt", -1);
+	if (pointhurt != -1)
+	{
+		if (target != -1)
+		{
+			decl String:targetname[64];
+			Format(targetname, 128, "%f%f", GetEngineTime(), GetRandomFloat(0.0, 1.0));
+			DispatchKeyValue(target, "TargetName", targetname);
+			DispatchKeyValue(pointhurt, "DamageTarget", targetname);
+		}
+		DispatchKeyValueVector(pointhurt, "Origin", attackposition);
+		decl String:number[64];
+		IntToString(damage, number, 64);
+		DispatchKeyValue(pointhurt, "Damage", number);
+		IntToString(damagetype, number, 64);
+		DispatchKeyValue(pointhurt, "DamageType", number);
+		DispatchKeyValueFloat(pointhurt, "DamageRadius", damageradius);
+		if (!StrEqual(weaponname, "", false))
+		{
+			DispatchKeyValue(pointhurt, "classname", weaponname);
+		}
+		DispatchSpawn(pointhurt);
+		new var1;
+		if (attacker != -1)
+		{
+			var1 = attacker;
+		}
+		else
+		{
+			var1 = 0;
+		}
+		AcceptEntityInput(pointhurt, "Hurt", var1, -1, 0);
+		AcceptEntityInput(pointhurt, "Kill", -1, -1, 0);
+		return true;
+	}
+	return false;
+}
+
+sendKeyHintTextMsg(client, String:msg[])
+{
+	new Handle:hudhandle;
+	if (client)
+	{
+		hudhandle = StartMessageOne("KeyHintText", client, 0);
+	}
+	else
+	{
+		hudhandle = StartMessageAll("KeyHintText", 0);
+	}
+	new String:txt[256];
+	VFormat(txt, 255, msg, 3);
+	if (hudhandle)
+	{
+		BfWriteByte(hudhandle, 1);
+		BfWriteString(hudhandle, txt);
+		EndMessage();
+	}
+	return 0;
+}
+
+SayText2ToAll(client, String:message[])
+{
+	new Handle:buffer;
+	new String:txt[256];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(txt, 255, message, 3);
+			buffer = StartMessageOne("SayText2", i, 0);
+			if (buffer)
+			{
+				BfWriteByte(buffer, client);
+				BfWriteByte(buffer, 1);
+				BfWriteString(buffer, txt);
+				EndMessage();
+				buffer = MissingTAG:0;
+			}
+		}
+		i++;
+	}
+	return 0;
+}
+
+public bool:tracerayfilterdefault(entity, mask, any:data)
+{
+	if (data != entity)
+	{
+		return true;
+	}
+	return false;
+}
+
+public bool:tracerayfilteronlyone(entity, mask, any:data)
+{
+	new var1;
+	if (data == entity && mask & 1073741824)
+	{
+		return true;
+	}
+	return false;
+}
+
+public bool:tracerayfilterrocket(entity, mask, any:data)
+{
+	new owner = GetEntPropEnt(entity, PropType:0, "m_hOwnerEntity");
+	new var1;
+	if (data != entity && data != owner)
+	{
+		return true;
+	}
+	return false;
+}
+
+public bool:tracerayfilternoplayer(entity, mask, any:data)
+{
+	if (!isClientConnectedIngameAlive(entity))
+	{
+		return true;
+	}
+	return false;
+}
+
+public bool:tracerayfilteronlyworld(entity, mask, any:data)
+{
+	if (entity)
+	{
+		return false;
+	}
+	return true;
+}
+
+bool:StripQuotesOnce(String:targetstring[], maxlength)
+{
+	new var1;
+	if (targetstring[0] == '"' && targetstring[strlen(targetstring) + -1] == '"')
+	{
+		ReplaceStringEx(targetstring, maxlength, "\"", "", -1, -1, true);
+		targetstring[strlen(targetstring) + -1] = MissingTAG:0;
+		return true;
+	}
+	return false;
+}
+
+public OnPluginStart()
+{
+	RegConsoleCmd("say", SayHook, "", 0);
+	CreateConVar("sm_strengthen_version", "2.5.0", "Made By Billy(Chamamyungsu, Yvonne Strahovski)", 270656, false, 0.0, false, 0.0);
+	RegConsoleCmd("sm_sinfo", Command_SInformation, "상대방의 강화 정보를 봅니다", 0);
+	RegConsoleCmd("sm_sgift", Command_GiveMoney, "원하는 상대방에게 송금합니다.", 0);
+	RegAdminCmd("sm_sremove", Command_RemoveData, 4, "원하는 플레이어의 데이터를 초기화합니다", "", 0);
+	RegAdminCmd("sm_point", Command_Pluspoint, 4, "원하는 플레이어에게 원하는만큼의 포인트를 줍니다", "", 0);
+	RegAdminCmd("sm_bassecret", Command_Strengthen, 4, "원하는 플레이어의 강화수치를 설정합니다", "", 0);
+	RegAdminCmd("sm_2bassecret", Command_2Strengthen, 4, "원하는 플레이어의 강화수치를 설정합니다", "", 0);
+	RegAdminCmd("sm_event", Command_event, 4, "포인트 2배 이벤트를 열어보자", "", 0);
+	RegAdminCmd("sm_developed", Command_developed, 4, "개발자전용", "", 0);
+	RegAdminCmd("sm_pointall", Command_pointall, 4, "서버에 있는 모든 사람에게 포인트를 줘봅시다", "", 0);
+	BuildPath(PathType:0, Path, 66, "data/Strengthen.txt");
+	BuildPath(PathType:0, Path2, 66, "data/SSettings.txt");
+	BuildPath(PathType:0, Path3, 66, "data/Lottosave.txt");
+	HookEventEx("player_team", EventTeam, EventHookMode:1);
+	HookEvent("player_death", EventDeath, EventHookMode:1);
+	HookEvent("teamplay_round_start", roundstart_event, EventHookMode:1);
+	HookEvent("teamplay_restart_round", roundstart_event, EventHookMode:1);
+	CreateTimer(1.0, nuke_timer, any:0, 1);
+	RegAdminCmd("sm_nukemmw2", Command_Nukem, 32, "blows everyone up except you in a firestorm of explosions.", "", 0);
+	RegAdminCmd("sm_nukemmw2_jk", Command_Nukem_jk, 32, "does the nukem count down and FX, but doesnt kill anyone.", "", 0);
+	g_cvarMeleeWeaponList = CreateConVar("Strengthen_MeleeWeaponList", "tf_weapon_bottle;tf_weapon_sword;tf_weapon_wrench;tf_weapon_robot_arm;tf_weapon_fists;tf_weapon_bonesaw;tf_weapon_fireaxe;tf_weapon_bat;tf_weapon_bat_wood;tf_weapon_bat_fish;tf_weapon_club;tf_weapon_shovel;tf_weapon_knife;tf_weapon_stickbomb;tf_weapon_katana", "MeleeWeaponList... ;", 0, false, 0.0, false, 0.0);
+	AutoExecConfig(true, "", "sourcemod");
+	return 0;
+}
+
+public OnMapStart()
+{
+	PrecacheSound("misc/strengthen_fail.wav", true);
+	PrecacheSound("misc/strengthen_success.wav", true);
+	PrecacheSound("misc/strengthen_zero.wav", true);
+	PrecacheSound("misc/equip_broken.wav", true);
+	PrecacheSound("misc/equip_strengthen.wav", true);
+	PrecacheSound("misc/get_item.mp3", true);
+	PrecacheSound("misc/baram/070.mp3", true);
+	PrecacheSound("misc/Doosan.mp3", true);
+	PrecacheSound("misc/task_complete.mp3", true);
+	PrecacheSound("misc/Americanooo2.mp3", true);
+	PrecacheSound("misc/djkoo.mp3", true);
+	PrecacheSound("misc/fun.mp3", true);
+	PrecacheSound("misc/omg.mp3", true);
+	PrecacheSound("misc/scatman3.mp3", true);
+	PrecacheSound("misc/yafeelsogood2.mp3", true);
+	PrecacheSound("misc/otherjoin.mp3", true);
+	PrecacheSound("misc/Orochi3.mp3", true);
+	PrecacheSound("misc/light2.mp3", true);
+	PrecacheSound("misc/tf_crowd_walla_intro.wav", true);
+	PrecacheSound("misc/joinserver.mp3", true);
+	PrecacheSound("misc/Goblins.mp3", true);
+	PrecacheSound("misc/Lightsmile.mp3", true);
+	PrecacheSound("misc/lolsssss.mp3", true);
+	AddFileToDownloadsTable("sound/misc/strengthen_fail.wav");
+	AddFileToDownloadsTable("sound/misc/strengthen_success.wav");
+	AddFileToDownloadsTable("sound/misc/strengthen_zero.wav");
+	AddFileToDownloadsTable("sound/misc/equip_broken.wav");
+	AddFileToDownloadsTable("sound/misc/equip_strengthen.wav");
+	AddFileToDownloadsTable("sound/misc/get_item.mp3");
+	AddFileToDownloadsTable("sound/misc/baram/070.mp3");
+	AddFileToDownloadsTable("sound/misc/Doosan.mp3");
+	AddFileToDownloadsTable("sound/misc/task_complete.mp3");
+	AddFileToDownloadsTable("sound/misc/Americanooo2.mp3");
+	AddFileToDownloadsTable("sound/misc/djkoo.mp3");
+	AddFileToDownloadsTable("sound/misc/fun.mp3");
+	AddFileToDownloadsTable("sound/misc/omg.mp3");
+	AddFileToDownloadsTable("sound/misc/scatman3.mp3");
+	AddFileToDownloadsTable("sound/misc/yafeelsogood2.mp3");
+	AddFileToDownloadsTable("sound/misc/otherjoin.mp3");
+	AddFileToDownloadsTable("sound/misc/Orochi3.mp3");
+	AddFileToDownloadsTable("sound/misc/light2.mp3");
+	AddFileToDownloadsTable("sound/misc/tf_crowd_walla_intro.wav");
+	AddFileToDownloadsTable("sound/misc/joinserver.mp3");
+	AddFileToDownloadsTable("sound/misc/Goblins.mp3");
+	AddFileToDownloadsTable("sound/misc/Lightsmile.mp3");
+	AddFileToDownloadsTable("sound/misc/lolsssss.mp3");
+	fire = PrecacheModel("materials/sprites/fire2.vmt", false);
+	white = PrecacheModel("materials/sprites/white.vmt", false);
+	g_HaloSprite = PrecacheModel("materials/sprites/halo01.vmt", false);
+	g_ExplosionSprite = PrecacheModel("sprites/sprite_fire01.vmt", false);
+	PrecacheSound("misc/1.wav", true);
+	PrecacheSound("misc/2.wav", true);
+	PrecacheSound("misc/3.wav", true);
+	PrecacheSound("misc/4.wav", true);
+	AddFileToDownloadsTable("sound/misc/1.wav");
+	AddFileToDownloadsTable("sound/misc/2.wav");
+	AddFileToDownloadsTable("sound/misc/3.wav");
+	AddFileToDownloadsTable("sound/misc/4.wav");
+	CreateTimer(1.0, playercheck, any:0, 0);
+	eventcheck = 0;
+	new eventroll = GetRandomInt(1, 10);
+	if (eventroll == 1)
+	{
+		pointevent = 1;
+	}
+	else
+	{
+		pointevent = 0;
+	}
+	strengthenevent = 0;
+	CreateTimer(2.0, SSLoad, any:0, 0);
+	return 0;
+}
+
+public Action:roundstart_event(Handle:Event, String:Name[], bool:Broadcast)
+{
+	PrintToChatAll("\x01플러그인 제작자는 Yvonne Strahovski(차마명수)이며,");
+	PrintToChatAll("\x01서버를 돌리는 사람은 김대중 입니다. 혼동 ㄴㄴ");
+	if (pointevent == 1)
+	{
+		PrintToChatAll("\x04이번맵은 포인트 2배 이벤트가 된 맵입니다.");
+	}
+	watime = 0;
+	return Action:3;
+}
+
+public Action:playercheck(Handle:timer, any:Client)
+{
+	new redtemp;
+	new bluetemp;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (isClientConnectedIngameAlive(i) == 1)
+		{
+			if (GetClientTeam(i) == 2)
+			{
+				redtemp += 1;
+			}
+			if (GetClientTeam(i) == 3)
+			{
+				bluetemp += 1;
+			}
+		}
+		i++;
+	}
+	teamalive[0] = redtemp;
+	teamalive[1] = bluetemp;
+	CreateTimer(1.0, playercheck, any:0, 0);
+	return Action:0;
+}
+
+public Action:Command_Nukem(client, args)
+{
+	if (bIsNuking == true)
+	{
+		PrintToConsole(client, "[SM] [SM] 핵이 준비되었습니다.");
+		return Action:3;
+	}
+	if (isClientConnectedIngame(client))
+	{
+		GetClientAbsOrigin(client, start_cor);
+		new String:User[32];
+		GetClientName(client, User, 31);
+		PrintToChatAll("[SM] :  %s 님의 핵공격을 감지했습니다, 우리는 모두 뒤질꺼에요!!!!", User);
+		PrintToServer("[Nukem] 어드민: %s 님의 핵공격이 서버에 감지되었습니다.", User);
+		lethal = true;
+		bIsNuking = true;
+		nuke_tmr = BOMB_FUSE;
+		CreateTimer(16.5, shake_timer, client, 0);
+		return Action:3;
+	}
+	PrintToConsole(client, "[SM] 어드민만이 이 명령어를 사용할수 있습니다!");
+	return Action:3;
+}
+
+public Action:Command_Nukem_jk(client, args)
+{
+	if (bIsNuking == true)
+	{
+		PrintToConsole(client, "[SM] 핵이 준비되었습니다.");
+		return Action:3;
+	}
+	if (isClientConnectedIngame(client))
+	{
+		GetClientAbsOrigin(client, start_cor);
+		new String:User[32];
+		GetClientName(client, User, 31);
+		PrintToChatAll("[SM] :  %s 님의 핵공격을 감지했습니다, 우리는 모두 뒤질꺼에요!!!!", User);
+		PrintToServer("[Nukem] 어드민: %s 님의 핵공격이 서버에 감지되었습니다.", User);
+		lethal = false;
+		bIsNuking = true;
+		nuke_tmr = BOMB_FUSE;
+		CreateTimer(16.5, shake_timer, client, 0);
+		return Action:3;
+	}
+	PrintToConsole(client, "[SM] 어드민만이 이 명령어를 사용할수 있습니다!");
+	return Action:3;
+}
+
+public Action:shake_timer(Handle:timer, any:client)
+{
+	env_shake(client, 10.0, 10000.0, 10.0, 150.0);
+	return Action:0;
+}
+
+public Action:nuke_timer(Handle:timer)
+{
+	if (bIsNuking)
+	{
+		new maxplayers = GetMaxClients();
+		nuke_tmr = nuke_tmr + -1;
+		if (0 < nuke_tmr)
+		{
+			if (nuke_tmr == 20)
+			{
+				EmitSoundToAll("misc/1.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+			if (nuke_tmr == 18)
+			{
+				EmitSoundToAll("misc/2.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+			if (nuke_tmr == 16)
+			{
+				EmitSoundToAll("misc/3.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+			new var1;
+			if (nuke_tmr > 5 && nuke_tmr < 11)
+			{
+				PrintToChatAll("%d 초후에 핵공격이 시작됩니다.", nuke_tmr + -5);
+				PrintCenterTextAll("%d 초후에 핵공격이 시작됩니다.", nuke_tmr + -5);
+			}
+			if (nuke_tmr == 5)
+			{
+				EmitSoundToAll("misc/4.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+				new color[4] = {250,250,250,255};
+				Fade(600, 600, color);
+				new Float:origin[3] = 0.0;
+				explodeall(origin);
+			}
+			if (nuke_tmr < 5)
+			{
+				if (nuke_tmr == 4)
+				{
+					start_cor[2] = start_cor[2] + 1000.0;
+					explodeall(start_cor);
+				}
+				else
+				{
+					new Float:rorigin[3] = 0.0;
+					new sb;
+					new i = 1;
+					while (i < 50)
+					{
+						rorigin = start_cor;
+						rorigin[0] = GetRandomFloat(0.0, 3000.0);
+						rorigin[1] = GetRandomFloat(0.0, 3000.0);
+						rorigin[2] = GetRandomFloat(0.0, 2000.0);
+						sb = GetRandomInt(0, 2);
+						if (!sb)
+						{
+							rorigin[0] = rorigin[0] * -1;
+						}
+						sb = GetRandomInt(0, 2);
+						if (!sb)
+						{
+							rorigin[1] = rorigin[1] * -1;
+						}
+						sb = GetRandomInt(0, 2);
+						if (!sb)
+						{
+							rorigin[2] = rorigin[2] * -1;
+						}
+						explodeall(rorigin);
+						i++;
+					}
+				}
+				new x = 1;
+				while (x <= maxplayers)
+				{
+					if (isClientConnectedIngame(x))
+					{
+						new rndkill = GetRandomInt(0, 9);
+						if (rndkill)
+						{
+						}
+						else
+						{
+							if (lethal == true)
+							{
+								ForcePlayerSuicide(x);
+							}
+							new Float:origin[3] = 0.0;
+							GetClientAbsOrigin(x, origin);
+							origin[2] = origin[2] - 26;
+							explode(origin);
+							IgniteEntity(x, 10.0, false, 0.0, false);
+						}
+					}
+					x++;
+				}
+			}
+		}
+		else
+		{
+			blowem_up();
+		}
+		return Action:0;
+	}
+	return Action:3;
+}
+
+public Action:blowem_up()
+{
+	bIsNuking = false;
+	nuke_tmr = 0;
+	if (lethal == true)
+	{
+		PrintCenterTextAll("핵이 폭발하였습니다.");
+		PrintToChatAll("핵이 폭발하였습니다.");
+		if (eventcheck == 1)
+		{
+			eventcheck = 0;
+		}
+	}
+	else
+	{
+		PrintToChatAll("하하하하! 이것은 장난이에요. 핵은 터지지 않습니다.");
+		PrintCenterTextAll("하하하하! 이것은 장난이에요. 핵은 터지지 않습니다.");
+	}
+	new Float:origin[3] = 0.0;
+	new maxpl = GetMaxClients();
+	new a = 1;
+	while (a <= maxpl)
+	{
+		new var1;
+		if (IsClientConnected(a) && IsClientInGame(a))
+		{
+			GetClientAbsOrigin(a, origin);
+			origin[2] = origin[2] - 26;
+			explode(origin);
+			if (lethal == true)
+			{
+				ForcePlayerSuicide(a);
+			}
+		}
+		a++;
+	}
+	return Action:3;
+}
+
+public Fade(duration, time, color[4])
+{
+	new Handle:hBf = StartMessageAll("Fade", 0);
+	if (hBf)
+	{
+		BfWriteShort(hBf, duration);
+		BfWriteShort(hBf, time);
+		BfWriteShort(hBf, 1);
+		BfWriteByte(hBf, color[0]);
+		BfWriteByte(hBf, color[1]);
+		BfWriteByte(hBf, color[2]);
+		BfWriteByte(hBf, color[3]);
+		EndMessage();
+	}
+	return 0;
+}
+
+env_shake(client, Float:Amplitude, Float:Radius, Float:Duration, Float:Frequency)
+{
+	decl Ent;
+	decl Float:ClientOrigin[3];
+	Ent = CreateEntityByName("env_shake", -1);
+	if (DispatchSpawn(Ent))
+	{
+		DispatchKeyValueFloat(Ent, "amplitude", Amplitude);
+		DispatchKeyValueFloat(Ent, "radius", Radius);
+		DispatchKeyValueFloat(Ent, "duration", Duration);
+		DispatchKeyValueFloat(Ent, "frequency", Frequency);
+		SetVariantString("spawnflags 8");
+		AcceptEntityInput(Ent, "AddOutput", -1, -1, 0);
+		AcceptEntityInput(Ent, "StartShake", client, -1, 0);
+		GetClientAbsOrigin(client, ClientOrigin);
+		TeleportEntity(Ent, ClientOrigin, NULL_VECTOR, NULL_VECTOR);
+		CreateTimer(30.0, KillEnt, Ent, 0);
+	}
+	return 0;
+}
+
+public Action:KillEnt(Handle:Timer, any:Ent)
+{
+	if (IsValidEdict(Ent))
+	{
+		AcceptEntityInput(Ent, "Kill", 0, -1, 0);
+	}
+	return Action:0;
+}
+
+explodeall(Float:vec1[3])
+{
+	vec1[2] += 10;
+	new color[4] = {188,220,255,255};
+	TE_SetupExplosion(vec1, g_ExplosionSprite, 10.0, 1, 0, 0, 5000, 10492, 67);
+	TE_SendToAll(0.0);
+	TE_SetupBeamRingPoint(vec1, 10.0, 1500.0, fire, g_HaloSprite, 0, 66, 6.0, 128.0, 0.2, color, 25, 0);
+	TE_SendToAll(0.0);
+	return 0;
+}
+
+explode(Float:vec1[3])
+{
+	new color[4] = {188,220,255,200};
+	TE_SetupExplosion(vec1, g_ExplosionSprite, 10.0, 1, 0, 0, 5000, 10492, 67);
+	TE_SendToAll(0.0);
+	TE_SetupBeamRingPoint(vec1, 10.0, 500.0, white, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, color, 10, 0);
+	TE_SendToAll(0.0);
+	return 0;
+}
+
+public EmitSoundFromOrigin(String:sound[], Float:orig[3])
+{
+	EmitSoundToAll(sound, 0, 0, 75, 0, 1.0, 100, -1, orig, NULL_VECTOR, true, 0.0);
+	return 0;
+}
+
+public OnClientPutInServer(Client)
+{
+	nextgivetime[Client] = GetEngineTime();
+	waitforcredit[Client] = 0;
+	nextgivetime2[Client] = GetEngineTime();
+	waitforcredit2[Client] = 0;
+	new var1;
+	if (!IsFakeClient(Client) && isClientConnectedIngame(Client))
+	{
+		spawncheck[Client] = 0;
+		Knifeon[Client] = 0;
+		strengthentime[Client] = 0;
+		CreateTimer(2.0, Load, Client, 0);
+		CreateTimer(2.0, SLoad, Client, 0);
+		SDKHook(Client, SDKHookType:2, OnTakeDamageHook);
+		SDKHook(Client, SDKHookType:5, PostThinkHook);
+		HookEvent("player_spawn", EventSpawn, EventHookMode:1);
+		PrintToChat(Client, "\x03강화,운지플러그인 제작자, 서버주인 : \x04Yvonne Strahovski(차마명수)");
+		PrintToChat(Client, "\x03어드민, 서버 돌리미 : \x04김대중");
+		EmitSoundToClient(Client, "misc/joinserver.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		if (pointevent == 1)
+		{
+			PrintToChat(Client, "\x03이번맵은 포인트 2배 이벤트 맵입니다.");
+		}
+		if (strengthenevent == 1)
+		{
+			PrintToChat(Client, "\x03이번맵은 강화 확률 증가 이벤트 맵입니다.");
+		}
+	}
+	return 0;
+}
+
+public Action:EventTeam(Handle:event, String:Name[], bool:Broadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new team = GetEventInt(event, "team");
+	new oldteam = GetEventInt(event, "oldteam");
+	new bool:disconnect = GetEventBool(event, "disconnect");
+	new String:name[128];
+	GetClientName(client, name, 128);
+	new bool:stillgood;
+	new var1;
+	if (isClientConnectedIngame(client) && disconnect)
+	{
+		if (!IsFakeClient(client))
+		{
+			if (team != oldteam)
+			{
+				new var2;
+				if (oldteam == 1 || oldteam)
+				{
+					new var3;
+					if (team == 2 || team == 3)
+					{
+						nextgivetime2[client] = GetEngineTime() + timepergive2;
+						waitforcredit2[client] = 1;
+						new totalsecond = timepergive2;
+						new minute = totalsecond / 60;
+						new second = totalsecond % 60;
+						decl String:msg[32];
+						new var4;
+						if (second && minute)
+						{
+							Format(msg, 30, "%d분 %d초", minute, second);
+						}
+						else
+						{
+							new var5;
+							if (second && minute)
+							{
+								Format(msg, 30, "%d초", second);
+							}
+							new var6;
+							if (second && minute)
+							{
+								Format(msg, 30, "%d분", minute);
+							}
+						}
+						PrintToChat(client, "\x03%s 후에 %d 포인트만큼 받을 것입니다", msg, Accountgive2);
+						stillgood = true;
+					}
+				}
+				new var7;
+				if (oldteam == 2 || oldteam == 3)
+				{
+					new var8;
+					if (team == 1 || team)
+					{
+						new var9;
+						if (!stillgood && !disconnect && waitforcredit2[client])
+						{
+							waitforcredit2[client] = 0;
+							PrintToChat(client, "\x03시간제 포인트 지급이 보류되었습니다. 포인트를 받으려면 게임을 하세요");
+						}
+					}
+				}
+			}
+		}
+	}
+	return Action:0;
+}
+
+public Action:Command_event(Client, Arguments)
+{
+	if (!pointevent)
+	{
+		new String:Name[32];
+		GetClientName(Client, Name, 32);
+		EmitSoundToAll("misc/baram/070.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		PrintToChatAll("어드민 \x04%s\x01님이 포인트 \x042배\x01 이벤트를 열었습니다!", Name);
+		PrintCenterTextAll("어드민 %s님이 포인트 2배 이벤트를 열었습니다!", Name);
+		pointevent = 1;
+	}
+	return Action:3;
+}
+
+public Action:Command_pointall(Client, Arguments)
+{
+	if (Arguments < 1)
+	{
+		PrintToChat(Client, "\x04[%s] - 사용법 : !pointall \"수량\"", ServerName);
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new Converted_Money;
+	new String:Money[32];
+	GetCmdArg(1, Money, 32);
+	GetClientName(Client, Player_Name, 32);
+	StringToIntEx(Money, Converted_Money, 10);
+	EmitSoundToAll("misc/baram/070.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+	PrintToChatAll("어드민 \x04%s\x01님이 모든 유저에게 \x04%d\x01 포인트만큼 증정하였습니다!", Player_Name, Converted_Money);
+	PrintCenterTextAll("어드민 %s님이 모든 유저에게 %d 포인트만큼 증정하였습니다!", Player_Name, Converted_Money);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (isClientConnectedIngame(i) == 1)
+		{
+			new var1 = PointK[i];
+			var1 = var1[Converted_Money];
+		}
+		i++;
+	}
+	return Action:3;
+}
+
+public Action:Command_developed(client, Arguments)
+{
+	if (Arguments < 1)
+	{
+		return Action:3;
+	}
+	new String:Name[32];
+	new Converted_Money;
+	new String:Money[32];
+	GetCmdArg(1, Money, 32);
+	GetClientName(client, Name, 32);
+	StringToIntEx(Money, Converted_Money, 10);
+	new var2;
+	if (Converted_Money == 1 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)))
+	{
+		PrintToChat(client, "\x04복권을 써서 디제이쿠의 버프를 받았습니다.");
+		eventcheck = 1;
+		EmitSoundToAll("misc/djkoo.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		if (GetClientTeam(client) == 2)
+		{
+			PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 블루팀은 8초 동안 얼어버립니다", Name);
+			ServerCommand("ma_freeze #B");
+			CreateTimer(7.6, unfreeze, GetClientTeam(client), 0);
+		}
+		PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 레드팀은 8초 동안 얼어버립니다", Name);
+		ServerCommand("ma_freeze #R");
+		CreateTimer(7.6, unfreeze, GetClientTeam(client), 0);
+	}
+	new var3;
+	if (Converted_Money == 2 && pointevent)
+	{
+		EmitSoundToAll("misc/tf_crowd_walla_intro.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04모든 유저 포인트 2배 이벤트\x01에 당첨 되셨습니다!", ServerName, Name);
+		PrintToChatAll("\x04[%s] - 맵이 바뀔때까지 포인트 2배 이벤트는 유지됩니다! (2배적용 : 메딕 포인트 , 킬포인트)", ServerName);
+		PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 모든 유저 포인트 2배 이벤트에 당첨 되셨습니다!", Name);
+		pointevent = 1;
+	}
+	new var5;
+	if (Converted_Money == 3 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)))
+	{
+		PrintToChat(client, "\x04복권을 써서 상대편 불태우기 버프를 받았습니다.");
+		eventcheck = 1;
+		EmitSoundToAll("misc/light2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		if (GetClientTeam(client) == 2)
+		{
+			PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 블루팀은 8초 동안 불태워집니다", Name);
+			ServerCommand("ma_burn #B");
+			CreateTimer(7.6, unburn, GetClientTeam(client), 0);
+		}
+		PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 레드팀은 8초 동안 불태워집니다", Name);
+		ServerCommand("ma_burn #R");
+		CreateTimer(7.6, unburn, GetClientTeam(client), 0);
+	}
+	new var7;
+	if (Converted_Money == 4 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)) && teamalive[0] >= 1 && teamalive[1] >= 1)
+	{
+		eventcheck = 1;
+		EmitSoundToAll("misc/Orochi3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		ServerCommand("ma_freeze #all 1");
+		CreateTimer(0.1, godmode, client, 0);
+		muattacker = client;
+		PrintToChatAll("\x04[%s] - %s님이 당첨된 복권에 의해 복권의 특수 효과가 발동됩니다.", ServerName, Name);
+		PrintCenterTextAll("%s님이 당첨된 복권에 의해 복권의 특수 효과가 발동됩니다.", Name);
+	}
+	new var8;
+	if (Converted_Money == 5 && strengthenevent)
+	{
+		EmitSoundToAll("misc/scatman3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04모든 유저 강화확률 증가 이벤트\x01에 당첨 되셨습니다!", ServerName, Name);
+		PrintToChatAll("\x04[%s] - 맵이 바뀔때까지 강화 확률 증가 이벤트는 유지됩니다!", ServerName);
+		PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 모든 유저 강화 확률 증가 이벤트에 당첨 되셨습니다!", Name);
+		strengthenevent = 1;
+	}
+	return Action:3;
+}
+
+public OnClientDisconnect(Client)
+{
+	if (LoadCheck[Client] == 1)
+	{
+		Save(Client);
+		SSave(Client);
+	}
+	strengthentime[Client] = 0;
+	Knifeon[Client] = 0;
+	return 0;
+}
+
+public PostThinkHook(client)
+{
+	if (isClientConnectedIngameAlive(client))
+	{
+		new TFClassType:class = TF2_GetPlayerClass(client);
+		new var1;
+		if (waitforcredit[client] && class == TFClassType:5)
+		{
+			if (nextgivetime[client] <= GetEngineTime())
+			{
+				new String:Name[32];
+				GetClientName(client, Name, 32);
+				new pointtemp = 0 + 1;
+				new Lotto = GetRandomInt(1, 10000);
+				new var2;
+				if (Lotto <= 70 && Lotto != 22)
+				{
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 메딕으로 플레이하다가 \x04100\x01포인트를 추가로 얻으셨습니다.", ServerName, Name);
+					pointtemp += 100;
+				}
+				new var3;
+				if (Lotto >= 3000 && Lotto <= 4000)
+				{
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 메딕으로 플레이하다가 \x045\x01포인트를 추가로 얻으셨습니다.", ServerName, Name);
+					pointtemp += 5;
+				}
+				new var4;
+				if (Lotto == 777 || Lotto == 22)
+				{
+					EmitSoundToAll("misc/Doosan.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 메딕으로 플레이하다가 \x041000\x01포인트를 추가로 얻으셨습니다.", ServerName, Name);
+					pointtemp += 1000;
+				}
+				new var5;
+				if (Lotto >= 7000 && Lotto <= 7222)
+				{
+					new drakedog = GetRandomInt(1, 222222);
+					if (drakedog == 222222)
+					{
+						EmitSoundToAll("misc/omg.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 메딕으로 플레이하다가 \x040.00000002222%\x01 확률로 \x0422222\x01포인트를 추가로 얻으셨습니다.", ServerName, Name);
+						pointtemp += 22222;
+					}
+					else
+					{
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 메딕으로 플레이하다가 \x0422\x01포인트를 추가로 얻으셨습니다.", ServerName, Name);
+						pointtemp += 22;
+					}
+				}
+				if (pointevent == 1)
+				{
+					pointtemp *= 2;
+				}
+				new var10 = PointK[client];
+				var10 = var10[pointtemp];
+				nextgivetime[client] = GetEngineTime() + timepergive;
+			}
+		}
+		if (waitforcredit2[client])
+		{
+			if (nextgivetime2[client] <= GetEngineTime())
+			{
+				PrintToChat(client, "\x03게임을 해서 %d 포인트를 받았습니다.", Accountgive2);
+				new var11 = PointK[client];
+				var11 = var11[Accountgive2];
+				nextgivetime2[client] = GetEngineTime() + timepergive2;
+				new totalsecond = timepergive2;
+				new minute = totalsecond / 60;
+				new second = totalsecond % 60;
+				decl String:msg[32];
+				new var6;
+				if (second && minute)
+				{
+					Format(msg, 30, "%d분 %d초", minute, second);
+				}
+				else
+				{
+					new var7;
+					if (second && minute)
+					{
+						Format(msg, 30, "%d초", second);
+					}
+					new var8;
+					if (second && minute)
+					{
+						Format(msg, 30, "%d분", minute);
+					}
+				}
+				PrintToChat(client, "\x03%s 후에 %d 포인트를 받을 것입니다.", msg, Accountgive2);
+			}
+		}
+	}
+	new Float:now = GetEngineTime();
+	new var9;
+	if (nextsensoractivetime[client] <= now && righthud[client] == 1)
+	{
+		nextsensoractivetime[client] = now + 0.4;
+		decl String:msg[256];
+		Format(msg, 255, "내 강화수치 : %d강\n내 포인트 : %d\n\nRED팀 생존자 : %d\nBLUE팀 생존자 : %d\n제작자 : Yvonne Strahovski(차마명수)", STRENGTHEN[client], PointK[client], teamalive, 2912 + 4);
+		sendKeyHintTextMsg(client, "%s", msg);
+	}
+	return 0;
+}
+
+public Action:EventSpawn(Handle:Event, String:Name[], bool:Broadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(Event, "userid"));
+	nextsensoractivetime[client] = GetEngineTime() + 0.5;
+	new bool:disconnect = GetEventBool(Event, "disconnect");
+	new TFClassType:class = GetEventInt(Event, "class");
+	new var1;
+	if (isClientConnectedIngame(client) && disconnect && class == TFClassType:5)
+	{
+		if (!spawncheck[client])
+		{
+			PrintToChat(client, "\x04메딕은 생존시 %d초에 %d포인트씩 얻습니다. 메딕 해라 꼭 해라 두번 해라", timepergive, Accountgive);
+		}
+		spawncheck[client] += 1;
+		nextgivetime[client] = GetEngineTime() + timepergive;
+		waitforcredit[client] = 1;
+	}
+	return Action:3;
+}
+
+public Action:Healthpack(Handle:timer, any:client)
+{
+	SetEntityHealth(client, GetClientHealth(client) + 100);
+	return Action:0;
+}
+
+public Action:Command_SInformation(Client, Arguments)
+{
+	if (Arguments < 1)
+	{
+		PrintToChat(Client, "\x04[%s] - 사용법 : !sinfo <이름>", ServerName);
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[128];
+			GetClientName(i, Other, 128);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "\x04[%s]\x01 - %s님을 찾을수 없습니다.", ServerName, Player_Name);
+		return Action:3;
+	}
+	new String:steamid[32];
+	GetClientAuthString(Target, steamid, 32);
+	GetClientName(Target, Player_Name, 32);
+	new String:Point[256];
+	new String:RKDGHK[256];
+	new String:Unknown[256];
+	new String:Unknown2[256];
+	new String:Unknown3[256];
+	new Handle:Panel = CreatePanel(Handle:0);
+	new damagetemp;
+	new strengthencheck = STRENGTHEN[Target];
+	if (strengthencheck <= 23)
+	{
+		if (strengthencheck <= 12)
+		{
+			damagetemp = strengthencheck + damagetemp;
+		}
+		if (strengthencheck > 13)
+		{
+			damagetemp = strengthencheck * 2 + -8 + damagetemp;
+		}
+	}
+	if (strengthencheck >= 24)
+	{
+		if (strengthencheck <= 30)
+		{
+			strengthencheck = 24;
+			while (STRENGTHEN[Target] >= strengthencheck)
+			{
+				highdamage = strengthenfor + highdamage;
+				if (STRENGTHEN[Target] <= 28)
+				{
+					strengthenfor = strengthenfor + 1;
+				}
+				else
+				{
+					strengthenfor = strengthenfor + 3;
+				}
+				strengthencheck++;
+			}
+			damagetemp = highdamage + damagetemp;
+		}
+	}
+	if (StrEqual(steamid, "STEAM_0:1:35546819", false))
+	{
+		if (StrEqual(Player_Name, "Alexei Volkoff", false))
+		{
+			Format(Point, 256, "%s 님의 포인트 : Unknown", Player_Name);
+			Format(RKDGHK, 256, "%s 님의 칼 : Unknown강", Player_Name);
+			Format(Unknown, 256, "그의 정보는 암호화가 되서 볼수 없습니다.");
+			SetPanelTitle(Panel, "--=    상대방의 정보   =--", false);
+			DrawPanelText(Panel, "========================");
+			DrawPanelText(Panel, Point);
+			DrawPanelText(Panel, RKDGHK);
+			DrawPanelText(Panel, Unknown);
+			DrawPanelText(Panel, "------------------------");
+			DrawPanelItem(Panel, "나가기", 0);
+			DrawPanelText(Panel, "========================");
+		}
+		else
+		{
+			Format(Point, 256, "%s 님의 포인트 : 2147483648", Player_Name);
+			Format(RKDGHK, 256, "%s 님의 칼 : %d강", Player_Name, STRENGTHEN[Target]);
+			if (STRENGTHEN[Target] == 1009900)
+			{
+				Format(Unknown, 256, "%s 님의 칼 추가 데미지 : *1009900%%", Player_Name);
+				Format(Unknown2, 256, "%s 님의 크리티컬 확률 : 100%%", Player_Name);
+			}
+			else
+			{
+				Format(Unknown, 256, "%s 님의 칼 추가 데미지 : +%d", Player_Name, damagetemp);
+				if (STRENGTHEN[Target] >= 12)
+				{
+					Format(Unknown2, 256, "%s 님의 크리티컬 확률 : %d%%", Player_Name, RoundToNearest(STRENGTHENcrits[STRENGTHEN[Target][-2]] * 100));
+				}
+				Format(Unknown2, 256, "%s 님의 크리티컬 확률 : %d%%", Player_Name, RoundToNearest(STRENGTHENcrits[0] * 100));
+			}
+			if (STRENGTHEN[Target] == 1009900)
+			{
+				Format(Unknown3, 256, "★특수 효과 : 적 죽일시 체력 + 50");
+			}
+			SetPanelTitle(Panel, "--=    상대방의 정보   =--", false);
+			DrawPanelText(Panel, "========================");
+			DrawPanelText(Panel, Point);
+			DrawPanelText(Panel, RKDGHK);
+			DrawPanelText(Panel, Unknown);
+			DrawPanelText(Panel, Unknown2);
+			DrawPanelText(Panel, Unknown3);
+			DrawPanelText(Panel, "------------------------");
+			DrawPanelItem(Panel, "나가기", 0);
+			DrawPanelText(Panel, "========================");
+		}
+	}
+	else
+	{
+		Format(Point, 256, "%s 님의 포인트 : %d", Player_Name, PointK[Target]);
+		Format(RKDGHK, 256, "%s 님의 칼 : %d강", Player_Name, STRENGTHEN[Target]);
+		Format(Unknown, 256, "%s 님의 칼 추가 데미지 : +%d", Player_Name, damagetemp);
+		if (STRENGTHEN[Target] >= 12)
+		{
+			Format(Unknown2, 256, "%s 님의 크리티컬 확률 : %d%%", Player_Name, RoundToNearest(STRENGTHENcrits[STRENGTHEN[Target][-2]] * 100));
+		}
+		else
+		{
+			Format(Unknown2, 256, "%s 님의 크리티컬 확률 : %d%%", Player_Name, RoundToNearest(STRENGTHENcrits[0] * 100));
+		}
+		SetPanelTitle(Panel, "--=    상대방의 정보   =--", false);
+		DrawPanelText(Panel, "========================");
+		DrawPanelText(Panel, Point);
+		DrawPanelText(Panel, RKDGHK);
+		DrawPanelText(Panel, Unknown);
+		DrawPanelText(Panel, Unknown2);
+		DrawPanelText(Panel, "------------------------");
+		DrawPanelItem(Panel, "나가기", 0);
+		DrawPanelText(Panel, "========================");
+	}
+	SendPanelToClient(Panel, Client, Menu_SInformation, 30);
+	CloseHandle(Panel);
+	return Action:3;
+}
+
+public Action:Command_Strengthen(Client, Arguments)
+{
+	if (Arguments < 2)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 01");
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new String:Given_St[32];
+	new Converted_St;
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	GetCmdArg(2, Given_St, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[128];
+			GetClientName(i, Other, 128);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 02");
+		return Action:3;
+	}
+	StringToIntEx(Given_St, Converted_St, 10);
+	if (0 > Converted_St)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 03");
+		return Action:3;
+	}
+	GetClientName(Target, Player_Name, 32);
+	STRENGTHEN[Target] = Converted_St;
+	if (Converted_St > 11)
+	{
+		EmitSoundToAll("misc/strengthen_success.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		PrintToChatAll("\x04%s\x01님이\x04 +%d \x01칼 강화에 성공 하셨습니다!", Player_Name, Converted_St);
+		PrintCenterTextAll("%s님이 +%d 칼 강화에 성공 하셨습니다!", Player_Name, Converted_St);
+	}
+	return Action:3;
+}
+
+public Action:Command_2Strengthen(Client, Arguments)
+{
+	if (Arguments < 2)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 01");
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new String:Given_St[32];
+	new Converted_St;
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	GetCmdArg(2, Given_St, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[128];
+			GetClientName(i, Other, 128);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 02");
+		return Action:3;
+	}
+	StringToIntEx(Given_St, Converted_St, 10);
+	if (0 > Converted_St)
+	{
+		PrintToChat(Client, "Warning : Unknown Command - Error 03");
+		return Action:3;
+	}
+	STRENGTHEN[Target] = Converted_St;
+	return Action:3;
+}
+
+public Action:Command_GiveMoney(Client, Arguments)
+{
+	new String:Client_Name[128];
+	if (Arguments < 2)
+	{
+		PrintToChat(Client, "\x04[%s] - 사용법 : !sgift <이름> <머니>", ServerName);
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new String:Given_Money[32];
+	new Converted_Money;
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	GetCmdArg(2, Given_Money, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[128];
+			GetClientName(i, Other, 128);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "\x04[%s]\x01 - %s님을 찾을수 없습니다.", ServerName, Player_Name);
+		return Action:3;
+	}
+	StringToIntEx(Given_Money, Converted_Money, 10);
+	if (PointK[Client] < Converted_Money)
+	{
+		PrintToChat(Client, "\x04[%s]\x01 - 그만한 포인트를 가지고 계시지 않습니다!", ServerName);
+		return Action:3;
+	}
+	if (0 > Converted_Money)
+	{
+		PrintToChat(Client, "\x04[%s]\x01 - 잘못된 금액입니다.", ServerName);
+		return Action:3;
+	}
+	new String:sName[32];
+	GetClientName(Target, sName, 32);
+	GetClientName(Target, Player_Name, 32);
+	GetClientName(Client, Client_Name, 32);
+	PointK[Client] = PointK[Client] - Converted_Money;
+	PointK[Target] = PointK[Target][Converted_Money];
+	PrintToChat(Client, "\x04[%s] \x01- 당신은 \x04[%s]\x01에게 \x04[%d]\x01포인트을 줬습니다.", ServerName, Player_Name, Converted_Money);
+	PrintToChat(Target, "\x04[%s] \x01- 당신은 \x04[%d]\x01포인트을 \x04[%s]\x01에게 받았습니다.", ServerName, Converted_Money, Client_Name);
+	return Action:3;
+}
+
+public Action:Command_RemoveData(Client, Arguments)
+{
+	new String:Client_Name[128];
+	if (Arguments < 1)
+	{
+		PrintToChat(Client, "\x04[%s] - 사용법 : !sremove <닉네임>", ServerName);
+		return Action:3;
+	}
+	new String:Player_Name[32];
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[128];
+			GetClientName(i, Other, 128);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "\x04[%s]\x01 - %s님을 찾을수 없습니다.", ServerName, Player_Name);
+		return Action:3;
+	}
+	GetClientName(Target, Player_Name, 32);
+	GetClientName(Client, Client_Name, 32);
+	PointK[Target] = 0;
+	STRENGTHEN[Target] = 0;
+	PrintToChat(Client, "\x04[%s] \x01- %s님의 데이터가 초기화 됬습니다.", ServerName, Player_Name);
+	PrintToChat(Target, "\x04[%s] \x01- 당신의 데이터가 초기화 됬습니다.", ServerName);
+	return Action:3;
+}
+
+public Action:Command_Pluspoint(Client, Arguments)
+{
+	new String:Player_Name[32];
+	new String:Given_Money[32];
+	new Converted_Money;
+	new Max;
+	new Target = -1;
+	GetCmdArg(1, Player_Name, 32);
+	GetCmdArg(2, Given_Money, 32);
+	Max = GetMaxClients();
+	new i = 1;
+	while (i <= Max)
+	{
+		if (IsClientConnected(i))
+		{
+			new String:Other[32];
+			GetClientName(i, Other, 32);
+			if (StrContains(Other, Player_Name, false) != -1)
+			{
+				Target = i;
+			}
+		}
+		i++;
+	}
+	if (Target == -1)
+	{
+		PrintToChat(Client, "\x04[%s] - %s님을 찾을수 없습니다.", ServerName, Player_Name);
+		return Action:3;
+	}
+	new String:sName[32];
+	GetClientName(Target, sName, 32);
+	StringToIntEx(Given_Money, Converted_Money, 10);
+	PointK[Target] = PointK[Target][Converted_Money];
+	PrintToChat(Client, "\x04[%s] - %s님에게 %d만큼 포인트를 주었습니다.", ServerName, sName, Converted_Money);
+	PrintToChat(Target, "\x04[%s] - 당신은 %d만큼 어드민에게 포인트를 받았습니다.", ServerName, Converted_Money);
+	return Action:3;
+}
+
+public Menu_SInformation(Handle:menu, MenuAction:action, param1, param2)
+{
+	return 0;
+}
+
+public Command_LottoMenu(Client)
+{
+	new String:POINT[256];
+	new String:Price[256];
+	new String:Price2[256];
+	new String:Price3[256];
+	new String:ST1[256];
+	Format(POINT, 256, "나의 포인트 : %d", PointK[Client]);
+	Format(Price, 256, "일반 복권 구입 (%d포인트)", 5);
+	Format(Price2, 256, "강화권 복권 구입 (%d포인트)", 10000);
+	Format(Price3, 256, "포인트 복권 구입 (%d포인트)", 50);
+	Format(ST1, 256, "★현재 복권 총 판매금액 : %d", Lottoamount);
+	new Handle:Panel = CreatePanel(Handle:0);
+	SetPanelTitle(Panel, "-------= 복권 메뉴 =-------", false);
+	DrawPanelText(Panel, POINT);
+	DrawPanelText(Panel, ST1);
+	DrawPanelText(Panel, "복권 1등은 5만포인트+복권 총 판매금액 입니다.");
+	DrawPanelText(Panel, "일반 복권에서는 특수효과도 뜹니당.");
+	DrawPanelText(Panel, "**제작자 : Yvonne Strahovski(차마명수)**");
+	DrawPanelText(Panel, "----------------------------");
+	DrawPanelItem(Panel, Price, 0);
+	DrawPanelItem(Panel, Price2, 0);
+	DrawPanelItem(Panel, Price3, 0);
+	DrawPanelText(Panel, "----------------------------");
+	DrawPanelItem(Panel, "나가기", 0);
+	DrawPanelItem(Panel, "메뉴 새로고침", 0);
+	DrawPanelText(Panel, "============================");
+	SendPanelToClient(Panel, Client, Menu_Lotto, 30);
+	CloseHandle(Panel);
+	return 0;
+}
+
+public Menu_Lotto(Handle:Menu, MenuAction:Click, client, Parameter2)
+{
+	new Handle:Panel = CreatePanel(Handle:0);
+	new String:Name[32];
+	GetClientName(client, Name, 32);
+	if (Click == MenuAction:4)
+	{
+		decl Roll;
+		new result;
+		if (Parameter2 == 1)
+		{
+			if (PointK[client] >= 5)
+			{
+				Roll = GetRandomInt(1, 125000);
+				PointK[client] += -5;
+				Lottoamount = Lottoamount + 5;
+				if (STRENGTHEN[client] <= 10)
+				{
+					if (Roll <= 2)
+					{
+						EmitSoundToAll("misc/scatman3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.0001%\x01 확률로 \x04+15\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 15;
+						result = 1;
+					}
+					new var1;
+					if (Roll >= 100 && Roll <= 105)
+					{
+						EmitSoundToAll("misc/Americanooo2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.004%\x01 확률로 \x04+13\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 13;
+						result = 1;
+					}
+					new var2;
+					if (Roll >= 1000 && Roll <= 1020)
+					{
+						EmitSoundToAll("misc/task_complete.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.01%\x01 확률로 \x04+12\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 12;
+						result = 1;
+					}
+				}
+				if (Roll == 22)
+				{
+					EmitSoundToAll("misc/omg.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00001%\x01 확률로 \x041등에\x01당첨되셔서 \x04%d\x01포인트를 얻으셨습니다.", ServerName, Name, Lottoamount + 50000);
+					PrintToChatAll("\x04[%s] - \x04하지만 세금 10% 떼가므로 %d밖에 못받음 ㅋ", ServerName, Lottoamount + 50000 / 10);
+					new var50 = PointK[client];
+					var50 = var50[Lottoamount + 50000 / 10];
+					Lottoamount = 0;
+					result = 1;
+				}
+				new var3;
+				if (Roll >= 30 && Roll <= 60)
+				{
+					new Rollanother = GetRandomInt(1, 20);
+					new var4;
+					if (Rollanother >= 2 || strengthenevent == 1)
+					{
+						EmitSoundToAll("misc/Doosan.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.0005%\x01 확률로 \x042등에\x01당첨되셔서 \x041만\x01포인트를 얻으셨습니다.", ServerName, Name);
+						PointK[client] += 10000;
+						result = 1;
+					}
+					new var5;
+					if (Rollanother == 1 && strengthenevent)
+					{
+						EmitSoundToAll("misc/scatman3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04모든 유저 강화확률 증가 이벤트\x01에 당첨 되셨습니다!", ServerName, Name);
+						PrintToChatAll("\x04[%s] - 맵이 바뀔때까지 강화 확률 증가 이벤트는 유지됩니다!", ServerName);
+						PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 모든 유저 강화 확률 증가 이벤트에 당첨 되셨습니다!", Name);
+						strengthenevent = 1;
+					}
+				}
+				new var6;
+				if (Roll >= 600 && Roll <= 700)
+				{
+					EmitSoundToAll("misc/yafeelsogood2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.002%\x01 확률로 \x043등에\x01당첨되셔서 \x045000\x01포인트를 얻으셨습니다.", ServerName, Name);
+					PointK[client] += 5000;
+					result = 1;
+				}
+				new var7;
+				if (Roll >= 2000 && Roll <= 3300)
+				{
+					EmitSoundToClient(client, "misc/task_complete.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChat(client, "\x04[%s] - \x01당신은 복권에서 \x040.03%\x01 확률로 \x044등에\x01당첨되셔서 \x04500\x01포인트를 얻으셨습니다.", ServerName);
+					PointK[client] += 500;
+					result = 1;
+				}
+				if (!result)
+				{
+					new Roll2 = GetRandomInt(1, 35000);
+					if (Roll2 == 17500)
+					{
+						EmitSoundToAll("misc/fun.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", ServerName, Name);
+						PrintToChatAll("\x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", Name);
+						PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 강화,포인트 초기화에 당첨 되셨습니다!", Name);
+						STRENGTHEN[client] = 0;
+						PointK[client] = 0;
+					}
+					new var8;
+					if (Roll2 >= 20000 && Roll2 <= 20005)
+					{
+						decl Roll3;
+						GetRandomInt(1, 4);
+						new var9;
+						if (Roll3 <= 3 && eventcheck)
+						{
+							eventcheck = 1;
+							GetClientAbsOrigin(client, start_cor);
+							new String:User[32];
+							GetClientName(client, User, 32);
+							PrintToChatAll("[SM] :  %s 님의 복권을 뽑다가 핵공격에 당첨됬습니다, 우리는 모두 뒤질꺼에요!!!!", User);
+							PrintToServer("[Nukem] %s 님의 핵공격이 서버에 감지되었습니다.", User);
+							lethal = true;
+							bIsNuking = true;
+							nuke_tmr = BOMB_FUSE;
+							CreateTimer(16.5, shake_timer, client, 0);
+						}
+						new var10;
+						if ((Roll3 == 4 || eventcheck == 1) && pointevent)
+						{
+							EmitSoundToAll("misc/tf_crowd_walla_intro.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+							PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04모든 유저 포인트 2배 이벤트\x01에 당첨 되셨습니다!", ServerName, Name);
+							PrintToChatAll("\x04[%s] - 맵이 바뀔때까지 포인트 2배 이벤트는 유지됩니다! (2배적용 : 메딕 포인트 , 킬포인트)", ServerName);
+							PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 모든 유저 포인트 2배 이벤트에 당첨 되셨습니다!", Name);
+							pointevent = 1;
+						}
+					}
+					new var12;
+					if (Roll2 <= 200 && isClientConnectedIngameAlive(client))
+					{
+						new client2 = GetClientUserId(client);
+						ServerCommand("sm_evilrocket #%i", client2);
+						PrintToChat(client, "\x04[%s] - \x01복권에서 무료 노로호 시승권에 당첨되셨습니다. 축하드립니다.", ServerName);
+					}
+					new var14;
+					if (Roll2 == 5000 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)))
+					{
+						PrintToChat(client, "\x04복권을 써서 디제이쿠의 버프를 받았습니다.");
+						eventcheck = 1;
+						EmitSoundToAll("misc/djkoo.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						if (GetClientTeam(client) == 2)
+						{
+							PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 블루팀은 8초 동안 얼어버립니다", Name);
+							ServerCommand("ma_freeze #B");
+							CreateTimer(7.6, unfreeze, GetClientTeam(client), 0);
+						}
+						PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 레드팀은 8초 동안 얼어버립니다", Name);
+						ServerCommand("ma_freeze #R");
+						CreateTimer(7.6, unfreeze, GetClientTeam(client), 0);
+					}
+					new var16;
+					if (Roll2 == 1000 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)))
+					{
+						PrintToChat(client, "\x04복권을 써서 상대편 불태우기 버프를 받았습니다.");
+						eventcheck = 1;
+						EmitSoundToAll("misc/light2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						if (GetClientTeam(client) == 2)
+						{
+							PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 블루팀은 8초 동안 불태워집니다", Name);
+							ServerCommand("ma_burn #B");
+							CreateTimer(7.6, unburn, GetClientTeam(client), 0);
+						}
+						PrintCenterTextAll("%s님이 당첨된 복권에 의해 모든 레드팀은 8초 동안 불태워집니다", Name);
+						ServerCommand("ma_burn #R");
+						CreateTimer(7.6, unburn, GetClientTeam(client), 0);
+					}
+					new var18;
+					if (Roll2 == 30000 && eventcheck && (GetClientTeam(client) != 1 && GetClientTeam(client)) && teamalive[0] >= 1 && teamalive[1] >= 1)
+					{
+						eventcheck = 1;
+						EmitSoundToAll("misc/Orochi3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						ServerCommand("ma_freeze #all 1");
+						CreateTimer(0.1, godmode, client, 0);
+						muattacker = client;
+						PrintToChatAll("\x04[%s] - %s님이 당첨된 복권에 의해 복권의 특수 효과가 발동됩니다.", ServerName, Name);
+						PrintCenterTextAll("%s님이 당첨된 복권에 의해 복권의 특수 효과가 발동됩니다.", Name);
+					}
+					else
+					{
+						new RollSTR = GetRandomInt(1, 500000);
+						if (RollSTR <= 150)
+						{
+							new RollSTR2 = GetRandomInt(1, 10);
+							if (RollSTR2 <= 6)
+							{
+								new var19;
+								if ((RollSTR <= 20 && STRENGTHEN[client] <= 18) || (RollSTR <= 10 && STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29))
+								{
+									if (STRENGTHEN[client] <= 18)
+									{
+										new STRTEMP;
+										if (RollSTR <= 2)
+										{
+											if (STRENGTHEN[client] >= 28)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 3;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var22;
+										if (RollSTR >= 3 && RollSTR <= 7)
+										{
+											if (STRENGTHEN[client] >= 29)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 2;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var23;
+										if (RollSTR >= 8 && RollSTR <= 20)
+										{
+											STRTEMP = STRENGTHEN[client] + 1;
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										STRENGTHEN[client] = STRTEMP;
+									}
+									else
+									{
+										new var24;
+										if (STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29)
+										{
+											new STRTEMP;
+											if (RollSTR == 1)
+											{
+												if (STRENGTHEN[client] >= 28)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 3;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var25;
+											if (RollSTR >= 2 && RollSTR <= 3)
+											{
+												if (STRENGTHEN[client] >= 29)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 2;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var26;
+											if (RollSTR >= 4 && RollSTR <= 10)
+											{
+												STRTEMP = STRENGTHEN[client] + 1;
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+											STRENGTHEN[client] = STRTEMP;
+										}
+									}
+								}
+								else
+								{
+									if (0 < STRENGTHEN[client])
+									{
+										PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+										STRENGTHEN[client] += -1;
+										new zzzzzz = GetRandomInt(1, 2);
+										if (zzzzzz == 1)
+										{
+											EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+										else
+										{
+											EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+									}
+								}
+							}
+							else
+							{
+								if (0 < STRENGTHEN[client])
+								{
+									PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+									STRENGTHEN[client] += -1;
+									new zzzzzz = GetRandomInt(1, 2);
+									if (zzzzzz == 1)
+									{
+										EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+									else
+									{
+										EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+								}
+							}
+						}
+						else
+						{
+							EmitSoundToClient(client, "misc/otherjoin.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+							PrintToChat(client, "\x04[%s] - \x01꽝입니다.", ServerName);
+						}
+					}
+				}
+			}
+			Command_LottoMenu(client);
+			SSSave(0);
+		}
+		if (Parameter2 == 2)
+		{
+			if (PointK[client] >= 10000)
+			{
+				Roll = GetRandomInt(1, 10000);
+				PointK[client] += -10000;
+				Lottoamount = Lottoamount + 10000;
+				if (STRENGTHEN[client] <= 10)
+				{
+					if (Roll <= 5)
+					{
+						EmitSoundToAll("misc/scatman3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.0001%\x01 확률로 \x04+15\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 15;
+						result = 1;
+					}
+					new var27;
+					if (Roll >= 100 && Roll <= 120)
+					{
+						EmitSoundToAll("misc/Americanooo2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.004%\x01 확률로 \x04+13\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 13;
+						result = 1;
+					}
+					new var28;
+					if (Roll >= 1000 && Roll <= 1060)
+					{
+						EmitSoundToAll("misc/task_complete.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.01%\x01 확률로 \x04+12\x01강화권을 얻으셨습니다. 강화권은 자동으로 적용됩니다.", ServerName, Name);
+						STRENGTHEN[client] = 12;
+						result = 1;
+					}
+				}
+				if (!result)
+				{
+					new Roll2 = GetRandomInt(1, 25000);
+					if (Roll2 == 12500)
+					{
+						EmitSoundToAll("misc/fun.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", ServerName, Name);
+						PrintToChatAll("\x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", Name);
+						PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 강화,포인트 초기화에 당첨 되셨습니닼ㅋㅋㅋㅋㅋ", Name);
+						STRENGTHEN[client] = 0;
+						PointK[client] = 0;
+					}
+					else
+					{
+						new RollSTR = GetRandomInt(1, 3000);
+						if (RollSTR <= 200)
+						{
+							new RollSTR2 = GetRandomInt(1, 10);
+							if (RollSTR2 <= 6)
+							{
+								new var29;
+								if ((RollSTR <= 20 && STRENGTHEN[client] <= 18) || (RollSTR <= 10 && STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29))
+								{
+									if (STRENGTHEN[client] <= 18)
+									{
+										new STRTEMP;
+										if (RollSTR <= 3)
+										{
+											if (STRENGTHEN[client] >= 28)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 3;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var32;
+										if (RollSTR >= 4 && RollSTR <= 9)
+										{
+											if (STRENGTHEN[client] >= 29)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 2;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var33;
+										if (RollSTR >= 10 && RollSTR <= 20)
+										{
+											STRTEMP = STRENGTHEN[client] + 1;
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										STRENGTHEN[client] = STRTEMP;
+									}
+									else
+									{
+										new var34;
+										if (STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29)
+										{
+											new STRTEMP;
+											if (RollSTR == 1)
+											{
+												if (STRENGTHEN[client] >= 28)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 3;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var35;
+											if (RollSTR >= 2 && RollSTR <= 3)
+											{
+												if (STRENGTHEN[client] >= 29)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 2;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var36;
+											if (RollSTR >= 4 && RollSTR <= 10)
+											{
+												STRTEMP = STRENGTHEN[client] + 1;
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+											STRENGTHEN[client] = STRTEMP;
+										}
+									}
+								}
+								else
+								{
+									if (0 < STRENGTHEN[client])
+									{
+										PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+										STRENGTHEN[client] += -1;
+										new zzzzzz = GetRandomInt(1, 2);
+										if (zzzzzz == 1)
+										{
+											EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+										else
+										{
+											EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+									}
+								}
+							}
+							else
+							{
+								if (0 < STRENGTHEN[client])
+								{
+									PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+									STRENGTHEN[client] += -1;
+									new zzzzzz = GetRandomInt(1, 2);
+									if (zzzzzz == 1)
+									{
+										EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+									else
+									{
+										EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+								}
+							}
+						}
+						else
+						{
+							EmitSoundToClient(client, "misc/otherjoin.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+							PrintToChat(client, "\x04[%s] - \x01꽝입니다.", ServerName);
+						}
+					}
+				}
+				SSSave(0);
+			}
+			Command_LottoMenu(client);
+		}
+		if (Parameter2 == 3)
+		{
+			if (PointK[client] >= 50)
+			{
+				Roll = GetRandomInt(1, 25000);
+				PointK[client] += -50;
+				Lottoamount = Lottoamount + 50;
+				if (Roll == 22)
+				{
+					EmitSoundToAll("misc/omg.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00001%\x01 확률로 \x041등에\x01당첨되셔서 \x04%d\x01포인트를 얻으셨습니다.", ServerName, Name, Lottoamount + 50000);
+					PrintToChatAll("\x04[%s] - \x04하지만 세금 10%% 떼가므로 %d밖에 못받음 ㅋ", ServerName, Lottoamount + 50000 - Lottoamount + 50000 / 10);
+					new var51 = PointK[client];
+					var51 = var51[Lottoamount + 50000 - Lottoamount + 50000 / 10];
+					Lottoamount = 0;
+					result = 1;
+				}
+				new var37;
+				if (Roll >= 30 && Roll <= 60)
+				{
+					new Rollanother = GetRandomInt(1, 20);
+					new var38;
+					if (Rollanother >= 2 || strengthenevent == 1)
+					{
+						EmitSoundToAll("misc/Doosan.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.0005%\x01 확률로 \x042등에\x01당첨되셔서 \x041만\x01포인트를 얻으셨습니다.", ServerName, Name);
+						PointK[client] += 10000;
+						result = 1;
+					}
+					new var39;
+					if (Rollanother == 1 && strengthenevent)
+					{
+						EmitSoundToAll("misc/scatman3.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04모든 유저 강화확률 증가 이벤트\x01에 당첨 되셨습니다!", ServerName, Name);
+						PrintToChatAll("\x04[%s] - 맵이 바뀔때까지 강화 확률 증가 이벤트는 유지됩니다!", ServerName);
+						PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 모든 유저 강화 확률 증가 이벤트에 당첨 되셨습니다!", Name);
+						strengthenevent = 1;
+					}
+				}
+				new var40;
+				if (Roll >= 600 && Roll <= 700)
+				{
+					EmitSoundToAll("misc/yafeelsogood2.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.002%\x01 확률로 \x043등에\x01당첨되셔서 \x045000\x01포인트를 얻으셨습니다.", ServerName, Name);
+					PointK[client] += 5000;
+					result = 1;
+				}
+				new var41;
+				if (Roll >= 2000 && Roll <= 3300)
+				{
+					EmitSoundToClient(client, "misc/task_complete.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChat(client, "\x04[%s] - \x01당신은 복권에서 \x040.03%\x01 확률로 \x044등에\x01당첨되셔서 \x04500\x01포인트를 얻으셨습니다.", ServerName);
+					PointK[client] += 500;
+					result = 1;
+				}
+				if (!result)
+				{
+					new Roll2 = GetRandomInt(1, 25000);
+					if (Roll2 == 12500)
+					{
+						EmitSoundToAll("misc/fun.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", ServerName, Name);
+						PrintToChatAll("\x04%s\x01님이 복권에서 \x040.000001%\x01 확률로 \x04강화,포인트\x01 초기화에 당첨 되셨습니다!", Name);
+						PrintCenterTextAll("%s님이 복권에서 0.000001% 확률로 강화,포인트 초기화에 당첨 되셨습니닼ㅋㅋㅋㅋㅋ", Name);
+						STRENGTHEN[client] = 0;
+						PointK[client] = 0;
+					}
+					else
+					{
+						new RollSTR = GetRandomInt(1, 100000);
+						if (RollSTR <= 40)
+						{
+							new RollSTR2 = GetRandomInt(1, 10);
+							if (RollSTR2 <= 6)
+							{
+								new var42;
+								if ((RollSTR <= 20 && STRENGTHEN[client] <= 18) || (RollSTR <= 10 && STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29))
+								{
+									if (STRENGTHEN[client] <= 18)
+									{
+										new STRTEMP;
+										if (RollSTR <= 2)
+										{
+											if (STRENGTHEN[client] >= 28)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 3;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var45;
+										if (RollSTR >= 3 && RollSTR <= 7)
+										{
+											if (STRENGTHEN[client] >= 29)
+											{
+												STRTEMP = 30;
+											}
+											else
+											{
+												STRTEMP = STRENGTHEN[client] + 2;
+											}
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										new var46;
+										if (RollSTR >= 8 && RollSTR <= 20)
+										{
+											STRTEMP = STRENGTHEN[client] + 1;
+											PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+										}
+										EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										STRENGTHEN[client] = STRTEMP;
+									}
+									else
+									{
+										new var47;
+										if (STRENGTHEN[client] >= 19 && STRENGTHEN[client] <= 29)
+										{
+											new STRTEMP;
+											if (RollSTR == 1)
+											{
+												if (STRENGTHEN[client] >= 28)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 3;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+3\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var48;
+											if (RollSTR >= 2 && RollSTR <= 3)
+											{
+												if (STRENGTHEN[client] >= 29)
+												{
+													STRTEMP = 30;
+												}
+												else
+												{
+													STRTEMP = STRENGTHEN[client] + 2;
+												}
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+2\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											new var49;
+											if (RollSTR >= 4 && RollSTR <= 10)
+											{
+												STRTEMP = STRENGTHEN[client] + 1;
+												PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치+1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRTEMP);
+											}
+											EmitSoundToAll("misc/Goblins.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+											STRENGTHEN[client] = STRTEMP;
+										}
+									}
+								}
+								else
+								{
+									if (0 < STRENGTHEN[client])
+									{
+										PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+										STRENGTHEN[client] += -1;
+										new zzzzzz = GetRandomInt(1, 2);
+										if (zzzzzz == 1)
+										{
+											EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+										else
+										{
+											EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+										}
+									}
+								}
+							}
+							else
+							{
+								if (0 < STRENGTHEN[client])
+								{
+									PrintToChatAll("\x04[%s] - \x04%s\x01님이 복권에서 \x040.00002%\x01 확률로 \x04강화수치-1\x01강화권에 당첨되셔서 \x04%d\x01강이 되셨습니다.", ServerName, Name, STRENGTHEN[client] + -1);
+									STRENGTHEN[client] += -1;
+									new zzzzzz = GetRandomInt(1, 2);
+									if (zzzzzz == 1)
+									{
+										EmitSoundToAll("misc/Lightsmile.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+									else
+									{
+										EmitSoundToAll("misc/lolsssss.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+									}
+								}
+							}
+						}
+						else
+						{
+							EmitSoundToClient(client, "misc/otherjoin.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+							PrintToChat(client, "\x04[%s] - \x01꽝입니다.", ServerName);
+						}
+					}
+				}
+			}
+			SSSave(0);
+			Command_LottoMenu(client);
+		}
+		if (Parameter2 == 5)
+		{
+			Command_LottoMenu(client);
+		}
+	}
+	CloseHandle(Panel);
+	return 0;
+}
+
+public Action:unfreeze(Handle:Timer, any:clientteam)
+{
+	if (clientteam == any:2)
+	{
+		ServerCommand("ma_freeze #B 0");
+	}
+	else
+	{
+		if (clientteam == any:3)
+		{
+			ServerCommand("ma_freeze #R 0");
+		}
+	}
+	eventcheck = 0;
+	return Action:0;
+}
+
+public Action:unburn(Handle:Timer, any:clientteam)
+{
+	if (clientteam == any:2)
+	{
+		ServerCommand("ma_burn #B 0");
+	}
+	else
+	{
+		if (clientteam == any:3)
+		{
+			ServerCommand("ma_burn #R 0");
+		}
+	}
+	eventcheck = 0;
+	return Action:0;
+}
+
+public Action:Orochimode(Handle:timer, any:Client)
+{
+	new maxselect;
+	watime = 0;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (isClientConnectedIngameAlive(i) == 1)
+		{
+			if (GetClientTeam(Client) == 2)
+			{
+				if (GetClientTeam(i) == 3)
+				{
+					maxselect++;
+					Muattack[maxselect] = i;
+				}
+			}
+			if (GetClientTeam(Client) == 3)
+			{
+				if (GetClientTeam(i) == 2)
+				{
+					maxselect++;
+					Muattack[maxselect] = i;
+				}
+			}
+		}
+		i++;
+	}
+	if (maxselect)
+	{
+		CreateTimer(0.1, Orochiattack, maxselect, 0);
+		CreateTimer(2.4, Ungodmode, Client, 0);
+	}
+	return Action:0;
+}
+
+public Action:Orochiattack(Handle:timer, any:maxselect)
+{
+	new adamage;
+	new i = maxselect;
+	while (i >= 1)
+	{
+		adamage = GetRandomInt(1, 20);
+		decl Float:attackerposition[3];
+		GetClientEyePosition(muattacker, attackerposition);
+		makeDamage(muattacker, Muattack[i], adamage, 4, 100.0, attackerposition, "Back to the 'MU'");
+		ismakedamage[muattacker] = 1;
+		i--;
+	}
+	if (watime <= 22)
+	{
+		watime = watime + 1;
+		CreateTimer(0.1, Orochiattack, maxselect, 0);
+	}
+	else
+	{
+		ServerCommand("ma_freeze #all 0");
+		ismakedamage[muattacker] = 0;
+	}
+	return Action:0;
+}
+
+public Action:godmode(Handle:timer, any:Client)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (isClientConnectedIngameAlive(i) == 1)
+		{
+			if (GetClientTeam(Client) == 2)
+			{
+				if (GetClientTeam(i) == 2)
+				{
+					SetEntProp(i, PropType:1, "m_takedamage", any:0, 1);
+				}
+			}
+			if (GetClientTeam(Client) == 3)
+			{
+				if (GetClientTeam(i) == 3)
+				{
+					SetEntProp(i, PropType:1, "m_takedamage", any:0, 1);
+				}
+			}
+		}
+		i++;
+	}
+	CreateTimer(3.9, Orochimode, Client, 0);
+	return Action:0;
+}
+
+public Action:Ungodmode(Handle:timer, any:Client)
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (isClientConnectedIngameAlive(i) == 1)
+		{
+			if (GetClientTeam(Client) == 2)
+			{
+				if (GetClientTeam(i) == 2)
+				{
+					SetEntProp(i, PropType:1, "m_takedamage", any:2, 1);
+				}
+			}
+			if (GetClientTeam(Client) == 3)
+			{
+				if (GetClientTeam(i) == 3)
+				{
+					SetEntProp(i, PropType:1, "m_takedamage", any:2, 1);
+				}
+			}
+		}
+		i++;
+	}
+	eventcheck = 0;
+	return Action:0;
+}
+
+public Command_StrengthenMenu(Client)
+{
+	new String:SSTRENGTHEN[256];
+	new String:POINT[256];
+	new String:EffectONOFF[256];
+	new String:Price[256];
+	Format(SSTRENGTHEN, 256, "나의 강화 수치 : +%d", STRENGTHEN[Client]);
+	Format(POINT, 256, "나의 포인트 : %d", PointK[Client]);
+	if (!Knifeon[Client])
+	{
+		Format(EffectONOFF, 256, "나의 강화 효과 : OFF");
+	}
+	if (Knifeon[Client] == 1)
+	{
+		Format(EffectONOFF, 256, "나의 강화 효과 : ON");
+	}
+	if (STRENGTHEN[Client] <= 10)
+	{
+		Format(Price, 256, "칼 강화 (%d포인트 필요)", STRENGTHEN[Client] * 100);
+	}
+	if (STRENGTHEN[Client] >= 11)
+	{
+		Format(Price, 256, "칼 강화 (%d포인트 필요)", 5000);
+	}
+	new Handle:Panel = CreatePanel(Handle:0);
+	SetPanelTitle(Panel, "--= 강화 메뉴 =--", false);
+	DrawPanelText(Panel, "============================");
+	DrawPanelText(Panel, SSTRENGTHEN);
+	DrawPanelText(Panel, POINT);
+	DrawPanelText(Panel, EffectONOFF);
+	DrawPanelText(Panel, "제작자 : Yvonne Strahovski(차마명수)");
+	DrawPanelText(Panel, "----------------------------");
+	DrawPanelItem(Panel, Price, 0);
+	DrawPanelItem(Panel, "강화효과 ON / OFF", 0);
+	DrawPanelText(Panel, "----------------------------");
+	DrawPanelItem(Panel, "나가기", 0);
+	DrawPanelText(Panel, "============================");
+	SendPanelToClient(Panel, Client, Menu_Casino, 30);
+	CloseHandle(Panel);
+	return 0;
+}
+
+public Menu_Casino(Handle:Menu, MenuAction:Click, Client, Parameter2)
+{
+	new Handle:Panel = CreatePanel(Handle:0);
+	if (Click == MenuAction:4)
+	{
+		if (Parameter2 == 1)
+		{
+			if (STRENGTHEN[Client] < 10)
+			{
+				if (strengthentime[Client] == 1)
+				{
+					PrintToChat(Client, "\x04[%s] - \x01이미 강화 중 입니다.", ServerName);
+					PrintHintText(Client, "[%s] - 이미 강화 중 입니다.", ServerName);
+				}
+				else
+				{
+					if (STRENGTHEN[Client] * 100 <= PointK[Client])
+					{
+						EmitSoundToClient(Client, "misc/equip_strengthen.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						PrintToChat(Client, "\x04[%s] - \x01강화 하고 있습니다.", ServerName);
+						PrintHintText(Client, "[%s] - 강화 하고 있습니다.", ServerName);
+						CreateTimer(5.0, Delay_Knife, Client, 0);
+						STRANGTHENTO[Client] = 1;
+						strengthentime[Client] = 1;
+					}
+				}
+			}
+			if (strengthentime[Client] == 1)
+			{
+				PrintToChat(Client, "\x04[%s] - \x01이미 강화 중 입니다.", ServerName);
+				PrintHintText(Client, "[%s] - 이미 강화 중 입니다.", ServerName);
+			}
+			if (PointK[Client] >= 5000)
+			{
+				EmitSoundToClient(Client, "misc/equip_strengthen.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+				PrintToChat(Client, "\x04[%s] - \x01강화 하고 있습니다.", ServerName);
+				PrintHintText(Client, "[%s] - 강화 하고 있습니다.", ServerName);
+				CreateTimer(5.0, Delay_Knife, Client, 0);
+				STRANGTHENTO[Client] = 1;
+				strengthentime[Client] = 1;
+			}
+		}
+		if (Parameter2 == 2)
+		{
+			if (Knifeon[Client])
+			{
+				if (STRENGTHEN[Client])
+				{
+					PrintToChat(Client, "\x04[%s] \x01- 강화효과 오프", ServerName);
+					Knifeon[Client] = 0;
+					Command_StrengthenMenu(Client);
+				}
+				PrintToChat(Client, "\x04[%s] - 강화 수치가 0강입니다.", ServerName);
+			}
+			if (STRENGTHEN[Client])
+			{
+				PrintToChat(Client, "\x04[%s] \x01- 강화효과 온", ServerName);
+				Knifeon[Client] = 1;
+				Command_StrengthenMenu(Client);
+			}
+			else
+			{
+				PrintToChat(Client, "\x04[%s] - 강화 수치가 0강입니다.", ServerName);
+			}
+		}
+	}
+	CloseHandle(Panel);
+	return 0;
+}
+
+public Action:Delay_Knife(Handle:timer, any:Client)
+{
+	decl STL;
+	decl STL2;
+	strengthentime[Client] = 0;
+	if (STRENGTHEN[Client] <= 10)
+	{
+		PointK[Client] -= STRENGTHEN[Client] * 100;
+	}
+	else
+	{
+		PointK[Client] += -5000;
+	}
+	new StrengthenResult;
+	new String:Name[32];
+	GetClientName(Client, Name, 32);
+	if (STRANGTHENTO[Client] == 1)
+	{
+		STL = GetRandomInt(1, 100);
+		if (strengthenevent == 1)
+		{
+			if (STRENGTHENSUCCESS2[STRENGTHEN[Client]] >= STL)
+			{
+				StrengthenResult = 1;
+			}
+		}
+		if (STRENGTHENSUCCESS[STRENGTHEN[Client]] >= STL)
+		{
+			StrengthenResult = 1;
+		}
+	}
+	if (StrengthenResult == 1)
+	{
+		if (STRENGTHEN[Client] <= 10)
+		{
+			STRENGTHEN[Client] += 1;
+			EmitSoundToClient(Client, "misc/strengthen_success.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			PrintToChat(Client, "\x04[%s] - \x01%d -> %d 강화에 성공하였습니다!", ServerName, STRENGTHEN[Client] + -1, STRENGTHEN[Client]);
+			PrintHintText(Client, "[%s] - %d -> %d 강화에 성공하였습니다!", ServerName, STRENGTHEN[Client] + -1, STRENGTHEN[Client]);
+			STRANGTHENTO[Client] = 0;
+		}
+		STRENGTHEN[Client] += 1;
+		EmitSoundToAll("misc/strengthen_success.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		PrintToChatAll("\x04%s\x01님이\x04 +%d\x01 칼 강화에 성공 하셨습니다!", Name, STRENGTHEN[Client]);
+		PrintCenterTextAll("%s님이 +%d 칼 강화에 성공 하셨습니다!", Name, STRENGTHEN[Client]);
+		STRANGTHENTO[Client] = 0;
+	}
+	if (!StrengthenResult)
+	{
+		STL2 = GetRandomInt(1, 100);
+		if (STRENGTHEN[Client] <= 11)
+		{
+			PrintToChat(Client, "\x04[%s] - \x01%d -> %d 강화에 실패하였습니다!", ServerName, STRENGTHEN[Client], STRENGTHEN[Client] + 1);
+			PrintHintText(Client, "[%s] - %d -> %d 강화에 실패하였습니다!", ServerName, STRENGTHEN[Client], STRENGTHEN[Client] + 1);
+			STRANGTHENTO[Client] = 0;
+			if (STRENGTHEN[Client] <= 6)
+			{
+				EmitSoundToClient(Client, "misc/strengthen_fail.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+			new var1;
+			if (STRENGTHEN[Client] >= 7 && STRENGTHEN[Client] <= 9)
+			{
+				EmitSoundToClient(Client, "misc/strengthen_zero.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+			new var2;
+			if (STRENGTHEN[Client] == 10 || STRENGTHEN[Client] == 11)
+			{
+				EmitSoundToClient(Client, "misc/equip_broken.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			}
+		}
+		new var3;
+		if (STRENGTHENMINUSFAIL[STRENGTHEN[Client]] >= STL2 && STRENGTHEN[Client] >= 1)
+		{
+			EmitSoundToAll("misc/equip_broken.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+			PrintToChatAll("\x04%s\x01님이\x04 +%d\x01 칼 강화에 실패 하셨습니다!", Name, STRENGTHEN[Client] + 1);
+			PrintCenterTextAll("%s님이 +%d 칼 강화에 실패 하셨습니다!", Name, STRENGTHEN[Client] + 1);
+			STRANGTHENTO[Client] = 0;
+			STRENGTHEN[Client] += -1;
+		}
+		else
+		{
+			PrintToChat(Client, "\x04[%s] - \x01당신은 \x04+%d\x01 칼 강화에 실패 하셨습니다!", ServerName, STRENGTHEN[Client] + 1);
+			PrintHintText(Client, "[%s] - +%d 칼 강화에 실패하였습니다!", ServerName, STRENGTHEN[Client] + 1);
+			EmitSoundToClient(Client, "misc/equip_broken.wav", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+		STRANGTHENTO[Client] = 0;
+	}
+	Command_StrengthenMenu(Client);
+	return Action:0;
+}
+
+public EventDeath(Handle:Spawn_Event, String:Spawn_Name[], bool:Spawn_Broadcast)
+{
+	new Client = GetClientOfUserId(GetEventInt(Spawn_Event, "userid"));
+	new Attacker = GetClientOfUserId(GetEventInt(Spawn_Event, "attacker"));
+	new String:Name[32];
+	GetClientName(Client, Name, 32);
+	new var1;
+	if (Client > 0 && Client <= MaxClients && Attacker > 0 && Attacker <= MaxClients)
+	{
+		if (Attacker != Client)
+		{
+			GetClientName(Attacker, playerName2, 150);
+			GetClientAuthString(Attacker, steamID2, 128);
+			new pointtemp = 0 + 1;
+			new Lotto = GetRandomInt(1, 10000);
+			new var2;
+			if (Lotto <= 70 && Lotto != 22)
+			{
+				PrintToChatAll("\x04[%s] - \x04%s\x01님이 \x04%s\x01님을 죽여 \x04100\x01포인트를 추가로 얻으셨습니다.", ServerName, playerName2, Name);
+				pointtemp += 100;
+			}
+			new var3;
+			if (Lotto >= 3000 && Lotto <= 4000)
+			{
+				PrintToChatAll("\x04[%s] - \x04%s\x01님이 \x04%s\x01님을 죽여 \x045\x01포인트를 추가로 얻으셨습니다.", ServerName, playerName2, Name);
+				pointtemp += 5;
+			}
+			new var4;
+			if (Lotto == 777 || Lotto == 22)
+			{
+				EmitSoundToAll("misc/Doosan.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+				PrintToChatAll("\x04[%s] - \x04%s\x01님이 \x04%s\x01님을 죽여 \x041000\x01포인트를 추가로 얻으셨습니다.", ServerName, playerName2, Name);
+				pointtemp += 1000;
+			}
+			new var5;
+			if (Lotto >= 7000 && Lotto <= 7222)
+			{
+				new drakedog = GetRandomInt(1, 22222);
+				if (drakedog == 22222)
+				{
+					EmitSoundToAll("misc/Doosan.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 \x040.00000002222%\x01 확률로 \x04%s\x01님을 죽여 \x0422222\x01포인트를 추가로 얻으셨습니다.", ServerName, playerName2, Name);
+					pointtemp += 22222;
+				}
+				else
+				{
+					PrintToChatAll("\x04[%s] - \x04%s\x01님이 \x04%s\x01님을 죽여 \x0422\x01포인트를 추가로 얻으셨습니다.", ServerName, playerName2, Name);
+					pointtemp += 22;
+				}
+			}
+			if (pointevent == 1)
+			{
+				pointtemp *= 2;
+			}
+			new var6 = PointK[Attacker];
+			var6 = var6[pointtemp];
+		}
+	}
+	return 0;
+}
+
+public Action:SayHook(Client, Arguments)
+{
+	new String:Msg[256];
+	new gaybss;
+	GetCmdArgString(Msg, 256);
+	new String:name[68];
+	new String:buffer[256];
+	GetClientName(Client, name, 66);
+	StripQuotesOnce(Msg, 256);
+	if (!(StrContains(Msg, "!강화", false)))
+	{
+		Command_StrengthenMenu(Client);
+		Format(buffer, 256, "\x03%s :  \x03%s", name, Msg);
+		SayText2ToAll(Client, buffer);
+		gaybss = 1;
+	}
+	if (!(StrContains(Msg, "!복권", false)))
+	{
+		Command_LottoMenu(Client);
+		Format(buffer, 256, "\x03%s :  \x03%s", name, Msg);
+		SayText2ToAll(Client, buffer);
+		gaybss = 1;
+	}
+	if (!(StrContains(Msg, "!righthud", false)))
+	{
+		if (righthud[Client] == 1)
+		{
+			righthud[Client] = 0;
+			PrintToChat(Client, "\x04[%s] - \x01righthud OFF (한번 죽어야 없어집니다.)", ServerName);
+		}
+		if (!righthud[Client])
+		{
+			righthud[Client] = 1;
+			PrintToChat(Client, "\x04[%s] - \x01righthud ON", ServerName);
+		}
+	}
+	if (gaybss == 1)
+	{
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public Save(Client)
+{
+	new var1;
+	if (Client > 0 && IsClientInGame(Client))
+	{
+		new String:SteamID[32];
+		GetClientAuthString(Client, SteamID, 32);
+		new Handle:Vault = CreateKeyValues("Vault", "", "");
+		if (FileExists(Path, false))
+		{
+			FileToKeyValues(Vault, Path);
+		}
+		if (0 < STRENGTHEN[Client])
+		{
+			KvJumpToKey(Vault, "STRENGTHEN", true);
+			KvSetNum(Vault, SteamID, STRENGTHEN[Client]);
+			KvRewind(Vault);
+		}
+		else
+		{
+			KvJumpToKey(Vault, "STRENGTHEN", false);
+			KvDeleteKey(Vault, SteamID);
+			KvRewind(Vault);
+		}
+		if (0 < PointK[Client])
+		{
+			KvJumpToKey(Vault, "PointK", true);
+			KvSetNum(Vault, SteamID, PointK[Client]);
+			KvRewind(Vault);
+		}
+		else
+		{
+			KvJumpToKey(Vault, "PointK", false);
+			KvDeleteKey(Vault, SteamID);
+			KvRewind(Vault);
+		}
+		if (0 < Insurance[Client])
+		{
+			KvJumpToKey(Vault, "Insurance", true);
+			KvSetNum(Vault, SteamID, Insurance[Client]);
+			KvRewind(Vault);
+		}
+		else
+		{
+			KvJumpToKey(Vault, "Insurance", false);
+			KvDeleteKey(Vault, SteamID);
+			KvRewind(Vault);
+		}
+		KvRewind(Vault);
+		LoadCheck[Client] = 0;
+		KeyValuesToFile(Vault, Path);
+		CloseHandle(Vault);
+	}
+	return 0;
+}
+
+public SSave(Client)
+{
+	new var1;
+	if (Client > 0 && IsClientInGame(Client))
+	{
+		new String:SteamID[32];
+		GetClientAuthString(Client, SteamID, 32);
+		new Handle:Vault = CreateKeyValues("Vault", "", "");
+		if (FileExists(Path2, false))
+		{
+			FileToKeyValues(Vault, Path2);
+		}
+		if (0 < Knifeon[Client])
+		{
+			KvJumpToKey(Vault, "Knifeon", true);
+			KvSetNum(Vault, SteamID, Knifeon[Client]);
+			KvRewind(Vault);
+		}
+		else
+		{
+			KvJumpToKey(Vault, "Knifeon", false);
+			KvDeleteKey(Vault, SteamID);
+			KvRewind(Vault);
+		}
+		if (0 < righthud[Client])
+		{
+			KvJumpToKey(Vault, "righthud", true);
+			KvSetNum(Vault, SteamID, righthud[Client]);
+			KvRewind(Vault);
+		}
+		else
+		{
+			KvJumpToKey(Vault, "righthud", false);
+			KvDeleteKey(Vault, SteamID);
+			KvRewind(Vault);
+		}
+		KvRewind(Vault);
+		KeyValuesToFile(Vault, Path2);
+		CloseHandle(Vault);
+	}
+	return 0;
+}
+
+public SSSave(Client)
+{
+	new String:LAN[32];
+	Format(LAN, 32, "0");
+	new Handle:Vault = CreateKeyValues("Vault", "", "");
+	if (FileExists(Path3, false))
+	{
+		FileToKeyValues(Vault, Path3);
+	}
+	if (0 < Lottoamount)
+	{
+		KvJumpToKey(Vault, "Lottoamount", true);
+		KvSetNum(Vault, LAN, Lottoamount);
+		KvRewind(Vault);
+	}
+	else
+	{
+		KvJumpToKey(Vault, "Lottoamount", false);
+		KvDeleteKey(Vault, LAN);
+		KvRewind(Vault);
+	}
+	KvRewind(Vault);
+	KeyValuesToFile(Vault, Path3);
+	CloseHandle(Vault);
+	return 0;
+}
+
+public Action:SSLoad(Handle:Timer, any:Client)
+{
+	new String:LAN[32];
+	Format(LAN, 32, "0");
+	new Handle:Vault = CreateKeyValues("Vault", "", "");
+	FileToKeyValues(Vault, Path3);
+	KvJumpToKey(Vault, "Lottoamount", false);
+	Lottoamount = KvGetNum(Vault, LAN, 0);
+	KvRewind(Vault);
+	KvRewind(Vault);
+	CloseHandle(Vault);
+	return Action:0;
+}
+
+public Action:Load(Handle:Timer, any:Client)
+{
+	new var1;
+	if (Client > any:0 && Client <= MaxClients)
+	{
+		new String:SteamID[32];
+		GetClientAuthString(Client, SteamID, 32);
+		new Handle:Vault = CreateKeyValues("Vault", "", "");
+		FileToKeyValues(Vault, Path);
+		KvJumpToKey(Vault, "PointK", false);
+		PointK[Client] = KvGetNum(Vault, SteamID, 0);
+		KvRewind(Vault);
+		KvJumpToKey(Vault, "STRENGTHEN", false);
+		STRENGTHEN[Client] = KvGetNum(Vault, SteamID, 0);
+		KvRewind(Vault);
+		KvJumpToKey(Vault, "Insurance", false);
+		Insurance[Client] = KvGetNum(Vault, SteamID, 0);
+		KvRewind(Vault);
+		if (Insurance[Client] <= 1)
+		{
+			Insurance[Client] = 2;
+			STRENGTHEN[Client] = 0;
+			PointK[Client] += 2000;
+		}
+		LoadCheck[Client] = 1;
+		KvRewind(Vault);
+		CloseHandle(Vault);
+	}
+	return Action:0;
+}
+
+public Action:SLoad(Handle:Timer, any:Client)
+{
+	new var1;
+	if (Client > any:0 && Client <= MaxClients)
+	{
+		new String:SteamID[32];
+		GetClientAuthString(Client, SteamID, 32);
+		new Handle:Vault = CreateKeyValues("Vault", "", "");
+		FileToKeyValues(Vault, Path2);
+		KvJumpToKey(Vault, "Knifeon", false);
+		Knifeon[Client] = KvGetNum(Vault, SteamID, 0);
+		KvRewind(Vault);
+		KvJumpToKey(Vault, "righthud", false);
+		righthud[Client] = KvGetNum(Vault, SteamID, 0);
+		KvRewind(Vault);
+		KvRewind(Vault);
+		CloseHandle(Vault);
+	}
+	return Action:0;
+}
+
+public Action:OnTakeDamageHook(Client, &attacker, &inflictor, &Float:damage, &damagetype)
+{
+	new var1;
+	if (isClientConnectedIngame(Client) && isClientConnectedIngame(attacker))
+	{
+		decl String:weapon[32];
+		GetEdictClassname(inflictor, weapon, 32);
+		new var2;
+		if (STRENGTHEN[attacker] && damagetype == 4 && ismakedamage[attacker] == 1)
+		{
+			return Action:0;
+		}
+		if (damagetype & 8)
+		{
+			return Action:0;
+		}
+		if (Knifeon[attacker] == 1)
+		{
+			new var3;
+			if (!StrEqual(weapon, "player", true) && !IsKnockBackWeapon(weapon))
+			{
+				return Action:0;
+			}
+			new clientteam = GetClientTeam(Client);
+			new attackerteam = GetClientTeam(attacker);
+			if (attackerteam == clientteam)
+			{
+				return Action:0;
+			}
+			GetClientWeapon(attacker, weapon, 32);
+			if (IsKnockBackWeapon(weapon))
+			{
+				new strengthencheck = STRENGTHEN[attacker];
+				if (strengthencheck <= 26)
+				{
+					if (strengthencheck <= 12)
+					{
+						damage = damage + strengthencheck;
+						return Action:1;
+					}
+					if (strengthencheck > 13)
+					{
+						damage = damage + strengthencheck * 2 + -8;
+						return Action:1;
+					}
+				}
+				if (strengthencheck >= 27)
+				{
+					new String:steamid[32];
+					GetClientAuthString(attacker, steamid, 32);
+					if (strengthencheck <= 30)
+					{
+						strengthencheck = 24;
+						while (STRENGTHEN[attacker] >= strengthencheck)
+						{
+							highdamage = strengthenfor + highdamage;
+							if (STRENGTHEN[attacker] <= 28)
+							{
+								strengthenfor = strengthenfor + 1;
+							}
+							else
+							{
+								strengthenfor = strengthenfor + 3;
+							}
+							strengthencheck++;
+						}
+						damage = damage + highdamage;
+						return Action:1;
+					}
+					new var4;
+					if (strengthencheck == 1009900 && StrEqual(steamid, "STEAM_0:1:35546819", false))
+					{
+						damage = damage * 1009900;
+						SetEntityHealth(attacker, GetClientHealth(attacker) + 50);
+						return Action:1;
+					}
+				}
+			}
+			return Action:0;
+		}
+	}
+	return Action:0;
+}
+
+public Action:TF2_CalcIsAttackCritical(client, weapon, String:weaponname[], &bool:result)
+{
+	new var1;
+	if (!IsKnockBackWeapon(weaponname) || Knifeon[client])
+	{
+		return Action:0;
+	}
+	if (STRENGTHEN[client] >= 12)
+	{
+		new String:steamid[32];
+		GetClientAuthString(client, steamid, 32);
+		new var2;
+		if (StrEqual(steamid, "STEAM_0:1:35546819", false) && STRENGTHEN[client] == 1009900)
+		{
+			result = 1;
+			return Action:3;
+		}
+		new var3;
+		if (STRENGTHENcrits[STRENGTHEN[client][-2]] > GetRandomFloat(0.0, 1.0) && STRENGTHEN[client] != 1009900)
+		{
+			result = 1;
+			return Action:3;
+		}
+	}
+	else
+	{
+		if (STRENGTHENcrits[0] > GetRandomFloat(0.0, 1.0))
+		{
+			result = 1;
+			return Action:3;
+		}
+	}
+	result = 0;
+	return Action:3;
+}
+
+bool:IsKnockBackWeapon(String:weaponname[])
+{
+	decl String:convarstring[256];
+	GetConVarString(g_cvarMeleeWeaponList, convarstring, 256);
+	if (StrContains(convarstring, weaponname, false) != -1)
+	{
+		return true;
+	}
+	return false;
+}
+

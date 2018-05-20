@@ -1,0 +1,619 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.7",
+	date = "03/04/2013",
+	time = "04:09:01"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Plugin:myinfo =
+{
+	name = "Damage report",
+	description = "Reports who damaged you and who you damaged",
+	author = "[30+]Gemeni",
+	version = "1.1.13",
+	url = "http://30plus.ownit.se/"
+};
+new g_DamageDone[66][66];
+new g_HitsDone[66][66];
+new g_HitboxDone[66][66][8];
+new g_DamageTaken[66][66];
+new g_HitsTaken[66][66];
+new g_HitboxTaken[66][66][8];
+new String:g_PlayerName[66][32];
+new g_KilledPlayer[66][66];
+new g_PlayerDROption[66][3];
+new String:g_filenameSettings[80];
+new Handle:KVSettings;
+new g_defaultPropOnOff = 1;
+new g_defaultPropChatPop = 1;
+new g_defaultPropShortLong = 1;
+new bool:g_lateLoaded;
+new String:g_HistDamageDone[66][512];
+new String:g_HistDamageDoneLong[66][512];
+new g_HistTotalDamageDone[66];
+new String:g_HistDamageTaken[66][512];
+new String:g_HistDamageTakenLong[66][512];
+new g_HistTotalDamageTaken[66];
+new Handle:g_versionConVar;
+new String:g_HitboxName[8][20];
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Handle:CreateDataTimer(Float:interval, Timer:func, &Handle:datapack, flags)
+{
+	datapack = CreateDataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	g_lateLoaded = late;
+	return APLRes:0;
+}
+
+public OnPluginStart()
+{
+	g_versionConVar = CreateConVar("sm_damage_report_version", "1.1.13", "Damage report version", 270656, false, 0.0, false, 0.0);
+	SetConVarString(g_versionConVar, "1.1.13", false, false);
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode:1);
+	HookEvent("player_hurt", Event_PlayerHurt, EventHookMode:1);
+	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode:1);
+	HookEvent("round_end", Event_RoundEnd, EventHookMode:1);
+	HookEvent("round_start", EventRoundStart, EventHookMode:1);
+	RegConsoleCmd("damage_report", Command_DamageReport, "", 0);
+	RegConsoleCmd("last_damage_report", Command_LastDamageReport, "", 0);
+	RegConsoleCmd("ldr", Command_LastDamageReport, "", 0);
+	KVSettings = CreateKeyValues("DamageReportSetting", "", "");
+	BuildPath(PathType:0, g_filenameSettings, 80, "data/damagereportsetting.txt");
+	if (!FileToKeyValues(KVSettings, g_filenameSettings))
+	{
+		KeyValuesToFile(KVSettings, g_filenameSettings);
+	}
+	if (g_lateLoaded)
+	{
+		new i = 1;
+		while (i < MaxClients)
+		{
+			new var1;
+			if (IsClientInGame(i) && !IsFakeClient(i))
+			{
+				FindSettingsForClient(i);
+			}
+			i++;
+		}
+	}
+	new var2 = g_HitboxName;
+	return 0;
+}
+
+public Action:Command_LastDamageReport(client, args)
+{
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		new var2;
+		if (strcmp(g_HistDamageDone[client], "", true) || strcmp(g_HistDamageTaken[client], "", true))
+		{
+			DisplayDamageReport(client, g_HistDamageDone[client], g_HistDamageDoneLong[client], g_HistDamageTaken[client], g_HistDamageTakenLong[client], g_HistTotalDamageDone[client], g_HistTotalDamageTaken[client]);
+		}
+		PrintToChat(client, "\x01\x04[Damage Report]\x01 Нет истории для отображения");
+	}
+	return Action:3;
+}
+
+public Action:Command_DamageReport(client, args)
+{
+	new var1;
+	if (client && IsClientInGame(client))
+	{
+		if (args != 1)
+		{
+			PrintToChat(client, "\x01\x04[Damage Report]\x01 Помощь: /damage_report help");
+			return Action:3;
+		}
+		new String:sBuffer[64];
+		GetCmdArg(1, sBuffer, 64);
+		if (strcmp(sBuffer, "on", false))
+		{
+			if (strcmp(sBuffer, "off", false))
+			{
+				if (strcmp(sBuffer, "popup", false))
+				{
+					if (strcmp(sBuffer, "chat", false))
+					{
+						if (strcmp(sBuffer, "short", false))
+						{
+							if (strcmp(sBuffer, "long", false))
+							{
+								if (strcmp(sBuffer, "status", false))
+								{
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /damage_report on (Включит статистику) /damage_report off (Отключит статистику)");
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /damage_report popup (Отображать слева в меню) /damage_report chat (Отображать в чате)");
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /damage_report short (Не показывать урон в всплывающем окошке)");
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /damage_report long (Показывать урон в всплывающем окошке)");
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /damage_report status (Текущие параметры статистики повреждений)");
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 /last_damage_report или /ldr (Отобразит последнюю показанную статистику повреждений)");
+								}
+								if (g_PlayerDROption[client][0] == 1)
+								{
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 Отображение урона включено");
+									if (g_PlayerDROption[client][1] == 1)
+									{
+										PrintToChat(client, "\x01\x04[Damage Report]\x01 Урон отображается в всплывающем меню");
+									}
+									else
+									{
+										PrintToChat(client, "\x01\x04[Damage Report]\x01 Урон отображается в общем чате");
+									}
+									if (g_PlayerDROption[client][2])
+									{
+										PrintToChat(client, "\x01\x04[Damage Report]\x01 Показывать урон в всплывающем окошке");
+									}
+									else
+									{
+										PrintToChat(client, "\x01\x04[Damage Report]\x01 Не показывать урон в всплывающем окошке");
+									}
+								}
+								else
+								{
+									PrintToChat(client, "\x01\x04[Damage Report]\x01 Отображение урона выключено");
+								}
+							}
+							g_PlayerDROption[client][2] = 1;
+							PrintToChat(client, "\x01\x04[Damage Report]\x01 Показывать урон в всплывающем окошке");
+						}
+						g_PlayerDROption[client][2] = 0;
+						PrintToChat(client, "\x01\x04[Damage Report]\x01 Не показывать урон в всплывающем окошке");
+					}
+					g_PlayerDROption[client][1] = 0;
+					PrintToChat(client, "\x01\x04[Damage Report]\x01 Урон отображается в общем чате");
+				}
+				g_PlayerDROption[client][1] = 1;
+				PrintToChat(client, "\x01\x04[Damage Report]\x01 Урон отображается в всплывающем меню");
+			}
+			g_PlayerDROption[client][0] = 0;
+			PrintToChat(client, "\x01\x04[Damage Report]\x01 Отображение урона выключено");
+		}
+		else
+		{
+			g_PlayerDROption[client][0] = 1;
+			PrintToChat(client, "\x01\x04[Damage Report]\x01 Отображение урона включено");
+		}
+		if (GetClientAuthString(client, sBuffer, 64))
+		{
+			KvRewind(KVSettings);
+			new var2;
+			if (g_defaultPropOnOff == g_PlayerDROption[client][0] && g_defaultPropChatPop == g_PlayerDROption[client][1] && g_defaultPropShortLong == g_PlayerDROption[client][2])
+			{
+				if (KvJumpToKey(KVSettings, sBuffer, false))
+				{
+					KvDeleteThis(KVSettings);
+				}
+			}
+			else
+			{
+				KvJumpToKey(KVSettings, sBuffer, true);
+				KvSetNum(KVSettings, "OnOff", g_PlayerDROption[client][0]);
+				KvSetNum(KVSettings, "PopChat", g_PlayerDROption[client][1]);
+				KvSetNum(KVSettings, "ShortLong", g_PlayerDROption[client][2]);
+			}
+			KvRewind(KVSettings);
+			KeyValuesToFile(KVSettings, g_filenameSettings);
+		}
+	}
+	return Action:3;
+}
+
+public OnMapEnd()
+{
+	KvRewind(KVSettings);
+	KeyValuesToFile(KVSettings, g_filenameSettings);
+	clearAllDamageData();
+	return 0;
+}
+
+public EventRoundStart(Handle:event, String:name[], bool:dontBroadcast)
+{
+	clearAllDamageData();
+	return 0;
+}
+
+public Event_PlayerHurt(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new var1;
+	if (victim > 0 && attacker > 0 && IsClientInGame(victim) && IsClientInGame(attacker))
+	{
+		new healthDmg = GetEventInt(event, "dmg_health");
+		new hitgroup = GetEventInt(event, "hitgroup");
+		new var2 = g_DamageDone[attacker][victim];
+		var2 = var2[healthDmg];
+		g_HitsDone[attacker][victim]++;
+		g_HitboxDone[attacker][victim][hitgroup]++;
+		new var3 = g_DamageTaken[victim][attacker];
+		var3 = var3[healthDmg];
+		g_HitsTaken[victim][attacker]++;
+		g_HitboxTaken[victim][attacker][hitgroup]++;
+	}
+	return 0;
+}
+
+public Event_PlayerDeath(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	new var1;
+	if (victim > 0 && attacker > 0 && IsClientInGame(victim) && IsClientInGame(attacker))
+	{
+		g_KilledPlayer[attacker][victim] = 1;
+		new var2;
+		if (g_PlayerDROption[victim][0] == 1 && !IsFakeClient(victim) && IsClientInGame(victim))
+		{
+			BuildDamageString(victim, attacker);
+		}
+	}
+	return 0;
+}
+
+BuildDamageString(in_victim, in_attacker)
+{
+	new String:damageReport[512];
+	new String:damageReportLong[600];
+	new String:damageDone[512];
+	new String:damageTaken[512];
+	new String:damageDoneLong[512];
+	new String:damageTakenLong[512];
+	new String:killer[128] = "";
+	new String:xkiller[128] = "--";
+	new String:killed[128] = "";
+	new String:xkilled[128] = "--";
+	new totalDmgTaken;
+	new totalDmgDone;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (0 < g_DamageDone[in_victim][i])
+		{
+			if (!(g_KilledPlayer[in_victim][i] == 1))
+			{
+			}
+			Format(damageDone, 512, "%s%s%s [%i хп, %i в цель]%s\n", damageDone, xkilled, g_PlayerName[i], g_DamageDone[in_victim][i], g_HitsDone[in_victim][i], killed);
+			Format(damageDoneLong, 512, "%s%s%s [%i хп, %i в цель]%s\n", damageDoneLong, xkilled, g_PlayerName[i], g_DamageDone[in_victim][i], g_HitsDone[in_victim][i], killed);
+			Format(damageDoneLong, 512, "%s  ", damageDoneLong);
+			totalDmgDone = g_DamageDone[in_victim][i][totalDmgDone];
+			new j;
+			while (j <= 7)
+			{
+				if (0 < g_HitboxDone[in_victim][i][j])
+				{
+					Format(damageDoneLong, 512, "%s%s: %i ", damageDoneLong, g_HitboxName[j], g_HitboxDone[in_victim][i][j]);
+				}
+				j++;
+			}
+			Format(damageDoneLong, 512, "%s\n", damageDoneLong);
+		}
+		i++;
+	}
+	if (strcmp(damageDone, "", false))
+	{
+		Format(damageReport, 512, "Урона нанесено:\n%s", damageDone);
+		Format(damageReportLong, 600, "Урона нанесено:\n%s", damageDoneLong);
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (0 < g_DamageTaken[in_victim][i])
+		{
+			if (!(in_attacker == i))
+			{
+			}
+			Format(damageTaken, 512, "%s%s%s [%i хп, %i в цель]%s\n", damageTaken, xkiller, g_PlayerName[i], g_DamageTaken[in_victim][i], g_HitsTaken[in_victim][i], killer);
+			Format(damageTakenLong, 512, "%s%s%s [%i хп, %i в цель]%s\n", damageTakenLong, xkiller, g_PlayerName[i], g_DamageTaken[in_victim][i], g_HitsTaken[in_victim][i], killer);
+			Format(damageTakenLong, 512, "%s  ", damageTakenLong);
+			totalDmgTaken = g_DamageTaken[in_victim][i][totalDmgTaken];
+			new j;
+			while (j <= 7)
+			{
+				if (0 < g_HitboxTaken[in_victim][i][j])
+				{
+					Format(damageTakenLong, 512, "%s%s: %i ", damageTakenLong, g_HitboxName[j], g_HitboxTaken[in_victim][i][j]);
+				}
+				j++;
+			}
+			Format(damageTakenLong, 512, "%s\n", damageTakenLong);
+		}
+		i++;
+	}
+	if (strcmp(damageTaken, "", true))
+	{
+		Format(damageReport, 512, "%sУрона получено:\n%s", damageReport, damageTaken);
+		Format(damageReportLong, 600, "%sУрона получено:\n%s", damageReportLong, damageTakenLong);
+	}
+	if (strcmp(damageReport, "", true))
+	{
+		g_HistTotalDamageDone[in_victim] = totalDmgDone;
+		g_HistTotalDamageTaken[in_victim] = totalDmgTaken;
+		DisplayDamageReport(in_victim, damageDone, damageDoneLong, damageTaken, damageTakenLong, totalDmgDone, totalDmgTaken);
+	}
+	return 0;
+}
+
+DisplayDamageReport(in_victim, String:damageDone[512], String:damageDoneLong[512], String:damageTaken[512], String:damageTakenLong[512], totalDmgDone, totalDmgTaken)
+{
+	if (g_PlayerDROption[in_victim][1] == 1)
+	{
+		new Handle:pack;
+		CreateDataTimer(1.0, DisplayDamageReportMenu, pack, 3);
+		WritePackCell(pack, in_victim);
+		new var1;
+		if (strlen(damageDoneLong) + strlen(damageTakenLong) < 482 && g_PlayerDROption[in_victim][2] == 1)
+		{
+			WritePackString(pack, damageDoneLong);
+			WritePackString(pack, damageTakenLong);
+			WritePackCell(pack, totalDmgDone);
+			WritePackCell(pack, totalDmgTaken);
+		}
+		else
+		{
+			WritePackString(pack, damageDone);
+			WritePackString(pack, damageTaken);
+			WritePackCell(pack, totalDmgDone);
+			WritePackCell(pack, totalDmgTaken);
+		}
+	}
+	else
+	{
+		if (strcmp(damageDoneLong, "", false))
+		{
+			PrintToChat(in_victim, "\x01\x04[Damage Report]\x01 \n=== Жертвы (Всего хп: %i) ===\n", totalDmgDone);
+			PrintToChat(in_victim, "\x01\x04[Damage Report]\x01 %s", damageDoneLong);
+		}
+		if (strcmp(damageTakenLong, "", false))
+		{
+			PrintToChat(in_victim, "\x01\x04[Damage Report]\x01 === Атакующие (Всего хп: %i) ===\n", totalDmgTaken);
+			PrintToChat(in_victim, "\x01\x04[Damage Report]\x01 %s", damageTakenLong);
+		}
+	}
+	return 0;
+}
+
+public Action:DisplayDamageReportMenu(Handle:timer, Handle:pack)
+{
+	new String:p_damageDone[512];
+	new String:p_damageTaken[512];
+	new String:victimItem[100];
+	new String:attackerItem[100];
+	new p_victim;
+	new p_totalDmgDone;
+	new p_totalDmgTaken;
+	ResetPack(pack, false);
+	p_victim = ReadPackCell(pack);
+	ReadPackString(pack, p_damageDone, 512);
+	ReadPackString(pack, p_damageTaken, 512);
+	p_totalDmgDone = ReadPackCell(pack);
+	p_totalDmgTaken = ReadPackCell(pack);
+	if (!IsClientInGame(p_victim))
+	{
+		return Action:4;
+	}
+	if (GetClientMenu(p_victim, Handle:0))
+	{
+		return Action:0;
+	}
+	new Handle:damageReportPanel = CreatePanel(Handle:0);
+	if (strcmp(p_damageDone, "", true))
+	{
+		Format(victimItem, 100, "Жертвы (Всего хп: %i)", p_totalDmgDone);
+		DrawPanelItem(damageReportPanel, victimItem, 0);
+		DrawPanelText(damageReportPanel, p_damageDone);
+	}
+	if (strcmp(p_damageTaken, "", true))
+	{
+		Format(attackerItem, 100, "Атакующие (Всего хп: %i)", p_totalDmgTaken);
+		DrawPanelItem(damageReportPanel, attackerItem, 0);
+		DrawPanelText(damageReportPanel, p_damageTaken);
+	}
+	DrawPanelItem(damageReportPanel, "Выход", 0);
+	DrawPanelText(damageReportPanel, "Напечатайте в чате \"/damage_report help\" для справки");
+	SendPanelToClient(damageReportPanel, p_victim, Handler_MyPanel, 12);
+	CloseHandle(damageReportPanel);
+	return Action:4;
+}
+
+public Handler_MyPanel(Handle:hMenu, MenuAction:action, param1, param2)
+{
+	return 0;
+}
+
+public Event_PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new String:sBuffer[64];
+	new var1;
+	if (client > 0 && IsClientInGame(client) && GetClientName(client, sBuffer, 64))
+	{
+		strcopy(g_PlayerName[client], 32, sBuffer);
+	}
+	return 0;
+}
+
+public OnClientPutInServer(client)
+{
+	new var1;
+	if (IsClientConnected(client) && IsClientInGame(client) && !IsFakeClient(client))
+	{
+		FindSettingsForClient(client);
+	}
+	return 0;
+}
+
+public FindSettingsForClient(client)
+{
+	decl String:sBuffer[32];
+	if (GetClientAuthString(client, sBuffer, 32))
+	{
+		KvRewind(KVSettings);
+		if (KvJumpToKey(KVSettings, sBuffer, false))
+		{
+			g_PlayerDROption[client][0] = KvGetNum(KVSettings, "OnOff", g_defaultPropOnOff);
+			g_PlayerDROption[client][1] = KvGetNum(KVSettings, "PopChat", g_defaultPropChatPop);
+			g_PlayerDROption[client][2] = KvGetNum(KVSettings, "ShortLong", g_defaultPropChatPop);
+		}
+		else
+		{
+			g_PlayerDROption[client][0] = g_defaultPropOnOff;
+			g_PlayerDROption[client][1] = g_defaultPropChatPop;
+			g_PlayerDROption[client][2] = g_defaultPropShortLong;
+		}
+		KvRewind(KVSettings);
+	}
+	return 0;
+}
+
+public OnClientDisconnect_Post(client)
+{
+	g_HistTotalDamageDone[client] = 0;
+	g_HistTotalDamageTaken[client] = 0;
+	return 0;
+}
+
+public Event_RoundEnd(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new reason = GetEventInt(event, "reason");
+	if (reason == 16)
+	{
+		return 0;
+	}
+	new damage;
+	new hits;
+	new mostDamage;
+	new mostDamagePlayer;
+	new mostHits;
+	new kills;
+	new mostKills;
+	new mostKillsPlayer;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			new var1;
+			if (g_PlayerDROption[i][0] == 1 && IsClientConnected(i) && !IsFakeClient(i) && IsPlayerAlive(i))
+			{
+				BuildDamageString(i, -1);
+			}
+		}
+		i++;
+	}
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		damage = 0;
+		hits = 0;
+		new j = 1;
+		while (j <= MaxClients)
+		{
+			damage = g_DamageDone[i][j][damage];
+			hits = g_HitsDone[i][j][hits];
+			j++;
+		}
+		if (damage > mostDamage)
+		{
+			mostDamage = damage;
+			mostDamagePlayer = i;
+			mostHits = hits;
+		}
+		i++;
+	}
+	mostKills = 0;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		kills = 0;
+		new j = 1;
+		while (j <= MaxClients)
+		{
+			kills = g_KilledPlayer[i][j][kills];
+			j++;
+		}
+		if (kills > mostKills)
+		{
+			mostKills = kills;
+			mostKillsPlayer = i;
+		}
+		i++;
+	}
+	if (0 < mostDamage)
+	{
+		PrintToChatAll("\x01\x04[Damage Report]\x01 %s нанёс самый больший урон, %i хп за %i попадания!", g_PlayerName[mostDamagePlayer], mostDamage, mostHits);
+	}
+	if (0 < mostKills)
+	{
+		PrintToChatAll("\x01\x04[Damage Report]\x01 Самый смертельный: %s с %i убийствами", g_PlayerName[mostKillsPlayer], mostKills);
+	}
+	return 0;
+}
+
+clearAllDamageData()
+{
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new j = 1;
+		while (j <= MaxClients)
+		{
+			g_DamageDone[i][j] = 0;
+			g_DamageTaken[i][j] = 0;
+			g_HitsDone[i][j] = 0;
+			g_HitsTaken[i][j] = 0;
+			g_KilledPlayer[i][j] = 0;
+			new k;
+			while (k <= 7)
+			{
+				g_HitboxDone[i][j][k] = 0;
+				g_HitboxTaken[i][j][k] = 0;
+				k++;
+			}
+			j++;
+		}
+		i++;
+	}
+	return 0;
+}
+

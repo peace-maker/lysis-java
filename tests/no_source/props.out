@@ -1,0 +1,2190 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.2",
+	date = "11/14/2013",
+	time = "17:15:22"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new String:PLUGIN_NAME[8] = "PROPS";
+new String:PLUGIN_VERS[8] = "v1.1";
+new bool:xD = 1;
+new String:FOR_IP_PORT[20] = "46.174.50.30:27306";
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_cstrike =
+{
+	name = "cstrike",
+	file = "games/game.cstrike.ext",
+	autoload = 0,
+	required = 1,
+};
+public Plugin:myinfo =
+{
+	name = "PROPS",
+	description = "",
+	author = "wS (World-Source.Ru)",
+	version = "v1.1",
+	url = ""
+};
+new Handle:g_PropsModel_Array;
+new Handle:g_PropsClass_Array;
+new Handle:g_PropsFlags_Array;
+new g_PropsCount;
+new Handle:g_PropsMenu;
+new Handle:g_PropsMenu2;
+new Handle:g_CtPistolsMenu;
+new Handle:g_PropsTimer;
+new g_PropsTimer_Sec;
+new bool:g_BuildingOn;
+new bool:g_PropsOn;
+new Handle:g_VladelecPropa_Trie;
+new String:g_PropModel[128];
+new String:g_PropClass[32];
+new String:g_PropName[68];
+new Handle:g_RespSteam_Trie;
+new g_MyId[66];
+new String:g_SteamID[66][32];
+new bool:g_iHavePistol[66];
+new Float:g_MyGameTimeWhenSelect[66];
+new Float:g_FloodSec;
+new Float:g_MySpawnPos[66][3];
+new g_MyPropsCount[66];
+new Handle:g_Degree_Trie;
+new Float:g_MyDegree[66] =
+{
+	1110704128, ...
+};
+new Handle:g_Credits_Trie;
+new g_Credits[66];
+new g_Limit[66][5];
+new Handle:g_SpeedTimer[66];
+new Handle:props_building_sec;
+new Handle:props_tt_timer_sec;
+new Handle:props_restore_ammo;
+new Handle:props_switch_teams;
+new Handle:props_stop_c4plant;
+new bool:g_PropsCreatedMsg;
+new bool:g_PropsMenu2Enabled;
+new bool:g_ShowOwner;
+new Float:g_TzoneMeters;
+new Handle:props_t_zone_radius;
+new Float:g_TzoneCenter[3];
+new bool:g_TzoneProtect;
+new Float:g_Units_FromTzoneCenter_Limit;
+new g_PropsLimit;
+new Float:g_PropsLimitMeters;
+new Handle:props_building_muz;
+new String:g_BuildingEndSound[128];
+new g_Tcash;
+new g_TbuyMode;
+new Handle:props_tt_speed;
+new Handle:props_tt_speed_sec;
+new Handle:props_start_credits;
+new Handle:props_clear_credits;
+new Handle:g_PROPS_OnBuildingEnd;
+new Handle:g_PROPS_OnCtChosePistol;
+new Handle:g_PROPS_OnCtDelOrRotProp;
+new Handle:g_PROPS_OnCtCreateLimitedProp;
+new Handle:g_PROPS_OnCtCreateProp;
+new Handle:g_PROPS_OnGameEnd;
+new Handle:g_PROPS_OnTerLeftSpawn;
+new Handle:g_PROPS_OnTerBuyLimitedProduct;
+new Handle:g_PROPS_OnTerBuyProduct;
+new g_TTBonusMenuInfo[5][2];
+new Handle:g_TTBonusMenu;
+new Handle:g_BonusNum_Trie;
+new g_EffectEnt;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator+(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 + float(oper2);
+}
+
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) != 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) >= 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) <= 0;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+PrintHintTextToAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintHintText(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+RenderFx:GetEntityRenderFx(entity)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderFX", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderFX");
+		}
+		gotconfig = true;
+	}
+	return GetEntProp(entity, PropType:0, prop, 1, 0);
+}
+
+SetEntityRenderFx(entity, RenderFx:fx)
+{
+	static bool:gotconfig;
+	static String:prop[32];
+	if (!gotconfig)
+	{
+		new Handle:gc = LoadGameConfigFile("core.games");
+		new bool:exists = GameConfGetKeyValue(gc, "m_nRenderFX", prop, 32);
+		CloseHandle(gc);
+		if (!exists)
+		{
+			strcopy(prop, 32, "m_nRenderFX");
+		}
+		gotconfig = true;
+	}
+	SetEntProp(entity, PropType:0, prop, fx, 1, 0);
+	return 0;
+}
+
+wS_Protect_IpPort()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	static Handle:cvar_hostip;
+	static Handle:cvar_hostport;
+	static bool:cvar_hook;
+	new var1;
+	if (xD && cvar_hostip)
+	{
+		cvar_hostip = FindConVar("hostip");
+		cvar_hostport = FindConVar("hostport");
+	}
+	new var3;
+	if (xD && (cvar_hostip && cvar_hostport))
+	{
+		SetFailState("hostip || hostport == INVALID_HANDLE");
+	}
+	new hostip = GetConVarInt(cvar_hostip);
+	new ip1 = hostip >> 24 & 255;
+	new ip2 = hostip >> 16 & 255;
+	new ip3 = hostip >> 8 & 255;
+	new ip4 = hostip & 255;
+	decl String:current_ip_port[76];
+	Format(current_ip_port, 75, "%d.%d.%d.%d:%d", ip1, ip2, ip3, ip4, GetConVarInt(cvar_hostport));
+	new var4;
+	if (xD && strcmp(current_ip_port, FOR_IP_PORT, false))
+	{
+		static errors;
+		errors += 1;
+		if (errors > 2)
+		{
+			SetFailState("\nPlugin not for this server!\nYour ip:port \"%s\". Owner: \"%s\".\nhttp://world-source.ru/index/buy/0-97", current_ip_port, FOR_IP_PORT);
+		}
+		else
+		{
+			CreateTimer(2.0, wS_Protect_IpPort_Timer, any:0, 0);
+		}
+	}
+	else
+	{
+		new var5;
+		if (xD && !cvar_hook)
+		{
+			cvar_hook = true;
+			HookConVarChange(cvar_hostip, cvar_hostip_ip_port_changed);
+			HookConVarChange(cvar_hostport, cvar_hostip_ip_port_changed);
+		}
+	}
+	return 0;
+}
+
+public cvar_hostip_ip_port_changed(Handle:cVar, String:OldValue[], String:NewValue[])
+{
+	wS_Protect_IpPort();
+	return 0;
+}
+
+public Action:wS_Protect_IpPort_Timer(Handle:timer)
+{
+	wS_Protect_IpPort();
+	return Action:4;
+}
+
+EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)
+{
+	new clients[MaxClients];
+	new total;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[total] = i;
+		}
+		i++;
+	}
+	if (!total)
+	{
+		return 0;
+	}
+	EmitSound(clients, total, sample, entity, channel, level, flags, volume, pitch, speakerentity, origin, dir, updatePos, soundtime);
+	return 0;
+}
+
+AddFileToDownloadsTable(String:filename[])
+{
+	static table = -1;
+	if (table == -1)
+	{
+		table = FindStringTable("downloadables");
+	}
+	new bool:save = LockStringTables(false);
+	AddToStringTable(table, filename, "", -1);
+	LockStringTables(save);
+	return 0;
+}
+
+TE_SendToClient(client, Float:delay)
+{
+	new players[1];
+	players[0] = client;
+	return TE_Send(players, 1, delay);
+}
+
+TE_SetupBeamPoints(Float:start[3], Float:end[3], ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:EndWidth, FadeLength, Float:Amplitude, Color[4], Speed)
+{
+	TE_Start("BeamPoints");
+	TE_WriteVector("m_vecStartPoint", start);
+	TE_WriteVector("m_vecEndPoint", end);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", EndWidth);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[1]);
+	TE_WriteNum("b", Color[2]);
+	TE_WriteNum("a", Color[3]);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFadeLength", FadeLength);
+	return 0;
+}
+
+wS_ServerVars()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	props_building_sec = CreateConVar("props_building_sec", "180", "Время строительства в секундах", 0, true, 5.0, false, 0.0);
+	props_building_muz = CreateConVar("props_building_muz", "ambient/misc/brass_bell_e.wav", "Звук после завершения строительства", 0, false, 0.0, false, 0.0);
+	props_tt_timer_sec = CreateConVar("props_tt_timer_sec", "350", "Сколько у T есть секунд, чтобы убить всех CT", 0, true, 5.0, false, 0.0);
+	props_restore_ammo = CreateConVar("props_restore_ammo", "1", "Если игрок стреляет из пустого оружия, восстановить в нем патроны:\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	props_switch_teams = CreateConVar("props_switch_teams", "1", "Команды меняются местами в конце раунда:\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	props_stop_c4plant = CreateConVar("props_stop_c4plant", "1", "Запретить ставить бомбу: 1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	props_tt_speed = CreateConVar("props_tt_speed", "2.0", "Какая устанавливается скорость, когда T покупает ее.", 0, true, 1.1, true, 3.0);
+	props_tt_speed_sec = CreateConVar("props_tt_speed_sec", "9", "Сколько секунд действует скорость", 0, true, 1.0, false, 0.0);
+	props_start_credits = CreateConVar("props_start_credits", "1000", "Кредиты игрока, который вошел в первый раз", 0, true, 0.0, false, 0.0);
+	props_clear_credits = CreateConVar("props_clear_credits", "1", "1 = очищать историю кредитов после смены карты; 0 = нет", 0, true, 0.0, true, 1.0);
+	new Handle:cvar = CreateConVar("props_created_msg", "1", "Сообщение в чате о созданном предмете:\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	g_PropsCreatedMsg = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_flood", "0.2", "Защита от флуда функциями в !props меню", 0, true, 0.1, true, 3.0);
+	g_FloodSec = GetConVarFloat(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_t_zone_meters", "50", "Как далеко T может отойти от базы во время строительства (метры, 0 = откл).\nПолезно, чтобы T не мешали CT строить.", 0, true, 0.0, false, 0.0);
+	g_TzoneMeters = GetConVarFloat(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_t_zone_radius", "35", "Расстояние в метрах от центра респа T до его края (конца).\nИспользуется для того, чтобы узнать ставит ли CT предмет на респе T.", 0, true, 10.0, false, 0.0);
+	props_t_zone_radius = cvar;
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_t_zone_protect", "1", "CT не могут застраивать респ T:\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	g_TzoneProtect = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_menu2_enabled", "1", "Меню после строительства с опциями 'удалить/повернуть':\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	g_PropsMenu2Enabled = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_limit", "90", "Сколько предметов CT может создать", 0, true, 1.0, false, 0.0);
+	g_PropsLimit = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_limit_meters", "15", "Максимальное расстояние от CT до создаваемого им предмета в метрах. Если будет дальше, предмет не создастся.", 0, true, 2.0, false, 0.0);
+	g_PropsLimitMeters = GetConVarFloat(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_show_owner", "1", "Нанося повреждение предмету, вы будете видеть его владельца:\n1 = Да. 0 = Нет.", 0, true, 0.0, true, 1.0);
+	g_ShowOwner = GetConVarBool(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_t_cash", "1111", "Деньги у T при рождении (0 = не устанавливать)", 0, true, 0.0, true, 16000.0);
+	g_Tcash = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	cvar = CreateConVar("props_t_buy_mode", "3", "Террористы могут покупать оружие:\n1 = Всегда\n2 = Только во время строительства\n3 = Только после строительства", 0, true, 1.0, true, 3.0);
+	g_TbuyMode = GetConVarInt(cvar);
+	HookConVarChange(cvar, cvar_changed);
+	AutoExecConfig(true, "props", "props");
+	return 0;
+}
+
+public cvar_changed(Handle:cvar, String:OldValue[], String:NewValue[])
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl String:CvarName[28];
+	GetConVarName(cvar, CvarName, 25);
+	strcopy(CvarName, 25, CvarName[1]);
+	if (strcmp(CvarName, "flood", true))
+	{
+		if (strcmp(CvarName, "t_zone_meters", true))
+		{
+			if (strcmp(CvarName, "limit_meters", true))
+			{
+				if (strcmp(CvarName, "t_zone_radius", true))
+				{
+					if (strcmp(CvarName, "created_msg", true))
+					{
+						if (strcmp(CvarName, "menu2_enabled", true))
+						{
+							if (strcmp(CvarName, "show_owner", true))
+							{
+								if (strcmp(CvarName, "t_zone_protect", true))
+								{
+									if (strcmp(CvarName, "limit", true))
+									{
+										if (strcmp(CvarName, "t_cash", true))
+										{
+											if (!(strcmp(CvarName, "t_buy_mode", true)))
+											{
+												g_TbuyMode = StringToInt(NewValue, 10);
+											}
+										}
+										g_Tcash = StringToInt(NewValue, 10);
+									}
+									g_PropsLimit = StringToInt(NewValue, 10);
+								}
+								g_TzoneProtect = StringToInt(NewValue, 10) == 1;
+							}
+							g_ShowOwner = StringToInt(NewValue, 10) == 1;
+						}
+						g_PropsMenu2Enabled = StringToInt(NewValue, 10) == 1;
+					}
+					g_PropsCreatedMsg = StringToInt(NewValue, 10) == 1;
+				}
+				g_Units_FromTzoneCenter_Limit = StringToFloat(NewValue) * 39.3;
+			}
+			g_PropsLimitMeters = StringToFloat(NewValue);
+		}
+		g_TzoneMeters = StringToFloat(NewValue);
+	}
+	else
+	{
+		g_FloodSec = StringToFloat(NewValue);
+	}
+	return 0;
+}
+
+wS_StopProps()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_PropsCount = 0;
+	g_PropsTimer_Sec = 0;
+	g_BuildingOn = false;
+	g_PropsOn = false;
+	ClearTrie(g_VladelecPropa_Trie);
+	ClearTrie(g_RespSteam_Trie);
+	wS_ClearHandle(g_PropsTimer, false);
+	decl x;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		g_MyPropsCount[i] = 0;
+		x = 0;
+		while (x < 5)
+		{
+			g_Limit[i][x] = 0;
+			x++;
+		}
+		i++;
+	}
+	return 0;
+}
+
+wS_SetGod(client, bool:god)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (god)
+	{
+		var1 = MissingTAG:0;
+	}
+	else
+	{
+		var1 = MissingTAG:2;
+	}
+	SetEntProp(client, PropType:1, "m_takedamage", var1, 4, 0);
+	return 0;
+}
+
+bool:wS_ItsCreatedProp(index)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl String:PropName[52];
+	PropName[0] = MissingTAG:0;
+	GetEntPropString(index, PropType:1, "m_iName", PropName, 50, 0);
+	return strcmp(PropName, "_wSprop", true) == 0;
+}
+
+wS_GetAimInfo(client, bool:get_index, bool:get_origin, Float:end_origin[3])
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl Float:angles[3];
+	if (!GetClientEyeAngles(client, angles))
+	{
+		return -5;
+	}
+	decl Float:origin[3];
+	GetClientEyePosition(client, origin);
+	TR_TraceRayFilter(origin, angles, 33570827, RayType:1, TraceFilter_CallBack, client);
+	if (!TR_DidHit(Handle:0))
+	{
+		return -5;
+	}
+	if (get_origin)
+	{
+		TR_GetEndPosition(end_origin, Handle:0);
+		if (!get_index)
+		{
+			return 0;
+		}
+	}
+	if (get_index)
+	{
+		return TR_GetEntityIndex(Handle:0);
+	}
+	return -5;
+}
+
+public bool:TraceFilter_CallBack(TraceEnt, mask, any:entity)
+{
+	return entity != TraceEnt;
+}
+
+wS_RotateEntity(entity, Float:degree)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (degree < 1.0 || degree > 180.0)
+	{
+		degree = 45.0;
+	}
+	decl Float:angles[3];
+	decl Float:normal[3];
+	decl Float:direction[3];
+	decl Float:a;
+	decl Float:b;
+	decl Float:c;
+	decl Float:x;
+	decl Float:y;
+	decl Float:z;
+	decl Float:sin;
+	decl Float:cos;
+	GetEntPropVector(entity, PropType:0, "m_angRotation", angles, 0);
+	GetAngleVectors(angles, direction, NULL_VECTOR, normal);
+	sin = Sine(degree * 0.01745328);
+	cos = Cosine(degree * 0.01745328);
+	a = normal[0] * sin;
+	b = normal[1] * sin;
+	c = normal[2] * sin;
+	x = direction[2] * b + direction[0] * cos - direction[1] * c;
+	y = direction[0] * c + direction[1] * cos - direction[2] * a;
+	z = direction[1] * a + direction[2] * cos - direction[0] * b;
+	direction[0] = x;
+	direction[1] = y;
+	direction[2] = z;
+	GetVectorAngles(direction, angles);
+	decl Float:up[3];
+	GetVectorVectors(direction, NULL_VECTOR, up);
+	angles[2] += GetAngleBetweenVectors(up, normal, direction);
+	TeleportEntity(entity, NULL_VECTOR, angles, NULL_VECTOR);
+	return 0;
+}
+
+Float:GetAngleBetweenVectors(Float:vector1[3], Float:vector2[3], Float:direction[3])
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl Float:vector1_n[3];
+	decl Float:vector2_n[3];
+	decl Float:direction_n[3];
+	decl Float:cross[3];
+	NormalizeVector(direction, direction_n);
+	NormalizeVector(vector1, vector1_n);
+	NormalizeVector(vector2, vector2_n);
+	new Float:degree = ArcCosine(GetVectorDotProduct(vector1_n, vector2_n)) * 57.29578;
+	GetVectorCrossProduct(vector1_n, vector2_n, cross);
+	if (GetVectorDotProduct(cross, direction_n) < 0)
+	{
+		degree *= -1.0;
+	}
+	return degree;
+}
+
+bool:wS_ClearHandle(&Handle:hdl, bool:not_timer)
+{
+	if (hdl)
+	{
+		if (not_timer)
+		{
+			CloseHandle(hdl);
+		}
+		else
+		{
+			KillTimer(hdl, false);
+		}
+		hdl = 0;
+		return true;
+	}
+	return false;
+}
+
+wS_ShowTTBonusMenu(client, item)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (g_TTBonusMenu)
+	{
+		decl String:title[68];
+		Format(title, 65, "%T\n \n", "tt_bonus_menu_title", client, g_Credits[client]);
+		SetMenuTitle(g_TTBonusMenu, title);
+		DisplayMenuAtItem(g_TTBonusMenu, client, item, 0);
+		return 0;
+	}
+	return 0;
+}
+
+bool:ItsFloodInMenu(client)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl Float:CurTime;
+	if ((CurTime = GetGameTime()) - g_MyGameTimeWhenSelect[client] <= g_FloodSec)
+	{
+		return true;
+	}
+	g_MyGameTimeWhenSelect[client] = CurTime;
+	return false;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	RegPluginLibrary("props");
+	CreateNative("PROPS_Count", PROPS_Count_);
+	CreateNative("PROPS_ClientCount", PROPS_ClientCount_);
+	CreateNative("PROPS_GameSecondsLeft", PROPS_GameSecondsLeft_);
+	CreateNative("PROPS_GameOn", PROPS_GameOn_);
+	CreateNative("PROPS_StopGame", PROPS_StopGame_);
+	CreateNative("PROPS_GetPurchasesCount", PROPS_GetPurchasesCount_);
+	CreateNative("PROPS_GetCredits", PROPS_GetCredits_);
+	return APLRes:0;
+}
+
+wS_GlobalFunctions()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_PROPS_OnBuildingEnd = CreateGlobalForward("PROPS_OnBuildingEnd", ExecType:0);
+	g_PROPS_OnCtChosePistol = CreateGlobalForward("PROPS_OnCtChosePistol", ExecType:0, 2, 7, 2);
+	g_PROPS_OnCtDelOrRotProp = CreateGlobalForward("PROPS_OnCtDelOrRotProp", ExecType:2, 2, 2, 2, 9);
+	g_PROPS_OnCtCreateLimitedProp = CreateGlobalForward("PROPS_OnCtCreateLimitedProp", ExecType:2, 2);
+	g_PROPS_OnCtCreateProp = CreateGlobalForward("PROPS_OnCtCreateProp", ExecType:2, 2, 9, 7);
+	g_PROPS_OnGameEnd = CreateGlobalForward("PROPS_OnGameEnd", ExecType:0, 2);
+	g_PROPS_OnTerLeftSpawn = CreateGlobalForward("PROPS_OnTerLeftSpawn", ExecType:2, 2, 4);
+	g_PROPS_OnTerBuyLimitedProduct = CreateGlobalForward("PROPS_OnTerBuyLimitedProduct", ExecType:2, 2, 2, 2);
+	g_PROPS_OnTerBuyProduct = CreateGlobalForward("PROPS_OnTerBuyProduct", ExecType:0, 2, 2, 2);
+	return 0;
+}
+
+public PROPS_Count_(Handle:plugin, args)
+{
+	return g_PropsCount;
+}
+
+public PROPS_ClientCount_(Handle:plugin, args)
+{
+	return g_MyPropsCount[GetNativeCell(1)];
+}
+
+public PROPS_GameSecondsLeft_(Handle:plugin, args)
+{
+	return g_PropsTimer_Sec;
+}
+
+public PROPS_GameOn_(Handle:plugin, args)
+{
+	return g_PropsOn;
+}
+
+public PROPS_GetPurchasesCount_(Handle:plugin, args)
+{
+	return g_Limit[GetNativeCell(1)][GetNativeCell(2)];
+}
+
+public PROPS_GetCredits_(Handle:plugin, args)
+{
+	return g_Credits[GetNativeCell(1)];
+}
+
+public PROPS_StopGame_(Handle:plugin, args)
+{
+	if (g_PropsOn)
+	{
+		wS_StopProps();
+		return 1;
+	}
+	return 0;
+}
+
+wS_CreatePropsMenu()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (!g_PropsMenu)
+	{
+		g_PropsMenu = CreateMenu(g_PropsMenu_CallBack, MenuAction:28);
+		SetMenuTitle(g_PropsMenu, "ПРЕДМЕТЫ\n \n");
+		g_PropsMenu2 = CreateMenu(g_PropsMenu_CallBack, MenuAction:28);
+		SetMenuTitle(g_PropsMenu2, "ПРЕДМЕТЫ\n \n");
+		AddMenuItem(g_PropsMenu2, "del", "Удалить предмет", 0);
+		AddMenuItem(g_PropsMenu2, "rot", "Повернуть", 0);
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/props/props_menu.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogError("GetFileTime error: cfg/props/props_menu.txt");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	RemoveAllMenuItems(g_PropsMenu);
+	AddMenuItem(g_PropsMenu, "del", "Удалить предмет", 0);
+	AddMenuItem(g_PropsMenu, "rot", "Повернуть\n \n", 0);
+	ClearArray(g_PropsModel_Array);
+	ClearArray(g_PropsClass_Array);
+	ClearArray(g_PropsFlags_Array);
+	new Handle:kv = CreateKeyValues("props_menu", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/props/props_menu.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		LogError("KeyValues Error: cfg/props/props_menu.txt");
+		wS_Add1Prop();
+		return 0;
+	}
+	decl String:str_value[12];
+	new item;
+	new option = 2;
+	do {
+		if (KvGetSectionName(kv, g_PropName, 65))
+		{
+			KvGetString(kv, "class", g_PropClass, 32, "prop_dynamic");
+			new var3;
+			if (strcmp(g_PropClass, "prop_dynamic", true) && strcmp(g_PropClass, "prop_dynamic_override", true) && strcmp(g_PropClass, "prop_physics", true) && strcmp(g_PropClass, "prop_physics_multiplayer", true) && strcmp(g_PropClass, "prop_physics_override", true))
+			{
+				LogError("Bad class: '%s'", g_PropClass);
+			}
+			KvGetString(kv, "model", g_PropModel, 125, "");
+			new var4;
+			if (StrContains(g_PropModel, "models", true) || StrContains(g_PropModel, ".mdl", true) < 1)
+			{
+				LogError("Bad model: '%s'", g_PropModel);
+			}
+			option++;
+			if (option == 8)
+			{
+				AddMenuItem(g_PropsMenu, "del", "Удалить предмет", 0);
+				AddMenuItem(g_PropsMenu, "rot", "Повернуть\n \n", 0);
+				option = 3;
+			}
+			IntToString(item, str_value, 10);
+			if (!AddMenuItem(g_PropsMenu, str_value, g_PropName, 0))
+			{
+				LogError("AddMenuItem error");
+			}
+			item++;
+			PushArrayString(g_PropsModel_Array, g_PropModel);
+			PushArrayString(g_PropsClass_Array, g_PropClass);
+			PushArrayCell(g_PropsFlags_Array, KvGetNum(kv, "flags", 0));
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(kv);
+	if (item < 1)
+	{
+		wS_Add1Prop();
+	}
+	return 0;
+}
+
+wS_Add1Prop()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (!AddMenuItem(g_PropsMenu, "0", "Автомат с газировкой", 0))
+	{
+		return 0;
+	}
+	PushArrayString(g_PropsModel_Array, "models/props/cs_office/vending_machine.mdl");
+	PushArrayString(g_PropsClass_Array, "prop_dynamic");
+	PushArrayCell(g_PropsFlags_Array, any:0);
+	return 0;
+}
+
+public g_PropsMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var2;
+	if (action == MenuAction:4 && !g_PropsOn && GetClientTeam(client) == 3 && !IsPlayerAlive(client) && (g_PropsMenu2 == menu && !g_PropsMenu2Enabled))
+	{
+		return 0;
+	}
+	new var3;
+	if (!g_BuildingOn && g_PropsMenu == menu)
+	{
+		if (g_PropsMenu2Enabled)
+		{
+			DisplayMenu(g_PropsMenu2, client, 0);
+		}
+		return 0;
+	}
+	if (ItsFloodInMenu(client))
+	{
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	decl String:str_value[12];
+	if (!GetMenuItem(menu, item, str_value, 10, 0, g_PropName, 65))
+	{
+		LogError("GetMenuItem error (g_PropsMenu_CallBack)");
+		return 0;
+	}
+	decl bool:NeedCreateProp;
+	new var4;
+	NeedCreateProp = str_value[0] != 'd' && str_value[0] != 'r';
+	new var5;
+	if (var4 && g_MyPropsCount[client] >= g_PropsLimit)
+	{
+		new Action:result = 4;
+		Call_StartForward(g_PROPS_OnCtCreateLimitedProp);
+		Call_PushCell(client);
+		Call_Finish(result);
+		if (result)
+		{
+			PrintCenterText(client, "%t", "props_limit", g_PropsLimit);
+			DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+			return 0;
+		}
+	}
+	decl Float:origin[3];
+	decl entity;
+	if ((entity = wS_GetAimInfo(client, true, true, origin)) == -5)
+	{
+		PrintToChat(client, "\x04Нет столкновений");
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	if (!NeedCreateProp)
+	{
+		new var6;
+		if (entity <= MaxClients || !wS_ItsCreatedProp(entity))
+		{
+			PrintCenterText(client, "%t", "aim_to_prop");
+			DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+			return 0;
+		}
+		new bool:DEL = str_value[0] == 100;
+		decl vladelec;
+		IntToString(entity, str_value, 10);
+		new var7;
+		if (GetTrieValue(g_VladelecPropa_Trie, str_value, vladelec) && vladelec > 0)
+		{
+			new var8;
+			if ((vladelec = GetClientOfUserId(vladelec)) < 1 || GetClientTeam(vladelec) == 3)
+			{
+				vladelec = 0;
+				SetTrieValue(g_VladelecPropa_Trie, str_value, any:0, true);
+			}
+		}
+		else
+		{
+			vladelec = 0;
+		}
+		new Action:result;
+		Call_StartForward(g_PROPS_OnCtDelOrRotProp);
+		new var9;
+		if (DEL)
+		{
+			var9 = MissingTAG:0;
+		}
+		else
+		{
+			var9 = MissingTAG:1;
+		}
+		Call_PushCell(var9);
+		Call_PushCell(client);
+		Call_PushCell(vladelec);
+		Call_PushArray(origin, 3);
+		Call_Finish(result);
+		if (!result)
+		{
+			new var10;
+			if (DEL && AcceptEntityInput(entity, "Kill", -1, -1, 0))
+			{
+				if (0 < g_PropsCount)
+				{
+					g_PropsCount -= 1;
+				}
+				new var11;
+				if (vladelec > 0 && g_MyPropsCount[vladelec] > 0)
+				{
+					g_MyPropsCount[vladelec]--;
+				}
+			}
+			if (!DEL)
+			{
+				wS_RotateEntity(entity, g_MyDegree[client]);
+			}
+		}
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	if (0 < entity <= MaxClients)
+	{
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	decl Float:MyPos[3];
+	GetClientAbsOrigin(client, MyPos);
+	if (GetVectorDistance(MyPos, origin, false) / 39.3 > g_PropsLimitMeters)
+	{
+		PrintCenterText(client, "%t", "props_limit_meters");
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	new var12;
+	if (g_TzoneProtect && GetVectorDistance(g_TzoneCenter, origin, false) <= g_Units_FromTzoneCenter_Limit)
+	{
+		PrintCenterText(client, "%t", "props_t_zone_protect");
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	decl Float:angles[3];
+	TR_GetPlaneNormal(Handle:0, angles);
+	GetVectorAngles(angles, angles);
+	angles[0] = angles[0] + 90.0;
+	new Action:result;
+	Call_StartForward(g_PROPS_OnCtCreateProp);
+	Call_PushCell(client);
+	Call_PushArray(origin, 3);
+	Call_PushString(g_PropName);
+	Call_Finish(result);
+	if (result)
+	{
+		DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+		return 0;
+	}
+	new ar_item = StringToInt(str_value, 10);
+	GetArrayString(g_PropsClass_Array, ar_item, g_PropClass, 32);
+	if ((entity = CreateEntityByName(g_PropClass, -1)) <= MaxClients)
+	{
+		LogError("CreateEntityByName error: '%s' (g_PropsMenu_CallBack)", g_PropClass);
+		return 0;
+	}
+	GetArrayString(g_PropsModel_Array, ar_item, g_PropModel, 125);
+	DispatchKeyValue(entity, "model", g_PropModel);
+	decl flags;
+	if (0 < (flags = GetArrayCell(g_PropsFlags_Array, ar_item, 0, false)))
+	{
+		IntToString(flags, str_value, 10);
+		DispatchKeyValue(entity, "spawnflags", str_value);
+	}
+	DispatchKeyValue(entity, "solid", "6");
+	DispatchKeyValue(entity, "targetname", "_wSprop");
+	if (!DispatchSpawn(entity))
+	{
+		LogError("DispatchSpawn error (g_PropsMenu_CallBack)");
+		return 0;
+	}
+	IntToString(entity, str_value, 10);
+	SetTrieValue(g_VladelecPropa_Trie, str_value, g_MyId[client], true);
+	g_PropsCount += 1;
+	g_MyPropsCount[client]++;
+	TeleportEntity(entity, origin, angles, NULL_VECTOR);
+	HookSingleEntityOutput(entity, "OnTakeDamage", PropTakeDamage, false);
+	new var13;
+	if (g_PropsCreatedMsg && GetClientName(client, g_PropClass, 32))
+	{
+		PrintToChatAll("\x01%s | \x04%s", g_PropClass, g_PropName);
+	}
+	DisplayMenuAtItem(menu, client, GetMenuSelectionPosition(), 0);
+	return 0;
+}
+
+public PropTakeDamage(String:output[], prop, client, Float:delay)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (!g_ShowOwner || !IsClientInGame(client))
+	{
+		return 0;
+	}
+	decl String:str_value[12];
+	decl vladelec;
+	IntToString(prop, str_value, 10);
+	new var2;
+	if (GetTrieValue(g_VladelecPropa_Trie, str_value, vladelec) && vladelec > 0)
+	{
+		new var3;
+		if ((vladelec = GetClientOfUserId(vladelec)) < 1 || GetClientTeam(vladelec) == 3)
+		{
+			SetTrieValue(g_VladelecPropa_Trie, str_value, any:0, true);
+		}
+		if (client == vladelec)
+		{
+			PrintCenterText(client, "%t", "its_your_prop");
+		}
+		PrintCenterText(client, "%N", vladelec);
+	}
+	return 0;
+}
+
+public Action:g_PropsTimer_CT_CallBack(Handle:timer)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl tt_list[MaxClients];
+	decl ct_list[MaxClients];
+	decl i;
+	decl X;
+	new tt_count;
+	new ct_count;
+	i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			if (IsPlayerAlive(i))
+			{
+				if (GetClientTeam(i) == 2)
+				{
+					tt_count++;
+					tt_list[tt_count] = i;
+				}
+				else
+				{
+					ct_count++;
+					ct_list[ct_count] = i;
+				}
+			}
+			new var1;
+			if (GetClientTeam(i) > 1 && !GetTrieValue(g_RespSteam_Trie, g_SteamID[i], X))
+			{
+				SetTrieValue(g_RespSteam_Trie, g_SteamID[i], any:1, true);
+				CS_RespawnPlayer(i);
+			}
+		}
+		i++;
+	}
+	if (ct_count < 1)
+	{
+		wS_CreateStopGameEvent(0);
+		return Action:4;
+	}
+	g_PropsTimer_Sec -= 1;
+	if (g_PropsTimer_Sec < 1)
+	{
+		i = 0;
+		while (i < ct_count)
+		{
+			wS_SetGod(ct_list[i], false);
+			if (g_PropsMenu2Enabled)
+			{
+				DisplayMenu(g_PropsMenu2, ct_list[i], 0);
+			}
+			i++;
+		}
+		if (tt_count < 1)
+		{
+			wS_CreateStopGameEvent(1);
+			return Action:4;
+		}
+		i = 0;
+		while (i < tt_count)
+		{
+			X = tt_list[i];
+			wS_SetGod(X, false);
+			TeleportEntity(X, g_MySpawnPos[X], NULL_VECTOR, NULL_VECTOR);
+			i++;
+		}
+		g_BuildingOn = false;
+		if (strlen(g_BuildingEndSound) > 3)
+		{
+			EmitSoundToAll(g_BuildingEndSound, -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+		}
+		PrintHintTextToAll("GO GO GO");
+		g_PropsTimer_Sec = GetConVarInt(props_tt_timer_sec) + 1;
+		g_PropsTimer = CreateTimer(1.0, g_PropsTimer_TERR_CallBack, any:0, 3);
+		Call_StartForward(g_PROPS_OnBuildingEnd);
+		Call_Finish(0);
+		return Action:4;
+	}
+	PrintHintTextToAll("%t", "PropsTimer_CT", g_PropsTimer_Sec, g_PropsCount);
+	i = 0;
+	while (i < ct_count)
+	{
+		X = ct_list[i];
+		if (!g_iHavePistol[X])
+		{
+			DisplayMenu(g_CtPistolsMenu, X, 1);
+		}
+		i++;
+	}
+	new var2;
+	if (g_TzoneMeters > 0.0 && tt_count > 0)
+	{
+		decl Float:CurPos[3];
+		decl Float:M;
+		decl Action:result;
+		i = 0;
+		while (i < tt_count)
+		{
+			X = tt_list[i];
+			GetClientAbsOrigin(X, CurPos);
+			M = GetVectorDistance(g_MySpawnPos[X], CurPos, false) / 39.3 - g_TzoneMeters;
+			if (M >= 0.1)
+			{
+				result = MissingTAG:4;
+				Call_StartForward(g_PROPS_OnTerLeftSpawn);
+				Call_PushCell(X);
+				Call_PushFloat(M);
+				Call_Finish(result);
+				if (result)
+				{
+					TeleportEntity(X, g_MySpawnPos[X], NULL_VECTOR, NULL_VECTOR);
+					PrintToChat(X, "\x04%t", "props_t_zone_meters");
+				}
+			}
+			i++;
+		}
+	}
+	return Action:0;
+}
+
+public Action:g_PropsTimer_TERR_CallBack(Handle:timer)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new tt_count;
+	new ct_count;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && IsPlayerAlive(i))
+		{
+			if (GetClientTeam(i) == 2)
+			{
+				tt_count++;
+			}
+			ct_count++;
+		}
+		i++;
+	}
+	new var2;
+	if (tt_count < 1 || ct_count < 1)
+	{
+		wS_CreateStopGameEvent(1);
+		return Action:4;
+	}
+	g_PropsTimer_Sec -= 1;
+	if (g_PropsTimer_Sec < 1)
+	{
+		g_PropsTimer = MissingTAG:0;
+		wS_StopProps();
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			new var3;
+			if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
+			{
+				ForcePlayerSuicide(i);
+			}
+			i++;
+		}
+		return Action:4;
+	}
+	PrintHintTextToAll("%t", "PropsTimer_TERR", tt_count, ct_count, g_PropsTimer_Sec);
+	return Action:0;
+}
+
+wS_CreateStopGameEvent(reason)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_PropsTimer = MissingTAG:0;
+	wS_StopProps();
+	PrintHintTextToAll("%t", "PropsTimer_Stopped");
+	Call_StartForward(g_PROPS_OnGameEnd);
+	Call_PushCell(reason);
+	Call_Finish(0);
+	return 0;
+}
+
+wS_CtPistolsMenu()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_CtPistolsMenu = CreateMenu(g_CtPistolsMenu_CallBack, MenuAction:28);
+	SetMenuTitle(g_CtPistolsMenu, "ПИСТОЛЕТ\n \n");
+	AddMenuItem(g_CtPistolsMenu, "weapon_glock", "Glock - 9x19mm Sidearm", 0);
+	AddMenuItem(g_CtPistolsMenu, "weapon_usp", "USP - KM .45 Tactical", 0);
+	AddMenuItem(g_CtPistolsMenu, "weapon_p228", "p228 - Compact", 0);
+	AddMenuItem(g_CtPistolsMenu, "weapon_deagle", "Deagle - Night Hawk .50C", 0);
+	AddMenuItem(g_CtPistolsMenu, "weapon_elite", "Elite - .40 Dual", 0);
+	AddMenuItem(g_CtPistolsMenu, "weapon_fiveseven", "ES Five-Seven", 0);
+	return 0;
+}
+
+public g_CtPistolsMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (action == MenuAction:4 && !g_PropsOn && !g_BuildingOn && GetClientTeam(client) == 3 && !IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	decl String:class[32];
+	if (!GetMenuItem(menu, item, class, 32, 0, "", 0))
+	{
+		return 0;
+	}
+	g_iHavePistol[client] = 1;
+	DisplayMenu(g_PropsMenu, client, 0);
+	new weapon = GetPlayerWeaponSlot(client, 1);
+	new var2;
+	if (weapon > 0 && RemovePlayerItem(client, weapon))
+	{
+		AcceptEntityInput(weapon, "Kill", -1, -1, 0);
+	}
+	if ((weapon = GivePlayerItem(client, class, 0)) > MaxClients)
+	{
+		Call_StartForward(g_PROPS_OnCtChosePistol);
+		Call_PushCell(client);
+		Call_PushString(class[1]);
+		Call_PushCell(weapon);
+		Call_Finish(0);
+	}
+	return 0;
+}
+
+wS_TTBonusMenu()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	static old_change_time = -1;
+	new new_change_time = GetFileTime("cfg/props/t_menu.txt", FileTimeMode:2);
+	new var1;
+	if (new_change_time == -1 || old_change_time != new_change_time)
+	{
+		if (new_change_time == -1)
+		{
+			LogError("GetFileTime error: cfg/props/t_menu.txt");
+		}
+		return 0;
+	}
+	old_change_time = new_change_time;
+	if (g_TTBonusMenu)
+	{
+		RemoveAllMenuItems(g_TTBonusMenu);
+	}
+	else
+	{
+		g_TTBonusMenu = CreateMenu(g_TTBonusMenu_CallBack, MenuAction:28);
+	}
+	new i;
+	while (i < 5)
+	{
+		g_TTBonusMenuInfo[i][0] = 0;
+		g_TTBonusMenuInfo[i][1] = 0;
+		i++;
+	}
+	new Handle:kv = CreateKeyValues("t_menu", "", "");
+	new var2;
+	if (!FileToKeyValues(kv, "cfg/props/t_menu.txt") || !KvGotoFirstSubKey(kv, true))
+	{
+		CloseHandle(kv);
+		wS_ClearHandle(g_TTBonusMenu, true);
+		LogError("KeyValues Error: cfg/props/t_menu.txt");
+		return 0;
+	}
+	decl String:Key[12];
+	decl String:text[68];
+	decl value;
+	new BonusNum;
+	new Handle:hKeysTrie = CreateTrie();
+	do {
+		new var3;
+		if (!KvGetSectionName(kv, Key, 10) || KvGetNum(kv, "enabled", 0) == 1 || GetTrieValue(hKeysTrie, Key, value))
+		{
+		}
+		else
+		{
+			if (!GetTrieValue(g_BonusNum_Trie, Key, value))
+			{
+				LogError("Bad bonus name: '%s' in cfg/props/t_menu.txt", Key);
+			}
+			value = KvGetNum(kv, "cr", 0);
+			KvGetString(kv, "text", text, 65, "");
+			Format(text, 65, "%s / %d", text, value);
+			if (!AddMenuItem(g_TTBonusMenu, Key, text, 0))
+			{
+				LogError("AddMenuItem error: wS_TTBonusMenu()");
+			}
+			SetTrieValue(hKeysTrie, Key, any:1, true);
+			g_TTBonusMenuInfo[BonusNum][0] = value;
+			g_TTBonusMenuInfo[BonusNum][1] = KvGetNum(kv, "limit", 0);
+			BonusNum++;
+			if (BonusNum >= 5)
+			{
+				CloseHandle(hKeysTrie);
+				CloseHandle(kv);
+				if (GetMenuItemCount(g_TTBonusMenu) < 1)
+				{
+					wS_ClearHandle(g_TTBonusMenu, true);
+					LogError("cfg/props/t_menu.txt empty");
+				}
+				return 0;
+			}
+		}
+	} while (KvGotoNextKey(kv, true));
+	CloseHandle(hKeysTrie);
+	CloseHandle(kv);
+	if (GetMenuItemCount(g_TTBonusMenu) < 1)
+	{
+		wS_ClearHandle(g_TTBonusMenu, true);
+		LogError("cfg/props/t_menu.txt empty");
+	}
+	return 0;
+}
+
+public g_TTBonusMenu_CallBack(Handle:menu, MenuAction:action, client, item)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (action == MenuAction:4 && !g_PropsOn && GetClientTeam(client) == 2 && !IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	if (ItsFloodInMenu(client))
+	{
+		wS_ShowTTBonusMenu(client, GetMenuSelectionPosition());
+		return 0;
+	}
+	if (g_BuildingOn)
+	{
+		PrintCenterText(client, "%t", "bonus_menu_not_ready");
+		wS_ShowTTBonusMenu(client, GetMenuSelectionPosition());
+		return 0;
+	}
+	decl String:Key[12];
+	if (!GetMenuItem(menu, item, Key, 10, 0, "", 0))
+	{
+		LogError("GetMenuItem error (g_TTBonusMenu_CallBack)");
+		return 0;
+	}
+	decl BonusNum;
+	if (!GetTrieValue(g_BonusNum_Trie, Key, BonusNum))
+	{
+		LogError("GetTrieValue 'BonusNum' error");
+		return 0;
+	}
+	decl price;
+	if ((price = g_TTBonusMenuInfo[BonusNum][0]) > g_Credits[client])
+	{
+		PrintCenterText(client, "%t", "bonus_menu_no_credits");
+		wS_ShowTTBonusMenu(client, GetMenuSelectionPosition());
+		return 0;
+	}
+	decl limit;
+	new var2;
+	if ((limit = g_TTBonusMenuInfo[BonusNum][1]) > 0 && g_Limit[client][BonusNum] >= limit)
+	{
+		new Action:result = 4;
+		Call_StartForward(g_PROPS_OnTerBuyLimitedProduct);
+		Call_PushCell(client);
+		Call_PushCell(BonusNum);
+		Call_PushCell(limit);
+		Call_Finish(result);
+		if (result)
+		{
+			PrintCenterText(client, "%t", "bonus_menu_limit", limit);
+			wS_ShowTTBonusMenu(client, GetMenuSelectionPosition());
+			return 0;
+		}
+	}
+	new bool:buy;
+	if (BonusNum)
+	{
+		if (BonusNum == 1)
+		{
+			buy = true;
+			decl count;
+			if ((count = GetEntProp(client, PropType:0, "m_iAmmo", 4, 11)) < 1)
+			{
+				GivePlayerItem(client, "weapon_hegrenade", 0);
+			}
+			else
+			{
+				SetEntProp(client, PropType:0, "m_iAmmo", count + 1, 4, 11);
+			}
+			if ((count = GetEntProp(client, PropType:0, "m_iAmmo", 4, 12)) < 1)
+			{
+				GivePlayerItem(client, "weapon_flashbang", 0);
+			}
+			else
+			{
+				SetEntProp(client, PropType:0, "m_iAmmo", count + 1, 4, 12);
+			}
+			if ((count = GetEntProp(client, PropType:0, "m_iAmmo", 4, 13)) < 1)
+			{
+				GivePlayerItem(client, "weapon_smokegrenade", 0);
+			}
+			else
+			{
+				SetEntProp(client, PropType:0, "m_iAmmo", count + 1, 4, 13);
+			}
+		}
+		if (BonusNum == 2)
+		{
+			new ent = wS_GetAimInfo(client, true, false, {0.0,0.0,0.0});
+			new var3;
+			if (ent > MaxClients && wS_ItsCreatedProp(ent) && GetEntityRenderFx(ent) != 12)
+			{
+				buy = true;
+				SetEntityRenderFx(ent, RenderFx:12);
+			}
+			else
+			{
+				PrintCenterText(client, "%t", "aim_to_prop");
+			}
+		}
+		if (BonusNum == 3)
+		{
+			if (GetEntProp(client, PropType:0, "m_iHealth", 4, 0) < 100)
+			{
+				buy = true;
+				SetEntProp(client, PropType:0, "m_iHealth", any:100, 4, 0);
+			}
+		}
+		if (BonusNum == 4)
+		{
+			new i = 1;
+			while (i <= MaxClients)
+			{
+				new var4;
+				if (IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i))
+				{
+					buy = true;
+					decl Float:MyPos[3];
+					decl Float:CtPos[3];
+					GetClientAbsOrigin(client, MyPos);
+					GetClientAbsOrigin(i, CtPos);
+					MyPos[2] += 250.0;
+					CtPos[2] += 30.0;
+					TE_SetupBeamPoints(MyPos, CtPos, g_EffectEnt, g_EffectEnt, 0, 0, 10.0, 3.0, 3.0, 0, 0.0, 13968, 10);
+					TE_SendToClient(client, 0.0);
+					decl String:name[32];
+					if (GetClientName(i, name, 32))
+					{
+						MyPos[2] -= 250.0;
+						CtPos[2] -= 30.0;
+						PrintToChat(client, "\x04%t", "where_ct", name, GetVectorDistance(MyPos, CtPos, false) / 39.3);
+					}
+				}
+				i++;
+			}
+		}
+	}
+	else
+	{
+		if (g_SpeedTimer[client])
+		{
+		}
+		else
+		{
+			buy = true;
+			g_SpeedTimer[client] = CreateTimer(GetConVarFloat(props_tt_speed_sec), g_SpeedTimer_CallBack, client, 0);
+			SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", GetConVarFloat(props_tt_speed), 0);
+			decl Float:origin[3];
+			GetClientEyePosition(client, origin);
+			EmitAmbientSound("weapons/flashbang/flashbang_explode1.wav", origin, client, 130, 0, 1.0, 100, 0.0);
+		}
+	}
+	if (buy)
+	{
+		g_Credits[client] -= price;
+		g_Limit[client][BonusNum]++;
+		SetTrieValue(g_Credits_Trie, g_SteamID[client], g_Credits[client], true);
+		Call_StartForward(g_PROPS_OnTerBuyProduct);
+		Call_PushCell(client);
+		Call_PushCell(BonusNum);
+		Call_PushCell(price);
+		Call_Finish(0);
+	}
+	wS_ShowTTBonusMenu(client, GetMenuSelectionPosition());
+	return 0;
+}
+
+public Action:g_SpeedTimer_CallBack(Handle:timer, any:client)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_SpeedTimer[client] = 0;
+	new var1;
+	if (IsClientInGame(client) && IsPlayerAlive(client))
+	{
+		SetEntPropFloat(client, PropType:1, "m_flLaggedMovementValue", 1.0, 0);
+	}
+	return Action:4;
+}
+
+public Action:props_cmd(client, args)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (0 < client <= MaxClients && IsPlayerAlive(client))
+	{
+		if (!g_PropsOn)
+		{
+			PrintToChat(client, "\x04%t", "command_disabled");
+		}
+		if (GetClientTeam(client) == 3)
+		{
+			if (g_BuildingOn)
+			{
+				if (g_iHavePistol[client])
+				{
+					DisplayMenu(g_PropsMenu, client, 0);
+				}
+				else
+				{
+					PrintToChat(client, "\x04%t", "choose_pistol");
+				}
+			}
+			else
+			{
+				if (g_PropsMenu2Enabled)
+				{
+					DisplayMenu(g_PropsMenu2, client, 0);
+				}
+			}
+		}
+		wS_ShowTTBonusMenu(client, 0);
+	}
+	return Action:3;
+}
+
+public Action:deg_cmd(client, args)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (0 < client <= MaxClients && GetClientTeam(client) == 3 && IsPlayerAlive(client))
+	{
+		if (args != 1)
+		{
+			PrintToChat(client, "\x04%t", "deg_info", g_MyDegree[client]);
+			return Action:3;
+		}
+		decl String:str_deg[8];
+		decl Float:deg;
+		GetCmdArg(1, str_deg, 5);
+		if ((deg = StringToFloat(str_deg)) < 1065353216)
+		{
+			deg = 1.0;
+		}
+		else
+		{
+			if (deg > 180.0)
+			{
+				deg = 180.0;
+			}
+		}
+		if (g_MyDegree[client] != deg)
+		{
+			g_MyDegree[client] = deg;
+			SetTrieValue(g_Degree_Trie, g_SteamID[client], deg, true);
+		}
+		PrintToChat(client, "\x04%t", "deg_info", deg);
+	}
+	return Action:3;
+}
+
+public Action:props_add_credits_cmd(admin, args)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (args != 2)
+	{
+		PrintToConsole(admin, "props_add_credits \"steamid\" \"cr\"");
+		return Action:3;
+	}
+	decl String:str_cr[12];
+	GetCmdArg(2, str_cr, 10);
+	new need_add_cr = StringToInt(str_cr, 10);
+	if (need_add_cr)
+	{
+		decl String:steamid[32];
+		GetCmdArg(1, steamid, 30);
+		if (StrContains(steamid, "STEAM_", true))
+		{
+			PrintToConsole(admin, "Bad steamid '%s'", steamid);
+			return Action:3;
+		}
+		new i = 1;
+		while (i <= MaxClients)
+		{
+			if (!(strcmp(steamid, g_SteamID[i], true)))
+			{
+				new var2;
+				if (!(!IsClientInGame(i) || (need_add_cr < 0 && g_Credits[i] <= 0)))
+				{
+					new old_cr = g_Credits[i];
+					new new_cr = need_add_cr + old_cr;
+					if (0 > new_cr)
+					{
+						new_cr = 0;
+					}
+					g_Credits[i] = new_cr;
+					SetTrieValue(g_Credits_Trie, steamid, new_cr, true);
+					PrintToConsole(admin, "Кредиты игрока '%N' обновлены. Было: %d. Стало: %d.", i, old_cr, new_cr);
+					return Action:3;
+				}
+				return Action:3;
+			}
+			i++;
+		}
+		return Action:3;
+	}
+	return Action:3;
+}
+
+public OnConfigsExecuted()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (GetConVarBool(props_clear_credits))
+	{
+		ClearTrie(g_Credits_Trie);
+	}
+	wS_CreatePropsMenu();
+	wS_TTBonusMenu();
+	GetConVarString(props_building_muz, g_BuildingEndSound, 125);
+	new var1;
+	if (StrContains(g_BuildingEndSound, ".mp3", true) > 0 || StrContains(g_BuildingEndSound, ".wav", true) > 0)
+	{
+		TrimString(g_BuildingEndSound);
+		ReplaceString(g_BuildingEndSound, 125, "\", "/", true);
+		ReplaceString(g_BuildingEndSound, 125, "sound/", "", true);
+		PrecacheSound(g_BuildingEndSound, true);
+		Format(g_BuildingEndSound, 125, "sound/%s", g_BuildingEndSound);
+		AddFileToDownloadsTable(g_BuildingEndSound);
+		strcopy(g_BuildingEndSound, 125, 8160 + 6);
+	}
+	else
+	{
+		g_BuildingEndSound[0] = 0;
+	}
+	decl i;
+	new value = GetArraySize(g_PropsModel_Array);
+	i = 0;
+	while (i < value)
+	{
+		new var2;
+		if (GetArrayString(g_PropsModel_Array, i, g_PropModel, 125) > 5 && g_PropModel[0] == 'm')
+		{
+			PrecacheModel(g_PropModel, true);
+		}
+		i++;
+	}
+	g_TzoneCenter[0] = 0;
+	g_TzoneCenter[1] = 0;
+	g_TzoneCenter[2] = 0;
+	decl Float:origin[3];
+	i = -1;
+	value = 0;
+	while (0 < (i = FindEntityByClassname(i, "info_player_terrorist")))
+	{
+		GetEntPropVector(i, PropType:0, "m_vecOrigin", origin, 0);
+		new var3 = g_TzoneCenter;
+		var3[0] = var3[0] + origin[0];
+		g_TzoneCenter[1] += origin[1];
+		g_TzoneCenter[2] += origin[2];
+		value++;
+	}
+	if (0 < value)
+	{
+		new var4 = g_TzoneCenter;
+		var4[0] = var4[0] / float(value);
+		g_TzoneCenter[1] /= float(value);
+		g_TzoneCenter[2] /= float(value);
+		g_Units_FromTzoneCenter_Limit = GetConVarFloat(props_t_zone_radius) * 39.3;
+	}
+	else
+	{
+		g_TzoneProtect = false;
+		g_Units_FromTzoneCenter_Limit = 0.0;
+		LogError("info_player_terrorist not found");
+	}
+	return 0;
+}
+
+public OnMapStart()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_PropsTimer = MissingTAG:0;
+	PrecacheSound("weapons/flashbang/flashbang_explode1.wav", true);
+	g_EffectEnt = PrecacheModel("materials/sprites/laser.vmt", true);
+	return 0;
+}
+
+public OnMapEnd()
+{
+	g_PropsTimer = MissingTAG:0;
+	return 0;
+}
+
+public RoundStart_CallBack(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	wS_StopProps();
+	if (name[1] != 'f')
+	{
+		return 0;
+	}
+	g_BuildingOn = true;
+	g_PropsOn = true;
+	g_PropsTimer_Sec = GetConVarInt(props_building_sec) + 1;
+	g_PropsTimer = CreateTimer(1.0, g_PropsTimer_CT_CallBack, any:0, 3);
+	return 0;
+}
+
+public round_end(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	wS_StopProps();
+	new var1;
+	if (GetConVarBool(props_switch_teams) && GetEventInt(event, "winner") > 1)
+	{
+		CreateTimer(0.5, SwitchTeams_Timer, any:0, 2);
+	}
+	return 0;
+}
+
+public Action:SwitchTeams_Timer(Handle:timer)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	decl team;
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && (team = GetClientTeam(i)) > 1)
+		{
+			new var2;
+			if (team == 2)
+			{
+				var2 = 3;
+			}
+			else
+			{
+				var2 = 2;
+			}
+			CS_SwitchTeam(i, var2);
+		}
+		i++;
+	}
+	return Action:4;
+}
+
+public player_spawn(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new id = GetEventInt(event, "userid");
+	new client = GetClientOfUserId(id);
+	wS_ClearHandle(g_SpeedTimer[client], false);
+	g_iHavePistol[client] = 0;
+	GetClientAbsOrigin(client, g_MySpawnPos[client]);
+	new var1;
+	if (g_Tcash > 0 && GetClientTeam(client) == 2)
+	{
+		SetEntProp(client, PropType:0, "m_iAccount", g_Tcash, 4, 0);
+	}
+	CreateTimer(0.2, player_spawn_Timer, id, 2);
+	return 0;
+}
+
+public Action:player_spawn_Timer(Handle:timer, any:id)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var1;
+	if (!g_PropsOn || !g_BuildingOn)
+	{
+		return Action:4;
+	}
+	new client = GetClientOfUserId(id);
+	new var2;
+	if (client > 0 && IsPlayerAlive(client))
+	{
+		wS_SetGod(client, true);
+	}
+	return Action:4;
+}
+
+public Action:CS_OnBuyCommand(client, String:item[])
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	new var5;
+	if (GetClientTeam(client) == 3 || (g_TbuyMode > 1 && (!g_PropsOn || (g_TbuyMode == 2 && !g_BuildingOn) || (g_TbuyMode == 3 && g_BuildingOn))))
+	{
+		PrintCenterText(client, "%t", "buy_blocked");
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public OnClientPutInServer(client)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_MyId[client] = GetClientUserId(client);
+	g_MyGameTimeWhenSelect[client] = 0;
+	g_MyPropsCount[client] = 0;
+	new i;
+	while (i < 5)
+	{
+		g_Limit[client][i] = 0;
+		i++;
+	}
+	return 0;
+}
+
+public OnClientAuthorized(client, String:steamid[])
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	strcopy(g_SteamID[client], 30, steamid);
+	if (!GetTrieValue(g_Degree_Trie, steamid, g_MyDegree[client]))
+	{
+		g_MyDegree[client] = 1110704128;
+	}
+	if (!GetTrieValue(g_Credits_Trie, steamid, g_Credits[client]))
+	{
+		g_Credits[client] = GetConVarInt(props_start_credits);
+		SetTrieValue(g_Credits_Trie, steamid, g_Credits[client], true);
+	}
+	return 0;
+}
+
+public OnClientDisconnect_Post(client)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	g_Credits[client] = 0;
+	g_SteamID[client][0] = MissingTAG:0;
+	g_MyPropsCount[client] = 0;
+	wS_ClearHandle(g_SpeedTimer[client], false);
+	return 0;
+}
+
+public break_prop(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (!g_BuildingOn)
+	{
+		return 0;
+	}
+	decl String:str_value[12];
+	decl vladelec;
+	IntToString(GetEventInt(event, "entindex"), str_value, 10);
+	if (GetTrieValue(g_VladelecPropa_Trie, str_value, vladelec))
+	{
+		if (0 < g_PropsCount)
+		{
+			g_PropsCount -= 1;
+		}
+		new var1;
+		if ((vladelec = GetClientOfUserId(vladelec)) > 0 && GetClientTeam(vladelec) == 3 && g_MyPropsCount[vladelec] > 0)
+		{
+			g_MyPropsCount[vladelec]--;
+		}
+		RemoveFromTrie(g_VladelecPropa_Trie, str_value);
+	}
+	return 0;
+}
+
+public weapon_fire_on_empty(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (!GetConVarBool(props_restore_ammo))
+	{
+		return 0;
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new weapon = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon", 0);
+	if (weapon > MaxClients)
+	{
+		if (RemovePlayerItem(client, weapon))
+		{
+			AcceptEntityInput(weapon, "Kill", -1, -1, 0);
+		}
+		decl String:item[32];
+		GetEventString(event, "weapon", item, 32);
+		Format(item, 32, "weapon_%s", item);
+		GivePlayerItem(client, item, 0);
+	}
+	return 0;
+}
+
+public bomb_beginplant(Handle:event, String:name[], bool:silent)
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	if (!GetConVarBool(props_stop_c4plant))
+	{
+		return 0;
+	}
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new c4 = GetPlayerWeaponSlot(client, 4);
+	new var1;
+	if (c4 > MaxClients && RemovePlayerItem(client, c4))
+	{
+		AcceptEntityInput(c4, "Kill", -1, -1, 0);
+		ClientCommand(client, "lastinv");
+	}
+	return 0;
+}
+
+public OnPluginStart()
+{
+	if (!xD)
+	{
+		if (!xD && !xD)
+		{
+		}
+	}
+	wS_Protect_IpPort();
+	LoadTranslations("props.phrases");
+	g_VladelecPropa_Trie = CreateTrie();
+	g_BonusNum_Trie = CreateTrie();
+	g_RespSteam_Trie = CreateTrie();
+	g_Degree_Trie = CreateTrie();
+	g_Credits_Trie = CreateTrie();
+	g_PropsModel_Array = CreateArray(125, 0);
+	g_PropsClass_Array = CreateArray(32, 0);
+	g_PropsFlags_Array = CreateArray(1, 0);
+	SetTrieValue(g_BonusNum_Trie, "speed", any:0, true);
+	SetTrieValue(g_BonusNum_Trie, "grens", any:1, true);
+	SetTrieValue(g_BonusNum_Trie, "pulse", any:2, true);
+	SetTrieValue(g_BonusNum_Trie, "hp", any:3, true);
+	SetTrieValue(g_BonusNum_Trie, "where_ct", any:4, true);
+	wS_ServerVars();
+	wS_GlobalFunctions();
+	wS_CtPistolsMenu();
+	RegConsoleCmd("props", props_cmd, "", 0);
+	RegConsoleCmd("deg", deg_cmd, "", 0);
+	RegAdminCmd("props_add_credits", props_add_credits_cmd, 16384, "props_add_credits \"steamid\" \"cr\"", "", 0);
+	HookEvent("round_end", round_end, EventHookMode:1);
+	HookEvent("round_freeze_end", RoundStart_CallBack, EventHookMode:2);
+	HookEvent("round_start", RoundStart_CallBack, EventHookMode:2);
+	HookEvent("player_spawn", player_spawn, EventHookMode:1);
+	HookEvent("break_prop", break_prop, EventHookMode:1);
+	HookEvent("weapon_fire_on_empty", weapon_fire_on_empty, EventHookMode:1);
+	HookEvent("bomb_beginplant", bomb_beginplant, EventHookMode:1);
+	CreateTimer(1.0, OnPluginStart_ChangeLevel, any:0, 2);
+	return 0;
+}
+
+public Action:OnPluginStart_ChangeLevel(Handle:timer)
+{
+	decl String:map[152];
+	map[0] = MissingTAG:0;
+	GetCurrentMap(map, 150);
+	ServerCommand("changelevel \"%s\"", map);
+	return Action:4;
+}
+

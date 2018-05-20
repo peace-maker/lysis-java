@@ -1,0 +1,7499 @@
+// Bad section size for section .tags. Trying to repair.
+// Unknown section ".".
+// Recovered name of previous section as ".___.natives".
+// Unknown section "".
+// Recovered name of previous section as "_dbg.info".
+// Missing section ".dbg.info".
+// Missing section ".dbg.natives".
+// Section "_dbg.info" is probably (0,857143) missing section ".dbg.info".
+// Section ".___.natives" is probably (0,600000) missing section ".dbg.natives".
+new NULL_VECTOR;
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public SharedPlugin:__pl__0x00002B75 =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 292882352,
+};
+public SharedPlugin:__pl__0x00002B7A =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 1461077058,
+};
+public PlVers:__version =
+{
+	version = 292882352,
+	filevers = "[INVALID_STRING]",
+	date = "[INVALID_STRING]",
+	time = "[INVALID_STRING]"
+};
+public SharedPlugin:__pl__0x00002B7E =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 208360016,
+};
+public SharedPlugin:__pl__0x00002B7C =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 1287495847,
+};
+public SharedPlugin:__pl__0x00002B79 =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 1507908557,
+};
+public Plugin:myinfo =
+{
+	name = "[INVALID_STRING]",
+	description = "[INVALID_STRING]",
+	author = "[INVALID_STRING]",
+	version = "[INVALID_STRING]",
+	url = ""
+};
+public SharedPlugin:__pl__0x00002B76 =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 3748402,
+};
+public SharedPlugin:__pl__0x00002B73 =
+{
+	name = "[INVALID_STRING]",
+	file = "[INVALID_STRING]",
+	required = 0,
+};
+new Handle:_0x0000046C[2] =
+{
+	3748402, 0
+};
+new Handle:_0x00000607[2] =
+{
+	3486258, 0
+};
+new Handle:_0x00000292[13];
+new Handle:_0x000027CC[2] =
+{
+	3748401, 0
+};
+new Handle:_0x000007CC[2] =
+{
+	14386, 0
+};
+new Handle:_0x0000010D[8];
+new Handle:_0x000003BB[35];
+new Handle:_0x000022B0[2] =
+{
+	14642, 0
+};
+new Handle:_0x0000085D[8];
+new Handle:_0x00000537[2] =
+{
+	3552817, 0
+};
+new Handle:_0x0000271D[12];
+new Handle:_0x000007A5[3];
+new Handle:_0x000003D2[2];
+new Handle:_0x000004CB[17];
+new Handle:_0x00000F4E[2] =
+{
+	12850, 0
+};
+new Handle:_0x00000BEE[2] =
+{
+	3682353, 0
+};
+new Handle:_0x0000040B[15];
+new Handle:_0x00000EEB[37];
+new Handle:_0x00000A4E[2] =
+{
+	3551281, 0
+};
+new Handle:_0x000007E2[12];
+new Handle:_0x000022F0[2] =
+{
+	3160113, 0
+};
+new Handle:_0x000002F9[3] =
+{
+	1663398693, 25381, 0
+};
+new Handle:_0x00000C10[2] =
+{
+	13363, 0
+};
+new Handle:_0x00000E3B[8];
+new Handle:_0x00000FC5[22];
+new Handle:_0x00000E65[14];
+new Handle:_0x00000F9B[29];
+new Handle:_0x00000A90[2] =
+{
+	14137, 0
+};
+new Handle:_0x00000AB2[6];
+new Handle:_0x00000AB5[8];
+new Handle:_0x000003B7[2] =
+{
+	14387, 0
+};
+new Handle:_0x000022FB[12];
+new Handle:_0x000027BB[12];
+new Handle:_0x00000FA7[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00002270[2] =
+{
+	12852, 0
+};
+new Handle:_0x0000087B[19];
+new Handle:_0x0000054C[2] =
+{
+	3748913, 0
+};
+new Handle:_0x0000089B[2];
+new Handle:_0x0000095B[3];
+new Handle:_0x00000A7B[21];
+new Handle:_0x000003CD[2];
+new Handle:_0x000004AD[16];
+new Handle:_0x00000460[2] =
+{
+	3160113, 0
+};
+new Handle:_0x000027A0[2] =
+{
+	3289394, 0
+};
+new Handle:_0x000009A0[2] =
+{
+	3290418, 0
+};
+new Handle:_0x00000E2E[2] =
+{
+	3619121, 0
+};
+new Handle:_0x000009B7[2] =
+{
+	14648, 0
+};
+new Handle:_0x000004F5[3];
+new Handle:_0x00000B1D[9];
+new Handle:_0x00000F8D[44];
+new Handle:_0x0000075C[2] =
+{
+	3616818, 0
+};
+new Handle:_0x00000CE2[23];
+new Handle:_0x0000066D[6];
+new Handle:_0x00000B95[19];
+new Handle:_0x000004F7[2] =
+{
+	3289905, 0
+};
+new Handle:_0x000009BB[40];
+new Handle:_0x000007A7[2] =
+{
+	3748913, 0
+};
+new Handle:_0x00000C15[9];
+new Handle:_0x0000229C[2] =
+{
+	3683377, 0
+};
+new Handle:_0x000003AB[113];
+new Handle:_0x00000675[13];
+new Handle:_0x000008E5[6];
+new Handle:_0x00000F9D[34];
+new Handle:_0x00000F6E[2] =
+{
+	3486770, 0
+};
+new Handle:_0x00000307[2] =
+{
+	3551793, 0
+};
+new Handle:_0x000005DD[21];
+new Handle:_0x000001B5[3];
+new Handle:_0x00000810[2] =
+{
+	3160369, 0
+};
+new Handle:_0x00000DC2[9];
+new Handle:_0x00000BE2[7];
+new Handle:_0x00000FBD[13];
+new Handle:_0x00000FE2[81];
+new Handle:_0x00000C95[23];
+new Handle:_0x00000ED5[20];
+new Handle:_0x00000812[9];
+new Handle:_0x00000CAB[28];
+new Handle:_0x00000F8E[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00000785[8];
+new Handle:_0x0000043E[2] =
+{
+	3748145, 0
+};
+new Handle:_0x0000069D[9];
+new Handle:_0x000007A0[2] =
+{
+	3225393, 0
+};
+new Handle:_0x000009B0[2] =
+{
+	3683122, 0
+};
+new Handle:_0x0000053D[21];
+new Handle:_0x0000090D[3];
+new Handle:_0x00000E6B[9];
+new Handle:_0x00000B7E[2] =
+{
+	3750193, 0
+};
+new Handle:_0x00000E82[6];
+new Handle:_0x00000CC7[2] =
+{
+	14134, 0
+};
+new Handle:_0x00000575[15];
+new Handle:_0x00000DC5[6];
+new Handle:_0x000027BC[2] =
+{
+	3159857, 0
+};
+new Handle:_0x000009AD[13];
+new Handle:_0x00002260[2] =
+{
+	3224882, 0
+};
+new Handle:_0x00000B6E[2] =
+{
+	3224114, 0
+};
+new Handle:_0x00000AF7[2] =
+{
+	3618353, 0
+};
+new Handle:_0x000004CD[25];
+new Handle:_0x00000BDC[2] =
+{
+	3617074, 0
+};
+new Handle:_0x00000682[23];
+new Handle:_0x00000A67[2] =
+{
+	13363, 0
+};
+new Handle:_0x000004C2[10];
+new Handle:_0x00000127[2] =
+{
+	3485746, 0
+};
+new Handle:_0x0000020C[2] =
+{
+	13878, 0
+};
+new Handle:_0x00002252[12];
+new Handle:_0x00000B82[11];
+new Handle:_0x00000FE5[43];
+new Handle:_0x000003F0[2] =
+{
+	3356721, 0
+};
+new Handle:_0x000003EB[3];
+new Handle:_0x00000F27[2] =
+{
+	13877, 0
+};
+new Handle:_0x00000A15[17];
+new Handle:_0x00000D40[2] =
+{
+	3225649, 0
+};
+new Handle:_0x00000485[16];
+new Handle:_0x000027DD[12];
+new Handle:_0x0000031B[2];
+new Handle:_0x00000C12[19];
+new Handle:_0x00000B22[9];
+new Handle:_0x00000DEE[2] =
+{
+	14645, 0
+};
+new Handle:_0x00000D62[3];
+new Handle:_0x00000AE5[31];
+new Handle:_0x00000F9C[2] =
+{
+	3683377, 0
+};
+new Handle:_0x00000ADC[2] =
+{
+	3420977, 0
+};
+new Handle:_0x00000715[22];
+new Handle:_0x000004E7[2] =
+{
+	3422001, 0
+};
+new Handle:_0x000022CD[12];
+new Handle:_0x000003D7[2] =
+{
+	3683889, 0
+};
+new Handle:_0x00000522[105];
+new Handle:_0x0000064E[2] =
+{
+	3486514, 0
+};
+new Handle:_0x00000CED[28];
+new Handle:_0x000001A7[2] =
+{
+	12596, 0
+};
+new Handle:_0x00000DBD[12];
+new Handle:_0x00000955[6];
+new Handle:_0x0000051E[2] =
+{
+	14137, 0
+};
+new Handle:_0x0000091D[16];
+new Handle:_0x00000B6B[8];
+new Handle:_0x000005BD[100];
+new Handle:_0x000005A2[21];
+new Handle:_0x0000076D[22];
+new Handle:_0x00000BBC[2] =
+{
+	14393, 0
+};
+new Handle:_0x00002797[2] =
+{
+	13621, 0
+};
+new Handle:_0x0000069B[6];
+new Handle:_0x00000C32[8];
+new Handle:_0x00000CEE[2] =
+{
+	3617585, 0
+};
+new Handle:_0x00000662[27];
+new Handle:_0x000006F2[17];
+new Handle:_0x000001CE[2] =
+{
+	14642, 0
+};
+new Handle:_0x00000B15[8];
+new Handle:_0x00000C4D[23];
+new Handle:_0x000005BC[2] =
+{
+	3749681, 0
+};
+new Handle:_0x00000BB2[9];
+new Handle:_0x00000F8C[2] =
+{
+	3158577, 0
+};
+new Handle:_0x0000018D[12];
+new Handle:_0x0000276E[2] =
+{
+	3485746, 0
+};
+new Handle:_0x00000F70[2] =
+{
+	3356977, 0
+};
+new Handle:_0x0000080D[17];
+new Handle:_0x000003ED[35];
+new Handle:_0x00000472[13];
+new Handle:_0x00000195[3];
+new Handle:_0x0000066E[2] =
+{
+	13107, 0
+};
+new Handle:_0x00000507[2] =
+{
+	13366, 0
+};
+new Handle:_0x00000D8D[8];
+new Handle:_0x000022C0[2] =
+{
+	3355697, 0
+};
+new Handle:_0x00000925[13];
+new Handle:_0x0000095D[8];
+new Handle:_0x00000A12[23];
+new Handle:_0x00000F2B[15];
+new Handle:_0x00000FAB[3];
+new Handle:_0x00000EBD[37];
+new Handle:_0x00002725[12];
+new Handle:_0x00000110[2] =
+{
+	3748658, 0
+};
+new Handle:_0x000004A0[2] =
+{
+	3291185, 0
+};
+new Handle:_0x0000044E[2] =
+{
+	3618353, 0
+};
+new Handle:_0x00000D7C[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00000E90[2] =
+{
+	12338, 0
+};
+new Handle:_0x00002237[2] =
+{
+	3683889, 0
+};
+new Handle:_0x00000EB7[2] =
+{
+	3224626, 0
+};
+new Handle:_0x0000098D[6];
+new Handle:_0x00000F7B[13];
+new Handle:_0x000002C4[2] =
+{
+	3683121, 0
+};
+new Handle:_0x00002750[2] =
+{
+	3224626, 0
+};
+new Handle:_0x000008BC[2] =
+{
+	14642, 0
+};
+new Handle:_0x00000637[2] =
+{
+	3290673, 0
+};
+new Handle:_0x00000A57[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000DDC[2] =
+{
+	3158834, 0
+};
+new Handle:_0x00000D87[2] =
+{
+	3486001, 0
+};
+new Handle:_0x000008CC[2] =
+{
+	3225393, 0
+};
+new Handle:_0x0000220B[12];
+new Handle:_0x00000B92[19];
+new Handle:_0x000005C5[6];
+new Handle:_0x00000187[2] =
+{
+	13113, 0
+};
+new Handle:_0x00000A82[95];
+new Handle:_0x0000031E[2] =
+{
+	12852, 0
+};
+new Handle:_0x000005CB[3];
+new Handle:_0x00000B5B[25];
+new Handle:_0x00000BC0[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00000525[3];
+new Handle:_0x0000082C[2] =
+{
+	3158321, 0
+};
+new Handle:_0x000005B0[2] =
+{
+	13106, 0
+};
+new Handle:_0x00000DD5[6];
+new Handle:_0x00000FFC[2] =
+{
+	3160113, 0
+};
+new Handle:_0x00000527[2] =
+{
+	3159346, 0
+};
+new Handle:_0x0000044D[9];
+new Handle:_0x00000995[8];
+new Handle:_0x00000772[2] =
+{
+	12338, 0
+};
+new Handle:_0x000007B2[7];
+new Handle:_0x00000CBD[6];
+new Handle:_0x0000073B[8];
+new Handle:_0x00000A7D[13];
+new Handle:_0x000008FD[8];
+new Handle:_0x00000AF2[28];
+new Handle:_0x000022BE[2] =
+{
+	13369, 0
+};
+new Handle:_0x00000774[9] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 25381, 0
+};
+new Handle:_0x000007BB[5];
+new Handle:_0x00002255[12];
+new Handle:_0x000005AC[2] =
+{
+	3617329, 0
+};
+new Handle:_0x00000DE0[2] =
+{
+	14137, 0
+};
+new Handle:_0x00000C5B[3];
+new Handle:_0x00000947[2] =
+{
+	3225649, 0
+};
+new Handle:_0x00000590[2] =
+{
+	14644, 0
+};
+new Handle:_0x0000098C[2] =
+{
+	3618097, 0
+};
+new Handle:_0x0000276B[12];
+new Handle:_0x00000DAB[6];
+new Handle:_0x0000041B[9];
+new Handle:_0x00000BF0[2] =
+{
+	14136, 0
+};
+new Handle:_0x00000172[18];
+new Handle:_0x00000155[8];
+new Handle:_0x000007F0[2] =
+{
+	3485745, 0
+};
+new Handle:_0x0000028C[6] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x00000952[9];
+new Handle:_0x000001C0[2] =
+{
+	12597, 0
+};
+new Handle:_0x00000C05[9];
+new Handle:_0x00000C20[2] =
+{
+	3289649, 0
+};
+new Handle:_0x00000D9E[2] =
+{
+	12597, 0
+};
+new Handle:_0x00000185[12];
+new Handle:_0x0000015C[2] =
+{
+	14386, 0
+};
+new Handle:_0x0000047C[2] =
+{
+	3158066, 0
+};
+new Handle:_0x00000FFD[15];
+new Handle:_0x00000FCD[23];
+new Handle:_0x00000250[12];
+new Handle:_0x00000ACB[3];
+new Handle:_0x00000FDB[30];
+new Handle:_0x000022D2[12];
+new Handle:_0x00002265[12];
+new Handle:_0x000004FC[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00000D8C[2] =
+{
+	14642, 0
+};
+new Handle:_0x00000BB0[2] =
+{
+	12598, 0
+};
+new Handle:_0x00000B4B[6];
+new Handle:_0x00000FF5[6];
+new Handle:_0x000008EC[2] =
+{
+	3224370, 0
+};
+new Handle:_0x00000E52[6];
+new Handle:_0x00000286[2] =
+{
+	3158578, 0
+};
+new Handle:_0x000008B2[3];
+new Handle:_0x0000225C[2] =
+{
+	3552306, 0
+};
+new Handle:_0x00000E40[2] =
+{
+	13618, 0
+};
+new Handle:_0x0000222D[12];
+new Handle:_0x00000D3E[2] =
+{
+	14644, 0
+};
+new Handle:_0x0000276D[12];
+new Handle:_0x00000457[2] =
+{
+	3486002, 0
+};
+new Handle:_0x000005EB[9];
+new Handle:_0x00000730[2] =
+{
+	13881, 0
+};
+new Handle:_0x0000096D[8];
+new Handle:_0x0000074E[2] =
+{
+	14645, 0
+};
+new Handle:_0x0000220E[2] =
+{
+	3159857, 0
+};
+new Handle:_0x000004B2[15];
+new Handle:_0x000008DC[2] =
+{
+	3487537, 0
+};
+new Handle:_0x0000056E[2] =
+{
+	3682354, 0
+};
+new Handle:_0x000003A0[2] =
+{
+	12857, 0
+};
+new Handle:_0x0000081C[2] =
+{
+	13622, 0
+};
+new Handle:_0x000001E5[3];
+new Handle:_0x000008DE[2] =
+{
+	3223857, 0
+};
+new Handle:_0x0000062E[2] =
+{
+	3485745, 0
+};
+new Handle:_0x00000150[2] =
+{
+	3486258, 0
+};
+new Handle:_0x00000672[18];
+new Handle:_0x000008DB[6];
+new Handle:_0x000002CD[2] =
+{
+	14390, 0
+};
+new Handle:_0x00000F3D[3];
+new Handle:_0x000022A5[12];
+new Handle:_0x000001AE[2] =
+{
+	3289650, 0
+};
+new Handle:_0x00000B00[2] =
+{
+	14387, 0
+};
+new Handle:_0x00000EB0[2] =
+{
+	3224881, 0
+};
+new Handle:_0x000009C7[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000135[3];
+new Handle:_0x000007D2[3];
+new Handle:_0x00000B57[2] =
+{
+	3420977, 0
+};
+new Handle:_0x00000465[4];
+new Handle:_0x00002717[2] =
+{
+	14391, 0
+};
+new Handle:_0x00000C0C[2] =
+{
+	14130, 0
+};
+new Handle:_0x000007FB[6];
+new Handle:_0x00000557[2] =
+{
+	3487793, 0
+};
+new Handle:_0x000002F6[2];
+new Handle:_0x00000397[2] =
+{
+	13110, 0
+};
+new Handle:_0x000003DD[2];
+new Handle:_0x00000ED7[2] =
+{
+	3420210, 0
+};
+new Handle:_0x00000DE5[23];
+new Handle:_0x0000037D[99];
+new Handle:_0x0000043C[2] =
+{
+	3683378, 0
+};
+new Handle:_0x00002200[2] =
+{
+	13111, 0
+};
+new Handle:_0x00000B97[2] =
+{
+	3748401, 0
+};
+new Handle:_0x0000073E[2] =
+{
+	3486770, 0
+};
+new Handle:_0x000006E7[2] =
+{
+	3355185, 0
+};
+new Handle:_0x00000975[8];
+new Handle:_0x00000299[2];
+new Handle:_0x00000C87[2] =
+{
+	3291441, 0
+};
+new Handle:_0x00000CF2[11];
+new Handle:_0x000006BB[22];
+new Handle:_0x0000228D[12];
+new Handle:_0x00002770[2] =
+{
+	3422513, 0
+};
+new Handle:_0x00000C70[2] =
+{
+	3355954, 0
+};
+new Handle:_0x00000732[3];
+new Handle:_0x000002DD[2] =
+{
+	13624, 0
+};
+new Handle:_0x00000BA7[2] =
+{
+	3551794, 0
+};
+new Handle:_0x00000342[2];
+new Handle:_0x00000E9B[14];
+new Handle:_0x00000C22[3];
+new Handle:_0x00000347[2] =
+{
+	3159857, 0
+};
+new Handle:_0x00002752[12];
+new Handle:_0x0000097E[2] =
+{
+	14643, 0
+};
+new Handle:_0x00000940[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00000726[77];
+new Handle:_0x000006A0[2] =
+{
+	3486513, 0
+};
+new Handle:_0x00000B35[3];
+new Handle:_0x00000B3C[2] =
+{
+	3420210, 0
+};
+new Handle:_0x00000712[2];
+new Handle:_0x00000477[2] =
+{
+	3420722, 0
+};
+new Handle:_0x00000835[8];
+new Handle:_0x00000723[3];
+new Handle:_0x00000A87[2] =
+{
+	13366, 0
+};
+new Handle:_0x0000223C[2] =
+{
+	3683122, 0
+};
+new Handle:_0x0000068C[2] =
+{
+	3553329, 0
+};
+new Handle:_0x000007C5[6];
+new Handle:_0x00000A42[9];
+new Handle:_0x00000D27[2] =
+{
+	13111, 0
+};
+new Handle:_0x000009C2[9];
+new Handle:_0x000001BE[2] =
+{
+	12596, 0
+};
+new Handle:_0x00000A17[2] =
+{
+	14136, 0
+};
+new Handle:_0x00000CC5[3];
+new Handle:_0x000006C0[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000CB7[2] =
+{
+	3224625, 0
+};
+new Handle:_0x00000D02[9];
+new Handle:_0x0000271B[12];
+new Handle:_0x00000D1C[2] =
+{
+	13108, 0
+};
+new Handle:_0x00002272[12];
+new Handle:_0x0000066C[2] =
+{
+	13881, 0
+};
+new Handle:_0x0000042D[12];
+new Handle:_0x00000B5C[2] =
+{
+	3619121, 0
+};
+new Handle:_0x000003A5[31];
+new Handle:_0x000005EE[2] =
+{
+	3617330, 0
+};
+new Handle:_0x00000455[21];
+new Handle:_0x00000BA2[8];
+new Handle:_0x00000FEC[2] =
+{
+	3160113, 0
+};
+new Handle:_0x00000C3B[9];
+new Handle:_0x000008DD[8];
+new Handle:_0x00000822[9];
+new Handle:_0x00000EC0[2] =
+{
+	3289137, 0
+};
+new Handle:_0x000004C0[2] =
+{
+	12856, 0
+};
+new Handle:_0x00000F7D[13];
+new Handle:_0x000004DD[18];
+new Handle:_0x0000084E[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000B25[6];
+new Handle:_0x00000A80[2] =
+{
+	3618353, 0
+};
+new Handle:_0x00002757[2] =
+{
+	3420210, 0
+};
+new Handle:_0x000003DB[84];
+new Handle:_0x00000747[2] =
+{
+	3225137, 0
+};
+new Handle:_0x00000100[2] =
+{
+	3487025, 0
+};
+new Handle:_0x00002762[12];
+new Handle:_0x0000029E[14];
+new Handle:_0x000004A7[2] =
+{
+	14389, 0
+};
+new Handle:_0x00000FBC[2] =
+{
+	3618097, 0
+};
+new Handle:_0x000007EC[2] =
+{
+	3291441, 0
+};
+new Handle:_0x00000D5E[2] =
+{
+	3289650, 0
+};
+new Handle:_0x000007B5[7];
+new Handle:_0x00000AFB[3];
+new Handle:_0x00000E7B[41];
+new Handle:_0x0000030E[2] =
+{
+	13625, 0
+};
+new Handle:_0x000027EE[2] =
+{
+	3486258, 0
+};
+new Handle:_0x00000C85[18];
+new Handle:_0x0000058B[6];
+new Handle:_0x00000787[2] =
+{
+	14644, 0
+};
+new Handle:_0x000007D0[2] =
+{
+	3551793, 0
+};
+new Handle:_0x00000D45[8];
+new Handle:_0x00000AA5[7];
+new Handle:_0x00000F42[13];
+new Handle:_0x0000086C[2] =
+{
+	13109, 0
+};
+new Handle:_0x0000093E[2] =
+{
+	3420466, 0
+};
+new Handle:_0x0000085E[2] =
+{
+	3551538, 0
+};
+new Handle:_0x000005A0[2] =
+{
+	3617585, 0
+};
+new Handle:_0x0000279C[2] =
+{
+	3747890, 0
+};
+new Handle:_0x00000BE7[2] =
+{
+	3422513, 0
+};
+new Handle:_0x00000615[11];
+new Handle:_0x000008AB[18];
+new Handle:_0x00000A47[2] =
+{
+	3159090, 0
+};
+new Handle:_0x000004D0[2] =
+{
+	3749169, 0
+};
+new Handle:_0x00000897[2] =
+{
+	3553073, 0
+};
+new Handle:_0x000009E7[2] =
+{
+	12596, 0
+};
+new Handle:_0x000009BE[2] =
+{
+	3290929, 0
+};
+new Handle:_0x0000033B[27];
+new Handle:_0x000005B7[2] =
+{
+	3225393, 0
+};
+new Handle:_0x0000087E[2] =
+{
+	14390, 0
+};
+new Handle:_0x0000070B[3];
+new Handle:_0x0000086D[3];
+new Handle:_0x0000083B[18];
+new Handle:_0x00000E12[71];
+new Handle:_0x00000E3C[2] =
+{
+	3618865, 0
+};
+new Handle:_0x00000792[8];
+new Handle:_0x00000FFB[2];
+new Handle:_0x00000125[18];
+new Handle:_0x0000011E[2] =
+{
+	13623, 0
+};
+new Handle:_0x0000076E[2] =
+{
+	3224370, 0
+};
+new Handle:_0x0000030D[85];
+new Handle:_0x00000AB0[2] =
+{
+	3553585, 0
+};
+new Handle:_0x00000552[3];
+new Handle:_0x00000D25[8];
+new Handle:_0x000027BD[12];
+new Handle:_0x000002FD[2] =
+{
+	14133, 0
+};
+new Handle:_0x00002267[2] =
+{
+	3552817, 0
+};
+new Handle:_0x00000CB0[2] =
+{
+	3551794, 0
+};
+new Handle:_0x000004EB[15];
+new Handle:_0x0000047D[15];
+new Handle:_0x00000FDE[2] =
+{
+	13362, 0
+};
+new Handle:_0x00000D8E[2] =
+{
+	3354929, 0
+};
+new Handle:_0x00000D92[9];
+new Handle:_0x00000EF2[4];
+new Handle:_0x00000C82[13];
+new Handle:_0x000008E7[2] =
+{
+	13367, 0
+};
+new Handle:_0x00000532[9];
+new Handle:_0x000003EE[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000370[2] =
+{
+	3486257, 0
+};
+new Handle:_0x00000BB5[3];
+new Handle:_0x000007BD[5];
+new Handle:_0x0000069E[2] =
+{
+	13624, 0
+};
+new Handle:_0x00000B6D[19];
+new Handle:_0x0000038C[2] =
+{
+	3749937, 0
+};
+new Handle:_0x00000BCB[3];
+new Handle:_0x00000790[2] =
+{
+	3420466, 0
+};
+new Handle:_0x00000857[2] =
+{
+	3486770, 0
+};
+new Handle:_0x00000402[42];
+new Handle:_0x000004CC[2] =
+{
+	3223601, 0
+};
+new Handle:_0x000022CC[2] =
+{
+	13875, 0
+};
+new Handle:_0x00000CFB[18];
+new Handle:_0x00000E97[2] =
+{
+	3617586, 0
+};
+new Handle:_0x00000CB5[23];
+new Handle:_0x0000083E[2] =
+{
+	3682353, 0
+};
+new Handle:_0x00000A2C[2] =
+{
+	14137, 0
+};
+new Handle:_0x0000081B[3];
+new Handle:_0x00000AF0[2] =
+{
+	3617329, 0
+};
+new Handle:_0x00000C8E[2] =
+{
+	14646, 0
+};
+new Handle:_0x0000052B[31];
+new Handle:_0x00000492[17];
+new Handle:_0x0000029C[9] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x000004B7[2] =
+{
+	3420466, 0
+};
+new Handle:_0x00000A22[12];
+new Handle:_0x000008D5[17];
+new Handle:_0x00000DE2[8];
+new Handle:_0x000009B5[11];
+new Handle:_0x00000FAD[11];
+new Handle:_0x000002F4[2] =
+{
+	12598, 0
+};
+new Handle:_0x00000585[21];
+new Handle:_0x00000375[2];
+new Handle:_0x00000B8B[6];
+new Handle:_0x00000F85[41];
+new Handle:_0x0000037C[2] =
+{
+	12598, 0
+};
+new Handle:_0x000005AE[2] =
+{
+	12857, 0
+};
+new Handle:_0x000003DC[2] =
+{
+	3683377, 0
+};
+new Handle:_0x000002FA[18];
+new Handle:_0x00000CD2[3];
+new Handle:_0x00000495[22];
+new Handle:_0x00000875[3];
+new Handle:_0x00000D2D[9];
+new Handle:_0x00000E50[2] =
+{
+	3682354, 0
+};
+new Handle:_0x000003E5[121];
+new Handle:_0x00000425[13];
+new Handle:_0x00000A1E[2] =
+{
+	3224626, 0
+};
+new Handle:_0x00000F5C[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000700[2] =
+{
+	3748658, 0
+};
+new Handle:_0x00000ADD[21];
+new Handle:_0x000003E2[31];
+new Handle:_0x00002227[2] =
+{
+	13367, 0
+};
+new Handle:_0x0000044B[11];
+new Handle:_0x00000E42[4];
+new Handle:_0x000008EE[2] =
+{
+	3486513, 0
+};
+new Handle:_0x00000A72[11];
+new Handle:_0x00000DFE[2] =
+{
+	3354929, 0
+};
+new Handle:_0x00000FAE[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00002230[2] =
+{
+	3289905, 0
+};
+new Handle:_0x000022A7[2] =
+{
+	3747889, 0
+};
+new Handle:_0x0000091C[2] =
+{
+	3682866, 0
+};
+new Handle:_0x00000667[2] =
+{
+	3747889, 0
+};
+new Handle:_0x00000655[13];
+new Handle:_0x0000273D[12];
+new Handle:_0x00000DEB[9];
+new Handle:_0x00000190[2] =
+{
+	13367, 0
+};
+new Handle:_0x00000F1C[2] =
+{
+	3355441, 0
+};
+new Handle:_0x00000447[2] =
+{
+	3160113, 0
+};
+new Handle:_0x0000011C[2] =
+{
+	13368, 0
+};
+new Handle:_0x00002735[12];
+new Handle:_0x00000350[2] =
+{
+	3485745, 0
+};
+new Handle:_0x000007DD[9];
+new Handle:_0x00000DED[3];
+new Handle:_0x000006AB[11];
+new Handle:_0x00000642[13];
+new Handle:_0x00000D15[9];
+new Handle:_0x00000817[2] =
+{
+	3356209, 0
+};
+new Handle:_0x0000222E[2] =
+{
+	14391, 0
+};
+new Handle:_0x00000F75[13];
+new Handle:_0x00000107[2] =
+{
+	3749425, 0
+};
+new Handle:_0x00000F05[21];
+new Handle:_0x00000B50[2] =
+{
+	3617842, 0
+};
+new Handle:_0x000005F7[2] =
+{
+	3552049, 0
+};
+new Handle:_0x00000632[13];
+new Handle:_0x000003BD[114];
+new Handle:_0x000005E5[21];
+new Handle:_0x00000E60[2] =
+{
+	3158833, 0
+};
+new Handle:_0x00000677[2] =
+{
+	3618097, 0
+};
+new Handle:_0x000005C2[9];
+new Handle:_0x00000625[13];
+new Handle:_0x000006F0[2] =
+{
+	12600, 0
+};
+new Handle:_0x000005DC[2] =
+{
+	3488049, 0
+};
+new Handle:_0x00000B75[3];
+new Handle:_0x00000C75[25];
+new Handle:_0x00000422[9];
+new Handle:_0x0000088B[9];
+new Handle:_0x00000367[2] =
+{
+	3486001, 0
+};
+new Handle:_0x00000C4E[2] =
+{
+	3551794, 0
+};
+new Handle:_0x0000057E[2] =
+{
+	3421234, 0
+};
+new Handle:_0x0000010B[4];
+new Handle:_0x000009F5[18];
+new Handle:_0x00002722[12];
+new Handle:_0x00000CCB[9];
+new Handle:_0x0000069C[2] =
+{
+	14644, 0
+};
+new Handle:_0x0000093C[2] =
+{
+	3617842, 0
+};
+new Handle:_0x000001C7[2] =
+{
+	3617330, 0
+};
+new Handle:_0x0000068D[3];
+new Handle:_0x00000FF2[3];
+new Handle:_0x00000A2B[11];
+new Handle:_0x00000797[2] =
+{
+	3748913, 0
+};
+new Handle:_0x00000DAD[8];
+new Handle:_0x00000C3C[2] =
+{
+	12854, 0
+};
+new Handle:_0x000006F5[8];
+new Handle:_0x000004A5[9];
+new Handle:_0x0000075E[2] =
+{
+	12339, 0
+};
+new Handle:_0x000022DC[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000400[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000DAE[2] =
+{
+	3618865, 0
+};
+new Handle:_0x00000847[2] =
+{
+	3486514, 0
+};
+new Handle:_0x0000037E[2] =
+{
+	3684145, 0
+};
+new Handle:_0x00000505[8];
+new Handle:_0x0000220C[2] =
+{
+	3158065, 0
+};
+new Handle:_0x0000224D[12];
+new Handle:_0x00000545[20];
+new Handle:_0x0000070D[3];
+new Handle:_0x00000BF2[9];
+new Handle:_0x00000D42[6];
+new Handle:_0x000005FC[2] =
+{
+	13876, 0
+};
+new Handle:_0x0000078D[9];
+new Handle:_0x00000CE5[9];
+new Handle:_0x000009F7[2] =
+{
+	3617841, 0
+};
+new Handle:_0x00000F67[2] =
+{
+	3552305, 0
+};
+new Handle:_0x00000D1E[2] =
+{
+	3488049, 0
+};
+new Handle:_0x000027E2[12];
+new Handle:_0x00000D5C[2] =
+{
+	3420209, 0
+};
+new Handle:_0x00000E4C[2] =
+{
+	3748146, 0
+};
+new Handle:_0x0000071C[2] =
+{
+	3552049, 0
+};
+new Handle:_0x00000882[8];
+new Handle:_0x00002730[2] =
+{
+	3289137, 0
+};
+new Handle:_0x00000A5C[2] =
+{
+	3159346, 0
+};
+new Handle:_0x00000D4C[2] =
+{
+	3420722, 0
+};
+new Handle:_0x000004B0[2] =
+{
+	12595, 0
+};
+new Handle:_0x0000035B[2];
+new Handle:_0x0000047E[2] =
+{
+	12339, 0
+};
+new Handle:_0x00000C00[2] =
+{
+	13874, 0
+};
+new Handle:_0x00000EC5[9];
+new Handle:_0x0000094D[11];
+new Handle:_0x00000652[11];
+new Handle:_0x00002715[12];
+new Handle:_0x00000F5E[2] =
+{
+	3158834, 0
+};
+new Handle:_0x000006FB[3];
+new Handle:_0x000008A5[3];
+new Handle:_0x000003D5[25];
+new Handle:_0x0000060D[9];
+new Handle:_0x000022C2[12];
+new Handle:_0x0000094B[18];
+new Handle:_0x000006AC[2] =
+{
+	3617074, 0
+};
+new Handle:_0x000001FC[2] =
+{
+	3158833, 0
+};
+new Handle:_0x0000061E[2] =
+{
+	13366, 0
+};
+new Handle:_0x00000FB7[2] =
+{
+	14133, 0
+};
+new Handle:_0x00000550[2] =
+{
+	13622, 0
+};
+new Handle:_0x0000221C[2] =
+{
+	14389, 0
+};
+new Handle:_0x00000C47[2] =
+{
+	3748145, 0
+};
+new Handle:_0x00000F4C[2] =
+{
+	13623, 0
+};
+new Handle:_0x00000D00[2] =
+{
+	13107, 0
+};
+new Handle:_0x000027C0[2] =
+{
+	14137, 0
+};
+new Handle:_0x0000050B[21];
+new Handle:_0x000003F5[35];
+new Handle:_0x00000152[6];
+new Handle:_0x00000E2B[22];
+new Handle:_0x00000D55[3];
+new Handle:_0x00000365[72];
+new Handle:_0x00000A65[21];
+new Handle:_0x00000B2B[3];
+new Handle:_0x00000AC5[8];
+new Handle:_0x00000E32[3];
+new Handle:_0x00000162[8];
+new Handle:_0x000008E2[9];
+new Handle:_0x00000937[2] =
+{
+	14390, 0
+};
+new Handle:_0x00002742[12];
+new Handle:_0x000022D7[2] =
+{
+	3289649, 0
+};
+new Handle:_0x00000115[8];
+new Handle:_0x00000120[2] =
+{
+	3159345, 0
+};
+new Handle:_0x00000895[2];
+new Handle:_0x0000015D[9];
+new Handle:_0x00000CD7[2] =
+{
+	3683633, 0
+};
+new Handle:_0x00000B40[2] =
+{
+	3289650, 0
+};
+new Handle:_0x00000F5B[14];
+new Handle:_0x00000BF5[3];
+new Handle:_0x00000547[2] =
+{
+	3617841, 0
+};
+new Handle:_0x0000017C[2] =
+{
+	3748914, 0
+};
+new Handle:_0x000006A5[18];
+new Handle:_0x0000049E[2] =
+{
+	13106, 0
+};
+new Handle:_0x000004C7[2] =
+{
+	12597, 0
+};
+new Handle:_0x00000B42[28];
+new Handle:_0x00000982[8];
+new Handle:_0x000003A7[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00000AAE[2] =
+{
+	3485746, 0
+};
+new Handle:_0x000009FB[9];
+new Handle:_0x00000C92[8];
+new Handle:_0x00000BC7[2] =
+{
+	12344, 0
+};
+new Handle:_0x000001E7[2] =
+{
+	12854, 0
+};
+new Handle:_0x000006B0[2] =
+{
+	3618097, 0
+};
+new Handle:_0x000027DE[2] =
+{
+	3682609, 0
+};
+new Handle:_0x00000950[2] =
+{
+	3354673, 0
+};
+new Handle:_0x0000062C[2] =
+{
+	14390, 0
+};
+new Handle:_0x00000D1D[18];
+new Handle:_0x00000BD5[6];
+new Handle:_0x00000A25[15];
+new Handle:_0x00000DF7[2] =
+{
+	3684657, 0
+};
+new Handle:_0x00000FC0[2] =
+{
+	12857, 0
+};
+new Handle:_0x00000AEB[6];
+new Handle:_0x00000ACD[9];
+new Handle:_0x0000036D[29];
+new Handle:_0x00000CF5[13];
+new Handle:_0x0000078E[2] =
+{
+	13111, 0
+};
+new Handle:_0x00000A9C[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000A6B[3];
+new Handle:_0x0000016E[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000780[2] =
+{
+	12600, 0
+};
+new Handle:_0x0000275B[12];
+new Handle:_0x000008F5[15];
+new Handle:_0x000008B5[3];
+new Handle:_0x00000C5D[3];
+new Handle:_0x0000026C[2] =
+{
+	3355186, 0
+};
+new Handle:_0x00000AD5[9];
+new Handle:_0x00000E22[6];
+new Handle:_0x0000098E[2] =
+{
+	3289906, 0
+};
+new Handle:_0x000003A2[2];
+new Handle:_0x00000C8C[2] =
+{
+	13621, 0
+};
+new Handle:_0x00000EA0[2] =
+{
+	3487281, 0
+};
+new Handle:_0x000003C0[2] =
+{
+	3682610, 0
+};
+new Handle:_0x00000ADE[2] =
+{
+	3485745, 0
+};
+new Handle:_0x00000692[3];
+new Handle:_0x00000767[2] =
+{
+	12339, 0
+};
+new Handle:_0x0000079C[2] =
+{
+	3553329, 0
+};
+new Handle:_0x00000FEE[2] =
+{
+	13619, 0
+};
+new Handle:_0x00002287[2] =
+{
+	3289650, 0
+};
+new Handle:_0x000008A2[9];
+new Handle:_0x00000E2C[2] =
+{
+	13621, 0
+};
+new Handle:_0x00000965[18];
+new Handle:_0x00000FA5[19];
+new Handle:_0x00000A07[2] =
+{
+	13621, 0
+};
+new Handle:_0x00000A35[8];
+new Handle:_0x0000270E[2] =
+{
+	3355953, 0
+};
+new Handle:_0x0000013E[2] =
+{
+	3289138, 0
+};
+new Handle:_0x0000225B[12];
+new Handle:_0x000004E5[21];
+new Handle:_0x00000137[2] =
+{
+	12338, 0
+};
+new Handle:_0x000001CB[6];
+new Handle:_0x0000045B[13];
+new Handle:_0x00000B7D[28];
+new Handle:_0x00000D6B[19];
+new Handle:_0x000008F2[15];
+new Handle:_0x00000FC2[22];
+new Handle:_0x00000305[2];
+new Handle:_0x00000C60[2] =
+{
+	14393, 0
+};
+new Handle:_0x000005F5[8];
+new Handle:_0x00000BC2[3];
+new Handle:_0x00000DFB[3];
+new Handle:_0x000005D0[2] =
+{
+	12601, 0
+};
+new Handle:_0x00000825[3];
+new Handle:_0x000001AD[8];
+new Handle:_0x00000132[9];
+new Handle:_0x00000DBB[3];
+new Handle:_0x00000D05[3];
+new Handle:_0x000006FE[2] =
+{
+	3225393, 0
+};
+new Handle:_0x00000C80[2] =
+{
+	3225649, 0
+};
+new Handle:_0x0000039C[2] =
+{
+	3682354, 0
+};
+new Handle:_0x00000DDB[3];
+new Handle:_0x00000D72[18];
+new Handle:_0x00000F6C[2] =
+{
+	3422001, 0
+};
+new Handle:_0x00000FA2[19];
+new Handle:_0x000009A5[18];
+new Handle:_0x000004F0[2] =
+{
+	3291441, 0
+};
+new Handle:_0x000027E7[2] =
+{
+	3422001, 0
+};
+new Handle:_0x00000D0E[2] =
+{
+	3355186, 0
+};
+new Handle:_0x0000043D[25];
+new Handle:_0x000009A7[2] =
+{
+	3289906, 0
+};
+new Handle:_0x00000AE7[2] =
+{
+	3619121, 0
+};
+new Handle:_0x000022DB[12];
+new Handle:_0x00000298[66];
+new Handle:_0x0000048B[11];
+new Handle:_0x00002295[12];
+new Handle:_0x00000BE0[2] =
+{
+	3551537, 0
+};
+new Handle:_0x00002747[2] =
+{
+	3682865, 0
+};
+new Handle:_0x000008BE[2] =
+{
+	3617586, 0
+};
+new Handle:_0x00000F2E[2] =
+{
+	13877, 0
+};
+new Handle:_0x000002C3[2];
+new Handle:_0x00000D6E[2] =
+{
+	3158065, 0
+};
+new Handle:_0x00000B7C[2] =
+{
+	3748658, 0
+};
+new Handle:_0x0000096C[2] =
+{
+	14649, 0
+};
+new Handle:_0x00000B1C[2] =
+{
+	3355186, 0
+};
+new Handle:_0x00000A32[6];
+new Handle:_0x00000A60[2] =
+{
+	13362, 0
+};
+new Handle:_0x0000065D[3];
+new Handle:_0x00000FB2[13];
+new Handle:_0x00000AB7[2] =
+{
+	3225137, 0
+};
+new Handle:_0x000001F7[2] =
+{
+	14389, 0
+};
+new Handle:_0x000004AE[2] =
+{
+	3682865, 0
+};
+new Handle:_0x0000099B[18];
+new Handle:_0x000006E5[11];
+new Handle:_0x000004D2[5];
+new Handle:_0x00002790[2] =
+{
+	12600, 0
+};
+new Handle:_0x0000016B[9];
+new Handle:_0x00000987[2] =
+{
+	3159089, 0
+};
+new Handle:_0x00000D95[3];
+new Handle:_0x00000281[2] =
+{
+	3355698, 0
+};
+new Handle:_0x000008D2[17];
+new Handle:_0x00000B02[8];
+new Handle:_0x0000074D[44];
+new Handle:_0x00000D7E[2] =
+{
+	12341, 0
+};
+new Handle:_0x000027CB[12];
+new Handle:_0x000006CE[2] =
+{
+	3617330, 0
+};
+new Handle:_0x00000945[40];
+new Handle:_0x00000C6E[2] =
+{
+	3684657, 0
+};
+new Handle:_0x00002707[2] =
+{
+	13621, 0
+};
+new Handle:_0x0000224C[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000D82[3];
+new Handle:_0x00000D90[2] =
+{
+	12341, 0
+};
+new Handle:_0x0000028A[2] =
+{
+	13366, 0
+};
+new Handle:_0x00000B4C[2] =
+{
+	3291185, 0
+};
+new Handle:_0x00000B80[2] =
+{
+	3289650, 0
+};
+new Handle:_0x00000A3B[14];
+new Handle:_0x00000182[11];
+new Handle:_0x0000028E[23];
+new Handle:_0x0000070E[2] =
+{
+	12856, 0
+};
+new Handle:_0x00000B5E[2] =
+{
+	12850, 0
+};
+new Handle:_0x0000097B[13];
+new Handle:_0x00000160[2] =
+{
+	12599, 0
+};
+new Handle:_0x000006B5[16];
+new Handle:_0x00000735[9];
+new Handle:_0x00000C50[2] =
+{
+	13368, 0
+};
+new Handle:_0x00000CDD[3];
+new Handle:_0x0000070C[2] =
+{
+	3421234, 0
+};
+new Handle:_0x00000960[2] =
+{
+	3485746, 0
+};
+new Handle:_0x00000705[22];
+new Handle:_0x000007BE[2] =
+{
+	3552306, 0
+};
+new Handle:_0x000005B5[2];
+new Handle:_0x0000026B[2] =
+{
+	14642, 0
+};
+new Handle:_0x00000F9E[2] =
+{
+	3552050, 0
+};
+new Handle:_0x00000105[9];
+new Handle:_0x00000580[2] =
+{
+	14649, 0
+};
+new Handle:_0x00000E70[2] =
+{
+	3224882, 0
+};
+new Handle:_0x0000223E[2] =
+{
+	3291185, 0
+};
+new Handle:_0x00000A6D[6];
+new Handle:_0x000001DD[3];
+new Handle:_0x00000E07[2] =
+{
+	13368, 0
+};
+new Handle:_0x00000627[2] =
+{
+	3355441, 0
+};
+new Handle:_0x00000FD0[2] =
+{
+	3552050, 0
+};
+new Handle:_0x00000C67[2] =
+{
+	12343, 0
+};
+new Handle:_0x0000227E[2] =
+{
+	3684401, 0
+};
+new Handle:_0x000003E7[2] =
+{
+	3223601, 0
+};
+new Handle:_0x000006CB[3];
+new Handle:_0x00002207[2] =
+{
+	3748914, 0
+};
+new Handle:_0x000001FD[10];
+new Handle:_0x000027C2[12];
+new Handle:_0x00000EAC[2] =
+{
+	3159857, 0
+};
+new Handle:_0x0000074C[2] =
+{
+	3355186, 0
+};
+new Handle:_0x00000B62[19];
+new Handle:_0x000008E0[2] =
+{
+	3355442, 0
+};
+new Handle:_0x0000019E[2] =
+{
+	12601, 0
+};
+new Handle:_0x000004E2[13];
+new Handle:_0x00000E4B[5];
+new Handle:_0x0000277C[2] =
+{
+	3683633, 0
+};
+new Handle:_0x0000063E[2] =
+{
+	14649, 0
+};
+new Handle:_0x000001E0[2] =
+{
+	3354930, 0
+};
+new Handle:_0x00000412[20];
+new Handle:_0x0000053C[2] =
+{
+	3682354, 0
+};
+new Handle:_0x00000DCD[8];
+new Handle:_0x000022ED[12];
+new Handle:_0x0000046E[2] =
+{
+	12601, 0
+};
+new Handle:_0x000004BD[13];
+new Handle:_0x000004A2[22];
+new Handle:_0x00000415[9];
+new Handle:_0x0000054D[3];
+new Handle:_0x0000085B[6];
+new Handle:_0x0000020D[7] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 25381, 0
+};
+new Handle:_0x00000707[2] =
+{
+	3158833, 0
+};
+new Handle:_0x00000407[2] =
+{
+	3158834, 0
+};
+new Handle:_0x00000C2E[2] =
+{
+	3355186, 0
+};
+new Handle:_0x00000FAC[2] =
+{
+	3487537, 0
+};
+new Handle:_0x00000902[8];
+new Handle:_0x0000094C[2] =
+{
+	12598, 0
+};
+new Handle:_0x000007AD[17];
+new Handle:_0x00000E1E[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000EEE[2] =
+{
+	13366, 0
+};
+new Handle:_0x0000270C[2] =
+{
+	13618, 0
+};
+new Handle:_0x000027A7[2] =
+{
+	13619, 0
+};
+new Handle:_0x0000048E[2] =
+{
+	3158066, 0
+};
+new Handle:_0x0000042B[18];
+new Handle:_0x00000E10[2] =
+{
+	3486001, 0
+};
+new Handle:_0x00000FED[3];
+new Handle:_0x00000EBB[59];
+new Handle:_0x0000049B[26];
+new Handle:_0x000001D0[2] =
+{
+	3224370, 0
+};
+new Handle:_0x00000FD7[2] =
+{
+	13879, 0
+};
+new Handle:_0x00002245[12];
+new Handle:_0x00002732[12];
+new Handle:_0x000005CD[8];
+new Handle:_0x00000CFC[2] =
+{
+	12599, 0
+};
+new Handle:_0x0000083D[9];
+new Handle:_0x00000510[2] =
+{
+	12857, 0
+};
+new Handle:_0x0000096E[2] =
+{
+	14392, 0
+};
+new Handle:_0x00000C4C[2] =
+{
+	3354673, 0
+};
+new Handle:_0x00000757[2] =
+{
+	12340, 0
+};
+new Handle:_0x000027C7[2] =
+{
+	14133, 0
+};
+new Handle:_0x00000AE2[31];
+new Handle:_0x000009B2[18];
+new Handle:_0x00000337[2] =
+{
+	14132, 0
+};
+new Handle:_0x00000577[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00002737[2] =
+{
+	13876, 0
+};
+new Handle:_0x00000CE7[2] =
+{
+	3552049, 0
+};
+new Handle:_0x000005F0[2] =
+{
+	3355697, 0
+};
+new Handle:_0x000004EC[2] =
+{
+	3160369, 0
+};
+new Handle:_0x00000E6D[6];
+new Handle:_0x00000E15[49];
+new Handle:_0x00000EE0[2] =
+{
+	12853, 0
+};
+new Handle:_0x00000A77[2] =
+{
+	3682609, 0
+};
+new Handle:_0x000022EE[2] =
+{
+	12594, 0
+};
+new Handle:_0x000001BD[22];
+new Handle:_0x00000DBE[2] =
+{
+	13879, 0
+};
+new Handle:_0x00000BB7[2] =
+{
+	3355953, 0
+};
+new Handle:_0x00000EB5[46];
+new Handle:_0x000004BC[2] =
+{
+	3682866, 0
+};
+new Handle:_0x000004F2[3];
+new Handle:_0x00000610[2] =
+{
+	3224113, 0
+};
+new Handle:_0x0000279D[12];
+new Handle:_0x0000018C[2] =
+{
+	3748401, 0
+};
+new Handle:_0x000022CE[2] =
+{
+	13622, 0
+};
+new Handle:_0x000004ED[25];
+new Handle:_0x00000C1D[23];
+new Handle:_0x00002262[12];
+new Handle:_0x00000E5C[2] =
+{
+	3355185, 0
+};
+new Handle:_0x00000D52[3];
+new Handle:_0x000007D5[8];
+new Handle:_0x00000C9E[2] =
+{
+	3619121, 0
+};
+new Handle:_0x000027D5[12];
+new Handle:_0x0000045E[2] =
+{
+	3682353, 0
+};
+new Handle:_0x0000088E[2] =
+{
+	3289905, 0
+};
+new Handle:_0x00000775[60];
+new Handle:_0x000002D3[2] =
+{
+	14130, 0
+};
+new Handle:_0x0000031D[35];
+new Handle:_0x00000F0C[2] =
+{
+	3224625, 0
+};
+new Handle:_0x000008FB[6];
+new Handle:_0x00000855[18];
+new Handle:_0x0000068B[3];
+new Handle:_0x0000019D[22];
+new Handle:_0x0000077B[2];
+new Handle:_0x0000035D[19];
+new Handle:_0x000007B0[2] =
+{
+	3420466, 0
+};
+new Handle:_0x00000EE5[43];
+new Handle:_0x000006D5[9];
+new Handle:_0x00000BA5[25];
+new Handle:_0x0000271E[2] =
+{
+	3684401, 0
+};
+new Handle:_0x0000038B[3];
+new Handle:_0x00000530[2] =
+{
+	13369, 0
+};
+new Handle:_0x00000E67[2] =
+{
+	3159857, 0
+};
+new Handle:_0x0000058C[2] =
+{
+	3420722, 0
+};
+new Handle:_0x00000930[2] =
+{
+	3355697, 0
+};
+new Handle:_0x00000750[2] =
+{
+	3420978, 0
+};
+new Handle:_0x0000034D[3];
+new Handle:_0x0000033D[65];
+new Handle:_0x00000167[2] =
+{
+	3290418, 0
+};
+new Handle:_0x00000AE0[2] =
+{
+	3747889, 0
+};
+new Handle:_0x000007F7[2] =
+{
+	3355954, 0
+};
+new Handle:_0x00000815[6];
+new Handle:_0x00000A2D[13];
+new Handle:_0x00000717[2] =
+{
+	13625, 0
+};
+new Handle:_0x000005D7[2] =
+{
+	3422257, 0
+};
+new Handle:_0x00000E7C[2] =
+{
+	3225137, 0
+};
+new Handle:_0x00000ABD[9];
+new Handle:_0x0000049C[2] =
+{
+	3488049, 0
+};
+new Handle:_0x000022BB[12];
+new Handle:_0x00000327[2] =
+{
+	3160113, 0
+};
+new Handle:_0x00000E3E[2] =
+{
+	3618609, 0
+};
+new Handle:_0x00000EF7[2] =
+{
+	12340, 0
+};
+new Handle:_0x00000A05[16];
+new Handle:_0x00000487[2] =
+{
+	13622, 0
+};
+new Handle:_0x0000032D[3];
+new Handle:_0x000027EC[2] =
+{
+	3683121, 0
+};
+new Handle:_0x0000090B[17];
+new Handle:_0x00000912[22];
+new Handle:_0x000005ED[3];
+new Handle:_0x00000CCE[2] =
+{
+	3354673, 0
+};
+new Handle:_0x0000013B[18];
+new Handle:_0x000007F5[8];
+new Handle:_0x00000C2B[6];
+new Handle:_0x00000C7C[2] =
+{
+	3553585, 0
+};
+new Handle:_0x000004BE[2] =
+{
+	3355953, 0
+};
+new Handle:_0x00000ECD[14];
+new Handle:_0x0000097C[2] =
+{
+	3354930, 0
+};
+new Handle:_0x00000B9C[2] =
+{
+	3616817, 0
+};
+new Handle:_0x000008BB[17];
+new Handle:_0x00000317[2] =
+{
+	14132, 0
+};
+new Handle:_0x00000296[2] =
+{
+	3421745, 0
+};
+new Handle:_0x00000F47[2] =
+{
+	3485745, 0
+};
+new Handle:_0x000006FD[9];
+new Handle:_0x000007FE[2] =
+{
+	13622, 0
+};
+new Handle:_0x00000927[2] =
+{
+	3354930, 0
+};
+new Handle:_0x00000D6C[2] =
+{
+	14132, 0
+};
+new Handle:_0x00000F1D[13];
+new Handle:_0x00000820[2] =
+{
+	12344, 0
+};
+new Handle:_0x000004AC[2] =
+{
+	3290417, 0
+};
+new Handle:_0x0000079B[9];
+new Handle:_0x000027AC[2] =
+{
+	3158577, 0
+};
+new Handle:_0x0000055B[20];
+new Handle:_0x000001C5[18];
+new Handle:_0x000027D7[2] =
+{
+	13881, 0
+};
+new Handle:_0x0000274D[12];
+new Handle:_0x0000013D[18];
+new Handle:_0x00000287[2];
+new Handle:_0x00000EF5[5];
+new Handle:_0x00000687[2] =
+{
+	3356209, 0
+};
+new Handle:_0x00000CC2[8];
+new Handle:_0x000027AE[2] =
+{
+	3356977, 0
+};
+new Handle:_0x000003D0[2] =
+{
+	13111, 0
+};
+new Handle:_0x00000E55[14];
+new Handle:_0x0000077C[2] =
+{
+	3617074, 0
+};
+new Handle:_0x00000208[2] =
+{
+	3224369, 0
+};
+new Handle:_0x00000357[2] =
+{
+	3223858, 0
+};
+new Handle:_0x00000F50[2] =
+{
+	3224625, 0
+};
+new Handle:_0x000002DF[22];
+new Handle:_0x00000F95[33];
+new Handle:_0x00000F52[15];
+new Handle:_0x00000880[2] =
+{
+	3617585, 0
+};
+new Handle:_0x00000264[24];
+new Handle:_0x000004DB[12];
+new Handle:_0x0000017D[18];
+new Handle:_0x00000A1C[2] =
+{
+	3749425, 0
+};
+new Handle:_0x000009E2[13];
+new Handle:_0x00000200[19];
+new Handle:_0x0000039E[2] =
+{
+	14386, 0
+};
+new Handle:_0x0000014C[2] =
+{
+	3552050, 0
+};
+new Handle:_0x00000261[10] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x0000041E[2] =
+{
+	3748145, 0
+};
+new Handle:_0x00000600[2] =
+{
+	13623, 0
+};
+new Handle:_0x00000102[69];
+new Handle:_0x00000670[2] =
+{
+	13620, 0
+};
+new Handle:_0x0000079D[6];
+new Handle:_0x0000270B[12];
+new Handle:_0x000027C5[12];
+new Handle:_0x000027B0[2] =
+{
+	3748402, 0
+};
+new Handle:_0x0000226C[2] =
+{
+	3421489, 0
+};
+new Handle:_0x00000EB2[40];
+new Handle:_0x00000D3C[2] =
+{
+	13367, 0
+};
+new Handle:_0x00000A95[8];
+new Handle:_0x00000E75[23];
+new Handle:_0x00000685[23];
+new Handle:_0x00000FF0[2] =
+{
+	13109, 0
+};
+new Handle:_0x00000F4B[13];
+new Handle:_0x0000040E[2] =
+{
+	3748145, 0
+};
+new Handle:_0x00000A62[21];
+new Handle:_0x00000695[8];
+new Handle:_0x000009D2[9];
+new Handle:_0x00000AA2[9];
+new Handle:_0x00000E77[2] =
+{
+	3684657, 0
+};
+new Handle:_0x00000288[2];
+new Handle:_0x000022B7[2] =
+{
+	3159090, 0
+};
+new Handle:_0x000006D7[2] =
+{
+	3420210, 0
+};
+new Handle:_0x00000442[11];
+new Handle:_0x00000180[2] =
+{
+	3159089, 0
+};
+new Handle:_0x000004FB[27];
+new Handle:_0x0000044C[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00000BFC[2] =
+{
+	12344, 0
+};
+new Handle:_0x00000DC0[2] =
+{
+	3356465, 0
+};
+new Handle:_0x00000990[2] =
+{
+	3224113, 0
+};
+new Handle:_0x00000B87[2] =
+{
+	14137, 0
+};
+new Handle:_0x00000E8C[2] =
+{
+	3616818, 0
+};
+new Handle:_0x00000A2E[2] =
+{
+	3223858, 0
+};
+new Handle:_0x00000D75[18];
+new Handle:_0x0000050D[9];
+new Handle:_0x0000073C[2] =
+{
+	3553073, 0
+};
+new Handle:_0x0000033C[2] =
+{
+	13876, 0
+};
+new Handle:_0x00000900[2] =
+{
+	3158578, 0
+};
+new Handle:_0x000027ED[12];
+new Handle:_0x000002D9[4] =
+{
+	1663398693, 1663394597, 0, 0
+};
+new Handle:_0x00000887[2] =
+{
+	3354673, 0
+};
+new Handle:_0x00000CCD[6];
+new Handle:_0x00000845[3];
+new Handle:_0x00000CFE[2] =
+{
+	3748401, 0
+};
+new Handle:_0x0000043B[20];
+new Handle:_0x000009E5[9];
+new Handle:_0x00000ED2[14];
+new Handle:_0x000007AE[2] =
+{
+	3422513, 0
+};
+new Handle:_0x00000F4D[22];
+new Handle:_0x0000052E[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000920[2] =
+{
+	3420977, 0
+};
+new Handle:_0x00000AD0[2] =
+{
+	3486514, 0
+};
+new Handle:_0x00000F15[15];
+new Handle:_0x0000072B[2] =
+{
+	3289650, 0
+};
+new Handle:_0x0000075B[8];
+new Handle:_0x0000090E[2] =
+{
+	14136, 0
+};
+new Handle:_0x000007AB[10];
+new Handle:_0x00000907[2] =
+{
+	3223602, 0
+};
+new Handle:_0x00002220[2] =
+{
+	3748401, 0
+};
+new Handle:_0x000006B7[2] =
+{
+	13367, 0
+};
+new Handle:_0x00000C6C[2] =
+{
+	3749681, 0
+};
+new Handle:_0x000001A2[9];
+new Handle:_0x00000385[92];
+new Handle:_0x00000CD0[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000ADB[8];
+new Handle:_0x000005AB[6];
+new Handle:_0x00002720[2] =
+{
+	13620, 0
+};
+new Handle:_0x000022AB[12];
+new Handle:_0x0000039D[94];
+new Handle:_0x00000A4B[31];
+new Handle:_0x00000A9D[9];
+new Handle:_0x00000372[116];
+new Handle:_0x000022E0[2] =
+{
+	3552561, 0
+};
+new Handle:_0x00000B3E[2] =
+{
+	3748658, 0
+};
+new Handle:_0x0000084C[2] =
+{
+	13107, 0
+};
+new Handle:_0x00002787[2] =
+{
+	12598, 0
+};
+new Handle:_0x000008A7[2] =
+{
+	3682865, 0
+};
+new Handle:_0x000008AE[2] =
+{
+	12601, 0
+};
+new Handle:_0x00000C9D[3];
+new Handle:_0x000003AD[2];
+new Handle:_0x00000FF7[2] =
+{
+	3682353, 0
+};
+new Handle:_0x0000038E[2] =
+{
+	14391, 0
+};
+new Handle:_0x00002215[12];
+new Handle:_0x000003B5[2];
+new Handle:_0x0000055C[2] =
+{
+	14131, 0
+};
+new Handle:_0x000004E0[2] =
+{
+	14388, 0
+};
+new Handle:_0x00000A7C[2] =
+{
+	13625, 0
+};
+new Handle:_0x0000084D[24];
+new Handle:_0x00000F80[2] =
+{
+	3617842, 0
+};
+new Handle:_0x00000EF0[2] =
+{
+	3749681, 0
+};
+new Handle:_0x000003E0[2] =
+{
+	3421234, 0
+};
+new Handle:_0x00000EFE[2] =
+{
+	3224882, 0
+};
+new Handle:_0x000002D7[7] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x00000C0B[13];
+new Handle:_0x00000BDD[19];
+new Handle:_0x0000222C[2] =
+{
+	3289650, 0
+};
+new Handle:_0x00000C52[28];
+new Handle:_0x00000B1B[28];
+new Handle:_0x000001A0[2] =
+{
+	13622, 0
+};
+new Handle:_0x00000AFD[33];
+new Handle:_0x00000C7D[3];
+new Handle:_0x0000014E[2] =
+{
+	3355442, 0
+};
+new Handle:_0x0000026D[4] =
+{
+	1663398693, 1663394597, 25381, 0
+};
+new Handle:_0x00002760[2] =
+{
+	14642, 0
+};
+new Handle:_0x00000F55[25];
+new Handle:_0x00000E02[5];
+new Handle:_0x00000760[2] =
+{
+	12857, 0
+};
+new Handle:_0x0000040D[21];
+new Handle:_0x00000C90[2] =
+{
+	13110, 0
+};
+new Handle:_0x000022C7[2] =
+{
+	13108, 0
+};
+new Handle:_0x000022FE[2] =
+{
+	3551282, 0
+};
+new Handle:_0x00000C6B[8];
+new Handle:_0x00000A5E[2] =
+{
+	3421489, 0
+};
+new Handle:_0x00000E45[58];
+new Handle:_0x00000F25[6];
+new Handle:_0x000009EE[2] =
+{
+	3617842, 0
+};
+new Handle:_0x00000E20[2] =
+{
+	3289394, 0
+};
+new Handle:_0x000027DB[12];
+new Handle:_0x0000272C[2] =
+{
+	3224881, 0
+};
+new Handle:_0x000008FC[2] =
+{
+	3159857, 0
+};
+new Handle:_0x00000322[2];
+new Handle:_0x0000221E[2] =
+{
+	13624, 0
+};
+new Handle:_0x00000263[6] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 25381, 0
+};
+new Handle:_0x000005BE[2] =
+{
+	3356977, 0
+};
+new Handle:_0x000003BC[2] =
+{
+	12342, 0
+};
+new Handle:_0x00000E4E[2] =
+{
+	3224114, 0
+};
+new Handle:_0x00000BED[9];
+new Handle:_0x000009D0[2] =
+{
+	3160369, 0
+};
+new Handle:_0x000027B7[2] =
+{
+	14131, 0
+};
+new Handle:_0x00000E17[2] =
+{
+	3289137, 0
+};
+new Handle:_0x00000CBC[2] =
+{
+	3616818, 0
+};
+new Handle:_0x000008F7[2] =
+{
+	3355698, 0
+};
+new Handle:_0x0000060B[27];
+new Handle:_0x000007C2[3];
+new Handle:_0x00000B72[9];
+new Handle:_0x00000445[20];
+new Handle:_0x000005FE[2] =
+{
+	3160113, 0
+};
+new Handle:_0x00002250[2] =
+{
+	14136, 0
+};
+new Handle:_0x0000064D[22];
+new Handle:_0x000009CD[18];
+new Handle:_0x00000490[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000827[2] =
+{
+	3159089, 0
+};
+new Handle:_0x00000C57[2] =
+{
+	3356721, 0
+};
+new Handle:_0x00000722[2] =
+{
+	3683377, 0
+};
+new Handle:_0x00000D10[2] =
+{
+	14133, 0
+};
+new Handle:_0x00000A27[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000FCE[2] =
+{
+	13363, 0
+};
+new Handle:_0x00000B9D[6];
+new Handle:_0x00000E0C[2] =
+{
+	13622, 0
+};
+new Handle:_0x00002775[12];
+new Handle:_0x00000300[2] =
+{
+	14649, 0
+};
+new Handle:_0x00000302[91];
+new Handle:_0x000002C7[8] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x000008C2[9];
+new Handle:_0x0000091B[3];
+new Handle:_0x000002DA[4];
+new Handle:_0x0000065C[2] =
+{
+	3355698, 0
+};
+new Handle:_0x00000297[2] =
+{
+	3158065, 0
+};
+new Handle:_0x00000CA5[6];
+new Handle:_0x0000020E[2] =
+{
+	12338, 0
+};
+new Handle:_0x000004C5[13];
+new Handle:_0x0000226B[12];
+new Handle:_0x0000052D[112];
+new Handle:_0x00000F62[25];
+new Handle:_0x00000130[2] =
+{
+	3420209, 0
+};
+new Handle:_0x0000045C[2] =
+{
+	3224369, 0
+};
+new Handle:_0x00000E9D[14];
+new Handle:_0x000005DB[21];
+new Handle:_0x0000067B[13];
+new Handle:_0x000009F2[13];
+new Handle:_0x00000DE7[2] =
+{
+	3224114, 0
+};
+new Handle:_0x000008D7[2] =
+{
+	3158065, 0
+};
+new Handle:_0x00000612[18];
+new Handle:_0x00000AFE[2] =
+{
+	3618353, 0
+};
+new Handle:_0x000027B5[12];
+new Handle:_0x00000AC7[2] =
+{
+	12344, 0
+};
+new Handle:_0x000009CC[2] =
+{
+	12595, 0
+};
+new Handle:_0x00000EEC[2] =
+{
+	3551281, 0
+};
+new Handle:_0x000005DE[2] =
+{
+	3422513, 0
+};
+new Handle:_0x00000165[22];
+new Handle:_0x00000FC7[2] =
+{
+	3420978, 0
+};
+new Handle:_0x00000D47[2] =
+{
+	14388, 0
+};
+new Handle:_0x00000F77[2] =
+{
+	3290417, 0
+};
+new Handle:_0x000003BE[2] =
+{
+	3420465, 0
+};
+new Handle:_0x00000C2D[9];
+new Handle:_0x000006CD[9];
+new Handle:_0x000005CE[2] =
+{
+	3290929, 0
+};
+new Handle:_0x0000036C[2] =
+{
+	3289137, 0
+};
+new Handle:_0x0000077E[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000B67[2] =
+{
+	3224881, 0
+};
+new Handle:_0x00000FBB[81];
+new Handle:_0x00000B0D[3];
+new Handle:_0x00000F65[29];
+new Handle:_0x00000E72[53];
+new Handle:_0x00000697[2] =
+{
+	3420977, 0
+};
+new Handle:_0x0000095E[2] =
+{
+	13367, 0
+};
+new Handle:_0x000006DC[2] =
+{
+	3289905, 0
+};
+new Handle:_0x0000042E[2] =
+{
+	3486514, 0
+};
+new Handle:_0x00000F3C[2] =
+{
+	3683122, 0
+};
+new Handle:_0x0000224E[2] =
+{
+	3355441, 0
+};
+new Handle:_0x0000092C[2] =
+{
+	3485745, 0
+};
+new Handle:_0x00000387[2] =
+{
+	3355442, 0
+};
+new Handle:_0x0000041D[11];
+new Handle:_0x00000725[2] =
+{
+	13622, 0
+};
+new Handle:_0x000008AD[18];
+new Handle:_0x00000FA0[2] =
+{
+	3289905, 0
+};
+new Handle:_0x00000BAE[2] =
+{
+	14392, 0
+};
+new Handle:_0x00000560[2] =
+{
+	12342, 0
+};
+new Handle:_0x000006D2[27];
+new Handle:_0x00002777[2] =
+{
+	3290161, 0
+};
+new Handle:_0x00000877[2] =
+{
+	3682354, 0
+};
+new Handle:_0x00000FEB[43];
+new Handle:_0x00000E2D[22];
+new Handle:_0x00000C8D[13];
+new Handle:_0x00000E3D[3];
+new Handle:_0x00000D7D[6];
+new Handle:_0x000004D5[38];
+new Handle:_0x00000F7C[2] =
+{
+	3356721, 0
+};
+new Handle:_0x00002740[2] =
+{
+	3487537, 0
+};
+new Handle:_0x00000515[3];
+new Handle:_0x000027E5[12];
+new Handle:_0x00000B85[11];
+new Handle:_0x0000033E[2] =
+{
+	3748145, 0
+};
+new Handle:_0x0000049D[29];
+new Handle:_0x00002702[12];
+new Handle:_0x00000AD2[21];
+new Handle:_0x00000D4B[18];
+new Handle:_0x000027AD[12];
+new Handle:_0x00000AA7[2] =
+{
+	3682866, 0
+};
+new Handle:_0x00000340[2] =
+{
+	3748658, 0
+};
+new Handle:_0x00000A9B[6];
+new Handle:_0x000001D5[19];
+new Handle:_0x00000382[26];
+new Handle:_0x00000F30[2] =
+{
+	13623, 0
+};
+new Handle:_0x000008EB[3];
+new Handle:_0x0000082E[2] =
+{
+	12344, 0
+};
+new Handle:_0x00000807[2] =
+{
+	3420209, 0
+};
+new Handle:_0x000006E0[2] =
+{
+	14391, 0
+};
+new Handle:_0x00000392[50];
+new Handle:_0x00000DD7[2] =
+{
+	12340, 0
+};
+new Handle:_0x00000BAB[9];
+new Handle:_0x00000362[16];
+new Handle:_0x000006B2[3];
+new Handle:_0x00000542[8];
+new Handle:_0x000027DC[2] =
+{
+	3159345, 0
+};
+new Handle:_0x00000142[22];
+new Handle:_0x0000012B[3];
+new Handle:_0x00000FE7[2] =
+{
+	3684401, 0
+};
+new Handle:_0x000022FD[12];
+new Handle:_0x00000740[2] =
+{
+	3354929, 0
+};
+new Handle:_0x00000E0B[3];
+new Handle:_0x0000057C[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000620[2] =
+{
+	3551793, 0
+};
+new Handle:_0x00002280[2] =
+{
+	3618353, 0
+};
+new Handle:_0x00000C35[28];
+new Handle:_0x00000D97[2] =
+{
+	3355185, 0
+};
+new Handle:_0x00000C5C[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00000885[15];
+new Handle:_0x0000061D[18];
+new Handle:_0x00000D5B[19];
+new Handle:_0x00000B0B[9];
+new Handle:_0x00000665[27];
+new Handle:_0x00000A8B[32];
+new Handle:_0x00000E95[6];
+new Handle:_0x0000057D[3];
+new Handle:_0x00000862[8];
+new Handle:_0x00000BCC[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00002765[12];
+new Handle:_0x000008C0[2] =
+{
+	3551794, 0
+};
+new Handle:_0x000003C5[17];
+new Handle:_0x000005F2[20];
+new Handle:_0x00000CA7[2] =
+{
+	14136, 0
+};
+new Handle:_0x000005BB[21];
+new Handle:_0x000001CC[2] =
+{
+	3748658, 0
+};
+new Handle:_0x0000016C[2] =
+{
+	14130, 0
+};
+new Handle:_0x000005E2[8];
+new Handle:_0x000005AD[8];
+new Handle:_0x000003B0[2] =
+{
+	3551281, 0
+};
+new Handle:_0x000001FE[2] =
+{
+	3420210, 0
+};
+new Handle:_0x000008F0[2] =
+{
+	13367, 0
+};
+new Handle:_0x00002297[2] =
+{
+	13365, 0
+};
+new Handle:_0x00000A0B[21];
+new Handle:_0x00000E9C[2] =
+{
+	14391, 0
+};
+new Handle:_0x00000F32[11];
+new Handle:_0x000008ED[8];
+new Handle:_0x00000BFE[2] =
+{
+	3355953, 0
+};
+new Handle:_0x00000E8D[5];
+new Handle:_0x0000019B[22];
+new Handle:_0x00002275[12];
+new Handle:_0x00000AAB[14];
+new Handle:_0x00000C72[25];
+new Handle:_0x00000EE7[2] =
+{
+	12852, 0
+};
+new Handle:_0x000003C7[2] =
+{
+	3553585, 0
+};
+new Handle:_0x00000A7E[2] =
+{
+	12595, 0
+};
+new Handle:_0x0000226D[12];
+new Handle:_0x00000A0C[2] =
+{
+	3617586, 0
+};
+new Handle:_0x00000A10[2] =
+{
+	13623, 0
+};
+new Handle:_0x00000F8B[22];
+new Handle:_0x00000E9E[2] =
+{
+	3224114, 0
+};
+new Handle:_0x0000071B[56];
+new Handle:_0x00000EA5[3];
+new Handle:_0x0000051D[6];
+new Handle:_0x00000A3E[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00000390[2] =
+{
+	13107, 0
+};
+new Handle:_0x00000F3B[3];
+new Handle:_0x0000064C[2] =
+{
+	14132, 0
+};
+new Handle:_0x0000047B[19];
+new Handle:_0x000007EB[10];
+new Handle:_0x00000A92[3];
+new Handle:_0x00000DCB[3];
+new Handle:_0x00000C8B[8];
+new Handle:_0x0000270D[12];
+new Handle:_0x00000B3D[25];
+new Handle:_0x00000647[2] =
+{
+	3421233, 0
+};
+new Handle:_0x0000089D[2];
+new Handle:_0x00002767[2] =
+{
+	3488049, 0
+};
+new Handle:_0x00000EAB[14];
+new Handle:_0x000001F5[13];
+new Handle:_0x00000AFC[2] =
+{
+	3225649, 0
+};
+new Handle:_0x00002782[12];
+new Handle:_0x00000BBB[24];
+new Handle:_0x00000617[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00000B8C[2] =
+{
+	3158577, 0
+};
+new Handle:_0x00000572[51];
+new Handle:_0x00000E1D[4];
+new Handle:_0x00000D2C[2] =
+{
+	3225905, 0
+};
+new Handle:_0x0000057B[3];
+new Handle:_0x0000087C[2] =
+{
+	3420209, 0
+};
+new Handle:_0x00000450[2] =
+{
+	13875, 0
+};
+new Handle:_0x00000C77[2] =
+{
+	3487537, 0
+};
+new Handle:_0x00000C2C[2] =
+{
+	3225137, 0
+};
+new Handle:_0x000005B2[20];
+new Handle:_0x00000E87[2] =
+{
+	3158321, 0
+};
+new Handle:_0x00000F45[14];
+new Handle:_0x0000060E[2] =
+{
+	3616817, 0
+};
+new Handle:_0x000007DC[2] =
+{
+	3289138, 0
+};
+new Handle:_0x000009AB[11];
+new Handle:_0x000002D4[2] =
+{
+	3225137, 0
+};
+new Handle:_0x00000A75[16];
+new Handle:_0x00000CD5[9];
+new Handle:_0x00000FDC[2] =
+{
+	3158065, 0
+};
+new Handle:_0x0000092B[18];
+new Handle:_0x0000012E[2] =
+{
+	14645, 0
+};
+new Handle:_0x00000872[3];
+new Handle:_0x00000B10[2] =
+{
+	3159857, 0
+};
+new Handle:_0x00000B2E[2] =
+{
+	3682865, 0
+};
+new Handle:_0x0000054E[2] =
+{
+	3291441, 0
+};
+new Handle:_0x00000EA2[38];
+new Handle:_0x00000325[29];
+new Handle:_0x0000014D[8];
+new Handle:_0x00000635[18];
+new Handle:_0x00000B0C[2] =
+{
+	3290418, 0
+};
+new Handle:_0x00000C30[2] =
+{
+	13623, 0
+};
+new Handle:_0x0000225D[12];
+new Handle:_0x0000227B[12];
+new Handle:_0x00000BC5[8];
+new Handle:_0x00000C0E[2] =
+{
+	13623, 0
+};
+new Handle:_0x00000A30[2] =
+{
+	3159090, 0
+};
+new Handle:_0x000022A2[12];
+new Handle:_0x0000091E[2] =
+{
+	3551793, 0
+};
+new Handle:_0x0000221B[12];
+new Handle:_0x0000028F[2] =
+{
+	3617073, 0
+};
+new Handle:_0x00000FD2[28];
+new Handle:_0x0000053E[2] =
+{
+	13879, 0
+};
+new Handle:_0x00000AEC[2] =
+{
+	3552817, 0
+};
+new Handle:_0x00000D2E[2] =
+{
+	3684401, 0
+};
+new Handle:_0x000001B0[2] =
+{
+	12857, 0
+};
+new Handle:_0x00000112[6];
+new Handle:_0x00000770[2] =
+{
+	13881, 0
+};
+new Handle:_0x00000177[2] =
+{
+	3616817, 0
+};
+new Handle:_0x00000D30[2] =
+{
+	3617074, 0
+};
+new Handle:_0x0000273E[2] =
+{
+	3420721, 0
+};
+new Handle:_0x00000352[18];
+new Handle:_0x000008BD[8];
+new Handle:_0x0000225E[2] =
+{
+	3486001, 0
+};
+new Handle:_0x00000D6D[8];
+new Handle:_0x000009F0[2] =
+{
+	3224626, 0
+};
+new Handle:_0x00000B12[6];
+new Handle:_0x0000220D[12];
+new Handle:_0x000001DC[2] =
+{
+	14132, 0
+};
+new Handle:_0x000001C2[18];
+new Handle:_0x00000EDB[20];
+new Handle:_0x00000795[18];
+new Handle:_0x000022BD[12];
+new Handle:_0x0000032E[2] =
+{
+	3356721, 0
+};
+new Handle:_0x00000B0E[2] =
+{
+	3289137, 0
+};
+new Handle:_0x000007E7[2] =
+{
+	14390, 0
+};
+new Handle:_0x0000084B[24];
+new Handle:_0x0000086E[2] =
+{
+	3749681, 0
+};
+new Handle:_0x000009C0[2] =
+{
+	3683121, 0
+};
+new Handle:_0x00000D0C[2] =
+{
+	3420465, 0
+};
+new Handle:_0x000008CE[2] =
+{
+	3224114, 0
+};
+new Handle:_0x00000D1B[8];
+new Handle:_0x0000229B[12];
+new Handle:_0x00000E1C[2] =
+{
+	3618865, 0
+};
+new Handle:_0x0000011B[18];
+new Handle:_0x00000289[20];
+new Handle:_0x0000088C[2] =
+{
+	3616818, 0
+};
+new Handle:_0x00000C02[6];
+new Handle:_0x00000380[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000A3D[9];
+new Handle:_0x0000099E[2] =
+{
+	3422001, 0
+};
+new Handle:_0x000009FE[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00002792[12];
+new Handle:_0x00000ED0[2] =
+{
+	3749681, 0
+};
+new Handle:_0x000007DB[22];
+new Handle:_0x00000C37[2] =
+{
+	3289138, 0
+};
+new Handle:_0x00000962[18];
+new Handle:_0x00000595[3];
+new Handle:_0x00000ABB[31];
+new Handle:_0x00000BEB[9];
+new Handle:_0x00000D0B[24];
+new Handle:_0x0000072F[15];
+new Handle:_0x0000056C[2] =
+{
+	3551282, 0
+};
+new Handle:_0x000001B7[2] =
+{
+	13109, 0
+};
+new Handle:_0x00000DFC[2] =
+{
+	12342, 0
+};
+new Handle:_0x00000D17[2] =
+{
+	3617841, 0
+};
+new Handle:_0x00000710[2] =
+{
+	13364, 0
+};
+new Handle:_0x00000410[2] =
+{
+	3551794, 0
+};
+new Handle:_0x00000EBC[2] =
+{
+	14392, 0
+};
+new Handle:_0x00002290[2] =
+{
+	3355953, 0
+};
+new Handle:_0x00000535[6];
+new Handle:_0x00000D67[2] =
+{
+	13368, 0
+};
+new Handle:_0x000022AE[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00000FB5[22];
+new Handle:_0x00000660[2] =
+{
+	3159601, 0
+};
+new Handle:_0x000022AD[12];
+new Handle:_0x00000690[2] =
+{
+	3618097, 0
+};
+new Handle:_0x0000080B[17];
+new Handle:_0x00000F3E[2] =
+{
+	13109, 0
+};
+new Handle:_0x00000330[2] =
+{
+	3617329, 0
+};
+new Handle:_0x000006C7[2] =
+{
+	12340, 0
+};
+new Handle:_0x00000AEE[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000BDE[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00000F90[2] =
+{
+	13878, 0
+};
+new Handle:_0x00002232[12];
+new Handle:_0x00002795[12];
+new Handle:_0x00000482[28];
+new Handle:_0x00000BD2[3];
+new Handle:_0x00000922[9];
+new Handle:_0x00000C0D[18];
+new Handle:_0x00000737[2] =
+{
+	12852, 0
+};
+new Handle:_0x00000EAE[2] =
+{
+	3684145, 0
+};
+new Handle:_0x0000099D[9];
+new Handle:_0x00000F1B[13];
+new Handle:_0x0000015E[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000ECC[2] =
+{
+	3486514, 0
+};
+new Handle:_0x00000DB7[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000592[9];
+new Handle:_0x00002217[2] =
+{
+	3616817, 0
+};
+new Handle:_0x000004DC[2] =
+{
+	3160113, 0
+};
+new Handle:_0x0000052C[2] =
+{
+	3355185, 0
+};
+new Handle:_0x000001EE[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000E7E[2] =
+{
+	3160369, 0
+};
+new Handle:_0x00000752[6];
+new Handle:_0x00000ACE[2] =
+{
+	13621, 0
+};
+new Handle:_0x000022F7[2] =
+{
+	3618609, 0
+};
+new Handle:_0x0000277D[12];
+new Handle:_0x00000742[71];
+new Handle:_0x000009EC[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000630[2] =
+{
+	13366, 0
+};
+new Handle:_0x000022D0[2] =
+{
+	13107, 0
+};
+new Handle:_0x000002F1[47];
+new Handle:_0x00000D32[9];
+new Handle:_0x00000E6C[2] =
+{
+	14131, 0
+};
+new Handle:_0x00000B52[6];
+new Handle:_0x00000B9E[2] =
+{
+	14393, 0
+};
+new Handle:_0x0000222B[3];
+new Handle:_0x0000093B[17];
+new Handle:_0x000009CB[18];
+new Handle:_0x0000076C[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00000A20[2] =
+{
+	3552050, 0
+};
+new Handle:_0x00002705[12];
+new Handle:_0x00000E1B[23];
+new Handle:_0x00000917[2] =
+{
+	3223602, 0
+};
+new Handle:_0x000007C0[2] =
+{
+	3224369, 0
+};
+new Handle:_0x000022F2[12];
+new Handle:_0x00000EE2[62];
+new Handle:_0x0000055D[8];
+new Handle:_0x000006A2[40];
+new Handle:_0x0000274C[2] =
+{
+	3421234, 0
+};
+new Handle:_0x0000079E[2] =
+{
+	13368, 0
+};
+new Handle:_0x0000010E[2] =
+{
+	3552050, 0
+};
+new Handle:_0x00000AED[12];
+new Handle:_0x00000B30[2] =
+{
+	13620, 0
+};
+new Handle:_0x000007DE[2] =
+{
+	3485746, 0
+};
+new Handle:_0x0000072D[2] =
+{
+	13877, 0
+};
+new Handle:_0x000009DE[2] =
+{
+	3552817, 0
+};
+new Handle:_0x000009DD[22];
+new Handle:_0x00000DA0[2] =
+{
+	12341, 0
+};
+new Handle:_0x00000452[12];
+new Handle:_0x00000CCC[2] =
+{
+	3159089, 0
+};
+new Handle:_0x00000C9C[2] =
+{
+	3223858, 0
+};
+new Handle:_0x0000012D[6];
+new Handle:_0x00002202[12];
+new Handle:_0x00000DF0[2] =
+{
+	3617073, 0
+};
+new Handle:_0x00000D65[3];
+new Handle:_0x000027EB[12];
+new Handle:_0x00000DA2[23];
+new Handle:_0x00000567[2] =
+{
+	12853, 0
+};
+new Handle:_0x00000140[2] =
+{
+	3356465, 0
+};
+new Handle:_0x00000840[2] =
+{
+	3356465, 0
+};
+new Handle:_0x00000475[20];
+new Handle:_0x00000DBC[2] =
+{
+	3487793, 0
+};
+new Handle:_0x00000E5D[3];
+new Handle:_0x000003FB[82];
+new Handle:_0x00000C97[2] =
+{
+	3355954, 0
+};
+new Handle:_0x000001FB[16];
+new Handle:_0x00000B4E[2] =
+{
+	3224625, 0
+};
+new Handle:_0x000002C1[2];
+new Handle:_0x00000EAD[33];
+new Handle:_0x0000034E[2] =
+{
+	14648, 0
+};
+new Handle:_0x00000DF5[6];
+new Handle:_0x0000095C[2] =
+{
+	3420209, 0
+};
+new Handle:_0x00000204[5] =
+{
+	1663398693, 1663394597, 1663394597, 25381, 0
+};
+new Handle:_0x00000467[2] =
+{
+	3158577, 0
+};
+new Handle:_0x00000E4D[45];
+new Handle:_0x00000832[6];
+new Handle:_0x0000063B[9];
+new Handle:_0x00000977[2] =
+{
+	13880, 0
+};
+new Handle:_0x000007AC[2] =
+{
+	3354929, 0
+};
+new Handle:_0x00000AC2[16];
+new Handle:_0x00000957[2] =
+{
+	3486769, 0
+};
+new Handle:_0x0000078C[2] =
+{
+	3225137, 0
+};
+new Handle:_0x000009ED[18];
+new Handle:_0x00000A8C[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000145[22];
+new Handle:_0x00000A02[6];
+new Handle:_0x0000030C[2] =
+{
+	13876, 0
+};
+new Handle:_0x000027B2[12];
+new Handle:_0x00000762[18];
+new Handle:_0x00000F57[2] =
+{
+	3485745, 0
+};
+new Handle:_0x0000029F[2] =
+{
+	3684657, 0
+};
+new Handle:_0x000001DB[13];
+new Handle:_0x000009BD[18];
+new Handle:_0x0000067C[2] =
+{
+	12597, 0
+};
+new Handle:_0x00000B8D[8];
+new Handle:_0x00000F40[2] =
+{
+	3354674, 0
+};
+new Handle:_0x00000DA7[2] =
+{
+	3355954, 0
+};
+new Handle:_0x0000276C[2] =
+{
+	3158066, 0
+};
+new Handle:_0x0000275C[2] =
+{
+	12855, 0
+};
+new Handle:_0x000007FD[9];
+new Handle:_0x00000ECB[12];
+new Handle:_0x00000CC0[2] =
+{
+	3158065, 0
+};
+new Handle:_0x00000258[2] =
+{
+	14387, 0
+};
+new Handle:_0x000027BE[2] =
+{
+	13363, 0
+};
+new Handle:_0x00000B90[2] =
+{
+	13368, 0
+};
+new Handle:_0x000006DE[2] =
+{
+	3617842, 0
+};
+new Handle:_0x00000555[3];
+new Handle:_0x00000DDD[8];
+new Handle:_0x0000067D[9];
+new Handle:_0x00000480[2] =
+{
+	3551537, 0
+};
+new Handle:_0x00000E8B[6];
+new Handle:_0x00000B8E[2] =
+{
+	3749425, 0
+};
+new Handle:_0x000006BD[9];
+new Handle:_0x00000D50[2] =
+{
+	3487537, 0
+};
+new Handle:_0x00000430[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000F2C[2] =
+{
+	3158066, 0
+};
+new Handle:_0x0000034C[2] =
+{
+	13369, 0
+};
+new Handle:_0x000001DE[2] =
+{
+	3355698, 0
+};
+new Handle:_0x0000060C[2] =
+{
+	3683121, 0
+};
+new Handle:_0x00000CBE[2] =
+{
+	14136, 0
+};
+new Handle:_0x00000BCE[2] =
+{
+	3618097, 0
+};
+new Handle:_0x000008C5[3];
+new Handle:_0x00000FBE[2] =
+{
+	14130, 0
+};
+new Handle:_0x00000E92[7];
+new Handle:_0x0000228C[2] =
+{
+	14643, 0
+};
+new Handle:_0x00000932[3];
+new Handle:_0x000009AE[2] =
+{
+	3355953, 0
+};
+new Handle:_0x000005FB[3];
+new Handle:_0x0000010C[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000B45[28];
+new Handle:_0x00000A6E[2] =
+{
+	3421234, 0
+};
+new Handle:_0x00000EA7[2] =
+{
+	13618, 0
+};
+new Handle:_0x0000018E[2] =
+{
+	13622, 0
+};
+new Handle:_0x00000DAC[2] =
+{
+	3616817, 0
+};
+new Handle:_0x00000A6C[2] =
+{
+	3553329, 0
+};
+new Handle:_0x0000078B[3];
+new Handle:_0x00000CBB[9];
+new Handle:_0x00002712[12];
+new Handle:_0x00000C3E[2] =
+{
+	3355442, 0
+};
+new Handle:_0x000007D7[2] =
+{
+	12340, 0
+};
+new Handle:_0x0000048C[2] =
+{
+	3223857, 0
+};
+new Handle:_0x00000F92[28];
+new Handle:_0x00000605[8];
+new Handle:_0x00000DDE[2] =
+{
+	13618, 0
+};
+new Handle:_0x000001E2[3];
+new Handle:_0x000022B5[12];
+new Handle:_0x00000205[71];
+new Handle:_0x000005CC[2] =
+{
+	14391, 0
+};
+new Handle:_0x00000D60[2] =
+{
+	3420721, 0
+};
+new Handle:_0x000027D0[2] =
+{
+	3290673, 0
+};
+new Handle:_0x000006D0[2] =
+{
+	3551282, 0
+};
+new Handle:_0x0000046D[11];
+new Handle:_0x00000C17[2] =
+{
+	3486513, 0
+};
+new Handle:_0x000022FC[2] =
+{
+	3682865, 0
+};
+new Handle:_0x00000F0B[34];
+new Handle:_0x00000D7B[3];
+new Handle:_0x000006ED[18];
+new Handle:_0x00000CAC[2] =
+{
+	3159346, 0
+};
+new Handle:_0x0000032C[2] =
+{
+	14390, 0
+};
+new Handle:_0x0000083C[2] =
+{
+	3158834, 0
+};
+new Handle:_0x00000F0D[24];
+new Handle:_0x00000DB5[22];
+new Handle:_0x000006AD[13];
+new Handle:_0x000008B0[2] =
+{
+	13621, 0
+};
+new Handle:_0x000001CD[8];
+new Handle:_0x000003FE[2] =
+{
+	3355186, 0
+};
+new Handle:_0x000007C7[2] =
+{
+	3748145, 0
+};
+new Handle:_0x00000D77[2] =
+{
+	3617842, 0
+};
+new Handle:_0x00000597[2] =
+{
+	3552050, 0
+};
+new Handle:_0x0000061C[2] =
+{
+	3355442, 0
+};
+new Handle:_0x000001D2[22];
+new Handle:_0x00000A97[2] =
+{
+	14643, 0
+};
+new Handle:_0x00000A1B[19];
+new Handle:_0x000027AB[12];
+new Handle:_0x0000227C[2] =
+{
+	3420722, 0
+};
+new Handle:_0x00000870[2] =
+{
+	3748402, 0
+};
+new Handle:_0x00000CB2[8];
+new Handle:_0x00002772[12];
+new Handle:_0x00000157[2] =
+{
+	12339, 0
+};
+new Handle:_0x00000437[2] =
+{
+	3487025, 0
+};
+new Handle:_0x00000D20[2] =
+{
+	14386, 0
+};
+new Handle:_0x0000065E[2] =
+{
+	3552049, 0
+};
+new Handle:_0x0000050C[2] =
+{
+	3289394, 0
+};
+new Handle:_0x000007CD[18];
+new Handle:_0x000001AC[2] =
+{
+	3420210, 0
+};
+new Handle:_0x00000C7E[2] =
+{
+	3354673, 0
+};
+new Handle:_0x00000265[5];
+new Handle:_0x0000274E[2] =
+{
+	3289394, 0
+};
+new Handle:_0x00000D12[18];
+new Handle:_0x0000086B[9];
+new Handle:_0x00000DD2[9];
+new Handle:_0x00000F82[35];
+new Handle:_0x00000680[2] =
+{
+	14387, 0
+};
+new Handle:_0x00000420[2] =
+{
+	3159345, 0
+};
+new Handle:_0x00000860[2] =
+{
+	12855, 0
+};
+new Handle:_0x00000842[9];
+new Handle:_0x00000EFD[10];
+new Handle:_0x000022E7[2] =
+{
+	3616818, 0
+};
+new Handle:_0x00000332[120];
+new Handle:_0x00000BAD[8];
+new Handle:_0x00000D37[2] =
+{
+	12342, 0
+};
+new Handle:_0x000022E2[12];
+new Handle:_0x00000F20[2] =
+{
+	14387, 0
+};
+new Handle:_0x00000B1E[2] =
+{
+	3552817, 0
+};
+new Handle:_0x00000F37[2] =
+{
+	13107, 0
+};
+new Handle:_0x000007CE[2] =
+{
+	3225137, 0
+};
+new Handle:_0x00000DC7[2] =
+{
+	14137, 0
+};
+new Handle:_0x000022DD[12];
+new Handle:_0x00000E8E[2] =
+{
+	13106, 0
+};
+new Handle:_0x00000745[2];
+new Handle:_0x00000147[2] =
+{
+	3224370, 0
+};
+new Handle:_0x000006C2[26];
+new Handle:_0x0000059C[2] =
+{
+	3682865, 0
+};
+new Handle:_0x00000A4C[2] =
+{
+	3552049, 0
+};
+new Handle:_0x00000BEC[2] =
+{
+	12597, 0
+};
+new Handle:_0x0000062B[18];
+new Handle:_0x00000117[2] =
+{
+	3617586, 0
+};
+new Handle:_0x00000B60[2] =
+{
+	3749681, 0
+};
+new Handle:_0x00002212[12];
+new Handle:_0x00000C6D[13];
+new Handle:_0x00000D4E[2] =
+{
+	14389, 0
+};
+new Handle:_0x00000724[17];
+new Handle:_0x00000D22[3];
+new Handle:_0x000004EE[2] =
+{
+	3487025, 0
+};
+new Handle:_0x0000015B[18];
+new Handle:_0x000006EB[40];
+new Handle:_0x000003F2[3];
+new Handle:_0x00000E05[5];
+new Handle:_0x00000E5E[2] =
+{
+	14643, 0
+};
+new Handle:_0x00000B37[2] =
+{
+	12340, 0
+};
+new Handle:_0x00000315[106];
+new Handle:_0x00000FE0[2] =
+{
+	3748658, 0
+};
+new Handle:_0x00000355[59];
+new Handle:_0x00000905[13];
+new Handle:_0x00000CEC[2] =
+{
+	12341, 0
+};
+new Handle:_0x00000802[9];
+new Handle:_0x00000CDE[2] =
+{
+	3748146, 0
+};
+new Handle:_0x000009D5[3];
+new Handle:_0x00000EFB[4];
+new Handle:_0x00000502[6];
+new Handle:_0x0000085C[2] =
+{
+	3487281, 0
+};
+new Handle:_0x00000DCE[2] =
+{
+	14392, 0
+};
+new Handle:_0x00000B6C[2] =
+{
+	3223601, 0
+};
+new Handle:_0x000006EC[2] =
+{
+	3553585, 0
+};
+new Handle:_0x00000E6E[2] =
+{
+	3618097, 0
+};
+new Handle:_0x000001ED[8];
+new Handle:_0x00002700[2] =
+{
+	3158833, 0
+};
+new Handle:_0x000022E5[12];
+new Handle:_0x000005C7[2] =
+{
+	13111, 0
+};
+new Handle:_0x00000192[9];
+new Handle:_0x00000F7E[2] =
+{
+	14386, 0
+};
+new Handle:_0x00000892[5];
+new Handle:_0x00000A8D[84];
+new Handle:_0x00000F6D[26];
+new Handle:_0x00000170[2] =
+{
+	3224369, 0
+};
+new Handle:_0x00000500[2] =
+{
+	13108, 0
+};
+new Handle:_0x000022B2[12];
+new Handle:_0x00000B47[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00002745[12];
+new Handle:_0x0000076B[8];
+new Handle:_0x0000092D[11];
+new Handle:_0x000022F5[12];
+new Handle:_0x00000C42[3];
+new Handle:_0x000009E0[2] =
+{
+	3682865, 0
+};
+new Handle:_0x00000D4D[9];
+new Handle:_0x00002225[12];
+new Handle:_0x0000020B[6];
+new Handle:_0x00000E85[4];
+new Handle:_0x0000224B[12];
+new Handle:_0x00000D9C[2] =
+{
+	14647, 0
+};
+new Handle:_0x00000850[2] =
+{
+	13362, 0
+};
+new Handle:_0x000005E0[2] =
+{
+	3552049, 0
+};
+new Handle:_0x00000BAC[2] =
+{
+	3551794, 0
+};
+new Handle:_0x00000830[2] =
+{
+	14642, 0
+};
+new Handle:_0x0000063C[2] =
+{
+	3552306, 0
+};
+new Handle:_0x0000071E[2] =
+{
+	3551793, 0
+};
+new Handle:_0x00000C5E[2] =
+{
+	3748658, 0
+};
+new Handle:_0x000007F2[3];
+new Handle:_0x00000310[2] =
+{
+	14647, 0
+};
+new Handle:_0x0000040C[2] =
+{
+	3552049, 0
+};
+new Handle:_0x00000DF2[9];
+new Handle:_0x00000B65[9];
+new Handle:_0x0000067E[2] =
+{
+	3354930, 0
+};
+new Handle:_0x000007EE[2] =
+{
+	3356209, 0
+};
+new Handle:_0x000007A2[11];
+new Handle:_0x00000A70[2] =
+{
+	3617073, 0
+};
+new Handle:_0x00000ECE[2] =
+{
+	3421233, 0
+};
+new Handle:_0x00000570[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000435[17];
+new Handle:_0x00000C7B[3];
+new Handle:_0x000001D7[2] =
+{
+	12857, 0
+};
+new Handle:_0x00000972[18];
+new Handle:_0x00000E0D[8];
+new Handle:_0x00000970[2] =
+{
+	14389, 0
+};
+new Handle:_0x00000C27[2] =
+{
+	3355697, 0
+};
+new Handle:_0x000004FE[2] =
+{
+	14131, 0
+};
+new Handle:_0x0000089E[2] =
+{
+	12594, 0
+};
+new Handle:_0x000022CB[12];
+new Handle:_0x0000081D[8];
+new Handle:_0x00000D9B[24];
+new Handle:_0x00000E0E[2] =
+{
+	3356721, 0
+};
+new Handle:_0x000022DE[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000FCC[2] =
+{
+	3422001, 0
+};
+new Handle:_0x00000A45[3];
+new Handle:_0x0000223B[12];
+new Handle:_0x0000036E[2] =
+{
+	3618609, 0
+};
+new Handle:_0x00000E62[8];
+new Handle:_0x00000DB0[2] =
+{
+	3749425, 0
+};
+new Handle:_0x00000C9B[9];
+new Handle:_0x00000E47[2] =
+{
+	12594, 0
+};
+new Handle:_0x00000B3B[24];
+new Handle:_0x00000E57[2] =
+{
+	14387, 0
+};
+new Handle:_0x0000029A[2] =
+{
+	3289138, 0
+};
+new Handle:_0x00000F35[3];
+new Handle:_0x00000657[2] =
+{
+	3487793, 0
+};
+new Handle:_0x00000EC2[14];
+new Handle:_0x000022AC[2] =
+{
+	12595, 0
+};
+new Handle:_0x00000CE0[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000980[2] =
+{
+	3618865, 0
+};
+new Handle:_0x00000D2B[6];
+new Handle:_0x00000AC0[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000A40[2] =
+{
+	3289649, 0
+};
+new Handle:_0x000001B2[9];
+new Handle:_0x0000062D[11];
+new Handle:_0x00000F17[2] =
+{
+	13880, 0
+};
+new Handle:_0x000022D5[12];
+new Handle:_0x000001A5[6];
+new Handle:_0x00000C07[2] =
+{
+	3682866, 0
+};
+new Handle:_0x00000DEC[2] =
+{
+	13113, 0
+};
+new Handle:_0x00000FD5[26];
+new Handle:_0x00000E80[2] =
+{
+	12340, 0
+};
+new Handle:_0x0000080E[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000377[2] =
+{
+	3158321, 0
+};
+new Handle:_0x00000F87[2] =
+{
+	3158833, 0
+};
+new Handle:_0x000027D2[12];
+new Handle:_0x00000985[3];
+new Handle:_0x00002285[12];
+new Handle:_0x00002247[2] =
+{
+	3224625, 0
+};
+new Handle:_0x000009EB[13];
+new Handle:_0x000006FC[2] =
+{
+	3683121, 0
+};
+new Handle:_0x00000BE5[7];
+new Handle:_0x00000FDD[27];
+new Handle:_0x000002C5[2] =
+{
+	12854, 0
+};
+new Handle:_0x00000EED[63];
+new Handle:_0x00000AAC[2] =
+{
+	3682609, 0
+};
+new Handle:_0x000003DE[2] =
+{
+	13108, 0
+};
+new Handle:_0x00000852[18];
+new Handle:_0x000003FD[2];
+new Handle:_0x00000A1D[8];
+new Handle:_0x000003CC[2] =
+{
+	3683889, 0
+};
+new Handle:_0x00000645[9];
+new Handle:_0x000022A0[2] =
+{
+	14387, 0
+};
+new Handle:_0x000002CA[3] =
+{
+	1663398693, 0, 0
+};
+new Handle:_0x00000A5B[6];
+new Handle:_0x00000AA0[2] =
+{
+	3291185, 0
+};
+new Handle:_0x0000019C[2] =
+{
+	3355697, 0
+};
+new Handle:_0x00000312[29];
+new Handle:_0x00000360[2] =
+{
+	3158834, 0
+};
+new Handle:_0x000027CD[12];
+new Handle:_0x000008CD[22];
+new Handle:_0x00000EDC[2] =
+{
+	3486514, 0
+};
+new Handle:_0x00000CDB[8];
+new Handle:_0x00000935[3];
+new Handle:_0x00000CFD[13];
+new Handle:_0x000009BC[2] =
+{
+	3291185, 0
+};
+new Handle:_0x000009CE[2] =
+{
+	13366, 0
+};
+new Handle:_0x0000082B[24];
+new Handle:_0x000008D0[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00002222[19];
+new Handle:_0x000004DE[2] =
+{
+	3354929, 0
+};
+new Handle:_0x00000D80[2] =
+{
+	14647, 0
+};
+new Handle:_0x00000AAD[14];
+new Handle:_0x0000074B[17];
+new Handle:_0x0000221D[12];
+new Handle:_0x00000BCD[9];
+new Handle:_0x00000D07[2] =
+{
+	3159090, 0
+};
+new Handle:_0x000005C0[2] =
+{
+	3684145, 0
+};
+new Handle:_0x00000C25[8];
+new Handle:_0x0000228B[12];
+new Handle:_0x00000405[39];
+new Handle:_0x0000042C[2] =
+{
+	3682866, 0
+};
+new Handle:_0x0000030B[30];
+new Handle:_0x00000EC7[2] =
+{
+	3487793, 0
+};
+new Handle:_0x00000587[2] =
+{
+	14646, 0
+};
+new Handle:_0x00000432[18];
+new Handle:_0x0000012C[2] =
+{
+	13106, 0
+};
+new Handle:_0x0000093D[8];
+new Handle:_0x00000EFC[2] =
+{
+	3420466, 0
+};
+new Handle:_0x0000034B[114];
+new Handle:_0x000006DB[8];
+new Handle:_0x000002CF[5] =
+{
+	1663398693, 1663394597, 1663394597, 0, 0
+};
+new Handle:_0x00000582[21];
+new Handle:_0x00000DD0[2] =
+{
+	3356977, 0
+};
+new Handle:_0x000006A7[2] =
+{
+	3422513, 0
+};
+new Handle:_0x00000C4B[23];
+new Handle:_0x0000059B[25];
+new Handle:_0x0000096B[6];
+new Handle:_0x000005D2[9];
+new Handle:_0x00000F10[2] =
+{
+	12855, 0
+};
+new Handle:_0x000009FC[2] =
+{
+	3421234, 0
+};
+new Handle:_0x000006AE[2] =
+{
+	3683121, 0
+};
+new Handle:_0x000001AB[3];
+new Handle:_0x0000075D[18];
+new Handle:_0x0000063D[13];
+new Handle:_0x00000FFE[2] =
+{
+	12343, 0
+};
+new Handle:_0x00000F5D[26];
+new Handle:_0x000003CB[59];
+new Handle:_0x00000992[6];
+new Handle:_0x00000DB2[22];
+new Handle:_0x000008AC[2] =
+{
+	12344, 0
+};
+new Handle:_0x00000F1E[2] =
+{
+	14133, 0
+};
+new Handle:_0x0000272B[12];
+new Handle:_0x000001BB[22];
+new Handle:_0x0000271C[2] =
+{
+	3158834, 0
+};
+new Handle:_0x0000090C[2] =
+{
+	3420977, 0
+};
+new Handle:_0x000002C6[6];
+new Handle:_0x00000B70[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000A85[2];
+new Handle:_0x00000BA0[2] =
+{
+	3551281, 0
+};
+new Handle:_0x00000F60[2] =
+{
+	3158065, 0
+};
+new Handle:_0x000003B2[121];
+new Handle:_0x000022BC[2] =
+{
+	13879, 0
+};
+new Handle:_0x00000782[17];
+new Handle:_0x0000227D[12];
+new Handle:_0x00000260[55];
+new Handle:_0x000002D1[13];
+new Handle:_0x00000A5D[3];
+new Handle:_0x000005A5[21];
+new Handle:_0x000003C2[2];
+new Handle:_0x000001EC[2] =
+{
+	3224114, 0
+};
+new Handle:_0x000006F7[2] =
+{
+	3159346, 0
+};
+new Handle:_0x000005EC[2] =
+{
+	12338, 0
+};
+new Handle:_0x000007FC[2] =
+{
+	13111, 0
+};
+new Handle:_0x00000AD7[2] =
+{
+	3224625, 0
+};
+new Handle:_0x00000F02[23];
+new Handle:_0x000008CB[22];
+new Handle:_0x0000051B[9];
+new Handle:_0x00000CA2[3];
+new Handle:_0x000007B7[2] =
+{
+	14131, 0
+};
+new Handle:_0x0000035E[2] =
+{
+	3159090, 0
+};
+new Handle:_0x0000068E[2] =
+{
+	3421234, 0
+};
+new Handle:_0x00000440[2] =
+{
+	13875, 0
+};
+new Handle:_0x00000755[9];
+new Handle:_0x0000050E[2] =
+{
+	13113, 0
+};
+new Handle:_0x0000088D[3];
+new Handle:_0x00000202[2] =
+{
+	3617841, 0
+};
+new Handle:_0x00000CAE[2] =
+{
+	3683378, 0
+};
+new Handle:_0x00000B05[11];
+new Handle:_0x00000EBE[2] =
+{
+	14134, 0
+};
+new Handle:_0x0000011D[9];
+new Handle:_0x000009DC[2] =
+{
+	3223857, 0
+};
+new Handle:_0x00000517[2] =
+{
+	3158066, 0
+};
+new Handle:_0x0000013C[2] =
+{
+	3289905, 0
+};
+new Handle:_0x000027CE[2] =
+{
+	3748401, 0
+};
+new Handle:_0x00000470[2] =
+{
+	13364, 0
+};
+new Handle:_0x0000066B[3];
+new Handle:_0x0000071D[2];
+new Handle:_0x00000CEB[8];
+new Handle:_0x00000ABC[2] =
+{
+	3486002, 0
+};
+new Handle:_0x00000427[2] =
+{
+	3684657, 0
+};
+new Handle:_0x0000035C[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00002240[2] =
+{
+	3225649, 0
+};
+new Handle:_0x00000865[17];
+new Handle:_0x00000867[2] =
+{
+	3684145, 0
+};
+new Handle:_0x0000039B[20];
+new Handle:_0x000008C7[2] =
+{
+	3421234, 0
+};
+new Handle:_0x0000038D[32];
+new Handle:_0x000006EE[2] =
+{
+	14135, 0
+};
+new Handle:_0x000007E0[2] =
+{
+	3617842, 0
+};
+new Handle:_0x000007ED[10];
+new Handle:_0x000001BC[2] =
+{
+	3224881, 0
+};
+new Handle:_0x00000F97[2] =
+{
+	3356721, 0
+};
+new Handle:_0x00000F0E[2] =
+{
+	3420210, 0
+};
+new Handle:_0x00000A55[14];
+new Handle:_0x0000277B[12];
+new Handle:_0x0000097D[9];
+new Handle:_0x0000272D[12];
+new Handle:_0x00000197[2] =
+{
+	3223858, 0
+};
+new Handle:_0x000006BC[2] =
+{
+	3421234, 0
+};
+new Handle:_0x00000ACC[2] =
+{
+	12851, 0
+};
+new Handle:_0x000004B5[9];
+new Handle:_0x00000800[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000DFD[8];
+new Handle:_0x00000A37[2] =
+{
+	3225905, 0
+};
+new Handle:_0x0000228E[2] =
+{
+	13880, 0
+};
+new Handle:_0x00002282[12];
+new Handle:_0x00000320[2] =
+{
+	3551281, 0
+};
+new Handle:_0x00000C55[27];
+new Handle:_0x00000417[2] =
+{
+	13877, 0
+};
+new Handle:_0x000007E5[12];
+new Handle:_0x00000F00[2] =
+{
+	12340, 0
+};
+new Handle:_0x00000942[9];
+new Handle:_0x00000C1E[2] =
+{
+	12338, 0
+};
+new Handle:_0x000002F3[2] =
+{
+	12852, 0
+};
+new Handle:_0x0000080C[2] =
+{
+	13110, 0
+};
+new Handle:_0x0000059E[2] =
+{
+	3158322, 0
+};
+new Handle:_0x0000082D[24];
+new Handle:_0x000005E7[2] =
+{
+	3486258, 0
+};
+new Handle:_0x00000640[2] =
+{
+	3421745, 0
+};
+new Handle:_0x000009A2[13];
+new Handle:_0x0000223D[12];
+new Handle:_0x00000D3D[23];
+new Handle:_0x00000497[2] =
+{
+	13110, 0
+};
+new Handle:_0x0000041C[2] =
+{
+	3486513, 0
+};
+new Handle:_0x00000540[2] =
+{
+	3748914, 0
+};
+new Handle:_0x000006C5[8];
+new Handle:_0x00000D9D[24];
+new Handle:_0x00000C1B[8];
+new Handle:_0x000009DB[22];
+new Handle:_0x00000E00[2] =
+{
+	3290929, 0
+};
+new Handle:_0x00000D85[3];
+new Handle:_0x000002D6[79];
+new Handle:_0x00000B32[9];
+new Handle:_0x00002242[7];
+new Handle:_0x0000045D[12];
+new Handle:_0x00000ABE[2] =
+{
+	14645, 0
+};
+new Handle:_0x0000081E[2] =
+{
+	12595, 0
+};
+new Handle:_0x00000602[6];
+new Handle:_0x00000AF5[91];
+new Handle:_0x0000046B[4];
+new Handle:_0x0000058D[3];
+new Handle:_0x00000F6B[27];
+new Handle:_0x0000056D[8];
+new Handle:_0x00000B5D[24];
+new Handle:_0x00000B7B[28];
+new Handle:_0x00000910[2] =
+{
+	3422513, 0
+};
+new Handle:_0x0000064B[8];
+new Handle:_0x00000D57[2] =
+{
+	3289138, 0
+};
+new Handle:_0x00002235[12];
+new Handle:_0x00000345[31];
+new Handle:_0x00000268[2] =
+{
+	3289393, 0
+};
+new Handle:_0x00000BD0[2] =
+{
+	3159601, 0
+};
+new Handle:_0x000001F0[2] =
+{
+	13621, 0
+};
+new Handle:_0x000022C5[12];
+new Handle:_0x00000A52[14];
+new Handle:_0x00000A3C[2] =
+{
+	12600, 0
+};
+new Handle:_0x00000BF7[2] =
+{
+	3617330, 0
+};
+new Handle:_0x000009FD[13];
+new Handle:_0x0000018B[9];
+new Handle:_0x000003CE[2] =
+{
+	3158065, 0
+};
+new Handle:_0x0000051C[2] =
+{
+	12854, 0
+};
+new Handle:_0x0000029B[8] =
+{
+	1663398693, 1663394597, 1663394597, 1663394597, 1663394597, 1663394597, 25381, 0
+};
+new Handle:_0x000005FD[9];
+new Handle:_0x0000279E[2] =
+{
+	14136, 0
+};
+new Handle:_0x00000E30[2] =
+{
+	3158834, 0
+};
+new Handle:_0x00000462[17];
+new Handle:_0x00000E25[6];
+new Handle:_0x00000BFD[22];
+new Handle:_0x0000087D[8];
+new Handle:_0x00000F12[81];
+new Handle:_0x0000229D[12];
+new Handle:_0x0000089C[2] =
+{
+	12341, 0
+};
+new Handle:_0x00000D8B[19];
+new Handle:_0x00000F72[81];
+new Handle:_0x0000099C[2] =
+{
+	3355185, 0
+};
+new Handle:_0x000008B7[2] =
+{
+	3749169, 0
+};
+new Handle:_0x000004CE[2] =
+{
+	3289905, 0
+};
+new Handle:_0x0000054B[9];
+new Handle:_0x00000805[6];
+new Handle:_0x0000098B[9];
+new Handle:_0x000004D7[2] =
+{
+	3420209, 0
+};
+new Handle:_0x00000E37[2] =
+{
+	13877, 0
+};
+new Handle:_0x00002727[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000BBD[24];
+new Handle:_0x00000702[22];
+new Handle:_0x000001F2[14];
+new Handle:_0x00000B2C[2] =
+{
+	12339, 0
+};
+new Handle:_0x00000C1C[2] =
+{
+	12852, 0
+};
+new Handle:_0x00000BDB[19];
+new Handle:_0x000002FF[130];
+new Handle:_0x00000B07[2] =
+{
+	3356977, 0
+};
+new Handle:_0x00000837[2] =
+{
+	14391, 0
+};
+new Handle:_0x0000092E[2] =
+{
+	3289650, 0
+};
+new Handle:_0x00000BBE[2] =
+{
+	3551794, 0
+};
+new Handle:_0x0000017B[8];
+new Handle:_0x00000B27[2] =
+{
+	3551793, 0
+};
+new Handle:_0x00000D5D[8];
+new Handle:_0x00000D70[2] =
+{
+	3223601, 0
+};
+new Handle:_0x00000D35[6];
+new Handle:_0x0000014B[3];
+new Handle:_0x00000E35[9];
+new Handle:_0x00000F07[2] =
+{
+	3682610, 0
+};
+new Handle:_0x000001EB[17];
+new Handle:_0x00000C3D[6];
+new Handle:_0x000006BE[2] =
+{
+	3553585, 0
+};
+new Handle:_0x0000017E[2] =
+{
+	3355698, 0
+};
+new Handle:_0x000003AC[2] =
+{
+	3683889, 0
+};
+new Handle:_0x000027E0[2] =
+{
+	3159601, 0
+};
+new Handle:_0x00000C40[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000622[8];
+new Handle:_0x0000031C[2] =
+{
+	3618609, 0
+};
+new Handle:_0x00000CAD[28];
+new Handle:_0x000005D5[3];
+new Handle:_0x00000DCC[2] =
+{
+	3683889, 0
+};
+new Handle:_0x000006CC[2] =
+{
+	14390, 0
+};
+new Handle:_0x00000CF0[2] =
+{
+	3552561, 0
+};
+new Handle:_0x00000B17[2] =
+{
+	12855, 0
+};
+new Handle:_0x00000EDD[12];
+new Handle:_0x000003FC[2] =
+{
+	14137, 0
+};
+new Handle:_0x00000175[9];
+new Handle:_0x00000E5B[3];
+new Handle:_0x0000094E[2] =
+{
+	3290162, 0
+};
+new Handle:_0x0000275E[2] =
+{
+	3355186, 0
+};
+new Handle:_0x000022EB[12];
+new Handle:_0x000003F7[2] =
+{
+	14642, 0
+};
+new Handle:_0x000006E2[18];
+new Handle:_0x00002292[12];
+new Handle:_0x00000B55[3];
+new Handle:_0x00000BFB[22];
+new Handle:_0x00000B77[2] =
+{
+	13877, 0
+};
+new Handle:_0x0000055E[2] =
+{
+	13620, 0
+};
+new Handle:_0x000009AC[2] =
+{
+	3552305, 0
+};
+new Handle:_0x00000765[9];
+new Handle:_0x00000A00[2] =
+{
+	3290418, 0
+};
+new Handle:_0x00000395[2];
+new Handle:_0x00002277[2] =
+{
+	13368, 0
+};
+new Handle:_0x00002210[2] =
+{
+	3616818, 0
+};
+new Handle:_0x000008A0[2] =
+{
+	3683122, 0
+};
+new Handle:_0x00000CDC[2] =
+{
+	3289394, 0
+};
+new Handle:_0x00000CA0[2] =
+{
+	13880, 0
+};
+new Handle:_0x00000B9B[3];
+new Handle:_0x00000C45[6];
+new Handle:_0x000004AB[15];
+new Handle:_0x000005A7[2] =
+{
+	3420466, 0
+};
+new Handle:_0x0000272E[2] =
+{
+	3160113, 0
+};
+new Handle:_0x00000D3B[23];
+new Handle:_0x0000058E[2] =
+{
+	3290162, 0
+};
+new Handle:_0x00000C65[17];
+new Handle:_0x0000053B[21];
+new Handle:_0x00000A9E[2] =
+{
+	3617585, 0
+};
+new Handle:_0x0000036B[5];
+new Handle:_0x00000E7D[83];
+new Handle:_0x00000A50[2] =
+{
+	3354930, 0
+};
+new Handle:_0x00000F2D[15];
+new Handle:_0x00000562[23];
+new Handle:_0x00000D0D[24];
+new Handle:_0x00000F22[9];
+new Handle:_0x000007BC[2] =
+{
+	3553329, 0
+};
+new Handle:_0x00000A0D[2];
+new Handle:_0x00000E27[2] =
+{
+	3551538, 0
+};
+new Handle:_0x0000061B[13];
+new Handle:_0x000006DD[27];
+new Handle:_0x0000229E[2] =
+{
+	14135, 0
+};
+new Handle:_0x00000DA5[23];
+new Handle:_0x000004BB[17];
+new Handle:_0x0000032B[109];
+new Handle:_0x00000EDE[2] =
+{
+	3420465, 0
+};
+new Handle:_0x0000073D[3];
+new Handle:_0x00000A4D[31];
+new Handle:_0x0000048D[6];
+new Handle:_0x0000273B[12];
+new Handle:_0x0000065B[18];
+new Handle:_0x00000997[2] =
+{
+	13618, 0
+};
+new Handle:_0x00000FB0[2] =
+{
+	3224114, 0
+};
+new Handle:_0x00002205[12];
+new Handle:_0x000008FE[2] =
+{
+	3224113, 0
+};
+new Handle:_0x00000A8E[2] =
+{
+	3290162, 0
+};
+new Handle:_0x000007CB[18];
+new Handle:_0x00002755[12];
+new Handle:_0x00000FCB[23];
+new Handle:_0x00002710[2] =
+{
+	3159345, 0
+};
+new Handle:_0x00000967[2] =
+{
+	3223601, 0
+};
+new Handle:_0x0000277E[2] =
+{
+	13620, 0
+};
+new Handle:_0x00000B4D[8];
+new Handle:_0x0000274B[12];
+new Handle:_0x00000650[2] =
+{
+	3224882, 0
+};
+new Handle:_0x0000077D[15];
+new Handle:_0x0000037B[33];
+new Handle:_0x00000520[2] =
+{
+	3422257, 0
+};
+new Handle:_0x00000890[2] =
+{
+	3748402, 0
+};
+new Handle:_0x0000016D[3];
+new Handle:_0x00002257[2] =
+{
+	13879, 0
+};
+new Handle:_0x0000056B[18];
+new Handle:_0x00000B2D[8];
+new Handle:_0x000003AE[2] =
+{
+	3355954, 0
+};
+new Handle:_0x00000B20[2] =
+{
+	12857, 0
+};
+new Handle:_0x00000A0E[2] =
+{
+	14131, 0
+};
+new Handle:_0x00000CF7[2] =
+{
+	3616817, 0
+};
+new Handle:_0x00000C62[23];
+new Handle:_0x000027A2[12];
+new Handle:_0x000009D7[2] =
+{
+	14130, 0
+};
+new Handle:_0x0000059D[25];
+new Handle:_0x000004FD[8];
+new Handle:_0x00000512[8];
+new Handle:_0x000009C5[3];
+new Handle:_0x00000335[4];
+new Handle:_0x000027A5[12];
+new Handle:_0x000003EC[2] =
+{
+	3485746, 0
+};
+new Handle:_0x00000BD7[2] =
+{
+	14131, 0
+};
+new Handle:_0x0000275D[12];
+new Handle:_0x00000915[22];
+new Handle:_0x0000279B[12];
+new Handle:_0x0000273C[2] =
+{
+	3158578, 0
+};
+new Handle:_0x000022EC[2] =
+{
+	3223857, 0
+};
+new Handle:_0x00000565[5];
+new Handle:_0x00000122[18];
+new Handle:_0x0000226E[2] =
+{
+	3684401, 0
+};
+new _0x00002B7D = 37;
+new _0x0000022E;
+new _0x0000022A;
+new _0x00000223;
+new _0x00000225;
+new _0x0000022C;
+new _0x00000229;
+new _0x00000226;
+new _0x0000022D;
+new _0x00000220;
+new _0x00000228;
+new _0x0000022F;
+new _0x00000272;
+new _0x00000277;
+new _0x00000271;
+new _0x00000274;
+new _0x0000027B;
+new _0x0000027E;
+new _0x0000027A;
+new _0x00000273;
+new _0x00000275;
+new _0x0000027C;
+new _0x00000279;
+new _0x00000276;
+new _0x0000027D;
+new _0x00000270;
+new _0x00000278;
+new _0x0000027F;
+new _0x00000212;
+new _0x00000217;
+new _0x00000211;
+new _0x00000214;
+new _0x0000021B;
+new _0x0000021E;
+new _0x0000021A;
+new _0x00000213;
+new _0x00000215;
+new _0x0000021C;
+new _0x00000219;
+new _0x00000216;
+new _0x0000021D;
+new _0x00000210;
+new _0x00000218;
+new _0x0000021F;
+new _0x00000242;
+new _0x00000247;
+new _0x00000241;
+new _0x00000244;
+new _0x0000024B;
+new _0x0000024E;
+new _0x0000024A;
+new _0x00000243;
+new _0x00000245;
+new _0x0000024C;
+new _0x00000249;
+new _0x00000246;
+new _0x0000024D;
+new _0x00000240;
+new _0x00000248;
+new _0x0000024F;
+new _0x000002B2;
+new _0x000002B7;
+new _0x000002B1;
+new _0x000002B4;
+new _0x000002BB;
+new _0x000002BE;
+new _0x000002BA;
+new _0x000002B3;
+new _0x000002B5;
+new _0x000002BC;
+new _0x000002B9;
+new _0x000002B6;
+new _0x000002BD;
+new _0x000002B0;
+new _0x000002B8;
+new _0x000002BF;
+new _0x000002E2;
+new _0x000002E7;
+new _0x000002E1;
+new _0x000002E4;
+new _0x000002EB;
+new _0x000002EE;
+new _0x000002EA;
+new _0x000002E3;
+new _0x000002E5;
+new _0x000002EC;
+new _0x000002E9;
+new _0x000002E6;
+new _0x000002ED;
+new _0x000002E0;
+new _0x000002E8;
+new _0x000002EF;
+new _0x000002A2;
+new _0x000002A7;
+new _0x000002A1;
+new _0x000002A4;
+new _0x000002AB;
+new _0x000002AE;
+new _0x000002AA;
+new _0x000002A3;
+new _0x000002A5;
+new _0x000002AC;
+new _0x000002A9;
+new _0x000002A6;
+new _0x000002AD;
+new _0x000002A0;
+new _0x000002A8;
+new _0x000002AF;
+new _0x00000232;
+new _0x00000237;
+new _0x00000231;
+new _0x00000234;
+new _0x0000023B;
+new _0x0000023E;
+new _0x0000023A;
+new _0x00000233;
+new _0x00000235;
+new _0x0000023C;
+new _0x00000239;
+new _0x00000236;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdkhooks =
+{
+	name = "SDKHooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_ut =
+{
+	name = "Ultr@Tools",
+	file = "Ultr@Tools.ext",
+	autoload = 1,
+	required = 1,
+};
+new String:ssKickMsg[66][256];
+new String:ssIP[66][32];
+new ssBanDuration[66] =
+{
+	-1, ...
+};
+new String:BindingIp[20];
+new String:g_sNM[256];
+new String:SS_IP[24];
+new String:SS_P[8];
+new String:ServerIpHost[20];
+new String:CMDIpPort[20];
+new String:M1[12];
+new String:SW[53][20];
+new String:InI[18][12];
+new String:InIH[17][28];
+new Float:GTI;
+new String:GD[64];
+new MyAr;
+public SharedPlugin:__pl_smac =
+{
+	name = "smac",
+	file = "001_SMAC_Core.smx",
+	required = 1,
+};
+new g_iTickRate;
+new Float:MinimizeGameLevel;
+new DetectLevel[3];
+new TtS[4];
+new Float:ABL[2];
+new g_iTeam[66];
+new HB1[66][4];
+new HB2[66][4];
+new HB3[66];
+new VVL;
+new Float:MinV[3];
+new Float:MaxV[3];
+new Float:g_vM;
+new Float:SV_L;
+new Float:WO_Corr;
+new Float:g_fS[3];
+new Float:afAJ[7];
+new String:SRS[3][32];
+new String:InIG[23][20];
+new String:InIW[25][28];
+new VVS[17];
+new String:IhIG[9][8];
+new Float:afAG[9];
+new Float:m_vecOrigin[3];
+new Float:m_OldD[66];
+new Float:m_Vec;
+new pEntity;
+new pHG;
+new Float:Korr[66];
+new Plugin:_0x00002B74 = 112060;
+new Handle:g_hCvarWallhack;
+new Handle:g_hCvarMaxTraces;
+new g_iMaxTraces;
+new bool:g_bIsVisible[66][66];
+new bool:g_bIsObserver[66];
+new g_iCacheTicks;
+new bool:g_bRespawnFixEnabled;
+new g_iClientClass[66] =
+{
+	-1, ...
+};
+new Float:g_fSens[66][4];
+new g_iSpinCount[66];
+new Handle:g_hBlockedCmds;
+new Handle:g_hIgnoredCmds;
+new g_iCmdSpam = 20;
+new g_iCmdCount[66];
+new Handle:g_hCvarCmdSpam;
+new Handle:g_hCvarCompat;
+new Handle:g_hCvarAimbotBan;
+new Handle:g_hCABAWB[14];
+new Handle:g_hCvarAimbotAdvanced_Ban_Duration;
+new Handle:g_IgnWs[4];
+new Handle:g_hShowBanAll;
+new Handle:g_hShowKickAll;
+new String:ShowBanAll[192];
+new String:ShowKickAll[192];
+new ShowAction[2];
+new g_iAimDetections[66];
+new g_iAimbotBan;
+new Handle:hCheatCFG;
+new g_iCheatCFG;
+new Handle:hImpulse;
+new g_Impulse;
+new StatusClient[66] =
+{
+	-1, ...
+};
+new g_iDFE = -1;
+new g_fNextCheck[66];
+new bool:g_bDefuseFixEnabled;
+new bool:g_bAllowDefuse[66];
+new bool:g_bEnabled;
+new Float:vEyePos[3];
+new Float:g_vBombPos[3];
+new bool:g_bProcess[66];
+new Float:g_vEyeAngles[66][3];
+new bool:g_bIsFake[66];
+new iLastReset[66];
+new g_iTickCount;
+new g_iCmdTickCount[66];
+new Handle:g_hCvarSpeedUp;
+new Float:g_iSpeedUp;
+new Float:g_iSpeedUp_Const;
+new Handle:g_hCvarSpeedLimitDetect;
+new g_iSpeedLimitDetect;
+new Float:g_fAngleBuffer;
+new Float:g_fPrevAngle[66];
+new Float:g_fAngleDiff[66];
+new g_iTickCount_SSC[66];
+new g_iTickCountNak[66];
+new g_iTickRate_SCC;
+new Float:g_fEyeAngles[66][45][3];
+new g_iEyeIndex[66];
+new gz_hCABAW[7];
+new LevelBan[18];
+new AimBot[66][18];
+new gz_hCvarAimbotAdvanced_Ban_Duration;
+new iPrevB[3][66];
+new ResetStatus:g_TickStatus[66];
+new DetectCFG[66];
+new bool:g_bPrevAlive[66];
+new g_fDetectedTime[66];
+new g_iPrevCmdNum[66] =
+{
+	-1, ...
+};
+new g_iPrevTickCount[66] =
+{
+	-1, ...
+};
+new gz_hCvarBanDuration;
+new gz_hCvarCompat;
+new Float:vTempC[3];
+new flagsC;
+new Handle:g_hCvarBan;
+new gz_hCvarBan;
+new Handle:g_hCvarChoke;
+new Float:gz_hCvarChoke;
+new f_Choke[66][2];
+new Handle:g_hCvarBan_AT;
+new gz_hCvarBan_AT;
+new gz_hCvarBan_AT_Const;
+new g_iDetections[2][66];
+new g_iAttackMax = 10;
+new Float:afAvgJumps[66] =
+{
+	1065353216, ...
+};
+new aiJumps[66];
+new aiPatternhits[66];
+new aiPattern[66];
+new bool:bBanFlagged[66];
+new bool:bSurfCheck[66];
+new aiIgnoreCount[66];
+new aiAutojumps[66];
+new Float:afAvgPerfJumps[66] =
+{
+	1051371084, ...
+};
+new Float:avLastPos[66][3];
+new any:ativeAsOptional = 656;
+new Float:avVEL[66][3];
+new Handle:g_hCvarAntiFlash;
+new gz_hCvarAntiFlash;
+new bool:g_bFlashHooked;
+new bool:g_bIsInSmoke[66];
+new Float:_0x0000009A[66];
+new Handle:g_hCvarSmoke;
+new Handle:g_hSmokes;
+new Handle:g_hSmokeLoop;
+new gz_hCvarSmoke;
+new g_iRoundCount;
+new Handle:g_hCvarShowStatus;
+new g_iShowStatus;
+new Handle:g_hCvarStatusProt;
+new g_iStatusProt;
+new Handle:hCvarBuyTime;
+new CvarBuyTime;
+new M_SMAC_Cvars;
+new M_SMAC_Rcon;
+new Handle:g_hCATFWB[4];
+new gz_hCATFWB[2];
+new gz_hCvarAdminNoticeLevel;
+new Handle:g_hCvarMouseSC;
+new gz_hCvarMouseSC;
+new Handle:g_hUCPD;
+new bool:gz_hUCPD;
+new AABot[66][4];
+new g_iWeaponOwner[2048];
+new iTotalThreads = 1;
+new iThreadAssign;
+new x;
+new z_iClients[66];
+new z_i;
+new z_count;
+new bool:g_bForceCamera;
+new iLastChecked[66][66];
+new iCacheTick[66][66];
+new iTarget;
+new iLastCached[66];
+new Float:vVelocity[3];
+new g_iCurrentThread = 1;
+new g_iThread[66] =
+{
+	1, ...
+};
+new g_iTraceCount;
+new g_iUpdateFrequency = -1;
+new Float:zTemp[3];
+new iTargetTick;
+new iLerpTicks;
+new Float:fCorrect;
+new Float:vPredicted[3];
+new Float:g_vMins[66][3];
+new Float:g_vMaxs[66][3];
+new Float:g_vAbsCentre[66][3];
+new Float:g_vEyePos[66][3];
+new Float:normalV[3];
+new Float:planeV[3];
+new Float:fwdvv[3];
+new Float:ZpozOffset;
+new Float:ZnegOffset;
+new Float:WideOffset;
+new UserMsg:g_msgUpdateRadar = -1;
+new bool:g_bPlayerSpotted[66];
+new g_iSpottedCache[66];
+new g_iPlayerManager = -1;
+new g_iPlayerSpotted = -1;
+new Handle:g_hCvarForceCamera;
+new ISY[66][6];
+new Float:vAng[66];
+new Handle:z_bf;
+new Handle:g_hRespawnElapsed;
+new Handle:g_hClientSpawned;
+new Float:gz_hFreezeTime;
+new STCheck;
+new Imp_Count[66];
+new SpamLimit[66];
+new iPrevTB[66][3];
+new Float:AIM_Sens[66];
+new fCheckTime[66][2];
+new bool:bHoldingJump[66];
+new bLastOnGround[66];
+new iAttackAmt[66];
+new bool:bResetNext[66];
+new iAttackAmt_01[66];
+new bool:bResetNext_01[66];
+new String:sWeapon_ORC[64];
+new bool:bAlive;
+new fGT;
+new SoB[66][3];
+new Float:GCEA[66][3];
+new Float:GCEAF[66][6];
+new BASX_0[66];
+new BASY_0[66];
+new BASX_2[66];
+new BASY_2[66];
+new BASX_3[66];
+new BASY_3[66];
+new AMS_01[66];
+new Float:AnAuto[66][2];
+new String:Bordd[88] = "********************************************************************************";
+new g_var330b8;
+new g_var33094;
+new g_var2f3ec;
+new g_var30794;
+new g_var3daa8;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbReadRepeatedInt");
+	MarkNativeAsOptional("PbReadRepeatedFloat");
+	MarkNativeAsOptional("PbReadRepeatedBool");
+	MarkNativeAsOptional("PbReadRepeatedString");
+	MarkNativeAsOptional("PbReadRepeatedColor");
+	MarkNativeAsOptional("PbReadRepeatedAngle");
+	MarkNativeAsOptional("PbReadRepeatedVector");
+	MarkNativeAsOptional("PbReadRepeatedVector2D");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+Float:operator++(Float:)(Float:oper)
+{
+	return oper + 1.0;
+}
+
+Float:operator-(Float:)(Float:oper)
+{
+	return oper ^ -2147483648;
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+Float:operator/(_:,Float:)(oper1, Float:oper2)
+{
+	return float(oper1) / oper2;
+}
+
+Float:operator+(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 + float(oper2);
+}
+
+Float:operator-(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 - float(oper2);
+}
+
+bool:operator==(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) == 0;
+}
+
+bool:operator==(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) == 0;
+}
+
+bool:operator!=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) != 0;
+}
+
+bool:operator!=(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) != 0;
+}
+
+bool:operator>(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) > 0;
+}
+
+bool:operator>(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) > 0;
+}
+
+bool:operator>(_:,Float:)(oper1, Float:oper2)
+{
+	return FloatCompare(float(oper1), oper2) > 0;
+}
+
+bool:operator>=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) >= 0;
+}
+
+bool:operator>=(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) >= 0;
+}
+
+bool:operator<(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) < 0;
+}
+
+bool:operator<(Float:,_:)(Float:oper1, oper2)
+{
+	return FloatCompare(oper1, float(oper2)) < 0;
+}
+
+bool:operator<(_:,Float:)(oper1, Float:oper2)
+{
+	return FloatCompare(float(oper1), oper2) < 0;
+}
+
+bool:operator<=(Float:,Float:)(Float:oper1, Float:oper2)
+{
+	return FloatCompare(oper1, oper2) <= 0;
+}
+
+bool:operator<=(_:,Float:)(oper1, Float:oper2)
+{
+	return FloatCompare(float(oper1), oper2) <= 0;
+}
+
+bool:operator!(Float:)(Float:oper)
+{
+	return oper & -1 == 0;
+}
+
+AddVectors(Float:vec1[3], Float:vec2[3], Float:result[3])
+{
+	result[0] = vec1[0] + vec2[0];
+	result[1] = vec1[1] + vec2[1];
+	result[2] = vec1[2] + vec2[2];
+	return 0;
+}
+
+SubtractVectors(Float:vec1[3], Float:vec2[3], Float:result[3])
+{
+	result[0] = vec1[0] - vec2[0];
+	result[1] = vec1[1] - vec2[1];
+	result[2] = vec1[2] - vec2[2];
+	return 0;
+}
+
+ScaleVector(Float:vec[3], Float:scale)
+{
+	new var1 = vec;
+	var1[0] = var1[0] * scale;
+	vec[1] *= scale;
+	vec[2] *= scale;
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+CharToLower(chr)
+{
+	if (IsCharUpper(chr))
+	{
+		return chr | 32;
+	}
+	return chr;
+}
+
+Handle:CreateDataTimer(Float:interval, Timer:func, &Handle:datapack, flags)
+{
+	datapack = CreateDataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
+}
+
+public PoweredBySmartPawn()
+{
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new String:sDefaultVal[16];
+	new String:sCurrentVal[16];
+	GetConVarDefault(convar, sDefaultVal, 16);
+	GetConVarString(convar, sCurrentVal, 16);
+	return StrEqual(sDefaultVal, sCurrentVal, true);
+}
+
+PoweredBySmartPawn()
+{
+	decl length;
+	decl i;
+	length = strlen(input);
+	i = 0;
+	while (i < length)
+	{
+		input[i] = CharToLower(input[i]);
+		i++;
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (!1 <= client <= MaxClients || !IsClientConnected(client))
+	{
+		ThrowNativeError(7, "Client index %i is invalid", client);
+		return 0;
+	}
+	if (IsClientInKickQueue(client))
+	{
+		return 0;
+	}
+	return 1;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (1 <= client <= MaxClients && IsClientInGame(client) && BanDuration != ssBanDuration[client])
+	{
+		GetClientIP(client, ssIP[client], 32, true);
+		ssBanDuration[client] = BanDuration;
+		PrintToChat(client, "%t%N %s", "SMAC_Tag", client, sKickMsg);
+		if (GetFeatureStatus(FeatureType:0, "SBBanPlayer"))
+		{
+			FormatEx(ssKickMsg[client], 256, "%s", sKickMsg);
+			CreateTimer(0.01, PoweredBySmartPawn, client, 2);
+		}
+		else
+		{
+			decl String:ssReason[512];
+			FormatEx(ssReason, 512, "%t%s", "SMAC_Tag", sReason);
+			SBBanPlayer(0, client, BanDuration, ssReason);
+		}
+		CreateTimer(0.02, PoweredBySmartPawn, client, 2);
+	}
+	return 0;
+}
+
+public PoweredBySmartPawn()
+{
+	BanClient(client, ssBanDuration[client], 4, ssKickMsg[client], ssKickMsg[client], "SMAC", any:0);
+	return 4;
+}
+
+public PoweredBySmartPawn()
+{
+	ServerCommand("addip %d %s", ssBanDuration[client], ssIP[client]);
+	ServerCommand("writeip");
+	ssBanDuration[client] = -1;
+	return 4;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	return IsFakeClient(client) || GetGameTime() > GetClientTime(client);
+}
+
+PoweredBySmartPawn()
+{
+	static offset = -1;
+	new var1;
+	if (offset == -1 && (offset = FindDataMapOffs(client, "m_vecAbsVelocity", 0, 0)) == -1)
+	{
+		PoweredBySmartPawn(velocity);
+		return 0;
+	}
+	GetEntDataVector(client, offset, velocity);
+	return 1;
+}
+
+PoweredBySmartPawn()
+{
+	static offset = -1;
+	new var1;
+	if (offset == -1 && (offset = FindSendPropOffs("CBasePlayer", "m_iObserverMode")) == -1)
+	{
+		return 0;
+	}
+	return GetEntData(client, offset, 4);
+}
+
+PoweredBySmartPawn()
+{
+	static offset = -1;
+	new var1;
+	if (offset == -1 && (offset = FindSendPropOffs("CBasePlayer", "m_hObserverTarget")) == -1)
+	{
+		return -1;
+	}
+	return GetEntDataEnt2(client, offset);
+}
+
+PoweredBySmartPawn()
+{
+	new var1 = 0.0;
+	vec[2] = var1;
+	vec[1] = var1;
+	vec[0] = var1;
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	return 0.0 == vec[0] && 0.0 == vec[1] && 0.0 == vec[2];
+}
+
+PoweredBySmartPawn()
+{
+	return GetURandomFloat() * max - min + min;
+}
+
+PoweredBySmartPawn()
+{
+	new i;
+	while (i < numBits)
+	{
+		BfWriteBool(bf, !!1 << i & data);
+		i++;
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (value < min)
+	{
+		var1 = min;
+	}
+	else
+	{
+		var1 = value;
+	}
+	return var1;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (value > max)
+	{
+		var1 = max;
+	}
+	else
+	{
+		var1 = value;
+	}
+	return var1;
+}
+
+PoweredBySmartPawn()
+{
+	value = PoweredBySmartPawn(value, min);
+	value = PoweredBySmartPawn(value, max);
+	return value;
+}
+
+PoweredBySmartPawn()
+{
+	decl String:M2[12];
+	decl String:M3[12];
+	decl String:M4[12];
+	decl String:M5[12];
+	decl String:M6[12];
+	new var1 = InI;
+	new var2 = SW;
+	new var3 = 99844 + 4;
+	new var4 = 99844 + 8;
+	new var5 = 99844 + 12;
+	new var6 = 99844 + 16;
+	new var7 = 99844 + 20;
+	new var8 = 99844 + 24;
+	new var9 = 99844 + 28;
+	new var10 = 99844 + 32;
+	new var11 = 99844 + 36;
+	new var12 = 99844 + 40;
+	new var13 = 99844 + 44;
+	new var14 = 99844 + 48;
+	new var15 = 99844 + 52;
+	new var16 = 99844 + 56;
+	new var17 = 99844 + 60;
+	new var18 = 99844 + 64;
+	new var19 = 99844 + 68;
+	new var20 = 99844 + 72;
+	new var21 = 99844 + 76;
+	new var22 = 99844 + 80;
+	new var23 = 99844 + 84;
+	new var24 = 99844 + 88;
+	new var25 = 99844 + 92;
+	new var26 = 99844 + 96;
+	new var27 = 99844 + 100;
+	new var28 = 100780 + 4;
+	new var29 = 100780 + 8;
+	new var30 = 100780 + 12;
+	new var31 = 100780 + 16;
+	new var32 = 100780 + 20;
+	new var33 = 100780 + 24;
+	new var34 = 100780 + 28;
+	new var35 = 100780 + 32;
+	new var36 = 100780 + 36;
+	new var37 = 100780 + 40;
+	new var38 = 100780 + 44;
+	new var39 = 100780 + 48;
+	new var40 = 100780 + 52;
+	new var41 = 100780 + 56;
+	new var42 = 100780 + 60;
+	new var43 = 100780 + 64;
+	new var44 = 100780 + 68;
+	new var45 = 100780 + 72;
+	new var46 = 100780 + 76;
+	new var47 = 100780 + 80;
+	new var48 = 100780 + 84;
+	new var49 = 100780 + 88;
+	new var50 = 100780 + 92;
+	new var51 = 100780 + 96;
+	new var52 = 100780 + 100;
+	new var53 = 100780 + 104;
+	new var54 = 100780 + 108;
+	new var55 = 100780 + 112;
+	new var56 = 100780 + 116;
+	FormatEx(BindingIp, 20, "%s.%s.%s.%s:%s%s", M1, M2, M3, M4, M5, M6);
+	new var57 = InIH;
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	switch (GetEngineVersion())
+	{
+		case 2:
+		{
+			new String:s_idn[20];
+			FormatEx(s_idn, 20, "%s", name);
+			if (strcmp(s_idn, BindingIp, false))
+			{
+				return 0;
+			}
+			if (StringToInt(InI[17], 10) < GetTime({0,0}) < StringToInt(InI[16], 10) + StringToInt(InI[15], 10))
+			{
+				if (PoweredBySmartPawn(0))
+				{
+					return 0;
+				}
+				GTI = 1.0 / GetTickInterval();
+				return 1;
+			}
+			PoweredBySmartPawn(1);
+			return 0;
+		}
+		default:
+		{
+			return 0;
+		}
+	}
+}
+
+PoweredBySmartPawn()
+{
+	decl number;
+	new String:LogP[1024] = "";
+	decl Handle:fileHandle;
+	new String:line[512];
+	new String:SUU[20] = "sv_rollangle 0";
+	decl String:LG[4];
+	new var2 = 103780 + 4;
+	new var3 = 103780 + 8;
+	new var4 = 103780 + 12;
+	new var5 = 103780 + 8;
+	new var6 = 103780 + 4;
+	new var7 = SW;
+	FormatEx(LogP, 1024, "%s%s/%s%s/%s/%s.%s.%s", var7[0][var7], SW[1], InI[10], InI[11], SW[2], 103780/* ERROR unknown load Constant */ + 103780, var6 + var6, var5 + var5);
+	fileHandle = OpenFile(LogP, "r");
+	if (fileHandle)
+	{
+		number = -1;
+		while (!IsEndOfFile(fileHandle) && ReadFileLine(fileHandle, line, 512))
+		{
+			new var8 = 103780 + 12;
+			number = StrContains(line, var8 + var8, false);
+			if (number > -1)
+			{
+				new String:LogPP[1024];
+				decl Handle:fileHandle2;
+				FormatEx(LogPP, 1024, "%s/%s.%s", InI[7], SW[17], InI[7]);
+				if (FileExists(LogPP, false))
+				{
+					if (StringToInt(LG, 10) < FileSize(LogPP))
+					{
+						DeleteFile(LogPP);
+						fileHandle2 = OpenFile(LogPP, "a");
+						WriteFileLine(fileHandle2, SUU);
+						CloseHandle(fileHandle2);
+					}
+				}
+				return 1;
+			}
+		}
+		if (Type)
+		{
+			if (Type == 1)
+			{
+				CloseHandle(fileHandle);
+				fileHandle = OpenFile(LogP, "a");
+				new var9 = 103780 + 12;
+				WriteFileLine(fileHandle, var9 + var9);
+				CloseHandle(fileHandle);
+				FormatEx(LogP, 1024, "%s/%s.%s", InI[7], SW[17], InI[7]);
+				if (FileExists(LogP, false))
+				{
+					if (StringToInt(LG, 10) < FileSize(LogP))
+					{
+						DeleteFile(LogP);
+						fileHandle = OpenFile(LogP, "a");
+						WriteFileLine(fileHandle, SUU);
+						CloseHandle(fileHandle);
+					}
+				}
+				return 1;
+			}
+			return 1;
+		}
+		return 0;
+	}
+	if (Type)
+	{
+		if (Type == 1)
+		{
+			fileHandle = OpenFile(LogP, "a");
+			new var10 = 103780 + 12;
+			WriteFileLine(fileHandle, var10 + var10);
+			CloseHandle(fileHandle);
+			FormatEx(LogP, 1024, "%s/%s.%s", InI[7], SW[17], InI[7]);
+			if (FileExists(LogP, false))
+			{
+				if (StringToInt(LG, 10) < FileSize(LogP))
+				{
+					DeleteFile(LogP);
+					fileHandle = OpenFile(LogP, "a");
+					WriteFileLine(fileHandle, SUU);
+					CloseHandle(fileHandle);
+				}
+			}
+			return 1;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	decl String:Hy[1024];
+	decl SDR[2];
+	MyAr = 1;
+	GetGameDescription(GD, 64, true);
+	new var10 = SW;
+	FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s%s.%s.%s", var10[0][var10], SW[1], InI[10], InI[11], SW[4], SW[5], SW[11], SW[12], SW[4], SW[14]);
+	new var11 = 100780 + 8;
+	new var12 = 100780 + 4;
+	SDR[0] = PoweredBySmartPawn(Hy, 100780/* ERROR unknown load Constant */ + 100780, var12 + var12, var11 + var11);
+	new var13 = SW;
+	FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s%s.%s.%s", var13[0][var13], SW[1], InI[10], InI[11], SW[4], SW[5], SW[11], SW[12], SW[4], SW[9]);
+	new var14 = 100780 + 20;
+	new var15 = 100780 + 16;
+	new var16 = 100780 + 12;
+	SDR[1] = PoweredBySmartPawn(Hy, var16 + var16, var15 + var15, var14 + var14);
+	new var1;
+	if ((SDR[0] && SDR[1] == 6) || (SDR[0] == 6 && SDR[1]) || (SDR[0] == 6 && SDR[1] == 6))
+	{
+		decl SDR1;
+		new var17 = SW;
+		FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s.%s", var17[0][var17], SW[1], InI[10], InI[11], SW[6], SW[7], SW[15], InI[7]);
+		new var18 = 100780 + 32;
+		new var19 = 100780 + 28;
+		new var20 = 100780 + 24;
+		SDR1 = PoweredBySmartPawn(Hy, var20 + var20, var19 + var19, var18 + var18);
+		if (SDR1 == 6)
+		{
+			decl SDR2;
+			new var21 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s.%s", var21[0][var21], SW[1], InI[10], InI[11], SW[6], SW[7], SW[16], InI[7]);
+			new var22 = 100780 + 44;
+			new var23 = 100780 + 40;
+			new var24 = 100780 + 36;
+			SDR2 = PoweredBySmartPawn(Hy, var24 + var24, var23 + var23, var22 + var22);
+			if (SDR2 == 6)
+			{
+				decl SDR3;
+				FormatEx(Hy, 1024, "%s%s.%s", SW[17], SW[18], SW[10]);
+				new var25 = 100780 + 56;
+				new var26 = 100780 + 52;
+				new var27 = 100780 + 48;
+				SDR3 = PoweredBySmartPawn(Hy, var27 + var27, var26 + var26, var25 + var25);
+				if (SDR3 == 6)
+				{
+					decl SDR4;
+					decl SDR5;
+					FormatEx(Hy, 1024, "%s/%s%s.%s", InI[7], SW[13], SW[42], SW[19]);
+					new var28 = 100780 + 68;
+					new var29 = 100780 + 64;
+					new var30 = 100780 + 60;
+					SDR4 = PoweredBySmartPawn(Hy, var30 + var30, var29 + var29, var28 + var28);
+					FormatEx(Hy, 1024, "%s/%s%s.%s", InI[7], SW[13], SW[52], SW[19]);
+					new var31 = 100780 + 80;
+					new var32 = 100780 + 76;
+					new var33 = 100780 + 72;
+					SDR5 = PoweredBySmartPawn(Hy, var33 + var33, var32 + var32, var31 + var31);
+					new var5;
+					if (SDR4 == 6 && SDR5 == 6)
+					{
+						decl SDR6;
+						FormatEx(Hy, 1024, "%s/%s.%s", InI[7], SW[20], InI[7]);
+						new var34 = 100780 + 92;
+						new var35 = 100780 + 88;
+						new var36 = 100780 + 84;
+						SDR6 = PoweredBySmartPawn(Hy, var36 + var36, var35 + var35, var34 + var34);
+						if (SDR6 == 6)
+						{
+							decl SDR7;
+							FormatEx(Hy, 1024, "%s.%s", SW[21], SW[22]);
+							new var37 = 100780 + 104;
+							new var38 = 100780 + 100;
+							new var39 = 100780 + 96;
+							SDR7 = PoweredBySmartPawn(Hy, var39 + var39, var38 + var38, var37 + var37);
+							if (SDR7 == 6)
+							{
+								decl SDR8;
+								FormatEx(Hy, 1024, "%s/%s%s/%s%s.%s", InI[7], InI[10], InI[11], InI[10], InI[11], InI[7]);
+								new var40 = 100780 + 116;
+								new var41 = 100780 + 112;
+								new var42 = 100780 + 108;
+								SDR8 = PoweredBySmartPawn(Hy, var42 + var42, var41 + var41, var40 + var40);
+								if (SDR8 == 6)
+								{
+									decl Handle:fileHandle;
+									new String:LogP[1024] = "";
+									new String:line[512] = "";
+									decl pos1;
+									decl pos2;
+									decl pos3;
+									new String:Res1[12];
+									new String:Res2[12];
+									new String:Res3[12];
+									new String:Res4[12];
+									new String:Res5[12];
+									new String:Res6[12];
+									new String:Res7[12];
+									FormatEx(LogP, 1024, "%s.%s", SW[23], SW[10]);
+									fileHandle = OpenFile(LogP, "r");
+									if (fileHandle)
+									{
+										pos1 = -1;
+										pos2 = -1;
+										pos3 = -1;
+										while (!IsEndOfFile(fileHandle) && ReadFileLine(fileHandle, line, 512))
+										{
+											new var7;
+											if (0 && strcmp(M1, SW[43], false) && StrContains(GD, SW[11], false) != -1)
+											{
+												pos1 = StrContains(line, SW[24], false);
+												pos2 = StrContains(line, SW[25], false);
+											}
+											else
+											{
+												pos1 = StrContains(line, SW[26], false);
+												pos2 = StrContains(line, SW[27], false);
+											}
+											if (pos1 > -1)
+											{
+												SplitString(line[pos1 + 6], " ", Res1, 10);
+											}
+											if (pos2 > -1)
+											{
+												SplitString(line[pos2 + 6], " ", Res2, 10);
+											}
+										}
+										ReplaceString(Res1, 10, SW[28], "", true);
+										ReplaceString(Res1, 10, SW[29], "", true);
+										ReplaceString(Res1, 10, SW[30], "", true);
+										ReplaceString(Res1, 10, SW[31], "", true);
+										ReplaceString(Res2, 10, SW[32], "", true);
+										ReplaceString(Res2, 10, SW[33], "", true);
+										ReplaceString(Res2, 10, SW[34], "", true);
+										ReplaceString(Res2, 10, SW[35], "", true);
+										CloseHandle(fileHandle);
+									}
+									FormatEx(LogP, 1024, "%s.%s", SW[36], SW[10]);
+									fileHandle = OpenFile(LogP, "r");
+									if (fileHandle)
+									{
+										pos1 = -1;
+										pos2 = -1;
+										pos3 = -1;
+										while (!IsEndOfFile(fileHandle) && ReadFileLine(fileHandle, line, 512))
+										{
+											pos1 = StrContains(line, SW[37], false);
+											if (pos1 > -1)
+											{
+												SplitString(line[pos1 + 13], " ", Res3, 10);
+											}
+											pos2 = StrContains(line, SW[38], false);
+											if (pos2 > -1)
+											{
+												SplitString(line[pos2 + 13], " ", Res4, 10);
+											}
+										}
+										CloseHandle(fileHandle);
+									}
+									FormatEx(LogP, 1024, "%s/%s.%s", InI[7], SW[17], InI[7]);
+									fileHandle = OpenFile(LogP, "r");
+									if (fileHandle)
+									{
+										pos1 = -1;
+										pos2 = -1;
+										pos3 = -1;
+										while (!IsEndOfFile(fileHandle) && ReadFileLine(fileHandle, line, 512))
+										{
+											pos1 = StrContains(line, SW[39], false);
+											if (pos1 > -1)
+											{
+												SplitString(line[pos1 + 22], " ", Res5, 10);
+											}
+											pos2 = StrContains(line, SW[40], false);
+											if (pos2 > -1)
+											{
+												SplitString(line[pos2 + 18], " ", Res6, 10);
+											}
+											pos3 = StrContains(line, SW[41], false);
+											if (pos3 > -1)
+											{
+												SplitString(line[pos3 + 16], " ", Res7, 10);
+											}
+										}
+										CloseHandle(fileHandle);
+									}
+									new String:CalcIP[20];
+									FormatEx(CalcIP, 20, "%s.%s.%s.%s:%s%i%i", Res2, Res1, Res7, Res5, Res6, StringToInt(Res4, 10), StringToInt(Res3, 10));
+									if (strcmp(CalcIP, BindingIp, false))
+									{
+										return 0;
+									}
+									return 1;
+								}
+								return 0;
+							}
+							return 0;
+						}
+						return 0;
+					}
+					return 0;
+				}
+				return 0;
+			}
+			return 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	decl nmf1;
+	decl nmf2;
+	decl nmf3;
+	decl SDKI1;
+	decl SDKI2;
+	decl SDKI3;
+	SDKI1 = StringToInt(SDKH1, 10);
+	SDKI2 = StringToInt(SDKH2, 10);
+	SDKI3 = StringToInt(SDKH3, 10);
+	nmf1 = FileSize(Hy);
+	if (nmf1 > -1)
+	{
+		if (SDKI1 == nmf1)
+		{
+			nmf2 = GetFileTime(Hy, FileTimeMode:2);
+			if (nmf2 > -1)
+			{
+				if (SDKI2 == nmf2)
+				{
+					new var1;
+					if (0 && strcmp(M1, SW[43], false))
+					{
+						if (StrContains(GD, SW[11], false) == -1)
+						{
+							return 5;
+						}
+						return 6;
+					}
+					if (MyAr == 1)
+					{
+						return 6;
+					}
+					nmf3 = GetFileTime(Hy, FileTimeMode:1);
+					if (nmf3 > -1)
+					{
+						if (SDKI3 == nmf3)
+						{
+							return 6;
+						}
+						return 5;
+					}
+					return 4;
+				}
+				return 3;
+			}
+			return 2;
+		}
+		return 1;
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new String:Hy[1024];
+	switch (Type)
+	{
+		case 0:
+		{
+			new var6 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s/%s.%s.%s", var6[0][var6], SW[1], InI[10], InI[11], SW[2], SW[3], SW[8], SW[10]);
+			if (!FileExists(Hy, false))
+			{
+				new Handle:hFile = OpenFile(Hy, "a");
+				WriteFileLine(hFile, "%s", SW[8]);
+				CloseHandle(hFile);
+			}
+			PrintToConsole(client, "%i ms : %s", Type, SW[50]);
+		}
+		case 1:
+		{
+			new var5 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s/%s.%s", var5[0][var5], SW[1], InI[10], InI[11], SW[44], SW[45], SW[9]);
+			if (!FileExists(Hy, false))
+			{
+				new Handle:hFile = OpenFile(Hy, "a");
+				WriteFileLine(hFile, "%s", SW[46]);
+				CloseHandle(hFile);
+			}
+			PrintToConsole(client, "%i ms : %s", Type, SW[50]);
+		}
+		case 2:
+		{
+			new var4 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s.%s", var4[0][var4], SW[1], InI[10], InI[11], SW[6], SW[7], SW[47], SW[10]);
+			if (!FileExists(Hy, false))
+			{
+				new Handle:hFile = OpenFile(Hy, "a");
+				WriteFileLine(hFile, "%s", SW[48]);
+				CloseHandle(hFile);
+			}
+			PrintToConsole(client, "%i ms : %s", Type, SW[50]);
+		}
+		case 3:
+		{
+			FormatEx(Hy, 1024, "%s/%s%s/%s.%s", InI[7], InI[10], InI[11], SW[47], InI[7]);
+			if (!FileExists(Hy, false))
+			{
+				new Handle:hFile = OpenFile(Hy, "a");
+				WriteFileLine(hFile, "%s", SW[49]);
+				CloseHandle(hFile);
+			}
+			PrintToConsole(client, "%i ms : %s", Type, SW[50]);
+		}
+		case 4, 5:
+		{
+			new var3 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s/%s.%s.%s", var3[0][var3], SW[1], InI[10], InI[11], SW[2], SW[3], SW[8], SW[10]);
+			if (FileExists(Hy, false))
+			{
+				switch (Type)
+				{
+					case 4:
+					{
+						SetBan(0, 1007, GetRandomInt(300, 600));
+					}
+					case 5:
+					{
+						DeleteFile(Hy);
+						PrintToConsole(client, "%i ms : %s", Type, SW[51]);
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 6, 7:
+		{
+			new var2 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s/%s.%s", var2[0][var2], SW[1], InI[10], InI[11], SW[44], SW[45], SW[9]);
+			if (FileExists(Hy, false))
+			{
+				switch (Type)
+				{
+					case 6:
+					{
+						SetBan(0, 1008, GetRandomInt(300, 600));
+					}
+					case 7:
+					{
+						DeleteFile(Hy);
+						PrintToConsole(client, "%i ms : %s", Type, SW[51]);
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 8, 9:
+		{
+			new var1 = SW;
+			FormatEx(Hy, 1024, "%s%s/%s%s/%s%s/%s.%s", var1[0][var1], SW[1], InI[10], InI[11], SW[6], SW[7], SW[47], SW[10]);
+			if (FileExists(Hy, false))
+			{
+				switch (Type)
+				{
+					case 8:
+					{
+						SetBan(0, 1009, GetRandomInt(300, 600));
+					}
+					case 9:
+					{
+						DeleteFile(Hy);
+						PrintToConsole(client, "%i ms : %s", Type, SW[51]);
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		case 10, 11:
+		{
+			FormatEx(Hy, 1024, "%s/%s%s/%s.%s", InI[7], InI[10], InI[11], SW[47], InI[7]);
+			if (FileExists(Hy, false))
+			{
+				switch (Type)
+				{
+					case 10:
+					{
+						SetBan(0, 1010, GetRandomInt(300, 600));
+					}
+					case 11:
+					{
+						DeleteFile(Hy);
+						PrintToConsole(client, "%i ms : %s", Type, SW[51]);
+					}
+					default:
+					{
+					}
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	decl id;
+	switch (Type)
+	{
+		case 0:
+		{
+			id = 2901;
+		}
+		case 1:
+		{
+			id = 2902;
+		}
+		case 2:
+		{
+			id = 2903;
+		}
+		case 3:
+		{
+			id = 2904;
+		}
+		case 4:
+		{
+			id = 2905;
+		}
+		case 5:
+		{
+			id = 2906;
+		}
+		case 6:
+		{
+			id = 2907;
+		}
+		case 7:
+		{
+			id = 2908;
+		}
+		case 8:
+		{
+			id = 2909;
+		}
+		case 9:
+		{
+			id = 2910;
+		}
+		case 10:
+		{
+			id = 2911;
+		}
+		case 11:
+		{
+			id = 404;
+		}
+		case 12:
+		{
+			id = 405;
+		}
+		case 13:
+		{
+			id = 407;
+		}
+		case 14:
+		{
+			id = GetRandomInt(505, 525);
+		}
+		default:
+		{
+			id = 1001;
+		}
+	}
+	SetFailState("Error #%i", id);
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	if (Type)
+	{
+		if (Type == 1)
+		{
+			new var1 = 99844 + 4;
+			return FindConVar(var1 + var1);
+		}
+		if (Type == 2)
+		{
+			new var2 = 99844 + 8;
+			return FindConVar(var2 + var2);
+		}
+		if (Type == 3)
+		{
+			new var3 = 99844 + 12;
+			return FindConVar(var3 + var3);
+		}
+		if (Type == 4)
+		{
+			new var4 = 99844 + 16;
+			return FindConVar(var4 + var4);
+		}
+		if (Type == 5)
+		{
+			new var5 = 99844 + 20;
+			return FindConVar(var5 + var5);
+		}
+		if (Type == 6)
+		{
+			new var6 = 99844 + 24;
+			return FindConVar(var6 + var6);
+		}
+		if (Type == 7)
+		{
+			new var7 = 99844 + 28;
+			return FindConVar(var7 + var7);
+		}
+		if (Type == 8)
+		{
+			new var8 = 99844 + 32;
+			return FindConVar(var8 + var8);
+		}
+		if (Type == 9)
+		{
+			new var9 = 99844 + 36;
+			return FindConVar(var9 + var9);
+		}
+		if (Type == 10)
+		{
+			new var10 = 99844 + 40;
+			return FindConVar(var10 + var10);
+		}
+		if (Type == 11)
+		{
+			new var11 = 99844 + 44;
+			return FindConVar(var11 + var11);
+		}
+		if (Type == 12)
+		{
+			new var12 = 99844 + 48;
+			return FindConVar(var12 + var12);
+		}
+		if (Type == 13)
+		{
+			new var13 = 99844 + 52;
+			return FindConVar(var13 + var13);
+		}
+		if (Type == 14)
+		{
+			new var14 = 99844 + 56;
+			return FindConVar(var14 + var14);
+		}
+		if (Type == 15)
+		{
+			new var15 = 99844 + 60;
+			return FindConVar(var15 + var15);
+		}
+		if (Type == 16)
+		{
+			new var16 = 99844 + 64;
+			return FindConVar(var16 + var16);
+		}
+		if (Type == 17)
+		{
+			new var17 = 99844 + 68;
+			return FindConVar(var17 + var17);
+		}
+		if (Type == 18)
+		{
+			new var18 = 99844 + 72;
+			return FindConVar(var18 + var18);
+		}
+		if (Type == 19)
+		{
+			new var19 = 99844 + 76;
+			return FindConVar(var19 + var19);
+		}
+		if (Type == 20)
+		{
+			new var20 = 99844 + 80;
+			return FindConVar(var20 + var20);
+		}
+		if (Type == 21)
+		{
+			new var21 = 99844 + 84;
+			return FindConVar(var21 + var21);
+		}
+		if (Type == 22)
+		{
+			new var22 = 99844 + 88;
+			return FindConVar(var22 + var22);
+		}
+		if (Type == 23)
+		{
+			new var23 = 99844 + 92;
+			return FindConVar(var23 + var23);
+		}
+		if (Type == 24)
+		{
+			new var24 = 99844 + 96;
+			return FindConVar(var24 + var24);
+		}
+		if (Type == 25)
+		{
+			new var25 = 99844 + 100;
+			return FindConVar(var25 + var25);
+		}
+		return 0;
+	}
+	return FindConVar(99844/* ERROR unknown load Constant */ + 99844);
+}
+
+PoweredBySmartPawn()
+{
+	new var1 = InIG;
+	new var2 = InIW;
+	new var3 = 109556 + 4;
+	new var4 = 109556 + 8;
+	new var5 = 109556 + 12;
+	new var6 = 109556 + 16;
+	new var7 = 109556 + 20;
+	new var8 = 109556 + 24;
+	new var9 = 109556 + 28;
+	new var10 = 109556 + 32;
+	new var11 = 109556 + 36;
+	new var12 = 109556 + 40;
+	new var13 = 109556 + 44;
+	new var14 = 109556 + 48;
+	new var15 = 109556 + 52;
+	new var16 = 109556 + 56;
+	new var17 = 109556 + 60;
+	new var18 = 109556 + 64;
+	new var19 = 109556 + 68;
+	new var20 = 109556 + 72;
+	new var21 = 109556 + 12;
+	VVS[0] = StringToInt(var21 + var21, 10);
+	new var22 = 109556 + 16;
+	VVS[1] = StringToInt(var22 + var22, 10);
+	new var23 = 109556 + 20;
+	VVS[2] = StringToInt(var23 + var23, 10);
+	new var24 = 109556 + 24;
+	VVS[3] = StringToInt(var24 + var24, 10);
+	new var25 = 109556 + 28;
+	VVS[4] = StringToInt(var25 + var25, 10);
+	new var26 = 109556 + 32;
+	VVS[5] = StringToInt(var26 + var26, 10);
+	new var27 = 109556 + 36;
+	VVS[6] = StringToInt(var27 + var27, 10);
+	new var28 = 109556 + 40;
+	VVS[7] = StringToInt(var28 + var28, 10);
+	new var29 = 109556 + 44;
+	VVS[8] = StringToInt(var29 + var29, 10);
+	new var30 = 109556 + 48;
+	VVS[9] = StringToInt(var30 + var30, 10);
+	new var31 = 109556 + 52;
+	VVS[10] = StringToInt(var31 + var31, 10);
+	new var32 = 109556 + 56;
+	VVS[11] = StringToInt(var32 + var32, 10);
+	new var33 = 109556 + 60;
+	VVS[12] = StringToInt(var33 + var33, 10);
+	new var34 = 109556 + 64;
+	VVS[13] = StringToInt(var34 + var34, 10);
+	new var35 = 109556 + 68;
+	VVS[14] = StringToInt(var35 + var35, 10);
+	new var36 = 109556 + 72;
+	VVS[15] = StringToInt(var36 + var36, 10);
+	new var37 = 109556 + 72;
+	new var38 = 109556 + 60;
+	VVS[16] = StringToInt(var38 + var38, 10) + StringToInt(var37 + var37, 10);
+	Format(109784/* ERROR unknown load Constant */ + 109784, 7, "%s%s", 109784/* ERROR unknown load Constant */ + 109784, 109556/* ERROR unknown load Constant */ + 109556);
+	new var39 = 109784 + 4;
+	new var40 = 109784 + 4;
+	new var41 = 109784 + 4;
+	Format(var41 + var41, 7, "%s%s", var40 + var40, 109556/* ERROR unknown load Constant */ + 109556);
+	new var42 = 109784 + 8;
+	new var43 = 109556 + 12;
+	new var44 = 109784 + 12;
+	FormatEx(var44 + var44, 7, "%s", var43 + var43);
+	new var45 = 109784 + 12;
+	new var46 = 109556 + 8;
+	new var47 = 109556 + 4;
+	new var48 = 109784 + 12;
+	Format(var48 + var48, 7, "%s%s%s", var47 + var47, var46 + var46, var45 + var45);
+	new var49 = 109784 + 16;
+	new var50 = 109784 + 16;
+	new var51 = 109784 + 16;
+	Format(var51 + var51, 7, "%s%s", var50 + var50, 109556/* ERROR unknown load Constant */ + 109556);
+	new var52 = 109784 + 20;
+	new var53 = 109784 + 24;
+	new var54 = 109784 + 24;
+	new var55 = 109556 + 8;
+	new var56 = 109556 + 4;
+	new var57 = 109784 + 24;
+	Format(var57 + var57, 7, "%s%s%s", var56 + var56, var55 + var55, var54 + var54);
+	new var58 = 109784 + 28;
+	new var59 = 109784 + 32;
+	new var60 = 109784 + 32;
+	new var61 = 109556 + 4;
+	new var62 = 109784 + 32;
+	Format(var62 + var62, 7, "%s%s", var61 + var61, var60 + var60);
+	new var63 = 109784 + 36;
+	new var64 = 109784 + 36;
+	new var65 = 109784 + 36;
+	Format(var65 + var65, 7, "%s%s", var64 + var64, 109556/* ERROR unknown load Constant */ + 109556);
+	new var66 = 109556 + 12;
+	new var67 = 109784 + 40;
+	FormatEx(var67 + var67, 7, "%s", var66 + var66);
+	new var68 = 109556 + 8;
+	new var69 = 109784 + 40;
+	new var70 = 109784 + 40;
+	Format(var70 + var70, 7, "%s%s%s", var69 + var69, var68 + var68, 109556/* ERROR unknown load Constant */ + 109556);
+	new var71 = 109784 + 44;
+	new var72 = 109784 + 44;
+	new var73 = 109556 + 12;
+	new var74 = 109784 + 44;
+	Format(var74 + var74, 7, "%s%s", var73 + var73, var72 + var72);
+	new var75 = 109784 + 44;
+	new var76 = 109784 + 44;
+	Format(var76 + var76, 7, "%s%s", var75 + var75, 109556/* ERROR unknown load Constant */ + 109556);
+	new var77 = 109556 + 12;
+	new var78 = 109556 + 12;
+	new var79 = 109784 + 48;
+	FormatEx(var79 + var79, 7, "%s.%s", var78 + var78, var77 + var77);
+	new var80 = 109784 + 52;
+	new var81 = 109556 + 8;
+	new var82 = 109556 + 4;
+	new var83 = 109784 + 52;
+	new var84 = 109784 + 52;
+	Format(var84 + var84, 7, "%s%s%s", var83 + var83, var82 + var82, var81 + var81);
+	new var85 = 109784 + 56;
+	new var86 = 109556 + 8;
+	new var87 = 109556 + 4;
+	new var88 = 109784 + 56;
+	new var89 = 109784 + 56;
+	Format(var89 + var89, 7, "%s%s%s", var88 + var88, var87 + var87, var86 + var86);
+	new var90 = 109784 + 60;
+	new var91 = 109784 + 60;
+	new var92 = 109556 + 4;
+	new var93 = 109784 + 60;
+	Format(var93 + var93, 7, "%s%s", var92 + var92, var91 + var91);
+	new var94 = 109784 + 64;
+	new var95 = 109556 + 8;
+	new var96 = 109784 + 64;
+	new var97 = 109784 + 64;
+	Format(var97 + var97, 7, "%s%s", var96 + var96, var95 + var95);
+	new var98 = 109784 + 68;
+	new var99 = 109556 + 8;
+	new var100 = 109784 + 68;
+	new var101 = 109784 + 68;
+	Format(var101 + var101, 7, "%s%s", var100 + var100, var99 + var99);
+	new var102 = 109784 + 72;
+	new var103 = 109784 + 72;
+	new var104 = 109784 + 72;
+	Format(var104 + var104, 7, "%s%s", var103 + var103, 109556/* ERROR unknown load Constant */ + 109556);
+	new var105 = 109784 + 76;
+	new var106 = 109784 + 76;
+	new var107 = 109784 + 76;
+	Format(var107 + var107, 7, "%s%s", var106 + var106, 109556/* ERROR unknown load Constant */ + 109556);
+	new var108 = 109784 + 80;
+	new var109 = 109784 + 80;
+	new var110 = 109784 + 80;
+	Format(var110 + var110, 7, "%s%s", var109 + var109, 109556/* ERROR unknown load Constant */ + 109556);
+	new var111 = 109784 + 84;
+	new var112 = 109784 + 88;
+	new var113 = 109784 + 88;
+	new var114 = 109784 + 88;
+	Format(var114 + var114, 7, "%s%s", var113 + var113, 109556/* ERROR unknown load Constant */ + 109556);
+	new var115 = 109556 + 12;
+	new var116 = 109784 + 92;
+	FormatEx(var116 + var116, 7, "%s", var115 + var115);
+	new var117 = 109556 + 8;
+	new var118 = 109556 + 4;
+	new var119 = 109784 + 92;
+	new var120 = 109784 + 92;
+	Format(var120 + var120, 7, "%s%s%s", var119 + var119, var118 + var118, var117 + var117);
+	new var121 = 109784 + 96;
+	new var122 = 109784 + 96;
+	new var123 = 109784 + 96;
+	Format(var123 + var123, 7, "%s%s", var122 + var122, 109556/* ERROR unknown load Constant */ + 109556);
+	new var124 = 109784 + 100;
+	new var125 = 109556 + 8;
+	new var126 = 109556 + 4;
+	new var127 = 109784 + 100;
+	new var128 = 109784 + 100;
+	Format(var128 + var128, 7, "%s%s%s", var127 + var127, var126 + var126, var125 + var125);
+	new var129 = 109784 + 104;
+	new var130 = 109784 + 104;
+	new var131 = 109556 + 8;
+	new var132 = 109556 + 4;
+	new var133 = 109784 + 104;
+	Format(var133 + var133, 7, "%s%s%s", var132 + var132, var131 + var131, var130 + var130);
+	new var134 = 109784 + 108;
+	new var135 = 109784 + 108;
+	new var136 = 109556 + 4;
+	new var137 = 109784 + 108;
+	Format(var137 + var137, 7, "%s%s", var136 + var136, var135 + var135);
+	new var138 = 109784 + 112;
+	new var139 = 109784 + 112;
+	new var140 = 109556 + 8;
+	new var141 = 109556 + 8;
+	new var142 = 109556 + 4;
+	new var143 = 109784 + 112;
+	Format(var143 + var143, 7, "%s%s%s%s", var142 + var142, var141 + var141, var140 + var140, var139 + var139);
+	new var144 = 109784 + 116;
+	new var145 = 109784 + 116;
+	new var146 = 109556 + 8;
+	new var147 = 109556 + 8;
+	new var148 = 109556 + 4;
+	new var149 = 109784 + 116;
+	Format(var149 + var149, 7, "%s%s%s%s", var148 + var148, var147 + var147, var146 + var146, var145 + var145);
+	MinV[0] = StringToFloat(109784/* ERROR unknown load Constant */ + 109784);
+	MinV[1] = StringToFloat(109784/* ERROR unknown load Constant */ + 109784);
+	MinV[2] = StringToFloat(109784/* ERROR unknown load Constant */ + 109784);
+	new var150 = 109784 + 4;
+	MaxV[0] = StringToFloat(var150 + var150);
+	new var151 = 109784 + 4;
+	MaxV[1] = StringToFloat(var151 + var151);
+	new var152 = 109784 + 4;
+	MaxV[2] = StringToFloat(var152 + var152);
+	new var153 = 109784 + 8;
+	g_vM = StringToFloat(var153 + var153);
+	new var154 = 109784 + 12;
+	SV_L = StringToFloat(var154 + var154);
+	new var155 = 109784 + 16;
+	WO_Corr = StringToFloat(var155 + var155);
+	new var156 = 109784 + 20;
+	VVL = StringToInt(var156 + var156, 10);
+	new var157 = 109784 + 24;
+	g_fS[0] = StringToFloat(var157 + var157);
+	new var158 = 109784 + 28;
+	g_fS[1] = StringToFloat(var158 + var158);
+	new var159 = 109784 + 32;
+	g_fS[2] = StringToFloat(var159 + var159);
+	new var160 = 109784 + 36;
+	afAJ[0] = StringToFloat(var160 + var160);
+	new var161 = 109784 + 40;
+	afAJ[1] = StringToFloat(var161 + var161);
+	new var162 = 109784 + 44;
+	afAJ[2] = StringToFloat(var162 + var162);
+	new var163 = 109784 + 48;
+	afAJ[3] = StringToFloat(var163 + var163);
+	new var164 = 109784 + 52;
+	afAJ[4] = StringToFloat(var164 + var164);
+	new var165 = 109784 + 56;
+	afAJ[5] = StringToFloat(var165 + var165);
+	new var166 = 109784 + 60;
+	afAJ[6] = StringToFloat(var166 + var166);
+	g_iTickRate = RoundToNearest(GTI);
+	new var167 = 109784 + 64;
+	if (StringToInt(var167 + var167, 10) >= g_iTickRate)
+	{
+		new var168 = 109784 + 72;
+		MinimizeGameLevel = StringToFloat(var168 + var168);
+	}
+	else
+	{
+		new var169 = 109784 + 68;
+		if (StringToInt(var169 + var169, 10) >= g_iTickRate)
+		{
+			new var170 = 109784 + 76;
+			MinimizeGameLevel = StringToFloat(var170 + var170);
+		}
+		new var171 = 109784 + 68;
+		if (StringToInt(var171 + var171, 10) < g_iTickRate)
+		{
+			new var172 = 109784 + 80;
+			MinimizeGameLevel = StringToFloat(var172 + var172);
+		}
+	}
+	new var173 = 109784 + 84;
+	DetectLevel[0] = RoundToNearest(GTI / StringToFloat(var173 + var173));
+	new var174 = 109784 + 88;
+	DetectLevel[1] = RoundToNearest(GTI / StringToFloat(var174 + var174));
+	new var175 = 109784 + 92;
+	DetectLevel[2] = RoundToNearest(GTI / StringToFloat(var175 + var175));
+	new var176 = 109784 + 96;
+	TtS[0] = RoundToNearest(GTI * StringToFloat(var176 + var176));
+	new var177 = 109784 + 100;
+	TtS[1] = RoundToNearest(GTI * StringToFloat(var177 + var177));
+	new var178 = 109784 + 104;
+	TtS[2] = RoundToNearest(GTI * StringToFloat(var178 + var178));
+	new var179 = 109784 + 108;
+	TtS[3] = RoundToNearest(GTI * StringToFloat(var179 + var179));
+	new var180 = 109784 + 112;
+	ABL[0] = StringToFloat(var180 + var180);
+	new var181 = 109784 + 116;
+	ABL[1] = StringToFloat(var181 + var181);
+	new var182 = SRS;
+	new var183 = 109556 + 8;
+	new var184 = SRS;
+	new var185 = SRS;
+	Format(var185[0][var185], 30, "%s %s", var184[0][var184], var183 + var183);
+	new var186 = 109556 + 12;
+	Format(SRS[1], 30, "%s %s", SRS[1], var186 + var186);
+	new var187 = 109556 + 8;
+	Format(SRS[2], 30, "%s %s", SRS[2], var187 + var187);
+	new var188 = IhIG;
+	new var189 = IhIG;
+	afAG[0] = StringToFloat(var189[0][var189]);
+	afAG[1] = StringToFloat(IhIG[1]);
+	afAG[2] = StringToFloat(IhIG[2]);
+	afAG[3] = StringToFloat(IhIG[3]);
+	afAG[4] = StringToFloat(IhIG[4]);
+	afAG[5] = StringToFloat(IhIG[5]);
+	afAG[6] = StringToFloat(IhIG[6]);
+	afAG[7] = StringToFloat(IhIG[7]);
+	afAG[8] = StringToFloat(IhIG[8]);
+	return 0;
+}
+
+PoweredBySmartPawn()
+{
+	new Handle:tr;
+	GetClientEyePosition(client, m_vecOrigin);
+	switch (Type_Tr)
+	{
+		case 1, 2:
+		{
+			if (Korr[client] > afAG[1])
+			{
+				Korr[client] = afAG[0];
+			}
+			else
+			{
+				Korr[client] = Korr[client][afAG[0]];
+			}
+			M_Ang[0] = Korr[client][M_Ang[0]];
+			if (M_Ang[0] > afAG[3])
+			{
+				M_Ang[0] = M_Ang[0] - afAG[3];
+			}
+			if (M_Ang[1] - m_OldD[client] < afAG[5])
+			{
+				m_Vec = M_Ang[1] - m_OldD[client] + afAG[3];
+			}
+			else
+			{
+				if (M_Ang[1] - m_OldD[client] > afAG[2])
+				{
+					m_Vec = M_Ang[1] - m_OldD[client] - afAG[3];
+				}
+				m_Vec = M_Ang[1] - m_OldD[client];
+			}
+			m_OldD[client] = M_Ang[1];
+			if (m_Vec > afAG[4])
+			{
+				m_Vec = afAG[4];
+			}
+			else
+			{
+				if (m_Vec < afAG[6])
+				{
+					m_Vec = afAG[6];
+				}
+			}
+			M_Ang[1] = M_Ang[1] + m_Vec;
+		}
+		default:
+		{
+		}
+	}
+	tr = TR_TraceRayFilterEx(m_vecOrigin, M_Ang, 1174421507, RayType:1, PoweredBySmartPawn, client);
+	if (TR_DidHit(tr))
+	{
+		switch (Type_Tr)
+		{
+			case 1:
+			{
+				pHG = TR_GetHitGroup(tr);
+				new var4;
+				if (pHG > 0 && var9[0] <= DetectLevel[2])
+				{
+					if (HB1[client][2])
+					{
+						new var5;
+						if (HB1[client][2] != pHG && HB1[client][3])
+						{
+							HB1[client][3] = pHG;
+						}
+					}
+					else
+					{
+						HB1[client][2] = pHG;
+					}
+					new var6;
+					if (pHG != HB1[client][2] && pHG != HB1[client][3])
+					{
+						HB1[client][1]++;
+					}
+				}
+				else
+				{
+					HB1[client][0] = 0;
+					HB1[client][1] = 0;
+					HB1[client][2] = 0;
+					HB1[client][3] = 0;
+				}
+			}
+			case 2:
+			{
+				pHG = TR_GetHitGroup(tr);
+				new var1;
+				if (pHG > 0 && var8[0] <= DetectLevel[2])
+				{
+					if (HB2[client][2])
+					{
+						new var2;
+						if (HB2[client][2] != pHG && HB2[client][3])
+						{
+							HB2[client][3] = pHG;
+						}
+					}
+					else
+					{
+						HB2[client][2] = pHG;
+					}
+					new var3;
+					if (pHG != HB2[client][2] && pHG != HB2[client][3])
+					{
+						HB2[client][1]++;
+						HB3[client]++;
+					}
+				}
+				else
+				{
+					HB2[client][0] = 0;
+					HB2[client][1] = 0;
+					HB2[client][2] = 0;
+					HB2[client][3] = 0;
+				}
+			}
+			case 3:
+			{
+				pHG = TR_GetHitGroup(tr);
+				if (0 < pHG)
+				{
+					HB3[client]++;
+				}
+			}
+			default:
+			{
+			}
+		}
+		pEntity = TR_GetEntityIndex(tr);
+		CloseHandle(tr);
+		new var7;
+		if (pEntity > 0 && pEntity <= MaxClients && IsValidEdict(pEntity) && g_iTeam[pEntity] != g_iTeam[client])
+		{
+			return pEntity;
+		}
+		if (Type_Tr == 3)
+		{
+			HB3[client] = 0;
+		}
+		return -1;
+	}
+	CloseHandle(tr);
+	return -1;
+}
+
+public PoweredBySmartPawn()
+{
+	if (data == entity)
+	{
+		return 0;
+	}
+	return 1;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (value >= 0)
+	{
+		var1 = value;
+	}
+	else
+	{
+		var1 = -value;
+	}
+	return var1;
+}
+
+PoweredBySmartPawn()
+{
+	new var1;
+	if (value >= 0.0)
+	{
+		var1 = value;
+	}
+	else
+	{
+		var1 = -value;
+	}
+	return var1;
+}
+
+PoweredBySmartPawn()
+{
+	switch (Ttp)
+	{
+		case 0:
+		{
+			new var1 = SRS;
+			InsertServerCommand(var1[0][var1]);
+		}
+		case 1:
+		{
+			InsertServerCommand(SRS[1]);
+		}
+		case 2:
+		{
+			InsertServerCommand(SRS[2]);
+		}
+		default:
+		{
+		}
+	}
+	ServerExecute();
+	return 0;
+}
+
