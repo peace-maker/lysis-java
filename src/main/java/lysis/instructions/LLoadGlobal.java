@@ -9,17 +9,15 @@ public class LLoadGlobal extends LInstructionReg {
 
 	private long address_;
 
-    public LLoadGlobal(long address, Register reg)
-    {
-    	super(reg);
-        address_ = address;
-    }
+	public LLoadGlobal(long address, Register reg) {
+		super(reg);
+		address_ = address;
+	}
 
-    public long address()
-    {
-        return address_;
-    }
-	
+	public long address() {
+		return address_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.LoadGlobal;

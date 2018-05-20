@@ -5,8 +5,7 @@ import java.io.IOException;
 
 public class LIncLocal extends LInstructionStack {
 
-	public LIncLocal(long offset)
-	{
+	public LIncLocal(long offset) {
 		super(offset);
 	}
 

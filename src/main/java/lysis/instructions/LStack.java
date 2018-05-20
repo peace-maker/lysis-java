@@ -6,25 +6,21 @@ import java.io.IOException;
 public class LStack extends LInstruction {
 	private long val_;
 
-    public LStack(long val)
-    {
-        val_ = val;
-    }
+	public LStack(long val) {
+		val_ = val;
+	}
 
-    public long amount()
-    {
-        return val_;
-    }
+	public long amount() {
+		return val_;
+	}
 
-    @Override
-    public Opcode op()
-    {
-        return Opcode.Stack;
-    }
+	@Override
+	public Opcode op() {
+		return Opcode.Stack;
+	}
 
-    @Override
-    public void print(DataOutputStream tw) throws IOException
-    {
-        tw.writeBytes("stack " + amount());
-    }
+	@Override
+	public void print(DataOutputStream tw) throws IOException {
+		tw.writeBytes("stack " + amount());
+	}
 }

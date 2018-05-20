@@ -7,16 +7,14 @@ public class LPushLocal extends LInstruction {
 
 	private long offset_;
 
-    public LPushLocal(long offset)
-    {
-        offset_ = offset;
-    }
+	public LPushLocal(long offset) {
+		offset_ = offset;
+	}
 
-    public long offset()
-    {
-        return offset_;
-    }
-	
+	public long offset() {
+		return offset_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.PushLocal;

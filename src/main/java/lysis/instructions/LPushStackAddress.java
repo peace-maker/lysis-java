@@ -5,11 +5,10 @@ import java.io.IOException;
 
 public class LPushStackAddress extends LInstructionStack {
 
-	public LPushStackAddress(long offset)
-	{
+	public LPushStackAddress(long offset) {
 		super(offset);
 	}
-	
+
 	@Override
 	public Opcode op() {
 		return Opcode.PushStackAddress;

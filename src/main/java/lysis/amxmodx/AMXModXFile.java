@@ -55,37 +55,37 @@ public class AMXModXFile extends PawnFile {
 	}
 
 	private class AMX_HEADER {
-		public int size;			/* size of the "file" */
-		public int magic;			/* signature */
-		public byte file_version;	/* file format version */
-		public byte amx_version;	/* required version of the AMX */
+		public int size; /* size of the "file" */
+		public int magic; /* signature */
+		public byte file_version; /* file format version */
+		public byte amx_version; /* required version of the AMX */
 		public short flags;
-		public short defsize;		/* size of a definition record */
-		public int cod;				/* initial value of COD - code block */
-		public int dat;				/* initial value of DAT - data block */
-		public int hea;				/* initial value of HEA - start of the heap */
-		public int stp;				/* initial value of STP - stack top */
-		public int cip;				/* initial value of CIP - the instruction pointer */
-		public int publics;			/* offset to the "public functions" table */
-		public int natives;			/* offset to the "native functions" table */
-		public int libraries;		/* offset to the table of libraries */
-		public int pubvars;			/* the "public variables" table */
-		public int tags;			/* the "public tagnames" table */
-		public int nametable;		/* name table */
+		public short defsize; /* size of a definition record */
+		public int cod; /* initial value of COD - code block */
+		public int dat; /* initial value of DAT - data block */
+		public int hea; /* initial value of HEA - start of the heap */
+		public int stp; /* initial value of STP - stack top */
+		public int cip; /* initial value of CIP - the instruction pointer */
+		public int publics; /* offset to the "public functions" table */
+		public int natives; /* offset to the "native functions" table */
+		public int libraries; /* offset to the table of libraries */
+		public int pubvars; /* the "public variables" table */
+		public int tags; /* the "public tagnames" table */
+		public int nametable; /* name table */
 	}
 
 	private class AMX_DEBUG_HDR {
-		public int size;			/* size of the debug information chunk */
-		public int magic;			/* signature, must be 0xf1ef */
-		public byte file_version;	/* file format version */
-		public byte amx_version;	/* required version of the AMX */
-		public short flags;			/* currently unused */
-		public short files;			/* number of entries in the "file" table */
-		public short lines;			/* number of entries in the "line" table */
-		public short symbols;		/* number of entries in the "symbol" table */
-		public short tags;			/* number of entries in the "tag" table */
-		public short automatons;	/* number of entries in the "automaton" table */
-		public short states;		/* number of entries in the "state" table */
+		public int size; /* size of the debug information chunk */
+		public int magic; /* signature, must be 0xf1ef */
+		public byte file_version; /* file format version */
+		public byte amx_version; /* required version of the AMX */
+		public short flags; /* currently unused */
+		public short files; /* number of entries in the "file" table */
+		public short lines; /* number of entries in the "line" table */
+		public short symbols; /* number of entries in the "symbol" table */
+		public short tags; /* number of entries in the "tag" table */
+		public short automatons; /* number of entries in the "automaton" table */
+		public short states; /* number of entries in the "state" table */
 
 		public final static int SIZE = 4 + 2 + (1 * 2) + (4 * 7);
 	}
@@ -184,10 +184,9 @@ public class AMXModXFile extends PawnFile {
 			}
 			r.close();
 		}
-		
-		assert((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT || amx.size == amx.hea);
-		if ((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT)
-		{
+
+		assert ((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT || amx.size == amx.hea);
+		if ((amx.flags & AMX_FLAG_COMPACT) == AMX_FLAG_COMPACT) {
 			binary = decompressCompactCode(amx, binary);
 		}
 
@@ -587,48 +586,42 @@ public class AMXModXFile extends PawnFile {
 
 		return null;
 	}
-	
+
 	// https://github.com/alliedmodders/amxmodx/blob/e95099817b1383fe5d9c797f761017a862fa8a97/amxmodx/amx.cpp#L786
-	public byte[] decompressCompactCode(AMX_HEADER amx, byte[] binary) throws IOException
-	{
+	public byte[] decompressCompactCode(AMX_HEADER amx, byte[] binary) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream(binary.length);
 		// Copy everything before the compressed code section of the file.
 		out.write(binary, 0, amx.cod);
-		
+
 		int codesize = amx.size - amx.cod;
 		byte[] code = Slice(binary, amx.cod, codesize);
-		
+
 		Stack<Long> stack = new Stack<>();
 		long c;
 		short shift;
-		while (codesize > 0)
-		{
+		while (codesize > 0) {
 			c = 0;
 			shift = 0;
-			
-			do
-			{
+
+			do {
 				codesize--;
 				// no input byte should be shifted out completely
-				assert(shift<8*4);
+				assert (shift < 8 * 4);
 				// we work from the end of a sequence backwards; the final code in
-			    // a sequence may not have the continuation bit set
-				assert(shift>0 || (code[codesize] & 0x80)==0);
+				// a sequence may not have the continuation bit set
+				assert (shift > 0 || (code[codesize] & 0x80) == 0);
 				c |= (code[codesize] & 0x7f) << shift;
 				shift += 7;
-			}
-			while (codesize > 0 && (code[codesize - 1] & 0x80) != 0);
-			
+			} while (codesize > 0 && (code[codesize - 1] & 0x80) != 0);
+
 			// sign expand
-			if ((code[codesize] & 0x40) != 0)
-			{
-				while (shift < 8*4)
-				{
+			if ((code[codesize] & 0x40) != 0) {
+				while (shift < 8 * 4) {
 					c |= 0xff << shift;
 					shift += 8;
 				}
 			}
-			
+
 			// store
 			stack.push(c);
 		}
@@ -642,7 +635,7 @@ public class AMXModXFile extends PawnFile {
 
 		return out.toByteArray();
 	}
-	
+
 	private byte[] IntToBigEndianByteArray(long value) {
 		byte[] bytes = new byte[4];
 		bytes[0] = (byte) (value >> 0);

@@ -5,10 +5,9 @@ import java.io.IOException;
 
 public class LDebugBreak extends LInstruction {
 
-	public LDebugBreak()
-    {
-    }
-	
+	public LDebugBreak() {
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.DebugBreak;

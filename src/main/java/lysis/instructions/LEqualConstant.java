@@ -9,17 +9,15 @@ public class LEqualConstant extends LInstructionReg {
 
 	private long value_;
 
-    public LEqualConstant(Register reg, long value)
-    {
-    	super(reg);
-        value_ = value;
-    }
+	public LEqualConstant(Register reg, long value) {
+		super(reg);
+		value_ = value;
+	}
 
-    public long value()
-    {
-        return value_;
-    }
-	
+	public long value() {
+		return value_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.EqualConstant;

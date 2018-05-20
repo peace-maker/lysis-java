@@ -7,13 +7,11 @@ public class LDecGlobal extends LInstruction {
 
 	private long address_;
 
-	public LDecGlobal(long address)
-	{
+	public LDecGlobal(long address) {
 		address_ = address;
 	}
 
-	public long address()
-	{
+	public long address() {
 		return address_;
 	}
 

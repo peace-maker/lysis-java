@@ -5,10 +5,9 @@ import java.io.IOException;
 
 public class LDecI extends LInstruction {
 
-	public LDecI()
-    {
-    }
-	
+	public LDecI() {
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.DecI;

@@ -14,5 +14,4 @@ public class LTrackerPopSetHeap extends LInstruction {
 		tw.writeBytes("tracker.pop.setheap");
 	}
 
-	
 }

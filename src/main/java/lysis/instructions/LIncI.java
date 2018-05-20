@@ -5,10 +5,9 @@ import java.io.IOException;
 
 public class LIncI extends LInstruction {
 
-	public LIncI()
-    {
-    }
-	
+	public LIncI() {
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.IncI;

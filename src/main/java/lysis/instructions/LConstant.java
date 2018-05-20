@@ -9,17 +9,15 @@ public class LConstant extends LInstructionReg {
 
 	private long val_;
 
-    public LConstant(long val, Register reg)
-    {
-    	super(reg);
-        val_ = val;
-    }
+	public LConstant(long val, Register reg) {
+		super(reg);
+		val_ = val;
+	}
 
-    public long val()
-    {
-        return val_;
-    }
-    
+	public long val() {
+		return val_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.Constant;

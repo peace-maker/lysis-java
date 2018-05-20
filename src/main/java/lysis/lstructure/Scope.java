@@ -1,7 +1,5 @@
 package lysis.lstructure;
 
 public enum Scope {
-	Global,
-    Local,
-    Static
+	Global, Local, Static
 }

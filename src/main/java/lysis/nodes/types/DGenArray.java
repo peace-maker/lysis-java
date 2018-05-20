@@ -4,16 +4,14 @@ import lysis.lstructure.Variable;
 import lysis.nodes.NodeType;
 import lysis.nodes.NodeVisitor;
 
-public class DGenArray extends DNode
-{
+public class DGenArray extends DNode {
 	private long pc_;
 	private Variable var_;
 	private long offset_;
 	private boolean autozero_;
 	private DNode[] dims_;
 
-	public DGenArray(long pc, DNode[] dims, boolean autozero) throws Exception
-	{
+	public DGenArray(long pc, DNode[] dims, boolean autozero) throws Exception {
 		pc_ = pc;
 		autozero_ = autozero;
 		dims_ = new DNode[dims.length];
@@ -21,8 +19,7 @@ public class DGenArray extends DNode
 			initOperand(i, dims[i]);
 	}
 
-	public long pc()
-	{
+	public long pc() {
 		return pc_;
 	}
 
@@ -30,35 +27,29 @@ public class DGenArray extends DNode
 		return autozero_;
 	}
 
-	public void setVariable(Variable var)
-	{
+	public void setVariable(Variable var) {
 		var_ = var;
 	}
 
-	public Variable var()
-	{
+	public Variable var() {
 		return var_;
 	}
 
-	public void setOffset(long offset)
-	{
+	public void setOffset(long offset) {
 		offset_ = offset;
 	}
 
-	public long offset()
-	{
+	public long offset() {
 		return offset_;
 	}
 
 	@Override
-	public NodeType type()
-	{
+	public NodeType type() {
 		return NodeType.GenArray;
 	}
 
 	@Override
-	public void accept(NodeVisitor visitor) throws Exception
-	{
+	public void accept(NodeVisitor visitor) throws Exception {
 		visitor.visit(this);
 	}
 

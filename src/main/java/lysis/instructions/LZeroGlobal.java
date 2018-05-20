@@ -7,15 +7,13 @@ public class LZeroGlobal extends LInstruction {
 
 	private long address_;
 
-    public LZeroGlobal(long address)
-    {
-        address_ = address;
-    }
+	public LZeroGlobal(long address) {
+		address_ = address;
+	}
 
-    public long address()
-    {
-        return address_;
-    }
+	public long address() {
+		return address_;
+	}
 
 	@Override
 	public Opcode op() {

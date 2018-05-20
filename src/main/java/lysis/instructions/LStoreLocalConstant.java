@@ -6,23 +6,21 @@ import java.io.IOException;
 public class LStoreLocalConstant extends LInstruction {
 
 	private long address_;
-    private long value_;
+	private long value_;
 
-    public LStoreLocalConstant(long address, long value)
-    {
-        address_ = address;
-        value_ = value;
-    }
+	public LStoreLocalConstant(long address, long value) {
+		address_ = address;
+		value_ = value;
+	}
 
-    public long address()
-    {
-        return address_;
-    }
-    public long value()
-    {
-        return value_;
-    }
-	
+	public long address() {
+		return address_;
+	}
+
+	public long value() {
+		return value_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.StoreLocalConstant;

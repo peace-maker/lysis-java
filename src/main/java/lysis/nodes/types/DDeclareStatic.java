@@ -8,32 +8,27 @@ public class DDeclareStatic extends DNullaryNode {
 
 	private Variable var_;
 
-    public DDeclareStatic(Variable var)
-    {
-        var_ = var;
-    }
+	public DDeclareStatic(Variable var) {
+		var_ = var;
+	}
 
-    public Variable var()
-    {
-        return var_;
-    }
-    
-    @Override
-    public NodeType type()
-    {
-        return NodeType.DeclareStatic;
-    }
-    
-    @Override
-    public void accept(NodeVisitor visitor)
-    {
-        visitor.visit(this);
-    }
-    
-    @Override
-    public boolean idempotent()
-    {
-        return false;
-    }
+	public Variable var() {
+		return var_;
+	}
+
+	@Override
+	public NodeType type() {
+		return NodeType.DeclareStatic;
+	}
+
+	@Override
+	public void accept(NodeVisitor visitor) {
+		visitor.visit(this);
+	}
+
+	@Override
+	public boolean idempotent() {
+		return false;
+	}
 
 }

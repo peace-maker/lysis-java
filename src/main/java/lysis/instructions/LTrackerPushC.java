@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 public class LTrackerPushC extends LInstruction {
 
 	private int value_;
-	
+
 	public LTrackerPushC(int value_) {
 		this.value_ = value_;
 	}

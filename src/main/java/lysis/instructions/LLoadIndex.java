@@ -7,16 +7,14 @@ public class LLoadIndex extends LInstruction {
 
 	private long shift_;
 
-    public LLoadIndex(long shift)
-    {
-        shift_ = shift;
-    }
+	public LLoadIndex(long shift) {
+		shift_ = shift;
+	}
 
-    public long shift()
-    {
-        return shift_;
-    }
-	
+	public long shift() {
+		return shift_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.LoadIndex;

@@ -7,14 +7,12 @@ import lysis.lstructure.LBlock;
 
 public class LJump extends LInstructionJump {
 
-	public LJump(LBlock target, long target_offs)
-	{
+	public LJump(LBlock target, long target_offs) {
 		super(target_offs, target);
 	}
 
-	public LBlock target()
-	{
-	    return getSuccessor(0);
+	public LBlock target() {
+		return getSuccessor(0);
 	}
 
 	@Override

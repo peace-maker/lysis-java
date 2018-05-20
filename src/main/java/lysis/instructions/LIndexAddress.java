@@ -7,16 +7,14 @@ public class LIndexAddress extends LInstruction {
 
 	private long shift_;
 
-    public LIndexAddress(long shift)
-    {
-        shift_ = shift;
-    }
+	public LIndexAddress(long shift) {
+		shift_ = shift;
+	}
 
-    public long shift()
-    {
-        return shift_;
-    }
-    
+	public long shift() {
+		return shift_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.IndexAddress;

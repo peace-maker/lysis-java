@@ -7,16 +7,14 @@ public class LMemCopy extends LInstruction {
 
 	private long bytes_;
 
-    public LMemCopy(long bytes)
-    {
-        bytes_ = bytes;
-    }
+	public LMemCopy(long bytes) {
+		bytes_ = bytes;
+	}
 
-    public long bytes()
-    {
-        return bytes_;
-    }
-	
+	public long bytes() {
+		return bytes_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.MemCopy;

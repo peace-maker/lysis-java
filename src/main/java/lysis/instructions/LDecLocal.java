@@ -5,8 +5,7 @@ import java.io.IOException;
 
 public class LDecLocal extends LInstructionStack {
 
-	public LDecLocal(long offset)
-    {
+	public LDecLocal(long offset) {
 		super(offset);
 	}
 

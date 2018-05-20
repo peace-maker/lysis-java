@@ -6,8 +6,8 @@ import java.io.IOException;
 public class LGenArray extends LInstruction {
 	private boolean autozero_;
 	private int dims_;
-	public LGenArray(int dims, boolean autozero)
-	{
+
+	public LGenArray(int dims, boolean autozero) {
 		dims_ = dims;
 		autozero_ = autozero;
 	}
@@ -27,6 +27,6 @@ public class LGenArray extends LInstruction {
 
 	@Override
 	public void print(DataOutputStream tw) throws IOException, Exception {
-		tw.writeBytes("genarray" + (autozero_?".z ":" ") + dims_);
+		tw.writeBytes("genarray" + (autozero_ ? ".z " : " ") + dims_);
 	}
 }

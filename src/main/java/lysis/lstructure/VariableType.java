@@ -1,9 +1,5 @@
 package lysis.lstructure;
 
 public enum VariableType {
-	Normal,
-    Reference,
-    Array,
-    ArrayReference,
-    Variadic
+	Normal, Reference, Array, ArrayReference, Variadic
 }

@@ -40,7 +40,7 @@ public class LysisTest {
 			public boolean accept(File file) {
 				if (file.isDirectory())
 					return true;
-				
+
 				return file.getName().endsWith(".smx") || file.getName().endsWith(".amxx");
 			}
 		});
@@ -54,7 +54,7 @@ public class LysisTest {
 			// System.out.println("Collecting file " + file.getAbsolutePath());
 		}
 	}
-	
+
 	@Parameters(name = "{index} {0}")
 	public static Collection<Object[]> files() {
 		Collection<Object[]> files = new LinkedList<Object[]>();
@@ -106,7 +106,7 @@ public class LysisTest {
 				expectedResult.append(line + System.lineSeparator());
 			}
 		}
-		
+
 		// Make sure we produce the same result still.
 		String result = new String(bout.toByteArray(), "UTF-8");
 		assertEquals("Mismatching decompilation output", expectedResult.toString(), result);

@@ -5,10 +5,9 @@ import java.io.IOException;
 
 public class LExchange extends LInstruction {
 
-	public LExchange()
-    {
-    }
-	
+	public LExchange() {
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.Exchange;

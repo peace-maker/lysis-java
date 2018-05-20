@@ -7,15 +7,13 @@ public class LAddConstant extends LInstruction {
 
 	private long amount_;
 
-    public LAddConstant(long amount)
-    {
-        amount_ = amount;
-    }
+	public LAddConstant(long amount) {
+		amount_ = amount;
+	}
 
-    public long amount()
-    {
-        return amount_;
-    }
+	public long amount() {
+		return amount_;
+	}
 
 	@Override
 	public Opcode op() {

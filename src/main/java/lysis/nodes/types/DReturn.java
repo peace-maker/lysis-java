@@ -4,32 +4,27 @@ import lysis.nodes.NodeType;
 import lysis.nodes.NodeVisitor;
 
 public class DReturn extends DUnaryNode {
-	public DReturn(DNode value) throws Exception
-    {
+	public DReturn(DNode value) throws Exception {
 		super(value);
-    }
+	}
 
 	@Override
-    public NodeType type()
-    {
-        return NodeType.Return;
-    }
-	
+	public NodeType type() {
+		return NodeType.Return;
+	}
+
 	@Override
-    public void accept(NodeVisitor visitor)
-    {
-        visitor.visit(this);
-    }
-	
+	public void accept(NodeVisitor visitor) {
+		visitor.visit(this);
+	}
+
 	@Override
-    public boolean idempotent()
-    {
-        return false;
-    }
-	
+	public boolean idempotent() {
+		return false;
+	}
+
 	@Override
-    public boolean controlFlow()
-    {
-        return true;
-    }
+	public boolean controlFlow() {
+		return true;
+	}
 }

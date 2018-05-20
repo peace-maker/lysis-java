@@ -18,8 +18,8 @@ public class LMove extends LInstructionReg {
 
 	@Override
 	public void print(DataOutputStream tw) throws IOException {
-		tw.writeBytes("move." + RegisterName(reg()) +  ", " +
-                (reg() == Register.Pri ? RegisterName(Register.Alt) : RegisterName(Register.Pri)));
+		tw.writeBytes("move." + RegisterName(reg()) + ", "
+				+ (reg() == Register.Pri ? RegisterName(Register.Alt) : RegisterName(Register.Pri)));
 	}
 
 }

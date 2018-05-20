@@ -7,16 +7,14 @@ public class LMulConstant extends LInstruction {
 
 	private long amount_;
 
-    public LMulConstant(long amount)
-    {
-        amount_ = amount;
-    }
+	public LMulConstant(long amount) {
+		amount_ = amount;
+	}
 
-    public long amount()
-    {
-        return amount_;
-    }
-	
+	public long amount() {
+		return amount_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.MulConstant;

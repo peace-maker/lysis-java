@@ -1,37 +1,32 @@
 package lysis.instructions;
 
-import java.io.*;
+import java.io.DataOutputStream;
 
 import lysis.lstructure.Register;
 
 public abstract class LInstruction {
 	private long pc_;
 
-    public LInstruction()
-    {
-    }
+	public LInstruction() {
+	}
 
-    public abstract Opcode op();
+	public abstract Opcode op();
 
-    public abstract void print(DataOutputStream tw) throws Exception;
+	public abstract void print(DataOutputStream tw) throws Exception;
 
-    public boolean isControl()
-    {
-        return false;
-    }
+	public boolean isControl() {
+		return false;
+	}
 
-    public void setPc(long pc)
-    {
-        pc_ = pc;
-    }
+	public void setPc(long pc) {
+		pc_ = pc;
+	}
 
-    public long pc()
-    {
-        return pc_;
-    }
+	public long pc() {
+		return pc_;
+	}
 
-    public static String RegisterName(Register reg)
-    {
-        return (reg == Register.Pri) ? "pri" : "alt";
-    }
+	public static String RegisterName(Register reg) {
+		return (reg == Register.Pri) ? "pri" : "alt";
+	}
 }

@@ -9,16 +9,14 @@ public class LSysReq extends LInstruction {
 
 	private Native native_;
 
-    public LSysReq(Native nativeX)
-    {
-        native_ = nativeX;
-    }
-	
-	public Native nativeX()
-    {
-        return native_;
-    }
-	
+	public LSysReq(Native nativeX) {
+		native_ = nativeX;
+	}
+
+	public Native nativeX() {
+		return native_;
+	}
+
 	@Override
 	public Opcode op() {
 		return Opcode.SysReq;

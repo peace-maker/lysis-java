@@ -7,14 +7,12 @@ import lysis.lstructure.LBlock;
 
 public class LGoto extends LControlInstruction {
 
-	public LGoto(LBlock target)
-	{
+	public LGoto(LBlock target) {
 		super(target);
 	}
-	
-	public LBlock target()
-	{
-	    return getSuccessor(0);
+
+	public LBlock target() {
+		return getSuccessor(0);
 	}
 
 	@Override

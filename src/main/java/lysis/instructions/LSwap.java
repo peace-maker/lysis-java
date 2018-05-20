@@ -7,11 +7,10 @@ import lysis.lstructure.Register;
 
 public class LSwap extends LInstructionReg {
 
-	public LSwap(Register reg)
-	{
+	public LSwap(Register reg) {
 		super(reg);
 	}
-	
+
 	@Override
 	public Opcode op() {
 		return Opcode.Swap;
