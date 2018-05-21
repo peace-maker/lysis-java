@@ -46,6 +46,7 @@ public class Lysis {
 			}
 			for (int i = start; i < num; i++) {
 				Argument arg = new Argument(VariableType.Normal, "_arg" + i, 0, null, null);
+				arg.markGenerated();
 
 				// See if this argument is already there.
 				// Implementations of functions for different states don't have their arguments
