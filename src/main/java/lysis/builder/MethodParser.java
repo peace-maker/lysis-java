@@ -101,6 +101,7 @@ public class MethodParser {
 	private long pc_;
 	private long current_pc_;
 	private LIR lir_ = new LIR();
+	private boolean need_proc_;
 
 	private int readInt32() {
 		pc_ += 4;
@@ -634,7 +635,7 @@ public class MethodParser {
 	private void readAll() throws Exception {
 		lir_.entry_pc = pc_;
 
-		if (readOp() != SPOpcode.proc)
+		if (need_proc_ && readOp() != SPOpcode.proc)
 			throw new Exception("invalid method, first op must be PROC");
 
 		while (pc_ < (long) file_.code().bytes().length) {
@@ -845,6 +846,18 @@ public class MethodParser {
 		BlockAnalysis.ComputeDominators(blocks);
 		BlockAnalysis.ComputeImmediateDominators(blocks);
 		BlockAnalysis.ComputeDominatorTree(blocks);
+		LBlock newEntry = BlockAnalysis.EnforceStackBalance(file_, blocks);
+		if (newEntry != null) {
+			// Reparse the method starting from a sane block.
+			// This looks like some manually crafted code.
+			newEntry = BlockAnalysis.FollowGoto(newEntry);
+			MethodParser subParser = new MethodParser(file_, func_, newEntry.pc());
+			subParser.readAll();
+			LGraph graph = subParser.buildBlocks();
+			// Set the entry pc to the old one, so the symbols still match.
+			graph.entry.setPC(lir_.entry_pc);
+			return graph;
+		}
 		BlockAnalysis.FindLoops(blocks);
 
 		LGraph graph = new LGraph();
@@ -858,10 +871,18 @@ public class MethodParser {
 		return graph;
 	}
 
+	private MethodParser(PawnFile file, Function func, long pc) {
+		file_ = file;
+		func_ = func;
+		pc_ = pc;
+		need_proc_ = false;
+	}
+
 	public MethodParser(PawnFile file, Function func) {
 		file_ = file;
 		func_ = func;
 		pc_ = func.address();
+		need_proc_ = true;
 	}
 
 	public LGraph parse() throws Exception {

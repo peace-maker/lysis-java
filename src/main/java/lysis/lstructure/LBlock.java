@@ -88,6 +88,10 @@ public class LBlock {
 		return idom_;
 	}
 
+	public void setPC(long pc) {
+		pc_ = pc;
+	}
+
 	public long pc() {
 		return pc_;
 	}

@@ -8,6 +8,10 @@ import lysis.nodes.types.DGenArray;
 import lysis.nodes.types.DNode;
 
 public class AbstractStack {
+	public class UnbalancedStackException extends Exception {
+		private static final long serialVersionUID = 1L;
+	}
+
 	private class StackEntry {
 		public DNode declaration;
 		public DNode assignment;
@@ -51,17 +55,20 @@ public class AbstractStack {
 		array.setOffset(depth());
 	}
 
-	private StackEntry popEntry() {
+	private StackEntry popEntry() throws UnbalancedStackException {
+		if (stack_.size() == 0)
+			throw new UnbalancedStackException();
+
 		StackEntry e = stack_.get(stack_.size() - 1);
 		stack_.remove(stack_.size() - 1);
 		return e;
 	}
 
-	public void pop() {
+	public void pop() throws UnbalancedStackException {
 		popEntry();
 	}
 
-	public DNode popAsTemp() {
+	public DNode popAsTemp() throws UnbalancedStackException {
 		StackEntry entry = popEntry();
 		if (entry.declaration.uses().size() == 0)
 			return entry.assignment;
@@ -69,13 +76,13 @@ public class AbstractStack {
 		return null;
 	}
 
-	public DNode popName() {
+	public DNode popName() throws UnbalancedStackException {
 		DNode value = stack_.get(stack_.size() - 1).declaration;
 		pop();
 		return value;
 	}
 
-	public DNode popValue() {
+	public DNode popValue() throws UnbalancedStackException {
 		DNode value = stack_.get(stack_.size() - 1).assignment;
 		pop();
 		return value;

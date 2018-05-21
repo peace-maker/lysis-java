@@ -5,8 +5,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import lysis.PawnFile;
+import lysis.instructions.LAddConstant;
+import lysis.instructions.LControlInstruction;
+import lysis.instructions.LGenArray;
 import lysis.instructions.LGoto;
 import lysis.instructions.LInstruction;
+import lysis.instructions.LJumpCondition;
+import lysis.instructions.LPushConstant;
+import lysis.instructions.LStack;
+import lysis.instructions.LStackAdjust;
+import lysis.instructions.LStoreCtrl;
 import lysis.instructions.Opcode;
 import lysis.lstructure.LBlock;
 import lysis.nodes.NodeBlock;
@@ -270,6 +279,155 @@ public class BlockAnalysis {
 		// LBlock[] tempBlocks;
 		for (int i = 0; i < blocks.length; i++) {
 			blocks[i].setImmediateDominated(idominated[i].toArray(new LBlock[0]));
+		}
+	}
+
+	public static LBlock FollowGoto(LBlock block) {
+		if (block.instructions().length > 1)
+			return block;
+		LControlInstruction last = block.last();
+		if (last.op() != Opcode.Goto)
+			return block;
+		LGoto go = (LGoto) last;
+		return FollowGoto(go.target());
+	}
+
+	private static LBlock FindSkippingParent(LBlock[] blocks, int unbalanced_id, LBlock block) {
+		LBlock idomBlock = blocks[block.idom().id()];
+		LControlInstruction lastIns = idomBlock.last();
+
+		if (lastIns.op() == Opcode.JumpCondition) {
+			LJumpCondition jcc = (LJumpCondition) lastIns;
+			LBlock target;
+			if (jcc.trueTarget() == block)
+				target = jcc.falseTarget();
+			else if (jcc.falseTarget() == block)
+				target = jcc.trueTarget();
+			else
+				return FindSkippingParent(blocks, unbalanced_id, idomBlock);
+
+			if (target.id() > unbalanced_id)
+				return target;
+			return FindSkippingParent(blocks, unbalanced_id, idomBlock);
+		}
+		return null;
+	}
+
+	public static LBlock EnforceStackBalance(PawnFile file, LBlock[] blocks) {
+		StackBalanceValidator validator = new StackBalanceValidator(file, blocks);
+		LBlock unbalanced = validator.FindUnbalancedBlock(blocks[0]);
+		if (unbalanced == null)
+			return null;
+
+		// System.err.printf("// Unbalanced stack at block %d%n", unbalanced.id());
+		LBlock idomBlock = blocks[unbalanced.idom().id()];
+		LControlInstruction lastIns = idomBlock.last();
+		assert (lastIns.op() == Opcode.JumpCondition);
+		return FindSkippingParent(blocks, unbalanced.id(), unbalanced);
+	}
+
+	private static class StackBalanceValidator {
+		private int[] stack_levels_;
+		private PawnFile file_;
+
+		public StackBalanceValidator(PawnFile file, LBlock[] blocks) {
+			stack_levels_ = new int[blocks.length];
+			file_ = file;
+		}
+
+		public LBlock FindUnbalancedBlock(LBlock block) {
+			for (int i = 0; i < block.numPredecessors(); i++) {
+				LBlock pred = block.getPredecessor(i);
+
+				// Don't bother with backedges yet.
+				if (pred.id() >= block.id())
+					continue;
+
+				if (stack_levels_[block.id()] == 0)
+					stack_levels_[block.id()] = stack_levels_[pred.id()];
+			}
+
+			Long lastConstant = null;
+			for (LInstruction ins : block.instructions()) {
+				switch (ins.op()) {
+				case Stack: {
+					LStack stk = (LStack) ins;
+					if (stk.amount() < 0)
+						stack_levels_[block.id()] += stk.amount() / -4;
+					else
+						stack_levels_[block.id()] -= stk.amount() / 4;
+					break;
+				}
+				case PushConstant: {
+					LPushConstant pushc = (LPushConstant) ins;
+					lastConstant = pushc.val();
+					stack_levels_[block.id()]++;
+					continue;
+				}
+				case PushGlobal:
+				case PushLocal:
+				case PushReg:
+				case PushStackAddress: {
+					stack_levels_[block.id()]++;
+					break;
+				}
+				case AddConstant: {
+					LAddConstant addc = (LAddConstant) ins;
+					lastConstant = addc.amount();
+					continue;
+				}
+				case StoreCtrl: {
+					assert (lastConstant != null);
+					// Hack in old |goto| support.
+					LStoreCtrl sctrl = (LStoreCtrl) ins;
+					assert (sctrl.ctrlregindex() == 4); // STK = PRI
+					stack_levels_[block.id()] = (int) (lastConstant / -4);
+					break;
+				}
+				case StackAdjust: {
+					LStackAdjust stkadj = (LStackAdjust) ins;
+					stack_levels_[block.id()] = stkadj.value() / -4;
+					break;
+				}
+				case Call:
+				case SysReq: {
+					assert (lastConstant != null);
+					if (file_.PassArgCountAsSize())
+						lastConstant /= 4;
+					stack_levels_[block.id()] -= lastConstant;
+					stack_levels_[block.id()]--;
+					break;
+				}
+				case GenArray: {
+					LGenArray genarray = (LGenArray) ins;
+					stack_levels_[block.id()] -= genarray.dims();
+					stack_levels_[block.id()]++;
+					break;
+				}
+				case Pop: {
+					stack_levels_[block.id()]--;
+					break;
+				}
+				default:
+					break;
+				}
+
+				lastConstant = null;
+				if (stack_levels_[block.id()] < 0)
+					return block;
+			}
+
+			for (int i = 0; i < block.idominated().length; i++) {
+				LBlock lir = block.idominated()[i];
+				if (lir == null)
+					continue;
+
+				LBlock unbalanced = FindUnbalancedBlock(lir);
+				if (unbalanced != null)
+					return unbalanced;
+			}
+
+			return null;
 		}
 	}
 

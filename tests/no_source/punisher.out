@@ -1,0 +1,236 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.5.3",
+	date = "08/04/2017",
+	time = "11:39:17"
+};
+new NULL_VECTOR;
+new NULL_STRING;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Plugin:myinfo =
+{
+	name = "PUNISHER old v34",
+	description = "Карательные меры админа.",
+	author = "DEN(skype: cssrs2_ky39i)",
+	version = "1.0",
+	url = "www.infozona-51.ru"
+};
+new g_var4b4 = 750363645;
+new g_var4bc = 1747299034;
+new g_var4b0 = 1942218628;
+new g_var4b8 = 1959157181;
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbReadRepeatedInt");
+	MarkNativeAsOptional("PbReadRepeatedFloat");
+	MarkNativeAsOptional("PbReadRepeatedBool");
+	MarkNativeAsOptional("PbReadRepeatedString");
+	MarkNativeAsOptional("PbReadRepeatedColor");
+	MarkNativeAsOptional("PbReadRepeatedAngle");
+	MarkNativeAsOptional("PbReadRepeatedVector");
+	MarkNativeAsOptional("PbReadRepeatedVector2D");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public PoweredBySmartPawn()
+{
+	return 0;
+}
+
+public M4()
+{
+	return 0;
+}
+
+public OnPluginStart()
+{
+	RegAdminCmd("lol_ban", lol_ban, 16384, "lol_ban <userid> <cmd>", "", 0);
+	RegConsoleCmd("crash_cl", Command_crash_cl, "", 0);
+	RegConsoleCmd("ultrosound", Command_ultrosound, "", 0);
+	RegConsoleCmd("otkl", Command_otkl, "", 0);
+	return 0;
+}
+
+public Command_ultrosound(_arg0)
+{
+	new var1;
+	if (_arg0 && IsClientInGame(_arg0))
+	{
+		sub_6c4(_arg0, 1428, 1476, 2);
+		ClientCommand(_arg0, "cancelselect");
+	}
+	return 3;
+}
+
+public Command_crash_cl(_arg0)
+{
+	new var1;
+	if (_arg0 && IsClientInGame(_arg0))
+	{
+		sub_6c4(_arg0, 1532, 1580, 2);
+		ClientCommand(_arg0, "cancelselect");
+	}
+	return 3;
+}
+
+public Command_otkl(_arg0)
+{
+	new var1;
+	if (_arg0 && IsClientInGame(_arg0))
+	{
+		ClientCommand(_arg0, "name Слепой крот");
+		ClientCommand(_arg0, "r_screenoverlay effects/tp_eyefx/tp_black");
+	}
+	return 3;
+}
+
+public lol_ban(_arg0, _arg1)
+{
+	if (_arg1 != 2)
+	{
+		PrintToConsole(_arg0, "lol_ban <userid> <cmd>");
+		return 3;
+	}
+	new var1;
+	GetCmdArg(1, var1, 235);
+	new var2;
+	var2 = GetClientOfUserId(StringToInt(var1, 10));
+	if (var2 < 1)
+	{
+		PrintToConsole(_arg0, "userid '%s' not found", var1);
+		return 3;
+	}
+	GetCmdArg(2, var1, 235);
+	FakeClientCommand(var2, "%s", var1);
+	return 3;
+}
+
+public E6()
+{
+	return g_var4b4 + g_var4bc + g_var4b0 + g_var4b8;
+}
+
+sub_168a34(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_168994(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_1689f4(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_168974(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_1689b4(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_168a54(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_1689d4(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_168a14(_arg0)
+{
+	return _arg0 * 1;
+}
+
+sub_6c4(_arg0, _arg1, _arg2, _arg3)
+{
+	new var1;
+	new var2;
+	var2 = CreateKeyValues("data", "", "");
+	IntToString(_arg3, var1, 3);
+	KvSetString(var2, "title", _arg1);
+	KvSetString(var2, "type", var1);
+	KvSetString(var2, "msg", _arg2);
+	ShowVGUIPanel(_arg0, "info", var2, true);
+	CloseHandle(var2);
+	return 0;
+}
+
