@@ -6,6 +6,7 @@ public class Argument {
 	int tag_id_;
 	Tag tag_;
 	Dimension[] dims_;
+	boolean generated_;
 
 	public Argument(VariableType type, String name, int tag_id, Tag tag, Dimension[] dims) {
 		type_ = type;
@@ -29,5 +30,13 @@ public class Argument {
 
 	public Dimension[] dimensions() {
 		return dims_;
+	}
+
+	public boolean generated() {
+		return generated_;
+	}
+
+	public void markGenerated() {
+		generated_ = true;
 	}
 }

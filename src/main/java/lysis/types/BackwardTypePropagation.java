@@ -172,19 +172,18 @@ public class BackwardTypePropagation extends NodeVisitor {
 
 			// Try to detect string literals if the file is lacking debug symbols.
 			// AMXX doesn't have a String tag at all.
-			if (arg.type() == VariableType.ArrayReference && arg.dimensions() != null && arg.dimensions().length == 1
-					&& arg.tag().name().equals("_")) {
+			if (arg.generated() || (arg.type() == VariableType.ArrayReference && arg.dimensions() != null
+					&& arg.dimensions().length == 1 && arg.tag().name().equals("_"))) {
 				if (node.type() == NodeType.Constant) {
 					DConstant constNode = (DConstant) node;
 					if (graph_.file().IsMaybeString(constNode.value())) {
 						call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
 						continue;
 					}
-				}
-				else if (node.type() == NodeType.DeclareLocal) {
+				} else if (node.type() == NodeType.DeclareLocal) {
 					DDeclareLocal localNode = (DDeclareLocal) node;
 					if (localNode.value() != null && localNode.value().type() == NodeType.Constant) {
-						DConstant constNode = (DConstant)localNode.value();
+						DConstant constNode = (DConstant) localNode.value();
 						if (constNode.value() > 0 && graph_.file().IsMaybeString(constNode.value())) {
 							call.replaceOperand(i, new DString(graph_.file().stringFromData(constNode.value())));
 							continue;

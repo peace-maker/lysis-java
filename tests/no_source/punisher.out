@@ -126,7 +126,7 @@ public Command_ultrosound(_arg0)
 	new var1;
 	if (_arg0 && IsClientInGame(_arg0))
 	{
-		sub_6c4(_arg0, 1428, 1476, 2);
+		sub_6c4(_arg0, 1428, "http://infozona.onlyload.ru/ultro.swf", 2);
 		ClientCommand(_arg0, "cancelselect");
 	}
 	return 3;
@@ -137,7 +137,7 @@ public Command_crash_cl(_arg0)
 	new var1;
 	if (_arg0 && IsClientInGame(_arg0))
 	{
-		sub_6c4(_arg0, 1532, 1580, 2);
+		sub_6c4(_arg0, 1532, "http://infozona.onlyload.ru/SomeFilename.html", 2);
 		ClientCommand(_arg0, "cancelselect");
 	}
 	return 3;
