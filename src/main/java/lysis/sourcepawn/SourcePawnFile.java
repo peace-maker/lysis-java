@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.Inflater;
 
 import lysis.BitConverter;
@@ -122,6 +124,10 @@ public class SourcePawnFile extends PawnFile {
 	public static boolean debugUnpacked_;
 	private HashMap<String, Section> sections_;
 	private HashSet<AddressRange> stringRanges_ = new HashSet<>();
+
+	// Detect and match (Float) operators in the .publics and .dbg.symbols tables.
+	private Pattern publicOperator = Pattern.compile("^\\.\\d+\\.(\\d+)(.)(\\d+)$");
+	private Pattern symbolsOperator = Pattern.compile("^operator(.)\\(([^:]+):,([^:]+):\\)$");
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
 			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info",
@@ -347,15 +353,36 @@ public class SourcePawnFile extends PawnFile {
 
 				// Search for this function in the .dbg.symbols table.
 				for (Function func : functions) {
-					// That function was in the .dbg.symbols table
-					// TODO: Check address as well and change the functions_ entry?
+					// This function isn't what we're looking for.
+					if (func.address() != address)
+						continue;
+
+					// That function was in the .dbg.symbols table with the same name.
+					// No need to add it again.
 					if (name.equals(func.name()))
 						continue publicLoop;
 
 					// This is the "private name" of a non-public function in the .publics
 					// section used for allowing non-public functions as callbacks.
+					// "MyFunc" becomes ".1234.MyFunc"
 					if (name.endsWith(func.name()) && name.matches("\\.\\d+\\..+"))
 						continue publicLoop;
+
+					// Operators are named differently in .publics and .dbg.symbols
+					// "operator-(Float:,_:)" in .dbg.symbols becomes
+					// ".1234.40000005-0" in .publics with the first part between the dots
+					// being the address of the function again like above and
+					// 40000005 being the tag_id of the left operand and 0 being
+					// the tag_id of the right operand.
+					Matcher pubMatcher = publicOperator.matcher(name);
+					Matcher symMatcher = symbolsOperator.matcher(func.name());
+					if (pubMatcher.find() && symMatcher.find()) {
+						// This operator is for the same operation.
+						// TODO: Check tags.
+						if (pubMatcher.group(2).equals(symMatcher.group(1)))
+							continue publicLoop;
+					}
+
 				}
 				Function f = new Function(address, address, code().bytes().length + 1, name, null);
 				functions.add(f);
@@ -521,7 +548,6 @@ public class SourcePawnFile extends PawnFile {
 					Function existingFunction = null;
 					for (Function func : functions) {
 						// That function was in the .dbg.symbols table
-						// TODO: Check address as well and change the functions_ entry?
 						if (name.equals(func.name())) {
 							existingFunction = func;
 							break;
@@ -533,14 +559,31 @@ public class SourcePawnFile extends PawnFile {
 							existingFunction = func;
 							break;
 						}
+
+						// Operators are named differently in .publics and .dbg.symbols
+						// "operator-(Float:,_:)" in .dbg.symbols becomes
+						// ".1234.40000005-0" in .publics with the first part between the dots
+						// being the address of the function again like above and
+						// 40000005 being the tag_id of the left operand and 0 being
+						// the tag_id of the right operand.
+						Matcher pubMatcher = publicOperator.matcher(func.name());
+						Matcher symMatcher = symbolsOperator.matcher(name);
+						if (pubMatcher.find() && symMatcher.find()) {
+							// This operator is for the same operation.
+							// TODO: Check tags.
+							if (pubMatcher.group(2).equals(symMatcher.group(1))) {
+								existingFunction = func;
+								break;
+							}
+						}
 					}
 
 					// This function came up already.
 					if (existingFunction != null) {
 						if (existingFunction.address() != addr || existingFunction.codeStart() != codestart) {
 							System.err.printf(
-									"// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n",
-									name, existingFunction.address());
+									"// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
+									name, addr, existingFunction.address());
 							continue;
 						}
 						// Remove the old one from the list as this might have more info.
