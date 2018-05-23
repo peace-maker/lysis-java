@@ -465,11 +465,18 @@ public class NodeAnalysis {
 								// This is the initialization of an inline array.
 								DInlineArray ia = new DInlineArray(con.value(), mcpy.bytes());
 								block.nodes().insertAfter(node, ia);
-								local.replaceOperand(0, ia);
 
 								// Give the inline array some type information.
 								TypeUnit tu = TypeUnit.FromVariable(local.var());
 								ia.addType(tu);
+								// Initialization of variable array variable.
+								if (local.block().lir().id() == con.block().lir().id()) {
+									local.replaceOperand(0, ia);
+								} else {
+									DStore store = new DStore(local, ia);
+									block.nodes().insertAfter(ia, store);
+								}
+
 							} else {
 								// This is a static array copy.
 								DGlobal dglobal = new DGlobal(global);

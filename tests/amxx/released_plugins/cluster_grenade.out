@@ -47,12 +47,16 @@ public fire_in_the_hole(id, dest, ent)
 
 public pfn_touch(ptr, ptd)
 {
-	new identify[15] = {119,111,114,108,100,0};
-	new compare[15] = {119,111,114,108,100,0};
+	new identify[15];
+	new compare[15];
 	new Float:origin[3] = 0.0;
 	if (ptr)
 	{
 		entity_get_string(ptr, explosion1, identify, 15);
+	}
+	else
+	{
+		identify = {119,111,114,108,100,0};
 	}
 	if (ptd)
 	{
@@ -60,6 +64,10 @@ public pfn_touch(ptr, ptd)
 		{
 			entity_get_string(ptd, explosion1, compare, 15);
 		}
+	}
+	else
+	{
+		compare = {119,111,114,108,100,0};
 	}
 	new var1;
 	if (ptr && equali(compare, "grenade_cluster", explosion1))

@@ -771,10 +771,10 @@ public class SourcePawnFile extends PawnFile {
 	public boolean IsMaybeString(long address) {
 		if (!isValidDataAddress(address))
 			return false;
-		
+
 		// Can't reference strings in public structs.
 		for (AddressRange range : stringRanges_) {
-			if (range.start >= address  && address <= range.end)
+			if (range.start >= address && address <= range.end)
 				return false;
 		}
 

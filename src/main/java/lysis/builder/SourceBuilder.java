@@ -1129,9 +1129,12 @@ public class SourceBuilder {
 			int versionOffset = file_.int32FromData(var.address() + 12);
 			int urlOffset = file_.int32FromData(var.address() + 16);
 			String name = file_.isValidDataAddress(nameOffset) ? file_.stringFromData(nameOffset) : "[INVALID_STRING]";
-			String description = file_.isValidDataAddress(descriptionOffset) ? file_.stringFromData(descriptionOffset) : "[INVALID_STRING]";
-			String author = file_.isValidDataAddress(authorOffset) ? file_.stringFromData(authorOffset) : "[INVALID_STRING]";
-			String version = file_.isValidDataAddress(versionOffset) ? file_.stringFromData(versionOffset) : "[INVALID_STRING]";
+			String description = file_.isValidDataAddress(descriptionOffset) ? file_.stringFromData(descriptionOffset)
+					: "[INVALID_STRING]";
+			String author = file_.isValidDataAddress(authorOffset) ? file_.stringFromData(authorOffset)
+					: "[INVALID_STRING]";
+			String version = file_.isValidDataAddress(versionOffset) ? file_.stringFromData(versionOffset)
+					: "[INVALID_STRING]";
 			String url = file_.isValidDataAddress(urlOffset) ? file_.stringFromData(urlOffset) : "[INVALID_STRING]";
 
 			outputLine("public Plugin:myinfo =");
@@ -1189,7 +1192,8 @@ public class SourceBuilder {
 			int fileversOffset = file_.int32FromData(var.address() + 4);
 			int dateOffset = file_.int32FromData(var.address() + 8);
 			int timeOffset = file_.int32FromData(var.address() + 12);
-			String filevers = file_.isValidDataAddress(fileversOffset) ? file_.stringFromData(fileversOffset) : "[INVALID_STRING]";
+			String filevers = file_.isValidDataAddress(fileversOffset) ? file_.stringFromData(fileversOffset)
+					: "[INVALID_STRING]";
 			String date = file_.isValidDataAddress(dateOffset) ? file_.stringFromData(dateOffset) : "[INVALID_STRING]";
 			String time = file_.isValidDataAddress(timeOffset) ? file_.stringFromData(timeOffset) : "[INVALID_STRING]";
 			outputLine("public PlVers:__version =");

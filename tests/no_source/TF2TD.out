@@ -408,9 +408,10 @@ public Action:BuyMultiplier(client, args)
 				StrCat(buymessage, 128, MultiplierStrings[i]);
 				StrCat(buymessage, 128, " now %s %i times more damage  (for \x03%i\x04 metal)!");
 				Multipliers[i]++;
-				new String:does[8] = "does";
-				if (!(i == 1))
+				new String:does[8];
+				if (i == 1)
 				{
+					does = "does";
 				}
 				PrintToChatAll(buymessage, does, Multipliers[i], MultiplierPrices[i]);
 			}

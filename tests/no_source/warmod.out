@@ -1948,7 +1948,7 @@ public Event_Round_Start(Handle:event, String:name[], bool:dontBroadcast)
 	SortCustom1D(the_money, num_players, SortMoney, Handle:0);
 	new String:player_name[64];
 	new String:player_money[12];
-	new String:has_weapon[4] = "";
+	new String:has_weapon[4];
 	new pri_weapon;
 	new i = 1;
 	while (i <= MaxClients)
@@ -1961,8 +1961,13 @@ public Event_Round_Start(Handle:event, String:name[], bool:dontBroadcast)
 			if (IsClientInGame(i) && !IsFakeClient(i) && GetClientTeam(the_money[x]) == GetClientTeam(i))
 			{
 				pri_weapon = GetPlayerWeaponSlot(the_money[x], 0);
-				if (!(pri_weapon == -1))
+				if (pri_weapon == -1)
 				{
+					has_weapon = ">";
+				}
+				else
+				{
+					has_weapon = "";
 				}
 				IntToMoney(GetEntData(the_money[x], g_i_account, 4), player_money, 10);
 				PrintToChat(i, "\x01$%s \x04%s> \x03%s", player_money, has_weapon, player_name);
@@ -1998,7 +2003,7 @@ ShowTeamMoney(client)
 	SortCustom1D(the_money, num_players, SortMoney, Handle:0);
 	new String:player_name[64];
 	new String:player_money[12];
-	new String:has_weapon[4] = "";
+	new String:has_weapon[4];
 	new pri_weapon;
 	PrintToChat(client, "\x01--------");
 	new x;
@@ -2009,8 +2014,13 @@ ShowTeamMoney(client)
 		if (IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(the_money[x]) == GetClientTeam(client))
 		{
 			pri_weapon = GetPlayerWeaponSlot(the_money[x], 0);
-			if (!(pri_weapon == -1))
+			if (pri_weapon == -1)
 			{
+				has_weapon = ">";
+			}
+			else
+			{
+				has_weapon = "";
 			}
 			IntToMoney(GetEntData(the_money[x], g_i_account, 4), player_money, 10);
 			PrintToChat(client, "\x01$%s \x04%s> \x03%s", player_money, has_weapon, player_name);
@@ -3299,9 +3309,10 @@ LiveOn3(bool:e_war)
 		}
 		new String:save_dir[128];
 		GetConVarString(g_h_save_file_dir, save_dir, 128);
-		new String:file_prefix[4] = "_";
-		if (!(GetConVarBool(g_h_prefix_logs)))
+		new String:file_prefix[4];
+		if (GetConVarBool(g_h_prefix_logs))
 		{
+			file_prefix = "_";
 		}
 		if (GetConVarBool(g_h_auto_record))
 		{
