@@ -278,6 +278,11 @@ public class SourcePawnFile extends PawnFile {
 		// and the packing changed, at the same time .dbg.ntvarg was introduced.
 		// Once the incompatibility was noted, version was bumped to 0x0102.
 		debugUnpacked_ = (header_.version == 0x0101) && !sections_.containsKey(".dbg.natives");
+		
+		// The .dbg.strings section is obsolete in newer binary versions.
+		Section debugStringsSection = sections_.get(".dbg.strings");
+		if (debugStringsSection == null)
+			debugStringsSection = sections_.get(".names");
 
 		switch (header_.compression) {
 		case None: {
@@ -480,7 +485,7 @@ public class SourcePawnFile extends PawnFile {
 			for (int i = 0; i < debugHeader_.numFiles; i++) {
 				long address = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
-				String name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int) nameOffset);
+				String name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
 				debugFiles_[i] = new DebugFile(name, address);
 			}
 			br.close();
@@ -531,13 +536,13 @@ public class SourcePawnFile extends PawnFile {
 				int dimcount = br.ReadInt16();
 				long nameOffset = br.ReadUInt32();
 				String name = "";
-				if (sections_.get(".dbg.strings").size > nameOffset)
-					name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int) nameOffset);
+				if (debugStringsSection.size > nameOffset)
+					name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
 
 				// Someone tampered with the .dbg.symbols table :(
 				if (addr == 0 || codeend == 0 || codestart > codeend || tagid < 0 || ident < 0 || vclassByte < 0
 						|| vclassByte >= Scope.values().length || dimcount < 0 || dimcount > DIMEN_MAX
-						|| nameOffset >= sections_.get(".dbg.strings").size) {
+						|| nameOffset >= debugStringsSection.size) {
 					continue;
 				}
 
@@ -716,7 +721,7 @@ public class SourcePawnFile extends PawnFile {
 			for (int i = 0; i < (int) nentries; i++) {
 				long index = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
-				String name = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int) nameOffset);
+				String name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
 				short tagid = br.ReadInt16();
 				Tag tag = tagid >= tags_.length ? null : tags_[tagid];
 				int nargs = br.ReadInt16();
@@ -727,7 +732,7 @@ public class SourcePawnFile extends PawnFile {
 					int arg_tagid = br.ReadInt16();
 					int dimcount = br.ReadInt16();
 					long argNameOffset = br.ReadUInt32();
-					String argName = ReadString(binary, sections_.get(".dbg.strings").dataoffs + (int) argNameOffset);
+					String argName = ReadString(binary, debugStringsSection.dataoffs + (int) argNameOffset);
 					Tag argTag = arg_tagid >= tags_.length ? null : tags_[arg_tagid];
 					VariableType type = FromIdent(ident);
 
