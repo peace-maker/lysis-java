@@ -188,7 +188,9 @@ public class SourcePawnFile extends PawnFile {
 					else
 						recoveredName += new String(binary, offset, 1, "UTF-8");
 				}
-				System.err.printf("// Recovered name of previous section as \"%s\".%n", recoveredName);
+				
+				if (!recoveredName.equals(previousSection.name))
+					System.err.printf("// Recovered name of previous section as \"%s\".%n", recoveredName);
 				previousSection.name = recoveredName;
 			}
 
