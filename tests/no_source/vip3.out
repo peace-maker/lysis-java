@@ -1,0 +1,666 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.9.0.6083",
+	date = "07/04/2017",
+	time = "23:06:35"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public SharedPlugin:__pl_tf2attributes =
+{
+	name = "tf2attributes",
+	file = "tf2attributes.smx",
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new TFHoliday:TFHoliday_Birthday;
+new TFHoliday:TFHoliday_Halloween;
+new TFHoliday:TFHoliday_Christmas;
+new TFHoliday:TFHoliday_EndOfTheLine;
+new TFHoliday:TFHoliday_CommunityUpdate;
+new TFHoliday:TFHoliday_ValentinesDay;
+new TFHoliday:TFHoliday_MeetThePyro;
+new TFHoliday:TFHoliday_FullMoon;
+new TFHoliday:TFHoliday_HalloweenOrFullMoon;
+new TFHoliday:TFHoliday_HalloweenOrFullMoonOrValentines;
+new TFHoliday:TFHoliday_AprilFools;
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_tf2items =
+{
+	name = "TF2Items",
+	file = "tf2items.ext.2.ep2v",
+	autoload = 0,
+	required = 1,
+};
+new Float:FootprintID[66];
+new String:TFResourceNames[18][] =
+{
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	""
+};
+new Float:FootprintID2[66];
+new Float:FootprintID3[66];
+new bool:on[66];
+new bool:CheakTaunt[66];
+new code;
+new TauntEffect[66];
+new TauntEffect1[66];
+new TauntEffect2[66];
+public Plugin:myinfo =
+{
+	name = "[TF2] Halloween Footprints",
+	description = "Looks Fancy Ahhhh",
+	author = "Oshizu",
+	version = "1.0",
+	url = "www.otaku-gaming.net"
+};
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.GetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return void:0;
+}
+
+public void:OnPluginStart()
+{
+	RegAdminCmd("sm_vip", FootSteps, 0, "", "", 0);
+	AddCommandListener(Say_TauntMenu, "say");
+	HookEvent("player_spawn", PlayerSpawn, EventHookMode:1);
+	return void:0;
+}
+
+public Action:Say_TauntMenu(client, String:command[], argc)
+{
+	decl String:text[192];
+	new startidx;
+	if (GetCmdArgString(text, 192) < 1)
+	{
+		return Action:0;
+	}
+	if (text[strlen(text) + -1] == '"')
+	{
+		text[strlen(text) + -1] = MissingTAG:0;
+		startidx = 1;
+	}
+	if (!(strcmp(command, "say2", false)))
+	{
+		startidx += 4;
+	}
+	if (strcmp(text[startidx], "!브이", false))
+	{
+		if (!(strcmp(text[startidx], "/브이", false)))
+		{
+			ShowMenu3(client);
+			return Action:3;
+		}
+	}
+	else
+	{
+		ShowMenu3(client);
+	}
+	return Action:0;
+}
+
+public Action:FootSteps(client, args)
+{
+	ShowMenu3(client);
+	return Action:3;
+}
+
+public void:TF2_OnConditionAdded(Client, TFCond:condition)
+{
+	if (CheakTaunt[Client])
+	{
+		if (condition == TFCond:7)
+		{
+			on[Client] = 1;
+			CreateEffect(Client, TauntEffect[Client]);
+		}
+	}
+	return void:0;
+}
+
+public void:TF2_OnConditionRemoved(client, TFCond:condition)
+{
+	if (condition == TFCond:7)
+	{
+		if (0 < TauntEffect1[client])
+		{
+			AcceptEntityInput(TauntEffect1[client], "Kill", -1, -1, 0);
+		}
+		if (0 < TauntEffect2[client])
+		{
+			AcceptEntityInput(TauntEffect2[client], "Kill", -1, -1, 0);
+		}
+		TauntEffect1[client] = -1;
+		TauntEffect2[client] = -1;
+		on[client] = 0;
+	}
+	return void:0;
+}
+
+public void:OnClientDisconnect(client)
+{
+	if (FootprintID[client] > 0.0)
+	{
+		FootprintID[client] = 0;
+	}
+	if (FootprintID2[client] > 0.0)
+	{
+		FootprintID2[client] = 0;
+	}
+	if (FootprintID3[client] > 0.0)
+	{
+		FootprintID3[client] = 0;
+	}
+	if (on[client] == true)
+	{
+		on[client] = 0;
+	}
+	CheakTaunt[client] = 0;
+	if (0 < TauntEffect1[client])
+	{
+		AcceptEntityInput(TauntEffect1[client], "Kill", -1, -1, 0);
+	}
+	if (0 < TauntEffect2[client])
+	{
+		AcceptEntityInput(TauntEffect2[client], "Kill", -1, -1, 0);
+	}
+	TauntEffect[client] = 0;
+	TauntEffect1[client] = 0;
+	TauntEffect2[client] = 0;
+	return void:0;
+}
+
+public Action:PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
+	if (FootprintID[client] > 0.0)
+	{
+		TF2Attrib_SetByDefIndex(client, 2014, FootprintID[client]);
+	}
+	if (FootprintID2[client] > 0.0)
+	{
+		TF2Attrib_SetByDefIndex(client, 2013, FootprintID2[client]);
+	}
+	if (FootprintID3[client] > 0.0)
+	{
+		TF2Attrib_SetByDefIndex(client, 2025, FootprintID3[client]);
+	}
+	return Action:0;
+}
+
+public Action:ShowMenu3(client)
+{
+	new Handle:ws = CreateMenu(FootStepsCALLBACK0, MenuAction:28);
+	SetMenuTitle(ws, "[매치] vip 메뉴");
+	AddMenuItem(ws, "0", "무기광택효과", 0);
+	AddMenuItem(ws, "1", "연속처치효과", 0);
+	AddMenuItem(ws, "2", "언유 도발", 0);
+	DisplayMenu(ws, client, 0);
+	return Action:3;
+}
+
+public Action:FootSteps2(client)
+{
+	new Handle:ws = CreateMenu(FootStepsCALLBACK, MenuAction:28);
+	SetMenuTitle(ws, "무 기 광 택 효 과");
+	AddMenuItem(ws, "8", "효과X", 0);
+	AddMenuItem(ws, "X", "----------", 1);
+	AddMenuItem(ws, "1", "팀의 광채", 0);
+	AddMenuItem(ws, "2", "용접봉", 0);
+	AddMenuItem(ws, "3", "귤색", 0);
+	AddMenuItem(ws, "4", "생명을 앗아가는 수선화", 0);
+	AddMenuItem(ws, "5", "초라한 초록색", 0);
+	AddMenuItem(ws, "6", "고통스러운 에마랄드색", 0);
+	AddMenuItem(ws, "7", "지독한 자주색", 0);
+	DisplayMenu(ws, client, 0);
+	return Action:3;
+}
+
+public Action:FootSteps3(client)
+{
+	new Handle:ws = CreateMenu(FootStepsCALLBACK2, MenuAction:28);
+	SetMenuTitle(ws, "연 속 처 치 효 과");
+	AddMenuItem(ws, "1", "효과X", 0);
+	AddMenuItem(ws, "X", "----------", 1);
+	AddMenuItem(ws, "2002", "불의 뿔", 0);
+	AddMenuItem(ws, "2003", "대뇌 유출", 0);
+	AddMenuItem(ws, "2004", "토네이도", 0);
+	AddMenuItem(ws, "2005", "최면 광선", 0);
+	AddMenuItem(ws, "2006", "특이점", 0);
+	AddMenuItem(ws, "2007", "소각기", 0);
+	AddMenuItem(ws, "2008", "화염", 0);
+	DisplayMenu(ws, client, 0);
+	return Action:3;
+}
+
+public FootStepsCALLBACK0(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	if (action == MenuAction:4)
+	{
+		decl String:info[12];
+		GetMenuItem(menu, param2, info, 12, 0, "", 0);
+		new Float:weapon_glow = StringToFloat(info);
+		if (0.0 == weapon_glow)
+		{
+			FootSteps2(client);
+		}
+		else
+		{
+			if (1.0 == weapon_glow)
+			{
+				FootSteps3(client);
+			}
+			if (2.0 == weapon_glow)
+			{
+				ShowMenu1(client);
+			}
+		}
+	}
+	return 0;
+}
+
+public FootStepsCALLBACK(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	if (action == MenuAction:4)
+	{
+		decl String:info[12];
+		GetMenuItem(menu, param2, info, 12, 0, "", 0);
+		new Float:weapon_glow = StringToFloat(info);
+		FootprintID[client] = weapon_glow;
+		if (0.0 == weapon_glow)
+		{
+			TF2Attrib_RemoveByDefIndex(client, 2014);
+		}
+		else
+		{
+			TF2Attrib_SetByDefIndex(client, 2014, weapon_glow);
+		}
+		ShowMenu3(client);
+	}
+	return 0;
+}
+
+public FootStepsCALLBACK2(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:16)
+	{
+		CloseHandle(menu);
+	}
+	if (action == MenuAction:4)
+	{
+		decl String:info[12];
+		GetMenuItem(menu, param2, info, 12, 0, "", 0);
+		new Float:weapon_glow = StringToFloat(info);
+		if (1.0 == weapon_glow)
+		{
+			FootprintID2[client] = weapon_glow;
+			if (0.0 == weapon_glow)
+			{
+				TF2Attrib_RemoveByDefIndex(client, 2013);
+				TF2Attrib_RemoveByDefIndex(client, 2025);
+			}
+			else
+			{
+				TF2Attrib_SetByDefIndex(client, 2013, weapon_glow);
+				TF2Attrib_SetByDefIndex(client, 2025, 0.0);
+			}
+			ShowMenu3(client);
+		}
+		else
+		{
+			FootprintID2[client] = weapon_glow;
+			if (0.0 == weapon_glow)
+			{
+				TF2Attrib_RemoveByDefIndex(client, 2013);
+				TF2Attrib_RemoveByDefIndex(client, 2025);
+			}
+			else
+			{
+				TF2Attrib_SetByDefIndex(client, 2013, weapon_glow);
+				TF2Attrib_SetByDefIndex(client, 2025, 4.2E-45);
+			}
+			ShowMenu3(client);
+		}
+	}
+	return 0;
+}
+
+public ShowMenu1(Client)
+{
+	new Handle:menu = CreateMenu(Taunt_Menu2, MenuAction:28);
+	SetMenuTitle(menu, "언 유 도 발");
+	AddMenuItem(menu, "0", "도발효과x", 0);
+	AddMenuItem(menu, "1", "분위기 종결자-RED", 0);
+	AddMenuItem(menu, "2", "분위기 종결자-BLUE", 0);
+	AddMenuItem(menu, "3", "성배", 0);
+	AddMenuItem(menu, "4", "1972닌식", 0);
+	AddMenuItem(menu, "5", "기쁨의 분수", 0);
+	AddMenuItem(menu, "6", "울부짖는 맹호", 0);
+	AddMenuItem(menu, "7", "정당이득", 0);
+	AddMenuItem(menu, "8", "한밤중의 회오리", 0);
+	AddMenuItem(menu, "9", "은빛 돌풍", 0);
+	AddMenuItem(menu, "10", "청천벽력", 0);
+	AddMenuItem(menu, "11", "저주 받은 혼령", 0);
+	AddMenuItem(menu, "12", "무시무시한 유령", 0);
+	AddMenuItem(menu, "13", "지옥 같은 불지옥", 0);
+	AddMenuItem(menu, "15", "지옥 같은 불꽃", 0);
+	AddMenuItem(menu, "16", "지옥 같은 연기", 0);
+	DisplayMenu(menu, Client, 60);
+	return 0;
+}
+
+public Taunt_Menu2(Handle:menu, MenuAction:action, Client, param2)
+{
+	CheakTaunt[Client] = 1;
+	switch (action)
+	{
+		case 4:
+		{
+			decl String:item[64];
+			GetMenuItem(menu, param2, item, 64, 0, "", 0);
+			TauntEffect[Client] = StringToInt(item, 10);
+			ShowMenu3(Client);
+		}
+		case 16:
+		{
+			CloseHandle(menu);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+CreateEffect(client, effectid)
+{
+	new particle1 = CreateEntityByName("info_particle_system", -1);
+	new String:tName[48];
+	Format(tName, 48, "target%i", client);
+	DispatchKeyValue(client, "targetname", tName);
+	DispatchKeyValue(particle1, "parentname", tName);
+	switch (effectid)
+	{
+		case 1:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_red");
+			code = 0;
+			CreateTimer(2.6, Taunt_Time, client, 0);
+		}
+		case 2:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_blue");
+			code = 1;
+			CreateTimer(2.6, Taunt_Time, client, 0);
+		}
+		case 3:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_beams_yellow");
+		}
+		case 4:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_disco_party");
+		}
+		case 5:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hearts_glow_parent");
+		}
+		case 6:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_meteor_parent");
+		}
+		case 7:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_cash_confetti");
+		}
+		case 8:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_tornado_parent_black");
+		}
+		case 9:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_tornado_parent_white");
+		}
+		case 10:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_lightning_parent");
+			code = 2;
+			CreateTimer(0.9, Taunt_Time, client, 0);
+		}
+		case 11:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_souls_green_parent");
+		}
+		case 12:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_souls_purple_parent");
+		}
+		case 13:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hellpit_parent");
+		}
+		case 15:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_headless");
+		}
+		case 16:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_merasmus");
+		}
+		default:
+		{
+		}
+	}
+	decl Float:pos[3];
+	GetClientAbsOrigin(client, pos);
+	TeleportEntity(particle1, pos, NULL_VECTOR, NULL_VECTOR);
+	DispatchSpawn(particle1);
+	SetVariantString(tName);
+	AcceptEntityInput(particle1, "SetParent", particle1, particle1, 0);
+	ActivateEntity(particle1);
+	AcceptEntityInput(particle1, "Start", -1, -1, 0);
+	TauntEffect1[client] = particle1;
+	return 0;
+}
+
+public Action:Taunt_Time(Handle:timer, any:client)
+{
+	new particle1 = CreateEntityByName("info_particle_system", -1);
+	switch (code)
+	{
+		case 0:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_red");
+		}
+		case 1:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_blue");
+		}
+		case 2:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_lightning_parent");
+		}
+		case 3:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hellswirl");
+		}
+		default:
+		{
+		}
+	}
+	decl Float:pos[3];
+	GetClientAbsOrigin(client, pos);
+	TeleportEntity(particle1, pos, NULL_VECTOR, NULL_VECTOR);
+	DispatchSpawn(particle1);
+	ActivateEntity(particle1);
+	AcceptEntityInput(particle1, "Start", -1, -1, 0);
+	TauntEffect2[client] = particle1;
+	return Action:0;
+}
+

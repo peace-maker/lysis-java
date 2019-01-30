@@ -1,0 +1,631 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.9.0.6083",
+	date = "07/16/2017",
+	time = "20:08:50"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public SharedPlugin:__pl_tf2attributes =
+{
+	name = "tf2attributes",
+	file = "tf2attributes.smx",
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new TFHoliday:TFHoliday_Birthday;
+new TFHoliday:TFHoliday_Halloween;
+new TFHoliday:TFHoliday_Christmas;
+new TFHoliday:TFHoliday_EndOfTheLine;
+new TFHoliday:TFHoliday_CommunityUpdate;
+new TFHoliday:TFHoliday_ValentinesDay;
+new TFHoliday:TFHoliday_MeetThePyro;
+new TFHoliday:TFHoliday_FullMoon;
+new TFHoliday:TFHoliday_HalloweenOrFullMoon;
+new TFHoliday:TFHoliday_HalloweenOrFullMoonOrValentines;
+new TFHoliday:TFHoliday_AprilFools;
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_tf2items =
+{
+	name = "TF2Items",
+	file = "tf2items.ext.2.ep2v",
+	autoload = 0,
+	required = 1,
+};
+new String:TFResourceNames[18][] =
+{
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	""
+};
+new bool:on[66];
+new bool:CheakTaunt[66];
+new code;
+new TauntEffect[66];
+new TauntEffect1[66];
+new TauntEffect2[66];
+new String:PrimaryConfig[120];
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.GetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return void:0;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+public void:OnPluginStart()
+{
+	RegAdminCmd("sm_vip2", CMD_F, 1, "", "", 0);
+	HookEvent("player_spawn", event_PlayerSpawn, EventHookMode:1);
+	BuildPath(PathType:0, PrimaryConfig, 120, "configs/effect_v1.cfg");
+	return void:0;
+}
+
+bool:IsAdmin(client)
+{
+	if (GetUserFlagBits(client) & 1)
+	{
+		return true;
+	}
+	if (GetUserFlagBits(client) & 16384)
+	{
+		return true;
+	}
+	return false;
+}
+
+public void:OnClientDisconnect(client)
+{
+	if (TFResourceNames[client] == 1)
+	{
+		TFResourceNames[client] = 0;
+	}
+	CheakTaunt[client] = 0;
+	if (0 < TauntEffect1[client])
+	{
+		AcceptEntityInput(TauntEffect1[client], "Kill", -1, -1, 0);
+	}
+	if (0 < TauntEffect2[client])
+	{
+		AcceptEntityInput(TauntEffect2[client], "Kill", -1, -1, 0);
+	}
+	TauntEffect[client] = 0;
+	TauntEffect1[client] = 0;
+	TauntEffect2[client] = 0;
+	return void:0;
+}
+
+public void:TF2_OnConditionAdded(Client, TFCond:condition)
+{
+	if (CheakTaunt[Client])
+	{
+		if (condition == TFCond:7)
+		{
+			TFResourceNames[Client] = 1;
+			CreateEffect(Client, TauntEffect[Client]);
+		}
+	}
+	return void:0;
+}
+
+public void:TF2_OnConditionRemoved(client, TFCond:condition)
+{
+	if (condition == TFCond:7)
+	{
+		if (0 < TauntEffect1[client])
+		{
+			AcceptEntityInput(TauntEffect1[client], "Kill", -1, -1, 0);
+		}
+		if (0 < TauntEffect2[client])
+		{
+			AcceptEntityInput(TauntEffect2[client], "Kill", -1, -1, 0);
+		}
+		TauntEffect1[client] = -1;
+		TauntEffect2[client] = -1;
+		TFResourceNames[client] = 0;
+	}
+	return void:0;
+}
+
+public Action:event_PlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
+	if (IsAdmin(client))
+	{
+		Cheak_BW(client);
+	}
+	return Action:0;
+}
+
+public Action:CMD_F(client, args)
+{
+	MainMenu1(client, -1);
+	return Action:0;
+}
+
+public MainMenu1(client, ic)
+{
+	new Handle:menu = CreateMenu(Effect_X, MenuAction:28);
+	new Handle:DB = CreateKeyValues("effect", "", "");
+	decl String:name[64];
+	new i;
+	new String:temp[256];
+	new String:h_name[32];
+	Format(h_name, 32, "%s V.I.P MENU\n　", "[소~]");
+	SetMenuTitle(menu, h_name, client);
+	FileToKeyValues(DB, PrimaryConfig);
+	if (KvGotoFirstSubKey(DB, true))
+	{
+		do {
+			KvGetSectionName(DB, name, 64);
+			new Index = KvGetNum(DB, "index", -1);
+			new Code = KvGetNum(DB, "code", -1);
+			if (0 <= ic)
+			{
+				if (i == ic)
+				{
+					view_att(client, DB, name);
+				}
+			}
+			else
+			{
+				Format(temp, 256, "%s*%d*%d*%d", name, Index, Code, i);
+				AddMenuItem(menu, temp, name, 0);
+			}
+			i++;
+		} while (KvGotoNextKey(DB, true));
+		AddMenuItem(menu, "999*0*0*0", "언유 도발", 0);
+		KvGoBack(DB);
+	}
+	KvRewind(DB);
+	CloseHandle(DB);
+	DisplayMenu(menu, client, 0);
+	return 0;
+}
+
+public view_att(client, Handle:DB, String:NAME[64])
+{
+	new Handle:menu = CreateMenu(Effect_X, MenuAction:28);
+	decl String:name[64];
+	new i;
+	new String:temp[256];
+	SetMenuTitle(menu, NAME, client);
+	if (KvGotoFirstSubKey(DB, true))
+	{
+		do {
+			KvGetSectionName(DB, name, 64);
+			new Index = KvGetNum(DB, "index", -1);
+			new Code = KvGetNum(DB, "code", -1);
+			Format(temp, 256, "%s*%d*%d*%d", name, Index, Code, i);
+			AddMenuItem(menu, temp, name, 0);
+		} while (KvGotoNextKey(DB, true));
+		KvGoBack(DB);
+	}
+	KvRewind(DB);
+	CloseHandle(DB);
+	DisplayMenu(menu, client, 0);
+	return 0;
+}
+
+public Effect_X(Handle:menu, MenuAction:action, client, select)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:info[128];
+		new String:aa[4][64] = {
+			"",
+			"�용 됩니다)",
+			"�대사탕 \x01착용시 언유효과를 받지 못합니다...",
+			"언 유 도 발"
+		};
+		GetMenuItem(menu, select, info, 128, 0, "", 0);
+		ExplodeString(info, "*", aa, 4, 128, false);
+		new Att_Index = StringToInt(aa[1], 10);
+		new Float:Att_Code = StringToFloat(aa[2]);
+		if (StringToInt(aa[0][aa], 10) == 999)
+		{
+			Taunt_Menu1(client);
+		}
+		else
+		{
+			if (StringToInt(aa[1], 10) == -1)
+			{
+				MainMenu1(client, StringToInt(aa[3], 10));
+			}
+			if (0.0 == Att_Code)
+			{
+				TF2Attrib_RemoveByDefIndex(client, Att_Index);
+			}
+			else
+			{
+				new var1;
+				if (Att_Index == 134 || Att_Index == 370)
+				{
+					Cheak_BW(client);
+				}
+			}
+			TF2Attrib_SetByDefIndex(client, Att_Index, Att_Code);
+			PrintToChat(client, "\x04%s \x03%s \x01효과를 적용했습니다.. (리스폰시 적용 됩니다)", "[소~]", aa[0][aa]);
+			MainMenu1(client, -1);
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+Cheak_BW(client)
+{
+	new EntitiesID = GetPlayerWeaponSlot(client, 2);
+	new Blacklisted_weapon = GetEntProp(EntitiesID, PropType:0, "m_iItemDefinitionIndex", 4, 0);
+	new var1;
+	if (Blacklisted_weapon == 739 || Blacklisted_weapon == 142)
+	{
+		TF2Attrib_RemoveByDefIndex(client, 134);
+		TF2Attrib_RemoveByDefIndex(client, 370);
+		PrintToChat(client, "\x04 총잡이 , 학대사탕 \x01착용시 언유효과를 받지 못합니다...");
+		return 0;
+	}
+	return 0;
+}
+
+public Taunt_Menu1(Client)
+{
+	new Handle:menu = CreateMenu(Taunt_Menu2, MenuAction:28);
+	SetMenuTitle(menu, "언 유 도 발");
+	AddMenuItem(menu, "0", "도발효과x", 0);
+	AddMenuItem(menu, "1", "분위기 종결자-RED", 0);
+	AddMenuItem(menu, "2", "분위기 종결자-BLUE", 0);
+	AddMenuItem(menu, "3", "성배", 0);
+	AddMenuItem(menu, "4", "1972닌식", 0);
+	AddMenuItem(menu, "5", "기쁨의 분수", 0);
+	AddMenuItem(menu, "6", "울부짖는 맹호", 0);
+	AddMenuItem(menu, "7", "정당이득", 0);
+	AddMenuItem(menu, "8", "한밤중의 회오리", 0);
+	AddMenuItem(menu, "9", "은빛 돌풍", 0);
+	AddMenuItem(menu, "10", "청천벽력", 0);
+	AddMenuItem(menu, "11", "저주 받은 혼령", 0);
+	AddMenuItem(menu, "12", "무시무시한 유령", 0);
+	AddMenuItem(menu, "13", "지옥 같은 불지옥", 0);
+	AddMenuItem(menu, "15", "지옥 같은 불꽃", 0);
+	AddMenuItem(menu, "16", "지옥 같은 연기", 0);
+	DisplayMenu(menu, Client, 60);
+	return 0;
+}
+
+public Taunt_Menu2(Handle:menu, MenuAction:action, Client, param2)
+{
+	CheakTaunt[Client] = 1;
+	switch (action)
+	{
+		case 4:
+		{
+			decl String:item[64];
+			GetMenuItem(menu, param2, item, 64, 0, "", 0);
+			TauntEffect[Client] = StringToInt(item, 10);
+			MainMenu1(Client, -1);
+		}
+		case 16:
+		{
+			CloseHandle(menu);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+CreateEffect(client, effectid)
+{
+	new particle1 = CreateEntityByName("info_particle_system", -1);
+	new String:tName[48];
+	Format(tName, 48, "target%i", client);
+	DispatchKeyValue(client, "targetname", tName);
+	DispatchKeyValue(particle1, "parentname", tName);
+	switch (effectid)
+	{
+		case 1:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_red");
+			code = 0;
+			CreateTimer(2.6, Taunt_Time, client, 0);
+		}
+		case 2:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_blue");
+			code = 1;
+			CreateTimer(2.6, Taunt_Time, client, 0);
+		}
+		case 3:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_beams_yellow");
+		}
+		case 4:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_disco_party");
+		}
+		case 5:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hearts_glow_parent");
+		}
+		case 6:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_meteor_parent");
+		}
+		case 7:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_cash_confetti");
+		}
+		case 8:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_tornado_parent_black");
+		}
+		case 9:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_tornado_parent_white");
+		}
+		case 10:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_lightning_parent");
+			code = 2;
+			CreateTimer(0.9, Taunt_Time, client, 0);
+		}
+		case 11:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_souls_green_parent");
+		}
+		case 12:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_souls_purple_parent");
+		}
+		case 13:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hellpit_parent");
+		}
+		case 15:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_headless");
+		}
+		case 16:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_merasmus");
+		}
+		default:
+		{
+		}
+	}
+	decl Float:pos[3];
+	GetClientAbsOrigin(client, pos);
+	TeleportEntity(particle1, pos, NULL_VECTOR, NULL_VECTOR);
+	DispatchSpawn(particle1);
+	SetVariantString(tName);
+	AcceptEntityInput(particle1, "SetParent", particle1, particle1, 0);
+	ActivateEntity(particle1);
+	AcceptEntityInput(particle1, "Start", -1, -1, 0);
+	TauntEffect1[client] = particle1;
+	return 0;
+}
+
+public Action:Taunt_Time(Handle:timer, any:client)
+{
+	new particle1 = CreateEntityByName("info_particle_system", -1);
+	switch (code)
+	{
+		case 0:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_red");
+		}
+		case 1:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_firework_teamcolor_blue");
+		}
+		case 2:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_lightning_parent");
+		}
+		case 3:
+		{
+			DispatchKeyValue(particle1, "effect_name", "utaunt_hellswirl");
+		}
+		default:
+		{
+		}
+	}
+	decl Float:pos[3];
+	GetClientAbsOrigin(client, pos);
+	TeleportEntity(particle1, pos, NULL_VECTOR, NULL_VECTOR);
+	DispatchSpawn(particle1);
+	ActivateEntity(particle1);
+	AcceptEntityInput(particle1, "Start", -1, -1, 0);
+	TauntEffect2[client] = particle1;
+	return Action:0;
+}
+

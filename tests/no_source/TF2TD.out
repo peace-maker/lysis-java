@@ -360,6 +360,7 @@ public Action:BuyTower(client, args)
 			else
 			{
 				new String:buymessage[128];
+				buymessage[0] = "\x04A ";
 				StrCat(buymessage, 128, TowerNiceNames[i]);
 				StrCat(buymessage, 128, " tower has been bought (for \x03%i\x04 metal).");
 				PrintToChatAll(buymessage, TowerPrices[i]);
@@ -405,10 +406,12 @@ public Action:BuyMultiplier(client, args)
 			else
 			{
 				new String:buymessage[128];
+				buymessage[0] = "\x04";
 				StrCat(buymessage, 128, MultiplierStrings[i]);
 				StrCat(buymessage, 128, " now %s %i times more damage  (for \x03%i\x04 metal)!");
 				Multipliers[i]++;
 				new String:does[8];
+				does[0] = "do";
 				if (i == 1)
 				{
 					does = "does";

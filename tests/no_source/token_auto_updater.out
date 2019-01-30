@@ -1,0 +1,582 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_SteamWorks =
+{
+	name = "SteamWorks",
+	file = "SteamWorks.ext",
+	autoload = 1,
+	required = 0,
+};
+public Extension:__ext_TAU_LIB =
+{
+	name = "TAU_LIB",
+	file = "TAU_LIB.ext",
+	autoload = 1,
+	required = 0,
+};
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.8.0.5914",
+	date = "06/16/2018",
+	time = "08:02:59"
+};
+public Plugin:myinfo =
+{
+	name = "Token Auto Updater",
+	description = "",
+	author = "Phoenix (˙·٠●Феникс●٠·˙)",
+	version = "1.4",
+	url = "tau.gg"
+};
+new g_varfb4;
+new g_varfc4;
+new g_varfb8;
+new g_varfbc;
+new g_varfc0;
+new g_var1200;
+new g_varfb0;
+public ConVarChanged(_arg0, _arg1, _arg2)
+{
+	if (_arg2 != 48)
+	{
+		ConVar.SetInt(_arg0, 0, 0, 0);
+	}
+	return 0;
+}
+
+public GetResult(_arg0)
+{
+	if (strlen(_arg0) != 32)
+	{
+		sub_27bc(8);
+		LogToFile(3952, "%s%s", /* HEAP 192 */, _arg0);
+		sub_27bc(8);
+		SetFailState("[Token Auto Updater] %s%s", /* HEAP 192 */, _arg0);
+	}
+	else
+	{
+		if (3776/* ERROR unknown load Constant */)
+		{
+			if (!sub_b68(3776, _arg0, 1))
+			{
+				sub_2188();
+				strcopy(3776, 33, _arg0);
+				sub_27bc(10);
+				LogToFile(3952, /* HEAP 192 */);
+				SetToken(0);
+			}
+		}
+		sub_2188();
+		strcopy(3776, 33, _arg0);
+		sub_27bc(9);
+		LogToFile(3952, /* HEAP 192 */);
+		TAU_LIB_2();
+		return 0;
+	}
+	return 0;
+}
+
+public HTTPComplete(_arg0, _arg1, _arg2, _arg3)
+{
+	if (_arg3 == 200)
+	{
+		SteamWorks_GetHTTPResponseBodyCallback(_arg0, 3, 0, 0);
+	}
+	else
+	{
+		sub_27bc(7);
+		LogToFile(3952, "%s(%d)", /* HEAP 192 */, _arg3);
+	}
+	CloseHandle(_arg0);
+	_arg0 = 0;
+	return 0;
+}
+
+public OnPluginStart()
+{
+	new var1;
+	var1 = FindConVar("sv_hibernate_when_empty");
+	HookConVarChange(var1, 1);
+	ConVar.SetInt(var1, 0, 0, 0);
+	g_varfb4 = KeyValues.KeyValues("config", 4072, 4076);
+	if (!KeyValues.ImportFromFile(g_varfb4, "token_auto_updater/config.ini"))
+	{
+		LogToFile("token_auto_updater/tau.log", "config.ini not found");
+		SetFailState("[Token Auto Updater] config.ini not found");
+		return 0;
+	}
+	KeyValues.GetString(g_varfb4, "Language", 3912, 38, "NULL");
+	if (sub_b68(3912, "RU", 1))
+	{
+		g_varfc4 = 0;
+	}
+	else
+	{
+		if (sub_b68(3912, "EN", 1))
+		{
+			g_varfc4 = 1;
+		}
+		LogToFile("token_auto_updater/tau.log", "Language parameter is incorrect - %s", 3912);
+		SetFailState("[Token Auto Updater] Language parameter is incorrect - %s", 3912);
+		return 0;
+	}
+	if (!LibraryExists("SteamWorks"))
+	{
+		sub_27bc(0);
+		LogToFile("token_auto_updater/tau.log", /* HEAP 192 */);
+		sub_27bc(0);
+		SetFailState("[Token Auto Updater] %s", /* HEAP 192 */);
+		return 0;
+	}
+	if (!LibraryExists("TAU_LIB"))
+	{
+		sub_27bc(1);
+		LogToFile("token_auto_updater/tau.log", /* HEAP 192 */);
+		sub_27bc(1);
+		SetFailState("[Token Auto Updater] %s", /* HEAP 192 */);
+		return 0;
+	}
+	if (TAU_LIB_VER() != 140)
+	{
+		sub_27bc(2);
+		LogToFile("token_auto_updater/tau.log", /* HEAP 192 */);
+		sub_27bc(2);
+		SetFailState("[Token Auto Updater] %s", /* HEAP 192 */);
+		return 0;
+	}
+	KeyValues.GetString(g_varfb4, "Location", 3912, 38, "NULL");
+	if (!(sub_b68(3912, "RU", 1)))
+	{
+		if (!(sub_b68(3912, "USA", 1)))
+		{
+			sub_27bc(3);
+			LogToFile("token_auto_updater/tau.log", "%s%s", /* HEAP 192 */, 3912);
+			sub_27bc(3);
+			SetFailState("[Token Auto Updater] %s%s", /* HEAP 192 */, 3912);
+			return 0;
+		}
+	}
+	KeyValues.GetString(g_varfb4, "Key", 3812, 100, 4536);
+	if (strlen(3812) != 30)
+	{
+		sub_27bc(4);
+		LogToFile("token_auto_updater/tau.log", /* HEAP 192 */);
+		sub_27bc(4);
+		SetFailState("[Token Auto Updater] %s", /* HEAP 192 */);
+		return 0;
+	}
+	g_varfb8 = KeyValues.GetNum(g_varfb4, "Mode", 0);
+	if (!0 <= g_varfb8 <= 2)
+	{
+		sub_27bc(5);
+		LogToFile("token_auto_updater/tau.log", "%s%d", /* HEAP 192 */, g_varfb8);
+		sub_27bc(5);
+		SetFailState("[Token Auto Updater] %s%d", /* HEAP 192 */, g_varfb8);
+		return 0;
+	}
+	return 0;
+}
+
+public SetToken()
+{
+	if (g_varfbc)
+	{
+		if (0 < g_varfb8)
+		{
+			TAU_LIB_1(3776);
+			CreateTimer(1065353216, 21, 0, 1);
+			sub_27bc(11);
+			LogToFile(3952, /* HEAP 192 */);
+		}
+		if (g_varfb8 < 2)
+		{
+			new var2 = 0;
+			KeyValues.GetString(g_varfb4, "Kick Message", var2, 256, 4536);
+			ReplaceString(var2, 256, "\n", "\n", 1);
+			new var3 = 1;
+			while (var3 <= MaxClients)
+			{
+				new var1;
+				if (IsClientConnected(var3) && !IsFakeClient(var3))
+				{
+					KickClient(var3, var2);
+				}
+				var3++;
+			}
+			if (g_varfb8)
+			{
+			}
+			else
+			{
+				sub_27bc(12);
+				LogToFile(3952, /* HEAP 192 */);
+				KeyValues.GetString(g_varfb4, "Restart Command", var2, 256, "sv_cheats 1; crash;");
+				ServerCommand(var2);
+			}
+		}
+		g_varfbc = 0;
+	}
+	else
+	{
+		g_varfc0 = 1;
+		TAU_LIB_1(3776);
+		sub_27bc(13);
+		LogToFile(3952, /* HEAP 192 */);
+	}
+	return 0;
+}
+
+public SteamWorks_SteamServersConnectFailure(_arg0)
+{
+	sub_25cc(_arg0);
+	return 0;
+}
+
+public SteamWorks_SteamServersConnected()
+{
+	if (!g_var1200)
+	{
+		if ((g_var1200 = SteamWorks_GetPublicIPCell()))
+		{
+			sub_2188();
+			Format(3812, 100, "key=%s&ver=140&lang=%d&ip=%d.%d.%d.%d:%d", 3812, g_varfc4, g_var1200 >>> 24 & 255, g_var1200 >>> 16 & 255, g_var1200 >>> 8 & 255, g_var1200 & 255, ConVar.IntValue.get(FindConVar("hostport")));
+			FormatEx(3952, NULL_STRING, "token_auto_updater/%s.log", 3812 + 53);
+			3952[sub_b9c(3952, 58, 0)] = 95;
+			sub_27bc(6);
+			LogToFile(3952, /* HEAP 192 */);
+		}
+		if (!g_varfb0)
+		{
+			g_varfb0 = CreateTimer(1065353216, 19, 0, 1);
+		}
+		return 0;
+	}
+	new var1;
+	if (!g_varfc0 || g_varfbc)
+	{
+		new var2;
+		var2 = SteamWorks_CreateHTTPRequest(3, 3912);
+		SteamWorks_SetHTTPRequestRawPostBody(var2, "application/x-www-form-urlencoded", 3812, strlen(3812));
+		SteamWorks_SetHTTPRequestNetworkActivityTimeout(var2, 7);
+		SteamWorks_SetHTTPCallbacks(var2, 5, -1, -1, 0);
+		SteamWorks_SendHTTPRequest(var2);
+		if (g_varfb0)
+		{
+		}
+		else
+		{
+			g_varfb0 = CreateTimer(1092616192, 19, 0, 1);
+		}
+	}
+	else
+	{
+		sub_2188();
+	}
+	return 0;
+}
+
+public SteamWorks_SteamServersDisconnected(_arg0)
+{
+	sub_25cc(_arg0);
+	return 0;
+}
+
+public TimerGetNewToken()
+{
+	TAU_LIB_2();
+	SteamWorks_SteamServersConnected();
+	sub_27bc(15);
+	LogToFile(3952, /* HEAP 192 */);
+	return 0;
+}
+
+public TimerRequestT()
+{
+	SteamWorks_SteamServersConnected();
+	return 0;
+}
+
+public UpdateSession()
+{
+	new var1;
+	if (TAU_LIB_3())
+	{
+		var1 = 4;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	return var1;
+}
+
+public __ext_SteamWorks_SetNTVOptional()
+{
+	MarkNativeAsOptional(2264);
+	MarkNativeAsOptional(2288);
+	MarkNativeAsOptional(2312);
+	MarkNativeAsOptional(2340);
+	MarkNativeAsOptional(2360);
+	MarkNativeAsOptional(2392);
+	MarkNativeAsOptional(2416);
+	MarkNativeAsOptional(2436);
+	MarkNativeAsOptional(2460);
+	MarkNativeAsOptional(2488);
+	MarkNativeAsOptional(2520);
+	MarkNativeAsOptional(2556);
+	MarkNativeAsOptional(2584);
+	MarkNativeAsOptional(2616);
+	MarkNativeAsOptional(2644);
+	MarkNativeAsOptional(2676);
+	MarkNativeAsOptional(2700);
+	MarkNativeAsOptional(2724);
+	MarkNativeAsOptional(2756);
+	MarkNativeAsOptional(2780);
+	MarkNativeAsOptional(2812);
+	MarkNativeAsOptional(2840);
+	MarkNativeAsOptional(2872);
+	MarkNativeAsOptional(2912);
+	MarkNativeAsOptional(2960);
+	MarkNativeAsOptional(3000);
+	MarkNativeAsOptional(3044);
+	MarkNativeAsOptional(3072);
+	MarkNativeAsOptional(3100);
+	MarkNativeAsOptional(3144);
+	MarkNativeAsOptional(3172);
+	MarkNativeAsOptional(3208);
+	MarkNativeAsOptional(3248);
+	MarkNativeAsOptional(3288);
+	MarkNativeAsOptional(3324);
+	MarkNativeAsOptional(3360);
+	MarkNativeAsOptional(3404);
+	MarkNativeAsOptional(3444);
+	MarkNativeAsOptional(3484);
+	MarkNativeAsOptional(3524);
+	return 0;
+}
+
+public __ext_TAU_LIB_SetNTVOptional()
+{
+	MarkNativeAsOptional(3600);
+	MarkNativeAsOptional(3612);
+	MarkNativeAsOptional(3624);
+	MarkNativeAsOptional(3636);
+	return 0;
+}
+
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional(100);
+	MarkNativeAsOptional(120);
+	MarkNativeAsOptional(136);
+	MarkNativeAsOptional(156);
+	MarkNativeAsOptional(180);
+	MarkNativeAsOptional(192);
+	MarkNativeAsOptional(204);
+	MarkNativeAsOptional(216);
+	MarkNativeAsOptional(232);
+	MarkNativeAsOptional(244);
+	MarkNativeAsOptional(256);
+	MarkNativeAsOptional(272);
+	MarkNativeAsOptional(288);
+	MarkNativeAsOptional(304);
+	MarkNativeAsOptional(320);
+	MarkNativeAsOptional(336);
+	MarkNativeAsOptional(352);
+	MarkNativeAsOptional(372);
+	MarkNativeAsOptional(388);
+	MarkNativeAsOptional(400);
+	MarkNativeAsOptional(412);
+	MarkNativeAsOptional(424);
+	MarkNativeAsOptional(436);
+	MarkNativeAsOptional(448);
+	MarkNativeAsOptional(460);
+	MarkNativeAsOptional(472);
+	MarkNativeAsOptional(488);
+	MarkNativeAsOptional(504);
+	MarkNativeAsOptional(516);
+	MarkNativeAsOptional(528);
+	MarkNativeAsOptional(544);
+	MarkNativeAsOptional(560);
+	MarkNativeAsOptional(576);
+	MarkNativeAsOptional(596);
+	MarkNativeAsOptional(616);
+	MarkNativeAsOptional(636);
+	MarkNativeAsOptional(656);
+	MarkNativeAsOptional(676);
+	MarkNativeAsOptional(696);
+	MarkNativeAsOptional(716);
+	MarkNativeAsOptional(736);
+	MarkNativeAsOptional(756);
+	MarkNativeAsOptional(776);
+	MarkNativeAsOptional(796);
+	MarkNativeAsOptional(816);
+	MarkNativeAsOptional(840);
+	MarkNativeAsOptional(864);
+	MarkNativeAsOptional(884);
+	MarkNativeAsOptional(900);
+	MarkNativeAsOptional(916);
+	MarkNativeAsOptional(932);
+	MarkNativeAsOptional(952);
+	MarkNativeAsOptional(968);
+	MarkNativeAsOptional(984);
+	MarkNativeAsOptional(1004);
+	MarkNativeAsOptional(1024);
+	MarkNativeAsOptional(1044);
+	MarkNativeAsOptional(1064);
+	MarkNativeAsOptional(1084);
+	MarkNativeAsOptional(1104);
+	MarkNativeAsOptional(1128);
+	MarkNativeAsOptional(1148);
+	MarkNativeAsOptional(1172);
+	MarkNativeAsOptional(1184);
+	MarkNativeAsOptional(1196);
+	MarkNativeAsOptional(1208);
+	MarkNativeAsOptional(1224);
+	MarkNativeAsOptional(1236);
+	MarkNativeAsOptional(1248);
+	MarkNativeAsOptional(1264);
+	MarkNativeAsOptional(1280);
+	MarkNativeAsOptional(1304);
+	MarkNativeAsOptional(1316);
+	MarkNativeAsOptional(1328);
+	MarkNativeAsOptional(1340);
+	MarkNativeAsOptional(1352);
+	MarkNativeAsOptional(1364);
+	MarkNativeAsOptional(1376);
+	MarkNativeAsOptional(1388);
+	MarkNativeAsOptional(1404);
+	MarkNativeAsOptional(1416);
+	MarkNativeAsOptional(1428);
+	MarkNativeAsOptional(1440);
+	MarkNativeAsOptional(1452);
+	MarkNativeAsOptional(1464);
+	MarkNativeAsOptional(1476);
+	MarkNativeAsOptional(1488);
+	MarkNativeAsOptional(1504);
+	MarkNativeAsOptional(1532);
+	MarkNativeAsOptional(1548);
+	MarkNativeAsOptional(1572);
+	MarkNativeAsOptional(1588);
+	MarkNativeAsOptional(1608);
+	MarkNativeAsOptional(1628);
+	MarkNativeAsOptional(1648);
+	MarkNativeAsOptional(1668);
+	MarkNativeAsOptional(1688);
+	MarkNativeAsOptional(1708);
+	MarkNativeAsOptional(1728);
+	MarkNativeAsOptional(1752);
+	MarkNativeAsOptional(1784);
+	MarkNativeAsOptional(1800);
+	MarkNativeAsOptional(1820);
+	MarkNativeAsOptional(1840);
+	MarkNativeAsOptional(1860);
+	MarkNativeAsOptional(1880);
+	MarkNativeAsOptional(1900);
+	MarkNativeAsOptional(1920);
+	MarkNativeAsOptional(1944);
+	MarkNativeAsOptional(1960);
+	MarkNativeAsOptional(1980);
+	MarkNativeAsOptional(2000);
+	MarkNativeAsOptional(2020);
+	MarkNativeAsOptional(2040);
+	MarkNativeAsOptional(2060);
+	MarkNativeAsOptional(2080);
+	MarkNativeAsOptional(2104);
+	MarkNativeAsOptional(2140);
+	MarkNativeAsOptional(2164);
+	MarkNativeAsOptional(2196);
+	VerifyCoreVersion();
+	return 0;
+}
+
+sub_27bc(_arg0, _arg1)
+{
+	new var1 = 4836[g_varfc4][_arg0];
+	return var1;
+}
+
+sub_2188()
+{
+	if (g_varfb0)
+	{
+		KillTimer(g_varfb0, 0);
+		g_varfb0 = 0;
+	}
+	return 0;
+}
+
+sub_b68(_arg0, _arg1, _arg2)
+{
+	return strcmp(_arg0, _arg1, _arg2) == 0;
+}
+
+sub_25cc(_arg0)
+{
+	switch (_arg0)
+	{
+		case 1:
+		{
+			if (!g_varfc0)
+			{
+				CreateTimer(1069547520, 9, 0, 0);
+			}
+		}
+		case 102:
+		{
+			if (!g_varfbc)
+			{
+				g_varfbc = 1;
+				CreateTimer(GetRandomFloat(1108082688, 1110704128), 17, 0, 0);
+				sub_27bc(14);
+				LogToFile(3952, /* HEAP 192 */);
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+sub_b9c(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = strlen(_arg0);
+	if (!_arg2)
+	{
+		new var2 = 0;
+		while (var2 < var1)
+		{
+			if (_arg1 == _arg0[var2])
+			{
+				return var2;
+			}
+			var2++;
+		}
+	}
+	else
+	{
+		new var3;
+		var3 = var1 + -1;
+		while (0 <= var3)
+		{
+			if (_arg1 == _arg0[var3])
+			{
+				return var3;
+			}
+			var3--;
+		}
+	}
+	return -1;
+}
+

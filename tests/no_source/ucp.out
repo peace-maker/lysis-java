@@ -1720,6 +1720,7 @@ md5_file(String:fileName[], String:output[])
 		}
 		CloseHandle(hFile);
 		new padding[64];
+		padding[0] = "�";
 		new inx[16];
 		inx[14] = x[0];
 		inx[15] = x[1];
@@ -1800,6 +1801,7 @@ md5_file(String:fileName[], String:output[])
 	}
 	CloseHandle(hFile);
 	new padding[64];
+	padding[0] = "�";
 	new inx[16];
 	inx[14] = x[0];
 	inx[15] = x[1];
@@ -1926,6 +1928,7 @@ md5(String:str[], String:output[], maxlen)
 		}
 	}
 	new padding[64];
+	padding[0] = "�";
 	new inx[16];
 	inx[14] = x[0];
 	inx[15] = x[1];
