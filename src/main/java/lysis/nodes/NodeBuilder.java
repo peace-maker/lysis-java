@@ -1,5 +1,8 @@
 package lysis.nodes;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 import lysis.PawnFile;
@@ -79,6 +82,7 @@ import lysis.nodes.types.DMemCopy;
 import lysis.nodes.types.DNode;
 import lysis.nodes.types.DReturn;
 import lysis.nodes.types.DStore;
+import lysis.nodes.types.DString;
 import lysis.nodes.types.DSwitch;
 import lysis.nodes.types.DSysReq;
 import lysis.nodes.types.DUnary;
@@ -155,6 +159,23 @@ public class NodeBuilder {
 				DConstant con = (DConstant) block.stack().pri();
 				if (local.value() == null && con.value() == 0)
 					local.initOperand(0, con);
+				
+				// The compiler might throw in a |fill| opcode instead of a
+				// |movs| to copy a string that fits in one cell.
+				if (ins.amount() == 4 && con.value() != 0) {
+					// Convert the number to a string.
+					ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
+					buffer.order(ByteOrder.LITTLE_ENDIAN);
+				    buffer.putInt((int)con.value());
+				    
+				    // Strip the unused bytes.
+				    int requiredBytes = (int) (Math.ceil(Math.log(con.value()) / Math.log(2)) / 8) + 1;
+				    byte[] bytes = new byte[requiredBytes];
+				    for (int i = 0; i < requiredBytes; i++)
+				    	bytes[i] = buffer.get(i);
+					DStore store = new DStore(local, new DString(new String(bytes, StandardCharsets.UTF_8)));
+					block.add(store);
+				}
 				break;
 			}
 

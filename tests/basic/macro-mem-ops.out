@@ -148,6 +148,7 @@ public main()
 	new array[5] = {3,7,5,9,11};
 	new index = 2;
 	decl String:str[4];
+	str[0] = "abc";
 	print("globals\n");
 	sGlobal += 1;
 	printnum(sGlobal);

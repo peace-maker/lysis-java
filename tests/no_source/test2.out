@@ -93,7 +93,9 @@ bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 public OnPluginStart()
 {
 	new String:sConfigTime[256];
+	sConfigTime[0] = "1";
 	new String:sConfigTimed[256];
+	sConfigTimed[0] = "1";
 	if (StrEqual(sConfigTime, sConfigTimed, true))
 	{
 		return 0;
