@@ -388,6 +388,8 @@ public OnClientAuthorized(client, String:auth[])
 		decl String:auth2[36];
 		GetClientName(client, name, 35);
 		Format(auth2, 35, "%s", auth);
+		g_LastEntered_SteamID = auth2;
+		g_LastEntered_Name = name;
 		if (hasMixStarted)
 		{
 			CreateTimer(60.0, InformPlayerAboutTheMix, client, 0);

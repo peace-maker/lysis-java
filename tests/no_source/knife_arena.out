@@ -1715,14 +1715,19 @@ wS_SpawnArena()
 			{
 				if (i == 1)
 				{
+					g_fArenaClientCTpos = p;
+					g_fArenaClientCTang = a;
 					g_fArenaClientCTang[1] += 180.0;
 					wS_MovePos(g_fArenaClientCTpos, g_fArenaClientCTang, 35.0, 0);
 					g_fArenaClientCTpos[2] += 10.0;
 				}
 			}
+			g_fArenaClientTTpos = p;
+			g_fArenaClientTTang = a;
 			g_fArenaClientTTang[1] += 180.0;
 			wS_MovePos(g_fArenaClientTTpos, g_fArenaClientTTang, 35.0, 0);
 			g_fArenaClientTTpos[2] += 10.0;
+			g_fC4pos = p;
 			wS_MovePos(g_fC4pos, a, 50.0, 0);
 			g_fC4pos[2] += 100.0;
 		}

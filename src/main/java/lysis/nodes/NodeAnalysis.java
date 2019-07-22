@@ -452,9 +452,78 @@ public class NodeAnalysis {
 							DStore store = new DStore(local, load);
 							block.nodes().insertAfter(node, store);
 						}
-					} else if (mcpy.from().type() == NodeType.Constant && mcpy.to().type() == NodeType.DeclareLocal) {
-						DConstant con = (DConstant) mcpy.from();
-						DDeclareLocal local = (DDeclareLocal) mcpy.to();
+					// This is a multidimensional array copied to another multidimensional array.
+					// new arr1[2][10], arr2[2][10];
+					// arr2[1] = arr1[0];
+					} else if (mcpy.from().type() == NodeType.ArrayRef && mcpy.to().type() == NodeType.Load) {
+						DArrayRef arrayref = (DArrayRef) mcpy.from();
+						DLoad load = (DLoad) mcpy.to();
+						DStore store = new DStore(load, arrayref);
+						block.nodes().insertAfter(node, store);
+					// Copy one local array into another local array.
+					// new arr1[64], arr2[64];
+					// arr2 = arr1;
+					} else if (mcpy.from().type() == NodeType.DeclareLocal && mcpy.to().type() == NodeType.DeclareLocal) {
+						DDeclareLocal local_from = (DDeclareLocal) mcpy.from();
+						DDeclareLocal local_to = (DDeclareLocal) mcpy.to();
+						
+						if (local_from.var() != null && local_from.var().type() == VariableType.Array
+						 && local_to.var() != null && local_to.var().type() == VariableType.Array) {
+							DStore store = new DStore(local_to, local_from);
+							block.nodes().insertAfter(node, store);
+						}
+					// Copy one global or static array into another.
+					} else if(mcpy.from().type() == NodeType.Constant && mcpy.to().type() == NodeType.Constant) {
+						DConstant con_from = (DConstant) mcpy.from();
+						DConstant con_to = (DConstant) mcpy.to();
+						
+						if (con_from.value() <= 0 || con_to.value() <= 0)
+							continue;
+						
+						// Try to lookup the corresponding variables.
+						Variable global_from = graph.file().lookupGlobal(con_from.value());
+						if (global_from == null)
+							global_from = graph.file().lookupVariable(con_from.pc(), con_from.value(), Scope.Static);
+						Variable global_to = graph.file().lookupGlobal(con_to.value());
+						if (global_to == null)
+							global_to = graph.file().lookupVariable(con_to.pc(), con_to.value(), Scope.Static);
+					
+						if (global_from == null || global_to == null)
+							continue;
+						
+						// Construct a local reference of the global vars.
+						DGlobal dglobal_from = new DGlobal(global_from);
+						DNode load_from = new DLoad(dglobal_from);
+						DDeclareLocal declare_from = new DDeclareLocal(con_from.pc(), load_from);
+						block.nodes().insertAfter(node, dglobal_from);
+						block.nodes().insertAfter(dglobal_from, load_from);
+						block.nodes().insertAfter(load_from, declare_from);
+						
+						DGlobal dglobal_to = new DGlobal(global_to);
+						DNode load_to = new DLoad(dglobal_to);
+						DDeclareLocal declare_to = new DDeclareLocal(con_to.pc(), load_to);
+						block.nodes().insertAfter(declare_from, dglobal_to);
+						block.nodes().insertAfter(dglobal_to, load_to);
+						block.nodes().insertAfter(load_to, declare_to);
+						
+						// Assign the arrays.
+						DStore store = new DStore(declare_to, declare_from);
+						block.nodes().insertAfter(declare_to, store);
+
+					// Copy an inline array or global variable into another array.
+					} else if (mcpy.from().type() == NodeType.Constant && mcpy.to().type() == NodeType.DeclareLocal
+							|| mcpy.from().type() == NodeType.DeclareLocal && mcpy.to().type() == NodeType.Constant) {
+						DConstant con = null;
+						DDeclareLocal local = null;
+						// Copy a constant (global variable or constant array/string) to a local variable.
+						if (mcpy.from().type() == NodeType.Constant) {
+							con = (DConstant) mcpy.from();
+							local = (DDeclareLocal) mcpy.to();
+						// Copy a local variable to a constant (most likely a global variable).
+						} else {
+							con = (DConstant) mcpy.to();
+							local = (DDeclareLocal) mcpy.from();
+						}
 
 						if (con.value() > 0 && local.var() != null && local.var().type() == VariableType.Array) {
 							// See if there is a global variable at that address.
@@ -469,6 +538,7 @@ public class NodeAnalysis {
 								// Give the inline array some type information.
 								TypeUnit tu = TypeUnit.FromVariable(local.var());
 								ia.addType(tu);
+
 								// Initialization of variable array variable.
 								if (local.block().lir().id() == con.block().lir().id()) {
 									local.replaceOperand(0, ia);
@@ -482,11 +552,18 @@ public class NodeAnalysis {
 								DGlobal dglobal = new DGlobal(global);
 								DNode load = new DLoad(dglobal);
 								DDeclareLocal declare = new DDeclareLocal(con.pc(), load);
-								DStore store = new DStore(local, declare);
 								block.nodes().insertAfter(node, dglobal);
 								block.nodes().insertAfter(dglobal, load);
 								block.nodes().insertAfter(load, declare);
-								block.nodes().insertAfter(declare, store);
+								if (mcpy.from().type() == NodeType.Constant) {
+									// Copy from global to local variable.
+									DStore store = new DStore(local, declare);
+									block.nodes().insertAfter(declare, store);
+								} else {
+									// Copy from local to global variable.
+									DStore store = new DStore(declare, local);
+									block.nodes().insertAfter(declare, store);
+								}
 							}
 						}
 					}

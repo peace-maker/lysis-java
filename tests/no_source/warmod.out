@@ -1226,7 +1226,9 @@ ResetHalf(bool:silent)
 
 ResetTeams()
 {
+	g_t_name_escaped = g_t_name;
 	EscapeString(g_t_name_escaped, 64);
+	g_ct_name_escaped = g_ct_name;
 	EscapeString(g_ct_name_escaped, 64);
 	SetConVarStringHidden(g_h_t, "Terrorists");
 	SetConVarStringHidden(g_h_ct, "Counter-Terrorists");
@@ -4095,6 +4097,7 @@ public OnTChange(Handle:cvar, String:oldVal[], String:newVal[])
 		Format(g_t_name, 64, "%s", "Terrorists");
 		SetConVarStringHidden(g_h_t, "Terrorists");
 	}
+	g_t_name_escaped = g_t_name;
 	EscapeString(g_t_name_escaped, 64);
 	CheckReady();
 	return 0;
@@ -4111,6 +4114,7 @@ public OnCTChange(Handle:cvar, String:oldVal[], String:newVal[])
 		Format(g_ct_name, 64, "%s", "Counter-Terrorists");
 		SetConVarStringHidden(g_h_ct, "Counter-Terrorists");
 	}
+	g_ct_name_escaped = g_ct_name;
 	EscapeString(g_ct_name_escaped, 64);
 	CheckReady();
 	return 0;
@@ -4163,6 +4167,7 @@ public Action:ChangeT(client, args)
 	{
 		GetCmdArgString(name, 64);
 		Format(g_t_name, 64, "%s", name);
+		g_t_name_escaped = g_t_name;
 		EscapeString(g_t_name_escaped, 64);
 		SetConVarStringHidden(g_h_t, name);
 		if (client)
@@ -4203,6 +4208,7 @@ public Action:ChangeCT(client, args)
 	{
 		GetCmdArgString(name, 64);
 		Format(g_ct_name, 64, "%s", name);
+		g_ct_name_escaped = g_ct_name;
 		EscapeString(g_ct_name_escaped, 64);
 		SetConVarStringHidden(g_h_ct, name);
 		if (client)
@@ -4452,9 +4458,13 @@ SwitchScores()
 SwitchTeamNames()
 {
 	new String:temp[64] = g_t_name;
+	g_t_name = g_ct_name;
 	SetConVarStringHidden(g_h_t, g_ct_name);
+	g_ct_name = temp;
 	SetConVarStringHidden(g_h_ct, temp);
+	g_t_name_escaped = g_t_name;
 	EscapeString(g_t_name_escaped, 64);
+	g_ct_name_escaped = g_ct_name;
 	EscapeString(g_ct_name_escaped, 64);
 	return 0;
 }
