@@ -48,6 +48,7 @@ import lysis.instructions.LPushLocal;
 import lysis.instructions.LPushReg;
 import lysis.instructions.LPushStackAddress;
 import lysis.instructions.LReturn;
+import lysis.instructions.LShiftLeftConstant;
 import lysis.instructions.LStack;
 import lysis.instructions.LStackAddress;
 import lysis.instructions.LStackAdjust;
@@ -298,6 +299,13 @@ public class MethodParser {
 		case sshr:
 		case xor:
 			return new LBinary(op, Register.Pri, Register.Alt);
+			
+		case shl_c_pri:
+		case shl_c_alt: {
+			// Only generated without the peephole optimizer.
+			Register reg = (op == SPOpcode.shl_c_pri) ? Register.Pri : Register.Alt;
+			return new LShiftLeftConstant(readInt32(), reg);
+		}
 
 		case not:
 		case neg:
