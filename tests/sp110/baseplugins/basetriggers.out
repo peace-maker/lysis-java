@@ -1,0 +1,662 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public SharedPlugin:__pl_mapchooser =
+{
+	name = "mapchooser",
+	file = "mapchooser.smx",
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:19"
+};
+public Plugin:myinfo =
+{
+	name = "Basic Info Triggers",
+	description = "Adds ff, timeleft, thetime, and others.",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_vara94;
+new g_vara8c;
+new g_vara9c;
+new g_varaa0;
+new g_varaa4;
+new g_varaac;
+new g_varaa8;
+new g_vara98;
+new g_vara90;
+void:ShowFriendlyFire(_arg0)
+{
+	if (g_vara94)
+	{
+		new var1 = 0;
+		if (ConVar.BoolValue.get(g_vara94))
+		{
+			strcopy(var1, 24, "Friendly Fire On");
+		}
+		else
+		{
+			strcopy(var1, 24, "Friendly Fire Off");
+		}
+		if (ConVar.IntValue.get(g_vara8c))
+		{
+			PrintToChatAll("[SM] %t", var1);
+		}
+		else
+		{
+			PrintToChat(_arg0, "[SM] %t", var1);
+		}
+	}
+	return 0;
+}
+
+bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+{
+	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+}
+
+void:PrintToChatAll(String:_arg0[], any:_arg1)
+{
+	new var1 = 0;
+	new var2 = 1;
+	while (var2 <= MaxClients)
+	{
+		if (IsClientInGame(var2))
+		{
+			SetGlobalTransTarget(var2);
+			VFormat(var1, 254, _arg0[0], 2);
+			PrintToChat(var2, "%s", var1);
+		}
+		var2++;
+	}
+	return 0;
+}
+
+void:ShowMOTDPanel(_arg0, String:_arg1[], String:_arg2[], _arg3)
+{
+	new var1 = 0;
+	IntToString(_arg3, var1, 3);
+	new var2;
+	var2 = KeyValues.KeyValues("data", "", "");
+	KeyValues.SetString(var2, "title", _arg1[0]);
+	KeyValues.SetString(var2, "type", var1);
+	KeyValues.SetString(var2, "msg", _arg2[0]);
+	ShowVGUIPanel(_arg0, "info", var2, true);
+	CloseHandle(var2);
+	var2 = 0;
+	return 0;
+}
+
+void:ShowTimeLeft(_arg0, _arg1)
+{
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var2;
+	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_vara8c)))
+	{
+		_arg0 = 0;
+	}
+	new var12 = 0;
+	if (GetMapTimeLeft(var12))
+	{
+		new var13 = 0;
+		new var14 = 0;
+		new var15 = 0;
+		if (0 < var12)
+		{
+			var13 = var12 / 60;
+			var14 = var12 % 60;
+			var9 = 1;
+			FormatEx(var11, 1024, "%T %d:%02d", "Timeleft", _arg0, var13, var14);
+		}
+		else
+		{
+			new var3;
+			if (GetMapTimeLimit(var15) && var15)
+			{
+				var10 = 1;
+			}
+			var8 = 1;
+		}
+	}
+	if (!var8)
+	{
+		if (g_vara9c)
+		{
+			new var16;
+			var16 = ConVar.IntValue.get(g_vara9c);
+			if (0 < var16)
+			{
+				if (var9)
+				{
+					new var17;
+					var17 = strlen(var11);
+					if (var17 < 1024)
+					{
+						if (var16 > 1)
+						{
+							FormatEx(var17 + var11, 1024 - var17, "%T", "WinLimitAppendPlural", _arg0, var16);
+						}
+						FormatEx(var17 + var11, 1024 - var17, "%T", "WinLimitAppend", _arg0);
+					}
+				}
+				if (var16 > 1)
+				{
+					FormatEx(var11, 1024, "%T", "WinLimitPlural", _arg0, var16);
+				}
+				else
+				{
+					FormatEx(var11, 1024, "%T", "WinLimit", _arg0);
+				}
+				var9 = 1;
+			}
+		}
+		if (g_varaa0)
+		{
+			new var18;
+			var18 = ConVar.IntValue.get(g_varaa0);
+			if (0 < var18)
+			{
+				if (var9)
+				{
+					new var19;
+					var19 = strlen(var11);
+					if (var19 < 1024)
+					{
+						if (var18 > 1)
+						{
+							FormatEx(var19 + var11, 1024 - var19, "%T", "FragLimitAppendPlural", _arg0, var18);
+						}
+						FormatEx(var19 + var11, 1024 - var19, "%T", "FragLimitAppend", _arg0);
+					}
+				}
+				if (var18 > 1)
+				{
+					FormatEx(var11, 1024, "%T", "FragLimitPlural", _arg0, var18);
+				}
+				else
+				{
+					FormatEx(var11, 1024, "%T", "FragLimit", _arg0);
+				}
+				var9 = 1;
+			}
+		}
+		if (g_varaa4)
+		{
+			new var20;
+			var20 = ConVar.IntValue.get(g_varaa4);
+			if (0 < var20)
+			{
+				new var21;
+				var21 = var20 - g_varaac;
+				if (var9)
+				{
+					new var22;
+					var22 = strlen(var11);
+					if (var22 < 1024)
+					{
+						if (var21 > 1)
+						{
+							FormatEx(var22 + var11, 1024 - var22, "%T", "MaxRoundsAppendPlural", _arg0, var21);
+						}
+						FormatEx(var22 + var11, 1024 - var22, "%T", "MaxRoundsAppend", _arg0);
+					}
+				}
+				else
+				{
+					if (var21 > 1)
+					{
+						FormatEx(var11, 1024, "%T", "MaxRoundsPlural", _arg0, var21);
+					}
+					else
+					{
+						FormatEx(var11, 1024, "%T", "MaxRounds", _arg0);
+					}
+					var9 = 1;
+				}
+			}
+		}
+	}
+	if (var8)
+	{
+		FormatEx(var11, 1024, "%T", "LastRound", _arg0);
+	}
+	else
+	{
+		new var4;
+		if (var10 && var9)
+		{
+			FormatEx(var11, 1024, "%T", "NoTimelimit", _arg0);
+		}
+	}
+	new var6;
+	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_vara8c)))
+	{
+		PrintToChatAll("[SM] %s", var11);
+	}
+	else
+	{
+		new var7;
+		if (_arg0 && IsClientInGame(_arg0))
+		{
+			PrintToChat(_arg0, "[SM] %s", var11);
+		}
+	}
+	if (!_arg0)
+	{
+		PrintToServer("[SM] %s", var11);
+	}
+	return 0;
+}
+
+public Action:Command_FriendlyFire(_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		if (IsClientInGame(_arg0))
+		{
+			ShowFriendlyFire(_arg0);
+			return 3;
+		}
+		return 3;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 3344);
+	return 3;
+}
+
+public Action:Command_Motd(_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		if (IsClientInGame(_arg0))
+		{
+			ShowMOTDPanel(_arg0, "Message Of The Day", "motd", 1);
+			return 3;
+		}
+		return 3;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 3284);
+	return 3;
+}
+
+public Action:Command_Nextmap(_arg0, _arg1)
+{
+	new var1;
+	if (_arg0 && IsClientInGame(_arg0))
+	{
+		return 3;
+	}
+	new var3 = 0;
+	GetNextMap(var3, 256);
+	new var2;
+	if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 3240);
+	}
+	else
+	{
+		GetMapDisplayName(var3, var3, 256);
+		ReplyToCommand(_arg0, "[SM] %t", "Next Map", var3);
+	}
+	return 3;
+}
+
+public Action:Command_Timeleft(_arg0, _arg1)
+{
+	ShowTimeLeft(_arg0, 2);
+	return 3;
+}
+
+public void:ConVarChange_TimeleftInterval(ConVar:_arg0, String:_arg1[], String:_arg2[])
+{
+	new var1;
+	var1 = StringToFloat(_arg2[0]);
+	if (var1 < 1.0)
+	{
+		if (g_vara98)
+		{
+			KillTimer(g_vara98, false);
+		}
+		return 0;
+	}
+	if (g_vara98)
+	{
+		KillTimer(g_vara98, false);
+		g_vara98 = CreateTimer(var1, 39, 0, 1);
+	}
+	else
+	{
+		g_vara98 = CreateTimer(var1, 39, 0, 1);
+	}
+	return 0;
+}
+
+public void:Event_GameStart(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	g_varaac = 0;
+	return 0;
+}
+
+public void:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	g_varaac += 1;
+	return 0;
+}
+
+public void:Event_TFRestartRound(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	g_varaac = 0;
+	return 0;
+}
+
+public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	new var1;
+	if (Event.GetInt(_arg0, "round_complete", 0) == 1 || StrEqual(_arg1[0], "arena_win_panel", true))
+	{
+		g_varaac += 1;
+	}
+	return 0;
+}
+
+public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+{
+	if (!(IsChatTrigger()))
+	{
+		if (strcmp(_arg2[0], "timeleft", false))
+		{
+			if (strcmp(_arg2[0], "thetime", false))
+			{
+				if (strcmp(_arg2[0], "ff", false))
+				{
+					if (strcmp(_arg2[0], "currentmap", false))
+					{
+						if (strcmp(_arg2[0], "nextmap", false))
+						{
+							if (!(strcmp(_arg2[0], "motd", false)))
+							{
+								ShowMOTDPanel(_arg0, "Message Of The Day", "motd", 1);
+							}
+						}
+						new var5 = 0;
+						GetNextMap(var5, 256);
+						GetMapDisplayName(var5, var5, 256);
+						if (ConVar.IntValue.get(g_vara8c))
+						{
+							new var1;
+							if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+							{
+								PrintToChatAll("[SM] %t", 3492);
+							}
+							else
+							{
+								PrintToChatAll("[SM] %t", "Next Map", var5);
+							}
+						}
+						else
+						{
+							new var2;
+							if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+							{
+								PrintToChat(_arg0, "[SM] %t", 3536);
+							}
+							PrintToChat(_arg0, "[SM] %t", "Next Map", var5);
+						}
+					}
+					new var4 = 0;
+					GetCurrentMap(var4, 64);
+					if (ConVar.IntValue.get(g_vara8c))
+					{
+						PrintToChatAll("[SM] %t", "Current Map", var4);
+					}
+					else
+					{
+						PrintToChat(_arg0, "[SM] %t", "Current Map", var4);
+					}
+				}
+				ShowFriendlyFire(_arg0);
+			}
+			new var3 = 0;
+			FormatTime(var3, 64, NULL_STRING, -1);
+			if (ConVar.IntValue.get(g_vara8c))
+			{
+				PrintToChatAll("[SM] %t", "Thetime", var3);
+			}
+			else
+			{
+				PrintToChat(_arg0, "[SM] %t", "Thetime", var3);
+			}
+		}
+		ShowTimeLeft(_arg0, 1);
+	}
+	return 0;
+}
+
+public void:OnLibraryAdded(String:_arg0[])
+{
+	if (StrEqual(_arg0[0], "mapchooser", true))
+	{
+		g_varaa8 = 1;
+	}
+	return 0;
+}
+
+public void:OnLibraryRemoved(String:_arg0[])
+{
+	if (StrEqual(_arg0[0], "mapchooser", true))
+	{
+		g_varaa8 = 0;
+	}
+	return 0;
+}
+
+public void:OnMapStart()
+{
+	g_varaac = 0;
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("basetriggers.phrases");
+	g_vara8c = CreateConVar("sm_trigger_show", "0", "Display triggers message to all players? (0 off, 1 on, def. 0)", 0, true, 0.0, true, 1.0);
+	g_vara90 = CreateConVar("sm_timeleft_interval", "0.0", "Display timeleft every x seconds. Default 0.", 0, true, 0.0, true, 1800.0);
+	g_vara94 = FindConVar("mp_friendlyfire");
+	RegConsoleCmd("timeleft", 17, "", 0);
+	RegConsoleCmd("nextmap", 15, "", 0);
+	RegConsoleCmd("motd", 13, "", 0);
+	RegConsoleCmd("ff", 11, "", 0);
+	ConVar.AddChangeHook(g_vara90, 19);
+	new var1 = 0;
+	GetGameFolderName(var1, 64);
+	if (strcmp(var1, "insurgency", true))
+	{
+		HookEvent("game_start", 21, 1);
+	}
+	else
+	{
+		HookEvent("game_newmap", 21, 1);
+	}
+	if (strcmp(var1, "nucleardawn", true))
+	{
+		HookEvent("round_end", 23, 1);
+	}
+	else
+	{
+		HookEvent("round_win", 23, 1);
+	}
+	HookEventEx("teamplay_win_panel", 27, 1);
+	HookEventEx("teamplay_restart_round", 25, 1);
+	HookEventEx("arena_win_panel", 27, 1);
+	g_vara9c = FindConVar("mp_winlimit");
+	g_varaa0 = FindConVar("mp_fraglimit");
+	g_varaa4 = FindConVar("mp_maxrounds");
+	g_varaa8 = LibraryExists("mapchooser");
+	return 0;
+}
+
+public Action:Timer_DisplayTimeleft(Handle:_arg0)
+{
+	ShowTimeLeft(0, 0);
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__pl_mapchooser_SetNTVOptional()
+{
+	MarkNativeAsOptional("NominateMap");
+	MarkNativeAsOptional("RemoveNominationByMap");
+	MarkNativeAsOptional("RemoveNominationByOwner");
+	MarkNativeAsOptional("GetExcludeMapList");
+	MarkNativeAsOptional("GetNominatedMapList");
+	MarkNativeAsOptional("CanMapChooserStartVote");
+	MarkNativeAsOptional("InitiateMapChooserVote");
+	MarkNativeAsOptional("HasEndOfMapVoteFinished");
+	MarkNativeAsOptional("EndOfMapVoteEnabled");
+	return 0;
+}
+

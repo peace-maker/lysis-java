@@ -1,0 +1,922 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:20"
+};
+public Plugin:myinfo =
+{
+	name = "SQL Admin Manager",
+	description = "Manages SQL admins",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+bool:DoQuery(_arg0, Database:_arg1, String:_arg2[])
+{
+	if (SQL_FastQuery(_arg1, _arg2[0], -1))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	SQL_GetError(_arg1, var1, 255);
+	LogError("Query failed: %s", var1);
+	LogError("Query dump: %s", _arg2[0]);
+	ReplyToCommand(_arg0, "[SM] %t", 10552);
+	return 0;
+}
+
+Action:DoError(_arg0, Database:_arg1, String:_arg2[], String:_arg3[])
+{
+	new var1 = 0;
+	SQL_GetError(_arg1, var1, 255);
+	LogError("%s: %s", _arg3[0], var1);
+	LogError("Query dump: %s", _arg2[0]);
+	CloseHandle(_arg1);
+	_arg1 = 0;
+	ReplyToCommand(_arg0, "[SM] %t", 10612);
+	return 3;
+}
+
+Action:DoStmtError(_arg0, Database:_arg1, String:_arg2[], String:_arg3[], String:_arg4[])
+{
+	LogError("%s: %s", _arg4[0], _arg3[0]);
+	LogError("Query dump: %s", _arg2[0]);
+	CloseHandle(_arg1);
+	_arg1 = 0;
+	ReplyToCommand(_arg0, "[SM] %t", 10672);
+	return 3;
+}
+
+bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+{
+	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+}
+
+ExplodeString(String:_arg0[], String:_arg1[], String:_arg2[][], _arg3, _arg4, bool:_arg5)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var1;
+	if (_arg3 < 1 || _arg1[0])
+	{
+		return 0;
+	}
+	while ((var3 = SplitString(var2 + _arg0[0], _arg1[0], _arg2[0][var4], _arg4)) != -1)
+	{
+		var2 = var3 + var2;
+		var4++;
+		if (_arg3 == var4)
+		{
+			if (_arg5)
+			{
+				strcopy(_arg2[0][var4 + -1], _arg4, var2 - var3 + _arg0[0]);
+			}
+			return var4;
+		}
+	}
+	var4++;
+	strcopy(_arg2[0][var4], _arg4, var2 + _arg0[0]);
+	return var4;
+}
+
+Database:Connect()
+{
+	new var1 = 0;
+	new var2 = 0;
+	if (SQL_CheckConfig("admins"))
+	{
+		var2 = SQL_Connect("admins", true, var1, 255);
+	}
+	else
+	{
+		var2 = SQL_Connect("default", true, var1, 255);
+	}
+	if (!var2)
+	{
+		LogError("Could not connect to database: %s", var1);
+	}
+	return var2;
+}
+
+void:CreateMySQL(_arg0, Database:_arg1)
+{
+	new var1;
+	new var2 = 0;
+	while (var2 < 7)
+	{
+		if (!(DoQuery(_arg0, _arg1, var1[var2])))
+		{
+			return 0;
+		}
+		var2++;
+	}
+	new var3 = 0;
+	Format(var3, 256, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d') ON DUPLICATE KEY UPDATE cfg_value = '1.0.0.%d'", 1409, 1409);
+	if (DoQuery(_arg0, _arg1, var3))
+	{
+		ReplyToCommand(_arg0, "[SM] Admin tables have been created.");
+		return 0;
+	}
+	return 0;
+}
+
+void:CreateSQLite(_arg0, Database:_arg1)
+{
+	new var1;
+	new var2 = 0;
+	while (var2 < 7)
+	{
+		if (!(DoQuery(_arg0, _arg1, var1[var2])))
+		{
+			return 0;
+		}
+		var2++;
+	}
+	new var3 = 0;
+	Format(var3, 256, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
+	if (DoQuery(_arg0, _arg1, var3))
+	{
+		ReplyToCommand(_arg0, "[SM] Admin tables have been created.");
+		return 0;
+	}
+	return 0;
+}
+
+bool:GetUpdateVersion(_arg0, Database:_arg1, _arg2[4])
+{
+	new var1 = 0;
+	new var2 = 0;
+	Format(var1, 256, "SELECT cfg_value FROM sm_config WHERE cfg_key = 'admin_version'");
+	if ((var2 = SQL_Query(_arg1, var1, -1)))
+	{
+		if (DBResultSet.FetchRow(var2))
+		{
+			new var3 = 0;
+			DBResultSet.FetchString(var2, 0, var3, 255, 0);
+			new var4 = 0;
+			if (ExplodeString(var3, ".", var4, 4, 12, false) == 4)
+			{
+				new var5 = 0;
+				while (var5 < 4)
+				{
+					_arg2[0][var5] = StringToInt(var4[var5], 10);
+					var5++;
+				}
+			}
+		}
+		CloseHandle(var2);
+		var2 = 0;
+		if (_arg2[0] + 12/* ERROR unknown load Binary */ > 2280 + 12/* ERROR unknown load Binary */)
+		{
+			ReplyToCommand(_arg0, "[SM] The database is newer than the expected version.");
+			return 0;
+		}
+		if (_arg2[0] + 12/* ERROR unknown load Binary */ == 2280 + 12/* ERROR unknown load Binary */)
+		{
+			ReplyToCommand(_arg0, "[SM] Your tables are already up to date.");
+			return 0;
+		}
+		return 1;
+	}
+	DoError(_arg0, _arg1, var1, "Version lookup query failed");
+	return 0;
+}
+
+void:UpdateSQLite(_arg0, Database:_arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	Format(var1, 512, "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sm_config'");
+	if ((var2 = SQL_Query(_arg1, var1, -1)))
+	{
+		new var3;
+		var3 = DBResultSet.FetchRow(var2);
+		CloseHandle(var2);
+		var2 = 0;
+		new var4 = 0;
+		if (var3)
+		{
+			if (!(GetUpdateVersion(_arg0, _arg1, var4)))
+			{
+				return 0;
+			}
+		}
+		if (var4 + 12/* ERROR unknown load Binary */ < 1409)
+		{
+			new var5;
+			new var6 = 0;
+			while (var6 < 8)
+			{
+				if (!(DoQuery(_arg0, _arg1, var5[var6])))
+				{
+					return 0;
+				}
+				var6++;
+			}
+			Format(var1, 512, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
+			if (DoQuery(_arg0, _arg1, var1))
+			{
+				var4 + 12/* ERROR unknown load Binary */ = 1409;
+			}
+			return 0;
+		}
+		ReplyToCommand(_arg0, "[SM] Your tables are now up to date.");
+		return 0;
+	}
+	DoError(_arg0, _arg1, var1, "Table lookup query failed");
+	return 0;
+}
+
+void:UpdateMySQL(_arg0, Database:_arg1)
+{
+	new var2 = 0;
+	new var3 = 0;
+	Format(var2, 512, "SHOW TABLES");
+	if ((var3 = SQL_Query(_arg1, var2, -1)))
+	{
+		new var4 = 0;
+		new var5 = 0;
+		while (DBResultSet.FetchRow(var3))
+		{
+			DBResultSet.FetchString(var3, 0, var4, 64, 0);
+			if (strcmp(var4, "sm_config", true))
+			{
+			}
+			else
+			{
+				var5 = 1;
+			}
+		}
+		CloseHandle(var3);
+		var3 = 0;
+		new var6 = 0;
+		new var1;
+		if (var5 && GetUpdateVersion(_arg0, _arg1, var6))
+		{
+			return 0;
+		}
+		if (var6 + 12/* ERROR unknown load Binary */ < 1409)
+		{
+			new var7;
+			new var8 = 0;
+			while (var8 < 6)
+			{
+				if (!(DoQuery(_arg0, _arg1, var7[var8])))
+				{
+					return 0;
+				}
+				var8++;
+			}
+			new var9 = 0;
+			Format(var9, 48, "1.0.0.%d", 1409);
+			Format(var2, 512, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '%s') ON DUPLICATE KEY UPDATE cfg_value = '%s'", var9, var9);
+			if (DoQuery(_arg0, _arg1, var2))
+			{
+				var6 + 12/* ERROR unknown load Binary */ = 1409;
+			}
+			return 0;
+		}
+		ReplyToCommand(_arg0, "[SM] Your tables are now up to date.");
+		return 0;
+	}
+	DoError(_arg0, _arg1, var2, "Table lookup query failed");
+	return 0;
+}
+
+public Action:Command_AddAdmin(_arg0, _arg1)
+{
+	if (_arg1 < 4)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_addadmin <alias> <authtype> <identity> <flags> [immunity] [password]");
+		ReplyToCommand(_arg0, "[SM] %t", 10024);
+		return 3;
+	}
+	new var2 = 0;
+	GetCmdArg(2, var2, 16);
+	new var1;
+	if (StrEqual(var2, "steam", true) && StrEqual(var2, "ip", true) && StrEqual(var2, "name", true))
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 10072);
+		return 3;
+	}
+	new var3 = 0;
+	if (_arg1 >= 5)
+	{
+		new var4 = 0;
+		GetCmdArg(5, var4, 32);
+		if (!(StringToIntEx(var4, var3, 10)))
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 10100);
+			return 3;
+		}
+	}
+	new var5 = 0;
+	new var6 = 0;
+	GetCmdArg(3, var5, 65);
+	new var7 = 0;
+	new var8;
+	var8 = Connect();
+	if (var8)
+	{
+		Database.Escape(var8, var5, var6, 140, 0);
+		new var9 = 0;
+		Format(var7, 256, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var2, var5);
+		if ((var9 = SQL_Query(var8, var7, -1)))
+		{
+			if (0 < DBResultSet.RowCount.get(var9))
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 10268);
+				CloseHandle(var9);
+				var9 = 0;
+				CloseHandle(var8);
+				var8 = 0;
+				return 3;
+			}
+			CloseHandle(var9);
+			var9 = 0;
+			new var10 = 0;
+			new var11 = 0;
+			GetCmdArg(1, var10, 64);
+			Database.Escape(var8, var10, var11, 140, 0);
+			new var12 = 0;
+			new var13 = 0;
+			GetCmdArg(4, var12, 30);
+			Database.Escape(var8, var12, var13, 64, 0);
+			new var14 = 0;
+			new var15 = 0;
+			if (_arg1 >= 6)
+			{
+				GetCmdArg(6, var14, 32);
+				Database.Escape(var8, var14, var15, 80, 0);
+			}
+			else
+			{
+				var15 = 0;
+			}
+			new var16;
+			var16 = Format(var7, 256, "INSERT INTO sm_admins (authtype, identity, password, flags, name, immunity) VALUES");
+			if (var15)
+			{
+				var16 = Format(var16 + var7, 256 - var16, " ('%s', '%s', '%s', '%s', '%s', %d)", var2, var6, var15, var13, var11, var3) + var16;
+			}
+			else
+			{
+				var16 = Format(var16 + var7, 256 - var16, " ('%s', '%s', NULL, '%s', '%s', %d)", var2, var6, var13, var11, var3) + var16;
+			}
+			if (SQL_FastQuery(var8, var7, -1))
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 10492);
+				CloseHandle(var8);
+				var8 = 0;
+				return 3;
+			}
+			return DoError(_arg0, var8, var7, "Admin insertion query failed");
+		}
+		return DoError(_arg0, var8, var7, "Admin retrieval query failed");
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 10128);
+	return 3;
+}
+
+public Action:Command_AddGroup(_arg0, _arg1)
+{
+	if (_arg1 < 2)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_addgroup <name> <flags> [immunity]");
+		return 3;
+	}
+	new var1 = 0;
+	if (_arg1 >= 3)
+	{
+		new var2 = 0;
+		GetCmdArg(3, var2, 32);
+		if (!(StringToIntEx(var2, var1, 10)))
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 9148);
+			return 3;
+		}
+	}
+	new var3;
+	var3 = Connect();
+	if (var3)
+	{
+		new var4 = 0;
+		new var5 = 0;
+		GetCmdArg(1, var4, 64);
+		Database.Escape(var3, var4, var5, 64, 0);
+		new var6 = 0;
+		new var7 = 0;
+		Format(var7, 256, "SELECT id FROM sm_groups WHERE name = '%s'", var5);
+		if ((var6 = SQL_Query(var3, var7, -1)))
+		{
+			if (0 < DBResultSet.RowCount.get(var6))
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 9292);
+				CloseHandle(var6);
+				var6 = 0;
+				CloseHandle(var3);
+				var3 = 0;
+				return 3;
+			}
+			CloseHandle(var6);
+			var6 = 0;
+			new var8 = 0;
+			new var9 = 0;
+			GetCmdArg(2, var8, 64);
+			Database.Escape(var3, var8, var9, 64, 0);
+			Format(var7, 256, "INSERT INTO sm_groups (flags, name, immunity_level) VALUES ('%s', '%s', '%d')", var9, var5, var1);
+			if (SQL_FastQuery(var3, var7, -1))
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 9440);
+				CloseHandle(var3);
+				var3 = 0;
+				return 3;
+			}
+			return DoError(_arg0, var3, var7, "Group insertion query failed");
+		}
+		return DoError(_arg0, var3, var7, "Group retrieval query failed");
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 9176);
+	return 3;
+}
+
+public Action:Command_CreateTables(_arg0)
+{
+	new var1 = 0;
+	new var2;
+	var2 = Connect();
+	if (var2)
+	{
+		new var3 = var4;
+		new var4 = "1.10.0.6484";
+		DBDriver.GetIdentifier(Database.Driver.get(var2), var3, 16);
+		if (strcmp(var3, "mysql", true))
+		{
+			if (strcmp(var3, "sqlite", true))
+			{
+				ReplyToCommand(var1, "[SM] Unknown driver type '%s', cannot create tables.", var3);
+			}
+			CreateSQLite(var1, var2);
+		}
+		else
+		{
+			CreateMySQL(var1, var2);
+		}
+		CloseHandle(var2);
+		var2 = 0;
+		return 3;
+	}
+	ReplyToCommand(var1, "[SM] %t", 5708);
+	return 3;
+}
+
+public Action:Command_DelAdmin(_arg0, _arg1)
+{
+	if (_arg1 < 2)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_deladmin <authtype> <identity>");
+		ReplyToCommand(_arg0, "[SM] %t", 9516);
+		return 3;
+	}
+	new var2 = 0;
+	GetCmdArg(1, var2, 16);
+	new var1;
+	if (StrEqual(var2, "steam", true) && StrEqual(var2, "ip", true) && StrEqual(var2, "name", true))
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 9564);
+		return 3;
+	}
+	new var3;
+	var3 = Connect();
+	if (var3)
+	{
+		new var4 = 0;
+		new var5 = 0;
+		GetCmdArg(2, var4, 65);
+		Database.Escape(var3, var4, var5, 140, 0);
+		new var6 = 0;
+		Format(var6, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var2, var5);
+		new var7 = 0;
+		if ((var7 = SQL_Query(var3, var6, -1)))
+		{
+			if (DBResultSet.FetchRow(var7))
+			{
+				new var8;
+				var8 = DBResultSet.FetchInt(var7, 0, 0);
+				CloseHandle(var7);
+				var7 = 0;
+				Format(var6, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", var8);
+				if (SQL_FastQuery(var3, var6, -1))
+				{
+					Format(var6, 255, "DELETE FROM sm_admins WHERE id = %d", var8);
+					if (SQL_FastQuery(var3, var6, -1))
+					{
+						CloseHandle(var3);
+						var3 = 0;
+						ReplyToCommand(_arg0, "[SM] %t", 9908);
+						return 3;
+					}
+					return DoError(_arg0, var3, var6, "Admin deletion query failed");
+				}
+				return DoError(_arg0, var3, var6, "Admin group deletion query failed");
+			}
+			ReplyToCommand(_arg0, "[SM] %t", 9728);
+			CloseHandle(var7);
+			var7 = 0;
+			CloseHandle(var3);
+			var3 = 0;
+			return 3;
+		}
+		CloseHandle(var3);
+		var3 = 0;
+		return DoError(_arg0, var3, var6, "Admin lookup query failed");
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 9592);
+	return 3;
+}
+
+public Action:Command_DelGroup(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_delgroup <name>");
+		return 3;
+	}
+	new var3;
+	var3 = Connect();
+	if (var3)
+	{
+		new var4 = 0;
+		new var5 = 0;
+		GetCmdArgString(var4, 80);
+		new var6;
+		var6 = strlen(var4);
+		new var2;
+		if (var6 > 1 && (var4 == 34 && var4[var6 + -1] == 34))
+		{
+			var6--;
+			var4[var6] = 0;
+			Database.Escape(var3, var4 + 1, var5, 180, 0);
+		}
+		else
+		{
+			Database.Escape(var3, var4, var5, 180, 0);
+		}
+		new var7 = 0;
+		new var8 = 0;
+		Format(var7, 256, "SELECT id FROM sm_groups WHERE name = '%s'", var5);
+		if ((var8 = SQL_Query(var3, var7, -1)))
+		{
+			if (DBResultSet.FetchRow(var8))
+			{
+				new var9;
+				var9 = DBResultSet.FetchInt(var8, 0, 0);
+				CloseHandle(var8);
+				var8 = 0;
+				Format(var7, 256, "DELETE FROM sm_admins_groups WHERE group_id = %d", var9);
+				if (SQL_FastQuery(var3, var7, -1))
+				{
+					Format(var7, 256, "DELETE FROM sm_group_overrides WHERE group_id = %d", var9);
+					if (SQL_FastQuery(var3, var7, -1))
+					{
+						Format(var7, 256, "DELETE FROM sm_group_immunity WHERE group_id = %d OR other_id = %d", var9, var9);
+						if (SQL_FastQuery(var3, var7, -1))
+						{
+							Format(var7, 256, "DELETE FROM sm_groups WHERE id = %d", var9);
+							if (SQL_FastQuery(var3, var7, -1))
+							{
+								ReplyToCommand(_arg0, "[SM] %t", 9064);
+								CloseHandle(var3);
+								var3 = 0;
+								return 3;
+							}
+							return DoError(_arg0, var3, var7, "Group deletion query failed");
+						}
+						return DoError(_arg0, var3, var7, "Group immunity deletion query failed");
+					}
+					return DoError(_arg0, var3, var7, "Group override deletion query failed");
+				}
+				return DoError(_arg0, var3, var7, "Admin group deletion query failed");
+			}
+			ReplyToCommand(_arg0, "[SM] %t", 8684);
+			CloseHandle(var8);
+			var8 = 0;
+			CloseHandle(var3);
+			var3 = 0;
+			return 3;
+		}
+		return DoError(_arg0, var3, var7, "Group retrieval query failed");
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 8568);
+	return 3;
+}
+
+public Action:Command_SetAdminGroups(_arg0, _arg1)
+{
+	if (_arg1 < 2)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_setadmingroups <authtype> <identity> [group1] ... [group N]");
+		return 3;
+	}
+	new var3 = 0;
+	GetCmdArg(1, var3, 16);
+	new var1;
+	if (StrEqual(var3, "steam", true) && StrEqual(var3, "ip", true) && StrEqual(var3, "name", true))
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 7908);
+		return 3;
+	}
+	new var4;
+	var4 = Connect();
+	if (var4)
+	{
+		new var5 = 0;
+		new var6 = 0;
+		GetCmdArg(2, var5, 65);
+		Database.Escape(var4, var5, var6, 140, 0);
+		new var7 = 0;
+		Format(var7, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var3, var6);
+		new var8 = 0;
+		if ((var8 = SQL_Query(var4, var7, -1)))
+		{
+			if (DBResultSet.FetchRow(var8))
+			{
+				new var9;
+				var9 = DBResultSet.FetchInt(var8, 0, 0);
+				CloseHandle(var8);
+				var8 = 0;
+				Format(var7, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", var9);
+				if (SQL_FastQuery(var4, var7, -1))
+				{
+					if (_arg1 < 3)
+					{
+						CloseHandle(var4);
+						var4 = 0;
+						ReplyToCommand(_arg0, "[SM] %t", 8188);
+						return 3;
+					}
+					new var10 = 0;
+					new var11 = 0;
+					new var12 = 0;
+					Format(var7, 255, "SELECT id FROM sm_groups WHERE name = ?");
+					if ((var12 = SQL_PrepareQuery(var4, var7, var10, 256)))
+					{
+						Format(var7, 255, "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (%d, ?, ?)", var9);
+						if ((var11 = SQL_PrepareQuery(var4, var7, var10, 256)))
+						{
+							new var13 = 0;
+							new var14 = 0;
+							new var15 = 3;
+							while (var15 <= _arg1)
+							{
+								GetCmdArg(var15, var13, 80);
+								DBStatement.BindString(var12, 0, var13, false);
+								new var2;
+								if (SQL_Execute(var12) && SQL_FetchRow(var12))
+								{
+									ReplyToCommand(_arg0, "[SM] %t", "SQL Group X not found", var13);
+								}
+								else
+								{
+									new var16;
+									var16 = SQL_FetchInt(var12, 0, 0);
+									DBStatement.BindInt(var11, 0, var16, true);
+									var14++;
+									DBStatement.BindInt(var11, 1, var14, true);
+									if (SQL_Execute(var11))
+									{
+									}
+									else
+									{
+										ReplyToCommand(_arg0, "[SM] %t", "SQL Group X failed to bind", var13);
+										var14--;
+									}
+								}
+								var15++;
+							}
+							CloseHandle(var11);
+							var11 = 0;
+							CloseHandle(var12);
+							var12 = 0;
+							CloseHandle(var4);
+							var4 = 0;
+							if (var14 == 1)
+							{
+								ReplyToCommand(_arg0, "[SM] %t", 8472);
+							}
+							else
+							{
+								if (var14 > 1)
+								{
+									ReplyToCommand(_arg0, "[SM] %t", "Added groups to user", var14);
+								}
+							}
+							return 3;
+						}
+						CloseHandle(var12);
+						var12 = 0;
+						return DoStmtError(_arg0, var4, var7, var10, "Add admin group prepare failed");
+					}
+					return DoStmtError(_arg0, var4, var7, var10, "Group search prepare failed");
+				}
+				return DoError(_arg0, var4, var7, "Admin group deletion query failed");
+			}
+			ReplyToCommand(_arg0, "[SM] %t", 8072);
+			CloseHandle(var8);
+			var8 = 0;
+			CloseHandle(var4);
+			var4 = 0;
+			return 3;
+		}
+		return DoError(_arg0, var4, var7, "Admin lookup query failed");
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 7936);
+	return 3;
+}
+
+public Action:Command_UpdateTables(_arg0)
+{
+	new var1 = 0;
+	new var2;
+	var2 = Connect();
+	if (var2)
+	{
+		new var3 = var4;
+		new var4 = "1.10.0.6484";
+		DBDriver.GetIdentifier(Database.Driver.get(var2), var3, 16);
+		if (strcmp(var3, "mysql", true))
+		{
+			if (strcmp(var3, "sqlite", true))
+			{
+				ReplyToCommand(var1, "[SM] Unknown driver type, cannot upgrade.");
+			}
+			UpdateSQLite(var1, var2);
+		}
+		else
+		{
+			UpdateMySQL(var1, var2);
+		}
+		CloseHandle(var2);
+		var2 = 0;
+		return 3;
+	}
+	ReplyToCommand(var1, "[SM] %t", 7708);
+	return 3;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("sqladmins.phrases");
+	RegAdminCmd("sm_sql_addadmin", 23, 16384, "Adds an admin to the SQL database", "", 0);
+	RegAdminCmd("sm_sql_deladmin", 29, 16384, "Removes an admin from the SQL database", "", 0);
+	RegAdminCmd("sm_sql_addgroup", 25, 16384, "Adds a group to the SQL database", "", 0);
+	RegAdminCmd("sm_sql_delgroup", 31, 16384, "Removes a group from the SQL database", "", 0);
+	RegAdminCmd("sm_sql_setadmingroups", 33, 16384, "Sets an admin's groups in the SQL database", "", 0);
+	RegServerCmd("sm_create_adm_tables", 27, "", 0);
+	RegServerCmd("sm_update_adm_tables", 35, "", 0);
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+

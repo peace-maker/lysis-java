@@ -1,0 +1,744 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_topmenus =
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+	autoload = 1,
+	required = 0,
+};
+public SharedPlugin:__pl_adminmenu =
+{
+	name = "adminmenu",
+	file = "adminmenu.smx",
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:16"
+};
+public Plugin:myinfo =
+{
+	name = "Player Commands",
+	description = "Misc. Player Commands",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_varc98;
+void:DisplayRenameTargetMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(31, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Rename player", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu(var1, _arg0, true, false);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:RandomizeName(_arg0)
+{
+	new var1 = 0;
+	GetClientName(_arg0, var1, 128);
+	new var2;
+	var2 = strlen(var1);
+	4176[_arg0] = 0;
+	new var3 = 0;
+	while (var3 < var2)
+	{
+		4176[_arg0][var3] = var1[GetRandomInt(0, var2 + -1)];
+		var3++;
+	}
+	4176[_arg0][var2] = 0;
+	return 0;
+}
+
+void:ReplyToTargetError(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case -7:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2492);
+		}
+		case -6:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2464);
+		}
+		case -5:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2436);
+		}
+		case -4:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2408);
+		}
+		case -3:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2376);
+		}
+		case -2:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2348);
+		}
+		case -1:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2316);
+		}
+		case 0:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2288);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+void:PerformSlay(_arg0, _arg1)
+{
+	LogAction(_arg0, _arg1, "\"%L\" slayed \"%L\"", _arg0, _arg1);
+	ForcePlayerSuicide(_arg1);
+	return 0;
+}
+
+void:DisplaySlayMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(37, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Slay player", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu(var1, _arg0, true, true);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:PerformSlap(_arg0, _arg1, _arg2)
+{
+	LogAction(_arg0, _arg1, "\"%L\" slapped \"%L\" (damage \"%d\")", _arg0, _arg1, _arg2);
+	SlapPlayer(_arg1, _arg2, true);
+	return 0;
+}
+
+void:DisplaySlapDamageMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(35, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Slap damage", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	Menu.AddItem(var1, "0", "0", 0);
+	Menu.AddItem(var1, "1", "1", 0);
+	Menu.AddItem(var1, "5", "5", 0);
+	Menu.AddItem(var1, "10", "10", 0);
+	Menu.AddItem(var1, "20", "20", 0);
+	Menu.AddItem(var1, "50", "50", 0);
+	Menu.AddItem(var1, "99", "99", 0);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:DisplaySlapTargetMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(33, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T: %d damage", "Slap player", _arg0, 3508[_arg0]);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu(var1, _arg0, true, true);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:PerformRename(_arg0, _arg1)
+{
+	LogAction(_arg0, _arg1, "\"%L\" renamed \"%L\" (to \"%s\")", _arg0, _arg1, 4176[_arg1]);
+	SetClientName(_arg1, 4176[_arg1]);
+	4176[_arg1] = 0;
+	return 0;
+}
+
+public void:AdminMenu_Rename(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplayRenameTargetMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Rename player", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_Slap(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplaySlapDamageMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Slap player", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_Slay(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplaySlayMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Slay player", _arg3);
+	}
+	return 0;
+}
+
+public Action:Command_Rename(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_rename <#userid|name> [newname]");
+		return 3;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	GetCmdArg(1, var1, 128);
+	new var3 = 0;
+	if (_arg1 > 1)
+	{
+		GetCmdArg(2, var2, 128);
+	}
+	else
+	{
+		var3 = 1;
+	}
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	if (0 < (var6 = ProcessTargetString(var1, _arg0, var5, 65, 0, var4, 64, var7)))
+	{
+		if (var7)
+		{
+			ShowActivity2(_arg0, "[SM] ", "%t", "Renamed target", var4);
+		}
+		else
+		{
+			ShowActivity2(_arg0, "[SM] ", "%t", "Renamed target", "_s", var4);
+		}
+		new var8 = 0;
+		while (var8 < var6)
+		{
+			if (var3)
+			{
+				RandomizeName(var5[var8]);
+			}
+			else
+			{
+				if (var6 > 1)
+				{
+					Format(4176[var5[var8]], 128, "%s %i", var2, var8 + 1);
+				}
+				Format(4176[var5[var8]], 128, "%s", var2);
+			}
+			PerformRename(_arg0, var5[var8]);
+			var8++;
+		}
+	}
+	else
+	{
+		ReplyToTargetError(_arg0, var6);
+	}
+	return 3;
+}
+
+public Action:Command_Slap(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_slap <#userid|name> [damage]");
+		return 3;
+	}
+	new var2 = 0;
+	GetCmdArg(1, var2, 65);
+	new var3 = 0;
+	if (_arg1 > 1)
+	{
+		new var4 = 0;
+		GetCmdArg(2, var4, 20);
+		new var1;
+		if (StringToIntEx(var4, var3, 10) && var3 < 0)
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 4100);
+			return 3;
+		}
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	if (0 >= (var7 = ProcessTargetString(var2, _arg0, var6, 65, 1, var5, 64, var8)))
+	{
+		ReplyToTargetError(_arg0, var7);
+		return 3;
+	}
+	new var9 = 0;
+	while (var9 < var7)
+	{
+		PerformSlap(_arg0, var6[var9], var3);
+		var9++;
+	}
+	if (var8)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Slapped target", var5);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Slapped target", "_s", var5);
+	}
+	return 3;
+}
+
+public Action:Command_Slay(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_slay <#userid|name>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 65);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		PerformSlay(_arg0, var3[var6]);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Slayed target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Slayed target", "_s", var2);
+	}
+	return 3;
+}
+
+public MenuHandler_Rename(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_varc98)
+			{
+				TopMenu.Display(g_varc98, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			new var3 = 0;
+			new var4 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
+			var3 = StringToInt(var2, 10);
+			if ((var4 = GetClientOfUserId(var3)))
+			{
+				if (CanUserTarget(_arg2, var4))
+				{
+					new var5 = 0;
+					GetClientName(var4, var5, 128);
+					RandomizeName(var4);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Renamed target", "_s", var5);
+					PerformRename(_arg2, var4);
+				}
+				PrintToChat(_arg2, "[SM] %t", 13000);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 12964);
+			}
+			DisplayRenameTargetMenu(_arg2);
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_Slap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			if (_arg3 == -6)
+			{
+				TopMenu.Display(g_varc98, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var1 = 0;
+			new var2 = 0;
+			new var3 = 0;
+			Menu.GetItem(_arg0, _arg3, var1, 32, 0, "", 0);
+			var2 = StringToInt(var1, 10);
+			if ((var3 = GetClientOfUserId(var2)))
+			{
+				if (CanUserTarget(_arg2, var3))
+				{
+					if (IsPlayerAlive(var3))
+					{
+						new var4 = 0;
+						GetClientName(var3, var4, 128);
+						PerformSlap(_arg2, var3, 3508[_arg2]);
+						ShowActivity2(_arg2, "[SM] ", "%t", "Slapped target", "_s", var4);
+					}
+					ReplyToCommand(_arg2, "[SM] %t", 3992);
+				}
+				PrintToChat(_arg2, "[SM] %t", 3964);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 3928);
+			}
+			DisplaySlapTargetMenu(_arg2);
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_SlapDamage(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_varc98)
+			{
+				TopMenu.Display(g_varc98, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
+			3508[_arg2] = StringToInt(var2, 10);
+			DisplaySlapTargetMenu(_arg2);
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_Slay(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_varc98)
+			{
+				TopMenu.Display(g_varc98, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			new var3 = 0;
+			new var4 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
+			var3 = StringToInt(var2, 10);
+			if ((var4 = GetClientOfUserId(var3)))
+			{
+				if (CanUserTarget(_arg2, var4))
+				{
+					if (IsPlayerAlive(var4))
+					{
+						new var5 = 0;
+						GetClientName(var4, var5, 128);
+						PerformSlay(_arg2, var4);
+						ShowActivity2(_arg2, "[SM] ", "%t", "Slayed target", "_s", var5);
+					}
+					ReplyToCommand(_arg2, "[SM] %t", 3356);
+				}
+				PrintToChat(_arg2, "[SM] %t", 3328);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 3292);
+			}
+			DisplaySlayMenu(_arg2);
+		}
+	}
+	return 0;
+}
+
+public void:OnAdminMenuReady(Handle:_arg0)
+{
+	new var1;
+	var1 = TopMenu.FromHandle(_arg0);
+	if (g_varc98 == var1)
+	{
+		return 0;
+	}
+	g_varc98 = var1;
+	new var2;
+	var2 = TopMenu.FindCategory(g_varc98, "PlayerCommands");
+	if (var2)
+	{
+		TopMenu.AddItem(g_varc98, "sm_slay", 23, var2, "sm_slay", 32, "");
+		TopMenu.AddItem(g_varc98, "sm_slap", 21, var2, "sm_slap", 32, "");
+		TopMenu.AddItem(g_varc98, "sm_rename", 19, var2, "sm_rename", 32, "");
+	}
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("playercommands.phrases");
+	RegAdminCmd("sm_slap", 27, 32, "sm_slap <#userid|name> [damage]", "", 0);
+	RegAdminCmd("sm_slay", 29, 32, "sm_slay <#userid|name>", "", 0);
+	RegAdminCmd("sm_rename", 25, 32, "sm_rename <#userid|name>", "", 0);
+	new var2 = 0;
+	new var1;
+	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	{
+		OnAdminMenuReady(var2);
+	}
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__ext_topmenus_SetNTVOptional()
+{
+	MarkNativeAsOptional("CreateTopMenu");
+	MarkNativeAsOptional("LoadTopMenuConfig");
+	MarkNativeAsOptional("AddToTopMenu");
+	MarkNativeAsOptional("RemoveFromTopMenu");
+	MarkNativeAsOptional("DisplayTopMenu");
+	MarkNativeAsOptional("DisplayTopMenuCategory");
+	MarkNativeAsOptional("FindTopMenuCategory");
+	MarkNativeAsOptional("SetTopMenuTitleCaching");
+	MarkNativeAsOptional("TopMenu.TopMenu");
+	MarkNativeAsOptional("TopMenu.FromHandle");
+	MarkNativeAsOptional("TopMenu.LoadConfig");
+	MarkNativeAsOptional("TopMenu.AddCategory");
+	MarkNativeAsOptional("TopMenu.AddItem");
+	MarkNativeAsOptional("TopMenu.GetInfoString");
+	MarkNativeAsOptional("TopMenu.GetObjName");
+	MarkNativeAsOptional("TopMenu.Remove");
+	MarkNativeAsOptional("TopMenu.Display");
+	MarkNativeAsOptional("TopMenu.DisplayCategory");
+	MarkNativeAsOptional("TopMenu.FindCategory");
+	MarkNativeAsOptional("TopMenu.CacheTitles.set");
+	return 0;
+}
+
+public void:__pl_adminmenu_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetAdminTopMenu");
+	MarkNativeAsOptional("AddTargetsToMenu");
+	MarkNativeAsOptional("AddTargetsToMenu2");
+	return 0;
+}
+

@@ -1,0 +1,1366 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public Extension:__ext_topmenus =
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+	autoload = 1,
+	required = 0,
+};
+public SharedPlugin:__pl_adminmenu =
+{
+	name = "adminmenu",
+	file = "adminmenu.smx",
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:15"
+};
+public Plugin:myinfo =
+{
+	name = "Basic Commands",
+	description = "Basic Admin Commands",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_var1144;
+new g_var1214;
+new g_var1158;
+new g_varc74;
+new g_varc70;
+new g_varc6c;
+LoadMapList(Menu:_arg0)
+{
+	new var1 = 0;
+	if ((var1 = ReadMapList(g_var1144, 4424, "sm_map menu", 3)))
+	{
+		g_var1144 = var1;
+	}
+	if (g_var1144)
+	{
+		Menu.RemoveAllItems(_arg0);
+		new var2 = 0;
+		new var3;
+		var3 = GetArraySize(g_var1144);
+		new var4 = 0;
+		while (var4 < var3)
+		{
+			new var5 = 0;
+			GetArrayString(g_var1144, var4, var2, 256);
+			GetMapDisplayName(var2, var5, 256);
+			Menu.AddItem(_arg0, var2, var5, 0);
+			var4++;
+		}
+		return var3;
+	}
+	return 0;
+}
+
+void:PerformExec(_arg0, String:_arg1[])
+{
+	if (FileExists(_arg1[0], false, "GAME"))
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Executed config", _arg1[0] + 4);
+		LogAction(_arg0, -1, "\"%L\" executed config (file \"%s\")", _arg0, _arg1[0] + 4);
+		ServerCommand("exec \"%s\"", _arg1[0] + 4);
+		return 0;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", "Config not found", _arg1[0] + 4);
+	return 0;
+}
+
+void:ParseConfigs()
+{
+	if (!g_var1214)
+	{
+		g_var1214 = SMCParser.SMCParser();
+	}
+	SMCParser.OnEnterSection.set(g_var1214, 85);
+	SMCParser.OnLeaveSection.set(g_var1214, 73);
+	SMCParser.OnKeyValue.set(g_var1214, 75);
+	if (g_var1158)
+	{
+		CloseHandle(g_var1158);
+		g_var1158 = 0;
+	}
+	g_var1158 = Menu.Menu(79, 2);
+	Menu.SetTitle(g_var1158, "%T", "Choose Config", 0);
+	Menu.ExitBackButton.set(g_var1158, true);
+	new var1 = 0;
+	BuildPath(0, var1, 256, "configs/adminmenu_cfgs.txt");
+	if (FileExists(var1, false, "GAME"))
+	{
+		new var2 = 0;
+		new var3;
+		var3 = SMCParser.ParseFile(g_var1214, var1, var2, 0);
+		if (var3)
+		{
+			new var4 = 0;
+			SMC_GetErrorString(var3, var4, 256);
+			LogError("Could not parse file (line %d, file \"%s\"):", var2, var1);
+			LogError("Parser encountered error: %s", var4);
+		}
+		return 0;
+	}
+	LogError("Unable to locate exec config file, no maps loaded.");
+	return 0;
+}
+
+void:ProtectVar(String:_arg0[])
+{
+	StringMap.SetValue(g_varc74, _arg0[0], 1, true);
+	return 0;
+}
+
+bool:IsVarProtected(String:_arg0[])
+{
+
+/* ERROR! null */
+ function "IsVarProtected" (number 4)
+
+bool:IsClientAllowedToChangeCvar(_arg0, String:_arg1[])
+{
+	new var2;
+	var2 = FindConVar(_arg1[0]);
+	new var3 = 0;
+	new var4;
+	new var1;
+	if (_arg0)
+	{
+		var1 = GetUserFlagBits(_arg0);
+	}
+	else
+	{
+		var1 = 16384;
+	}
+	var4 = var1;
+	if (var4 & 16384)
+	{
+		var3 = 1;
+	}
+	else
+	{
+		if (ConVar.Flags.get(var2) & 32)
+		{
+			var3 = var4 & 2048 == 2048;
+		}
+		if (StrEqual(_arg1[0], "sv_cheats", true))
+		{
+			var3 = var4 & 8192 == 8192;
+		}
+		if (!(IsVarProtected(_arg1[0])))
+		{
+			var3 = 1;
+		}
+	}
+	return var3;
+}
+
+CustomFlagsToString(String:_arg0[], _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 15;
+	while (var3 <= 20)
+	{
+		if (1 << var3 & _arg2)
+		{
+			var2++;
+			IntToString(var3 + -14, var1[var2], 6);
+		}
+		var3++;
+	}
+	ImplodeStrings(var1, var2, ",", _arg0[0], _arg1);
+	return var2;
+}
+
+void:FlagsToString(String:_arg0[], _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	while (var3 < 14)
+	{
+		if (1 << var3 & _arg2)
+		{
+			var2++;
+			strcopy(var1[var2], 32, 5500[var3]);
+		}
+		var3++;
+	}
+	new var4 = 0;
+	if (CustomFlagsToString(var4, 32, _arg2))
+	{
+		var2++;
+		Format(var1[var2], 32, "custom(%s)", var4);
+	}
+	ImplodeStrings(var1, var2, ", ", _arg0[0], _arg1);
+	return 0;
+}
+
+bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+{
+	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+}
+
+ImplodeStrings(String:_arg0[][], _arg1, String:_arg2[], String:_arg3[], _arg4)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3;
+	var3 = strlen(_arg2[0]);
+	new var4 = 0;
+	while (var4 < _arg1)
+	{
+		var2 = strcopy(var1 + _arg3[0], _arg4 - var1, _arg0[0][var4]);
+		var1 = var2 + var1;
+		if (!(var2 < 0/* ERROR unknown load Constant */))
+		{
+			if (_arg1 + -1 != var4)
+			{
+				var2 = strcopy(var1 + _arg3[0], _arg4 - var1, _arg2[0]);
+				var1 = var2 + var1;
+				if (var2 < var3)
+				{
+					return var1;
+				}
+			}
+			var4++;
+		}
+		return var1;
+	}
+	return var1;
+}
+
+Handle:CreateDataTimer(Float:_arg0, <typeset 0>:_arg1, Handle:_arg2, _arg3)
+{
+	_arg2 = DataPack.DataPack();
+	_arg3 |= 512;
+	return CreateTimer(_arg0, _arg1, _arg2, _arg3);
+}
+
+void:ReplyToTargetError(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case -7:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2492);
+		}
+		case -6:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2464);
+		}
+		case -5:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2436);
+		}
+		case -4:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2408);
+		}
+		case -3:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2376);
+		}
+		case -2:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2348);
+		}
+		case -1:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2316);
+		}
+		case 0:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2288);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 16;
+	if (_arg2)
+	{
+		var3 |= 32;
+	}
+	if (!_arg3)
+	{
+		var3 |= 8;
+	}
+
+/* ERROR! null */
+ function "FindTarget" (number 12)
+
+bool:RedisplayAdminMenu(Handle:_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		return DisplayTopMenu(_arg0, _arg1, 3);
+	}
+	return 0;
+}
+
+void:PerformKick(_arg0, _arg1, String:_arg2[])
+{
+	LogAction(_arg0, _arg1, "\"%L\" kicked \"%L\" (reason \"%s\")", _arg0, _arg1, _arg2[0]);
+	if (_arg2[0])
+	{
+		KickClient(_arg1, "%s", _arg2[0]);
+	}
+	else
+	{
+		KickClient(_arg1, "%t", 3228);
+	}
+	return 0;
+}
+
+void:DisplayKickMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(81, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Kick player", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu(var1, _arg0, false, false);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:PerformReloadAdmins(_arg0)
+{
+	DumpAdminCache(1, true);
+	DumpAdminCache(0, true);
+	LogAction(_arg0, -1, "\"%L\" refreshed the admin cache.", _arg0);
+	ReplyToCommand(_arg0, "[SM] %t", 3604);
+	return 0;
+}
+
+void:PerformCancelVote(_arg0)
+{
+	if (IsVoteInProgress(0))
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", 3692);
+		CancelVote();
+		return 0;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 3656);
+	return 0;
+}
+
+void:PerformWho(_arg0, _arg1, ReplySource:_arg2, bool:_arg3)
+{
+	new var2 = 0;
+	GetClientName(_arg1, var2, 128);
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = GetUserAdmin(_arg1);
+	new var1;
+	if (var5 != -1 && AdminId.GetUsername(var5, var4, 128))
+	{
+		var3 = 1;
+	}
+	new var6;
+	var6 = SetCmdReplySource(_arg2);
+	if (var5 == -1)
+	{
+		ReplyToCommand(_arg0, "[SM] %t", "Player is not an admin", var2);
+	}
+	else
+	{
+		if (_arg3)
+		{
+			new var7;
+			var7 = GetUserFlagBits(_arg1);
+			new var8 = 0;
+			if (var7)
+			{
+				if (var7 & 16384)
+				{
+					strcopy(var8, 255, "root");
+				}
+				FlagsToString(var8, 255, var7);
+			}
+			else
+			{
+				strcopy(var8, 255, "none");
+			}
+			if (var3)
+			{
+				ReplyToCommand(_arg0, "[SM] %t", "Admin logged in as", var2, var4, var8);
+			}
+			else
+			{
+				ReplyToCommand(_arg0, "[SM] %t", "Admin logged in anon", var2, var8);
+			}
+		}
+		ReplyToCommand(_arg0, "[SM] %t", "Player is an admin", var2);
+	}
+	SetCmdReplySource(var6);
+	return 0;
+}
+
+void:DisplayWhoMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(83, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Identify player", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu2(var1, 0, 4);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+public void:AdminMenu_CancelVote(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			PerformCancelVote(_arg3);
+			RedisplayAdminMenu(_arg0, _arg3);
+		}
+		if (_arg1 == 3)
+		{
+			new var1;
+			if (IsVoteInProgress(0))
+			{
+				var1 = 0;
+			}
+			else
+			{
+				var1 = 6;
+			}
+			_arg4[0] = var1;
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Cancel vote", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_ExecCFG(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			Menu.Display(g_var1158, _arg3, 0);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Exec CFG", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_Kick(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplayKickMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Kick player", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_Map(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			Menu.Display(g_varc70, _arg3, 0);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Choose Map", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_ReloadAdmins(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			PerformReloadAdmins(_arg3);
+			RedisplayAdminMenu(_arg0, _arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Reload admins", _arg3);
+	}
+	return 0;
+}
+
+public void:AdminMenu_Who(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplayWhoMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Identify player", _arg3);
+	}
+	return 0;
+}
+
+public Action:Command_CancelVote(_arg0, _arg1)
+{
+	PerformCancelVote(_arg0);
+	return 3;
+}
+
+public Action:Command_Cvar(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		if (_arg0)
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <cvar> [value]");
+		}
+		else
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <cvar|protect> [value]");
+		}
+		return 3;
+	}
+	new var3 = 0;
+	GetCmdArg(1, var3, 64);
+	new var1;
+	if (_arg0 && StrEqual(var3, "protect", true))
+	{
+		if (_arg1 < 2)
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <protect> <cvar>");
+			return 3;
+		}
+		GetCmdArg(2, var3, 64);
+		ProtectVar(var3);
+		ReplyToCommand(_arg0, "[SM] %t", "Cvar is now protected", var3);
+		return 3;
+	}
+	new var4;
+	var4 = FindConVar(var3);
+	if (var4)
+	{
+		if (IsClientAllowedToChangeCvar(_arg0, var3))
+		{
+			new var5 = 0;
+			if (_arg1 < 2)
+			{
+				ConVar.GetString(var4, var5, 255);
+				ReplyToCommand(_arg0, "[SM] %t", "Value of cvar", var3, var5);
+				return 3;
+			}
+			GetCmdArg(2, var5, 255);
+			new var2;
+			if (StrEqual(var3, "servercfgfile", false) || StrEqual(var3, "lservercfgfile", false))
+			{
+				new var6;
+				var6 = StrContains(var5, ";", true);
+				if (var6 != -1)
+				{
+					var5[var6] = 0;
+				}
+			}
+			if (ConVar.Flags.get(var4) & 32 != 32)
+			{
+				ShowActivity2(_arg0, "[SM] ", "%t", "Cvar changed", var3, var5);
+			}
+			else
+			{
+				ReplyToCommand(_arg0, "[SM] %t", "Cvar changed", var3, var5);
+			}
+			LogAction(_arg0, -1, "\"%L\" changed cvar (cvar \"%s\") (value \"%s\")", _arg0, var3, var5);
+			ConVar.SetString(var4, var5, true, false);
+			return 3;
+		}
+		ReplyToCommand(_arg0, "[SM] %t", 6136);
+		return 3;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", "Unable to find cvar", var3);
+	return 3;
+}
+
+public Action:Command_ExecCfg(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_execcfg <filename>");
+		return 3;
+	}
+	new var1 = 0;
+	var1 = "cfg/";
+	GetCmdArg(1, var1 + 4, 60);
+	PerformExec(_arg0, var1);
+	return 3;
+}
+
+public Action:Command_Kick(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		new var1;
+		if (GetCmdReplySource() == 1 && _arg0)
+		{
+			DisplayKickMenu(_arg0);
+		}
+		else
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_kick <#userid|name> [reason]");
+		}
+		return 3;
+	}
+	new var2 = 0;
+	GetCmdArgString(var2, 256);
+	new var3 = 0;
+	new var4;
+	var4 = BreakString(var2, var3, 65);
+	if (var4 == -1)
+	{
+		var4 = 0;
+		var2 = 0;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	if (0 < (var7 = ProcessTargetString(var3, _arg0, var6, 65, 4, var5, 64, var8)))
+	{
+		new var9 = 0;
+		Format(var9, 64, var4 + var2);
+		if (var8)
+		{
+			if (var9)
+			{
+				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target reason", var5, var9);
+			}
+			else
+			{
+				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target", var5);
+			}
+		}
+		else
+		{
+			if (var9)
+			{
+				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target reason", "_s", var5, var9);
+			}
+			ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target", "_s", var5);
+		}
+		new var10 = 0;
+		new var11 = 0;
+		while (var11 < var7)
+		{
+			if (_arg0 == var6[var11])
+			{
+				var10 = _arg0;
+			}
+			else
+			{
+				PerformKick(_arg0, var6[var11], var9);
+			}
+			var11++;
+		}
+		if (var10)
+		{
+			PerformKick(_arg0, _arg0, var9);
+		}
+	}
+	else
+	{
+		ReplyToTargetError(_arg0, var7);
+	}
+	return 3;
+}
+
+public Action:Command_Map(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		new var1;
+		if (GetCmdReplySource() == 1 && _arg0)
+		{
+			Menu.SetTitle(g_varc70, "%T", "Choose Map", _arg0);
+			Menu.Display(g_varc70, _arg0, 0);
+		}
+		else
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_map <map>");
+		}
+		return 3;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	GetCmdArg(1, var2, 256);
+	if (FindMap(var2, var3, 256) == 1)
+	{
+		ReplyToCommand(_arg0, "[SM] %t", "Map was not found", var2);
+		return 3;
+	}
+	GetMapDisplayName(var3, var3, 256);
+	ShowActivity2(_arg0, "[SM] ", "%t", "Changing map", var3);
+	LogAction(_arg0, -1, "\"%L\" changed map to \"%s\"", _arg0, var2);
+	new var4 = 0;
+	CreateDataTimer(3.0, 97, var4, 0);
+	DataPack.WriteString(var4, var2, false);
+	return 3;
+}
+
+public Action:Command_Rcon(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_rcon <args>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArgString(var1, 255);
+	LogAction(_arg0, -1, "\"%L\" console command (cmdline \"%s\")", _arg0, var1);
+	if (_arg0)
+	{
+		new var2 = 0;
+		ServerCommandEx(var2, 4096, "%s", var1);
+		if (IsClientConnected(_arg0))
+		{
+			ReplyToCommand(_arg0, var2);
+		}
+	}
+	else
+	{
+		ServerCommand("%s", var1);
+	}
+	return 3;
+}
+
+public Action:Command_ReVote(_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		if (IsVoteInProgress(0))
+		{
+			if (IsClientInVotePool(_arg0))
+			{
+				if (!(RedrawClientVoteMenu(_arg0, true)))
+				{
+					ReplyToCommand(_arg0, "[SM] %t", 6676);
+				}
+				return 3;
+			}
+			ReplyToCommand(_arg0, "[SM] %t", 6640);
+			return 3;
+		}
+		ReplyToCommand(_arg0, "[SM] %t", 6608);
+		return 3;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 6576);
+	return 3;
+}
+
+public Action:Command_ReloadAdmins(_arg0, _arg1)
+{
+	PerformReloadAdmins(_arg0);
+	return 3;
+}
+
+public Action:Command_ResetCvar(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_resetcvar <cvar>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2;
+	var2 = FindConVar(var1);
+	if (var2)
+	{
+		if (IsClientAllowedToChangeCvar(_arg0, var1))
+		{
+			ConVar.RestoreDefault(var2, false, false);
+			new var3 = 0;
+			ConVar.GetString(var2, var3, 255);
+			if (ConVar.Flags.get(var2) & 32 != 32)
+			{
+				ShowActivity2(_arg0, "[SM] ", "%t", "Cvar changed", var1, var3);
+			}
+			else
+			{
+				ReplyToCommand(_arg0, "[SM] %t", "Cvar changed", var1, var3);
+			}
+			LogAction(_arg0, -1, "\"%L\" reset cvar (cvar \"%s\") (value \"%s\")", _arg0, var1, var3);
+			return 3;
+		}
+		ReplyToCommand(_arg0, "[SM] %t", 6380);
+		return 3;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", "Unable to find cvar", var1);
+	return 3;
+}
+
+public Action:Command_Who(_arg0, _arg1)
+{
+	new var3 = 0;
+	new var2;
+	if (_arg0 && (_arg0 && GetUserFlagBits(_arg0)))
+	{
+		var3 = 1;
+	}
+	if (_arg1 < 1)
+	{
+		new var4 = 0;
+		new var5 = 0;
+		new var6 = 0;
+		Format(var4, 16, "%T", "Admin access", _arg0);
+		Format(var5, 16, "%T", "Name", _arg0);
+		Format(var6, 16, "%T", "Username", _arg0);
+		if (var3)
+		{
+			PrintToConsole(_arg0, "    %-24.23s %-18.17s %s", var5, var6, var4);
+		}
+		else
+		{
+			PrintToConsole(_arg0, "    %-24.23s %s", var5, var4);
+		}
+		new var7 = 0;
+		new var8 = 1;
+		while (var8 <= MaxClients)
+		{
+			if (IsClientInGame(var8))
+			{
+				new var9;
+				var9 = GetUserFlagBits(var8);
+				new var10;
+				var10 = GetUserAdmin(var8);
+				if (var9)
+				{
+					if (var9 & 16384)
+					{
+						strcopy(var7, 255, "root");
+					}
+					FlagsToString(var7, 255, var9);
+				}
+				else
+				{
+					strcopy(var7, 255, "none");
+				}
+				new var11 = 0;
+				new var12 = 0;
+				GetClientName(var8, var11, 128);
+				if (var10 != -1)
+				{
+					AdminId.GetUsername(var10, var12, 128);
+				}
+				if (var3)
+				{
+					PrintToConsole(_arg0, "%2d. %-24.23s %-18.17s %s", var8, var11, var12, var7);
+				}
+				else
+				{
+					if (var9)
+					{
+						PrintToConsole(_arg0, "%2d. %-24.23s %t", var8, var11, "Yes");
+					}
+					PrintToConsole(_arg0, "%2d. %-24.23s %t", var8, var11, "No");
+				}
+			}
+			var8++;
+		}
+		if (GetCmdReplySource() == 1)
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 4156);
+		}
+		return 3;
+	}
+	new var13 = 0;
+	GetCmdArg(1, var13, 65);
+	new var14;
+	var14 = FindTarget(_arg0, var13, false, false);
+	if (var14 == -1)
+	{
+		return 3;
+	}
+	PerformWho(_arg0, var14, GetCmdReplySource(), var3);
+	return 3;
+}
+
+public SMCResult:EndSection(SMCParser:_arg0)
+{
+	return 0;
+}
+
+public SMCResult:KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+{
+	Menu.AddItem(g_var1158, _arg1[0], _arg2[0], 0);
+	return 0;
+}
+
+public MenuHandler_ChangeMap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 8)
+	{
+		new var1;
+		if (_arg3 == -6 && g_varc6c)
+		{
+			TopMenu.Display(g_varc6c, _arg2, 3);
+		}
+	}
+	else
+	{
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 256, 0, "", 0);
+			ShowActivity2(_arg2, "[SM] ", "%t", "Changing map", var2);
+			LogAction(_arg2, -1, "\"%L\" changed map to \"%s\"", _arg2, var2);
+			new var3 = 0;
+			CreateDataTimer(3.0, 97, var3, 0);
+			DataPack.WriteString(var3, var2, false);
+		}
+		if (_arg1 == 2)
+		{
+			new var4 = 0;
+			Format(var4, 128, "%T", "Please select a map", _arg2);
+			new var5;
+			var5 = _arg3;
+			Panel.SetTitle(var5, var4, false);
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_ExecCFG(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 8)
+	{
+		new var1;
+		if (_arg3 == -6 && g_varc6c)
+		{
+			TopMenu.Display(g_varc6c, _arg2, 3);
+		}
+	}
+	else
+	{
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 256, 0, "", 0);
+			PerformExec(_arg2, var2);
+		}
+		if (_arg1 == 2)
+		{
+			new var3 = 0;
+			Format(var3, 128, "%T", "Choose Config", _arg2);
+			new var4;
+			var4 = _arg3;
+			Panel.SetTitle(var4, var3, false);
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_Kick(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_varc6c)
+			{
+				TopMenu.Display(g_varc6c, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var3 = 0;
+			new var4 = 0;
+			new var5 = 0;
+			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
+			var4 = StringToInt(var3, 10);
+			if ((var5 = GetClientOfUserId(var4)))
+			{
+				if (CanUserTarget(_arg2, var5))
+				{
+					new var6 = 0;
+					GetClientName(var5, var6, 128);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Kicked target", "_s", var6);
+					PerformKick(_arg2, var5, "");
+				}
+				PrintToChat(_arg2, "[SM] %t", 3328);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 3292);
+			}
+			new var2;
+			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			{
+				DisplayKickMenu(_arg2);
+			}
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_Who(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_varc6c)
+			{
+				TopMenu.Display(g_varc6c, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var3 = 0;
+			new var4 = 0;
+			new var5 = 0;
+			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
+			var4 = StringToInt(var3, 10);
+			if ((var5 = GetClientOfUserId(var4)))
+			{
+				if (CanUserTarget(_arg2, var5))
+				{
+					new var2;
+					if (GetUserFlagBits(_arg2))
+					{
+						var2 = true;
+					}
+					else
+					{
+						var2 = false;
+					}
+					PerformWho(_arg2, var5, 1, var2);
+				}
+				PrintToChat(_arg2, "[SM] %t", 3944);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 3908);
+			}
+		}
+	}
+	return 0;
+}
+
+public SMCResult:NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+{
+	return 0;
+}
+
+public void:OnAdminMenuReady(Handle:_arg0)
+{
+	new var1;
+	var1 = TopMenu.FromHandle(_arg0);
+	if (g_varc6c == var1)
+	{
+		return 0;
+	}
+	g_varc6c = var1;
+	new var2;
+	var2 = TopMenu.FindCategory(g_varc6c, "PlayerCommands");
+	if (var2)
+	{
+		TopMenu.AddItem(g_varc6c, "sm_kick", 45, var2, "sm_kick", 4, "");
+		TopMenu.AddItem(g_varc6c, "sm_who", 51, var2, "sm_who", 2, "");
+	}
+	new var3;
+	var3 = TopMenu.FindCategory(g_varc6c, "ServerCommands");
+	if (var3)
+	{
+		TopMenu.AddItem(g_varc6c, "sm_reloadadmins", 49, var3, "sm_reloadadmins", 8, "");
+		TopMenu.AddItem(g_varc6c, "sm_map", 47, var3, "sm_map", 64, "");
+		TopMenu.AddItem(g_varc6c, "sm_execcfg", 43, var3, "sm_execcfg", 256, "");
+	}
+	new var4;
+	var4 = TopMenu.FindCategory(g_varc6c, "VotingCommands");
+	if (var4)
+	{
+		TopMenu.AddItem(g_varc6c, "sm_cancelvote", 41, var4, "sm_cancelvote", 1024, "");
+	}
+	return 0;
+}
+
+public void:OnConfigsExecuted()
+{
+	LoadMapList(g_varc70);
+	return 0;
+}
+
+public void:OnLibraryRemoved(String:_arg0[])
+{
+	if (!(strcmp(_arg0[0], "adminmenu", true)))
+	{
+		g_varc6c = 0;
+	}
+	return 0;
+}
+
+public void:OnMapStart()
+{
+	ParseConfigs();
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("plugin.basecommands");
+	RegAdminCmd("sm_kick", 59, 4, "sm_kick <#userid|name> [reason]", "", 0);
+	RegAdminCmd("sm_map", 61, 64, "sm_map <map>", "", 0);
+	RegAdminCmd("sm_rcon", 63, 4096, "sm_rcon <args>", "", 0);
+	RegAdminCmd("sm_cvar", 55, 128, "sm_cvar <cvar> [value]", "", 0);
+	RegAdminCmd("sm_resetcvar", 69, 128, "sm_resetcvar <cvar>", "", 0);
+	RegAdminCmd("sm_execcfg", 57, 256, "sm_execcfg <filename>", "", 0);
+	RegAdminCmd("sm_who", 71, 2, "sm_who [#userid|name]", "", 0);
+	RegAdminCmd("sm_reloadadmins", 67, 8, "sm_reloadadmins", "", 0);
+	RegAdminCmd("sm_cancelvote", 53, 1024, "sm_cancelvote", "", 0);
+	RegConsoleCmd("sm_revote", 65, "", 0);
+	new var2 = 0;
+	new var1;
+	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	{
+		OnAdminMenuReady(var2);
+	}
+	g_varc70 = Menu.Menu(77, 2);
+	Menu.SetTitle(g_varc70, "%T", "Please select a map", 0);
+	Menu.ExitBackButton.set(g_varc70, true);
+	new var3 = 0;
+	BuildPath(0, var3, 256, "configs/adminmenu_maplist.ini");
+	SetMapListCompatBind("sm_map menu", var3);
+	g_varc74 = StringMap.StringMap();
+	ProtectVar("rcon_password");
+	ProtectVar("sm_show_activity");
+	ProtectVar("sm_immunity_mode");
+	return 0;
+}
+
+public Action:Timer_ChangeMap(Handle:_arg0, DataPack:_arg1)
+{
+	new var1 = 0;
+	DataPack.Reset(_arg1, false);
+	DataPack.ReadString(_arg1, var1, 256);
+	ForceChangeLevel(var1, "sm_map Command");
+	return 4;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__ext_topmenus_SetNTVOptional()
+{
+	MarkNativeAsOptional("CreateTopMenu");
+	MarkNativeAsOptional("LoadTopMenuConfig");
+	MarkNativeAsOptional("AddToTopMenu");
+	MarkNativeAsOptional("RemoveFromTopMenu");
+	MarkNativeAsOptional("DisplayTopMenu");
+	MarkNativeAsOptional("DisplayTopMenuCategory");
+	MarkNativeAsOptional("FindTopMenuCategory");
+	MarkNativeAsOptional("SetTopMenuTitleCaching");
+	MarkNativeAsOptional("TopMenu.TopMenu");
+	MarkNativeAsOptional("TopMenu.FromHandle");
+	MarkNativeAsOptional("TopMenu.LoadConfig");
+	MarkNativeAsOptional("TopMenu.AddCategory");
+	MarkNativeAsOptional("TopMenu.AddItem");
+	MarkNativeAsOptional("TopMenu.GetInfoString");
+	MarkNativeAsOptional("TopMenu.GetObjName");
+	MarkNativeAsOptional("TopMenu.Remove");
+	MarkNativeAsOptional("TopMenu.Display");
+	MarkNativeAsOptional("TopMenu.DisplayCategory");
+	MarkNativeAsOptional("TopMenu.FindCategory");
+	MarkNativeAsOptional("TopMenu.CacheTitles.set");
+	return 0;
+}
+
+public void:__pl_adminmenu_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetAdminTopMenu");
+	MarkNativeAsOptional("AddTargetsToMenu");
+	MarkNativeAsOptional("AddTargetsToMenu2");
+	return 0;
+}
+

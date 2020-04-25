@@ -1,0 +1,301 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:16"
+};
+public Plugin:myinfo =
+{
+	name = "Admin Help",
+	description = "Display command information",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+public Action:HelpCmd(_arg0, _arg1)
+{
+	new var1;
+	if (_arg0 && IsClientInGame(_arg0))
+	{
+		return 3;
+	}
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 1;
+	new var13 = 0;
+	GetCmdArg(0, var11, 20);
+	if (GetCmdArgs() >= 1)
+	{
+		GetCmdArg(1, var10, 64);
+		StringToIntEx(var10, var12, 10);
+		new var2;
+		if (var12 <= 0)
+		{
+			var2 = 1;
+		}
+		else
+		{
+			var2 = var12;
+		}
+		var12 = var2;
+	}
+	new var3;
+	if (strcmp("sm_help", var11, true))
+	{
+		var3 = 1;
+	}
+	else
+	{
+		var3 = 0;
+	}
+	var13 = var3;
+	if (GetCmdReplySource() == 1)
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 2552);
+	}
+	new var14 = 0;
+	new var15 = 0;
+	new var16 = 0;
+	new var17 = 0;
+	new var18;
+	var18 = GetCommandIterator();
+	FormatEx(var16, 128, "%T", "No description available", _arg0);
+	if (var13)
+	{
+		new var19 = 1;
+		while (ReadCommandIterator(var18, var14, 64, var17, var15, 255))
+		{
+			new var4;
+			if (StrContains(var14, var10, false) != -1 && CheckCommandAccess(_arg0, var14, var17, false))
+			{
+				new var5;
+				if (var15)
+				{
+					var5 = var15;
+				}
+				else
+				{
+					var5 = var16;
+				}
+				var19++;
+				PrintToConsole(_arg0, "[%03d] %s - %s", var19, var14, var5);
+			}
+		}
+		if (var19 == 1)
+		{
+			PrintToConsole(_arg0, "%t", 2628);
+		}
+	}
+	else
+	{
+		PrintToConsole(_arg0, "%t", 2660);
+		if (var12 > 1)
+		{
+			new var20 = 0;
+			new var21;
+			var21 = var12 + -1 * 10 + -1;
+			var20 = 0;
+			while (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && var20 < var21)
+			{
+				if (CheckCommandAccess(_arg0, var14, var17, false))
+				{
+					var20++;
+				}
+			}
+			if (!var20)
+			{
+				PrintToConsole(_arg0, "%t", 2684);
+				CloseHandle(var18);
+				var18 = 0;
+				return 3;
+			}
+		}
+		new var22 = 0;
+		new var23;
+		var23 = var12 + -1 * 10;
+		var22 = 0;
+		while (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && var22 < 10)
+		{
+			if (CheckCommandAccess(_arg0, var14, var17, false))
+			{
+				var22++;
+				new var8;
+				if (var15)
+				{
+					var8 = var15;
+				}
+				else
+				{
+					var8 = var16;
+				}
+				PrintToConsole(_arg0, "[%03d] %s - %s", var23 + var22, var14, var8);
+			}
+		}
+		if (var22)
+		{
+			PrintToConsole(_arg0, "%t", "Entries n - m in page k", var23 + 1, var23 + var22, var12);
+		}
+		else
+		{
+			PrintToConsole(_arg0, "%t", 2728);
+		}
+		new var9;
+		if (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && CheckCommandAccess(_arg0, var14, var17, false))
+		{
+			PrintToConsole(_arg0, "%t", "Type sm_help to see more", var12 + 1);
+		}
+	}
+	CloseHandle(var18);
+	var18 = 0;
+	return 3;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("adminhelp.phrases");
+	RegConsoleCmd("sm_help", 1, "Displays SourceMod commands and descriptions", 0);
+	RegConsoleCmd("sm_searchcmd", 1, "Searches SourceMod commands", 0);
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+

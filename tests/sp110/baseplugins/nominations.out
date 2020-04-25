@@ -1,0 +1,573 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public SharedPlugin:__pl_mapchooser =
+{
+	name = "mapchooser",
+	file = "mapchooser.smx",
+	required = 1,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:18"
+};
+public Plugin:myinfo =
+{
+	name = "Map Nominations",
+	description = "Provides Map Nominations",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_vara58;
+new g_vara68;
+new g_vara5c;
+new g_vara50;
+new g_vara54;
+new g_vara60;
+new g_vara64 = -1;
+bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+{
+	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+}
+
+void:PrintToChatAll(String:_arg0[], any:_arg1)
+{
+	new var1 = 0;
+	new var2 = 1;
+	while (var2 <= MaxClients)
+	{
+		if (IsClientInGame(var2))
+		{
+			SetGlobalTransTarget(var2);
+			VFormat(var1, 254, _arg0[0], 2);
+			PrintToChat(var2, "%s", var1);
+		}
+		var2++;
+	}
+	return 0;
+}
+
+ByteCountToCells(_arg0)
+{
+	if (_arg0)
+	{
+		return _arg0 + 3 / 4;
+	}
+	return 1;
+}
+
+FindMatchingMaps(ArrayList:_arg0, ArrayList:_arg1, String:_arg2[])
+{
+	new var2;
+	var2 = ArrayList.Length.get(_arg0);
+	if (var2)
+	{
+		new var3 = 0;
+		new var4 = 0;
+		new var5;
+		var5 = ConVar.IntValue.get(g_vara58);
+		new var6 = 0;
+		while (var6 < var2)
+		{
+			ArrayList.GetString(_arg0, var6, var4, 256);
+			if (StrContains(var4, _arg2[0], true) != -1)
+			{
+				ArrayList.Push(_arg1, var6);
+				var3++;
+				new var1;
+				if (var5 > 0 && var3 >= var5)
+				{
+					return var3;
+				}
+			}
+			var6++;
+		}
+		return var3;
+	}
+	return -1;
+}
+
+void:AttemptNominate(_arg0, String:_arg1[], _arg2)
+{
+	new var1 = 0;
+	if (FindMap(_arg1[0], var1, _arg2) == 1)
+	{
+		ReplyToCommand(_arg0, "%t", "Map was not found", var1);
+		return 0;
+	}
+	new var2 = 0;
+	GetMapDisplayName(var1, var2, 256);
+	new var3 = 0;
+	if (StringMap.GetValue(g_vara68, var1, var3))
+	{
+		if (var3 & 2 == 2)
+		{
+			if (var3 & 4 == 4)
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 3484);
+			}
+			if (var3 & 8 == 8)
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 3520);
+			}
+			if (var3 & 16 == 16)
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 3548);
+			}
+			return 0;
+		}
+		new var4;
+		var4 = NominateMap(var1, false, _arg0);
+		if (var4 > 1)
+		{
+			if (var4 == 2)
+			{
+				ReplyToCommand(_arg0, "%t", "Map Already In Vote", var2);
+			}
+			else
+			{
+				ReplyToCommand(_arg0, "[SM] %t", 3604);
+			}
+			return 0;
+		}
+		StringMap.SetValue(g_vara68, var1, 18, true);
+		new var5 = 0;
+		GetClientName(_arg0, var5, 128);
+		PrintToChatAll("[SM] %t", "Map Nominated", var5, var2);
+		return 0;
+	}
+	ReplyToCommand(_arg0, "%t", "Map was not found", var2);
+	return 0;
+}
+
+void:OpenNominationMenu(_arg0)
+{
+	Menu.SetTitle(g_vara5c, "%T", "Nominate Title", _arg0);
+	Menu.Display(g_vara5c, _arg0, 0);
+	return 0;
+}
+
+void:BuildMapMenu()
+{
+	CloseHandle(g_vara5c);
+	g_vara5c = 0;
+	StringMap.Clear(g_vara68);
+	g_vara5c = Menu.Menu(19, 796);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	if (ConVar.BoolValue.get(g_vara50))
+	{
+		var3 = ArrayList.ArrayList(ByteCountToCells(256), 0);
+		GetExcludeMapList(var3);
+	}
+	if (ConVar.BoolValue.get(g_vara54))
+	{
+		GetCurrentMap(var4, 256);
+	}
+	new var5 = 0;
+	while (ArrayList.Length.get(g_vara60) > var5)
+	{
+		new var6 = 1;
+		ArrayList.GetString(g_vara60, var5, var2, 256);
+		FindMap(var2, var2, 256);
+		new var7 = 0;
+		GetMapDisplayName(var2, var7, 256);
+		if (ConVar.BoolValue.get(g_vara54))
+		{
+			if (StrEqual(var2, var4, true))
+			{
+				var6 = 6;
+			}
+		}
+		new var1;
+		if (ConVar.BoolValue.get(g_vara50) && var6 == 1)
+		{
+			if (ArrayList.FindString(var3, var2) != -1)
+			{
+				var6 = 10;
+			}
+		}
+		Menu.AddItem(g_vara5c, var2, var7, 0);
+		StringMap.SetValue(g_vara68, var2, var6, true);
+		var5++;
+	}
+	Menu.ExitButton.set(g_vara5c, true);
+	CloseHandle(var3);
+	var3 = 0;
+	return 0;
+}
+
+public Action:Command_Addmap(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_nominate_addmap <mapname>");
+		return 3;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	GetCmdArg(1, var1, 256);
+	if (FindMap(var1, var2, 256) == 1)
+	{
+		ReplyToCommand(_arg0, "%t", "Map was not found", var1);
+		return 3;
+	}
+	new var3 = 0;
+	GetMapDisplayName(var2, var3, 256);
+
+/* ERROR! null */
+ function "Command_Addmap" (number 7)
+
+public Action:Command_Nominate(_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		new var1;
+		var1 = GetCmdReplySource();
+		if (_arg1)
+		{
+			new var2 = 0;
+			GetCmdArg(1, var2, 256);
+			new var3;
+			var3 = ArrayList.ArrayList(1, 0);
+			new var4;
+			var4 = FindMatchingMaps(g_vara60, var3, var2);
+			new var5 = 0;
+			if (0 >= var4)
+			{
+				ReplyToCommand(_arg0, "%t", "Map was not found", var2);
+			}
+			else
+			{
+				if (var4 == 1)
+				{
+					ArrayList.GetString(g_vara60, ArrayList.Get(var3, 0, 0, false), var5, 256);
+					AttemptNominate(_arg0, var5, 256);
+				}
+				if (var4 > 1)
+				{
+					if (var1)
+					{
+						new var6;
+						var6 = Menu.Menu(19, 796);
+						Menu.SetTitle(var6, "Select map");
+						new var7 = 0;
+						while (ArrayList.Length.get(var3) > var7)
+						{
+							ArrayList.GetString(g_vara60, ArrayList.Get(var3, var7, 0, false), var5, 256);
+							Menu.AddItem(var6, var5, var5, 0);
+							var7++;
+						}
+						Menu.Display(var6, _arg0, 30);
+					}
+					AttemptNominate(_arg0, var2, 256);
+					CloseHandle(var3);
+					var3 = 0;
+					return 3;
+				}
+			}
+			CloseHandle(var3);
+			var3 = 0;
+			return 3;
+		}
+		if (var1 == 1)
+		{
+			OpenNominationMenu(_arg0);
+		}
+		else
+		{
+			ReplyToCommand(_arg0, "[SM] Usage: sm_nominate <mapname>");
+		}
+		return 3;
+	}
+	return 3;
+}
+
+public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	switch (_arg1)
+	{
+		case 4:
+		{
+			new var5 = 0;
+			Menu.GetItem(_arg0, _arg3, var5, 256, 0, "", 0);
+			AttemptNominate(_arg2, var5, 256);
+		}
+		case 16:
+		{
+			if (g_vara5c != _arg0)
+			{
+				CloseHandle(_arg0);
+				_arg0 = 0;
+			}
+		}
+		case 256:
+		{
+			new var3 = 0;
+			Menu.GetItem(_arg0, _arg3, var3, 256, 0, "", 0);
+			new var4 = 0;
+			if (StringMap.GetValue(g_vara68, var3, var4))
+			{
+				if (var4 & 2 == 2)
+				{
+					return 1;
+				}
+				return 0;
+			}
+			LogError("Menu selection of item not in trie. Major logic problem somewhere.");
+			return 0;
+		}
+		case 512:
+		{
+			new var1 = 0;
+			Menu.GetItem(_arg0, _arg3, var1, 256, 0, "", 0);
+			new var2 = 0;
+			if (StringMap.GetValue(g_vara68, var1, var2))
+			{
+				if (var2 & 2 == 2)
+				{
+					if (var2 & 4 == 4)
+					{
+						Format(var1, 256, "%s (%T)", var1, "Current Map", _arg2);
+						return RedrawMenuItem(var1);
+					}
+					if (var2 & 8 == 8)
+					{
+						Format(var1, 256, "%s (%T)", var1, "Recently Played", _arg2);
+						return RedrawMenuItem(var1);
+					}
+					if (var2 & 16 == 16)
+					{
+						Format(var1, 256, "%s (%T)", var1, "Nominated", _arg2);
+						return RedrawMenuItem(var1);
+					}
+				}
+			}
+			LogError("Menu selection of item not in trie. Major logic problem somewhere.");
+			return 0;
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+{
+	new var1;
+	if (_arg0 && IsChatTrigger())
+	{
+		return 0;
+	}
+	if (!(strcmp(_arg2[0], "nominate", false)))
+	{
+		new var2;
+		var2 = SetCmdReplySource(1);
+		OpenNominationMenu(_arg0);
+		SetCmdReplySource(var2);
+	}
+	return 0;
+}
+
+public void:OnConfigsExecuted()
+{
+	if (!(ReadMapList(g_vara60, g_vara64, "nominations", 3)))
+	{
+		if (g_vara64 == -1)
+		{
+			SetFailState("Unable to create a valid map list.");
+		}
+	}
+	BuildMapMenu();
+	return 0;
+}
+
+public void:OnNominationRemoved(String:_arg0[], _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	FindMap(_arg0[0], var2, 256);
+	if (StringMap.GetValue(g_vara68, var2, var1))
+	{
+		if (var1 & 16 != 16)
+		{
+			return 0;
+		}
+		StringMap.SetValue(g_vara68, var2, 1, true);
+		return 0;
+	}
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("nominations.phrases");
+	new var1;
+	var1 = ByteCountToCells(256);
+	g_vara60 = ArrayList.ArrayList(var1, 0);
+	g_vara50 = CreateConVar("sm_nominate_excludeold", "1", "Specifies if the MapChooser excluded maps should also be excluded from Nominations", 0, true, 0.0, true, 1.0);
+	g_vara54 = CreateConVar("sm_nominate_excludecurrent", "1", "Specifies if the current map should be excluded from the Nominations list", 0, true, 0.0, true, 1.0);
+	g_vara58 = CreateConVar("sm_nominate_maxfound", "0", "Maximum number of nomination matches to add to the menu. 0 = infinite.", 0, true, 0.0, false, 0.0);
+	RegConsoleCmd("sm_nominate", 17, "", 0);
+	RegAdminCmd("sm_nominate_addmap", 15, 64, "sm_nominate_addmap <mapname> - Forces a map to be on the next mapvote.", "", 0);
+	g_vara68 = StringMap.StringMap();
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__pl_mapchooser_SetNTVOptional()
+{
+	MarkNativeAsOptional("NominateMap");
+	MarkNativeAsOptional("RemoveNominationByMap");
+	MarkNativeAsOptional("RemoveNominationByOwner");
+	MarkNativeAsOptional("GetExcludeMapList");
+	MarkNativeAsOptional("GetNominatedMapList");
+	MarkNativeAsOptional("CanMapChooserStartVote");
+	MarkNativeAsOptional("InitiateMapChooserVote");
+	MarkNativeAsOptional("HasEndOfMapVoteFinished");
+	MarkNativeAsOptional("EndOfMapVoteEnabled");
+	return 0;
+}
+

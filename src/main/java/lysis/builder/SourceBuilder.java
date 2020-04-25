@@ -1027,6 +1027,7 @@ public class SourceBuilder {
 		//  = 0x03 (ETX) - Use team color from this point forward
 		//  = 0x04 (EOT) - Use location color from this point forward
 		//  = 0x01 (SOH) - Use normal color from this point forward
+		str = str.replace("\u0000", "\\x00");
 		str = str.replace("\u0001", "\\x01"); // Default
 		str = str.replace("\u0002", "\\x02"); // Teamcolor at start
 		str = str.replace("\u0003", "\\x03"); // Teamcolor

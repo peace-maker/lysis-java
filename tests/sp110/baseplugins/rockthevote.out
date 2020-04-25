@@ -1,0 +1,404 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public SharedPlugin:__pl_mapchooser =
+{
+	name = "mapchooser",
+	file = "mapchooser.smx",
+	required = 1,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:18"
+};
+public Plugin:myinfo =
+{
+	name = "Rock The Vote",
+	description = "Provides RTV Map Voting",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_vara64;
+new g_vara60;
+new g_vara50;
+new g_vara6c;
+new g_vara70;
+new g_varb7c;
+new g_vara5c;
+new g_vara58;
+new g_vara68;
+new g_vara4c;
+new g_vara54;
+void:PrintToChatAll(String:_arg0[], any:_arg1)
+{
+	new var1 = 0;
+	new var2 = 1;
+	while (var2 <= MaxClients)
+	{
+		if (IsClientInGame(var2))
+		{
+			SetGlobalTransTarget(var2);
+			VFormat(var1, 254, _arg0[0], 2);
+			PrintToChat(var2, "%s", var1);
+		}
+		var2++;
+	}
+	return 0;
+}
+
+void:AttemptRTV(_arg0)
+{
+	new var2;
+	if (g_vara64 && (ConVar.IntValue.get(g_vara60) == 1 && HasEndOfMapVoteFinished()))
+	{
+		ReplyToCommand(_arg0, "[SM] %t", 3592);
+		return 0;
+	}
+	if (CanMapChooserStartVote())
+	{
+		if (ConVar.IntValue.get(g_vara50) > GetClientCount(true))
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 3636);
+			return 0;
+		}
+		if (2676[_arg0])
+		{
+			ReplyToCommand(_arg0, "[SM] %t", "Already Voted", g_vara6c, g_vara70);
+			return 0;
+		}
+		new var3 = 0;
+		GetClientName(_arg0, var3, 128);
+		g_vara6c += 1;
+		2676[_arg0] = 1;
+		PrintToChatAll("[SM] %t", "RTV Requested", var3, g_vara6c, g_vara70);
+		if (g_vara6c >= g_vara70)
+		{
+			StartRTV();
+		}
+		return 0;
+	}
+	ReplyToCommand(_arg0, "[SM] %t", 3616);
+	return 0;
+}
+
+void:StartRTV()
+{
+	if (g_varb7c)
+	{
+		return 0;
+	}
+	new var1;
+	if (EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+	{
+		new var2 = 0;
+		if (GetNextMap(var2, 256))
+		{
+			GetMapDisplayName(var2, var2, 256);
+			PrintToChatAll("[SM] %t", "Changing Maps", var2);
+			CreateTimer(5.0, 23, 0, 2);
+			g_varb7c = 1;
+			ResetRTV();
+			g_vara64 = 0;
+		}
+		return 0;
+	}
+	if (CanMapChooserStartVote())
+	{
+		new var3;
+		var3 = ConVar.IntValue.get(g_vara5c);
+		InitiateMapChooserVote(var3, 0);
+		ResetRTV();
+		g_vara64 = 0;
+		CreateTimer(ConVar.FloatValue.get(g_vara58), 25, 0, 2);
+	}
+	return 0;
+}
+
+void:ResetRTV()
+{
+	g_vara6c = 0;
+	new var1 = 1;
+	while (var1 <= 65)
+	{
+		2676[var1] = 0;
+		var1++;
+	}
+	return 0;
+}
+
+public Action:Command_RTV(_arg0, _arg1)
+{
+	if (_arg0)
+	{
+		AttemptRTV(_arg0);
+		return 3;
+	}
+	return 3;
+}
+
+public void:OnClientConnected(_arg0)
+{
+	if (!(IsFakeClient(_arg0)))
+	{
+		g_vara68 += 1;
+		g_vara70 = RoundToCeil(float(g_vara68) * ConVar.FloatValue.get(g_vara4c));
+	}
+	return 0;
+}
+
+public void:OnClientDisconnect(_arg0)
+{
+	if (2676[_arg0])
+	{
+		g_vara6c -= 1;
+		2676[_arg0] = 0;
+	}
+	if (!(IsFakeClient(_arg0)))
+	{
+		g_vara68 -= 1;
+		g_vara70 = RoundToCeil(float(g_vara68) * ConVar.FloatValue.get(g_vara4c));
+	}
+	new var1;
+	if (g_vara6c && g_vara68 && g_vara6c >= g_vara70 && g_vara64)
+	{
+		new var2;
+		if (ConVar.IntValue.get(g_vara60) == 1 && HasEndOfMapVoteFinished())
+		{
+			return 0;
+		}
+		StartRTV();
+	}
+	return 0;
+}
+
+public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+{
+	new var1;
+	if (_arg0 && IsChatTrigger())
+	{
+		return 0;
+	}
+	new var2;
+	if (strcmp(_arg2[0], "rtv", false) && strcmp(_arg2[0], "rockthevote", false))
+	{
+		new var3;
+		var3 = SetCmdReplySource(1);
+		AttemptRTV(_arg0);
+		SetCmdReplySource(var3);
+	}
+	return 0;
+}
+
+public void:OnConfigsExecuted()
+{
+	CreateTimer(ConVar.FloatValue.get(g_vara54), 25, 0, 2);
+	return 0;
+}
+
+public void:OnMapEnd()
+{
+	g_vara64 = 0;
+	g_vara68 = 0;
+	g_vara6c = 0;
+	g_vara70 = 0;
+	g_varb7c = 0;
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("rockthevote.phrases");
+	g_vara4c = CreateConVar("sm_rtv_needed", "0.60", "Percentage of players needed to rockthevote (Def 60%)", 0, true, 0.05, true, 1.0);
+	g_vara50 = CreateConVar("sm_rtv_minplayers", "0", "Number of players required before RTV will be enabled.", 0, true, 0.0, true, float(65));
+	g_vara54 = CreateConVar("sm_rtv_initialdelay", "30.0", "Time (in seconds) before first RTV can be held", 0, true, 0.0, false, 0.0);
+	g_vara58 = CreateConVar("sm_rtv_interval", "240.0", "Time (in seconds) after a failed RTV before another can be held", 0, true, 0.0, false, 0.0);
+	g_vara5c = CreateConVar("sm_rtv_changetime", "0", "When to change the map after a succesful RTV: 0 - Instant, 1 - RoundEnd, 2 - MapEnd", 0, true, 0.0, true, 2.0);
+	g_vara60 = CreateConVar("sm_rtv_postvoteaction", "0", "What to do with RTV's after a mapvote has completed. 0 - Allow, success = instant change, 1 - Deny", 0, true, 0.0, true, 1.0);
+	RegConsoleCmd("sm_rtv", 9, "", 0);
+	AutoExecConfig(true, "rtv", "sourcemod");
+	OnMapEnd();
+	new var1 = 1;
+	while (var1 <= MaxClients)
+	{
+		if (IsClientConnected(var1))
+		{
+			OnClientConnected(var1);
+		}
+		var1++;
+	}
+	return 0;
+}
+
+public Action:Timer_ChangeMap(Handle:_arg0)
+{
+	g_varb7c = 0;
+	LogMessage("RTV changing map manually");
+	new var1 = 0;
+	if (GetNextMap(var1, 256))
+	{
+		ForceChangeLevel(var1, "RTV after mapvote");
+	}
+	return 4;
+}
+
+public Action:Timer_DelayRTV(Handle:_arg0)
+{
+	g_vara64 = 1;
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__pl_mapchooser_SetNTVOptional()
+{
+	MarkNativeAsOptional("NominateMap");
+	MarkNativeAsOptional("RemoveNominationByMap");
+	MarkNativeAsOptional("RemoveNominationByOwner");
+	MarkNativeAsOptional("GetExcludeMapList");
+	MarkNativeAsOptional("GetNominatedMapList");
+	MarkNativeAsOptional("CanMapChooserStartVote");
+	MarkNativeAsOptional("InitiateMapChooserVote");
+	MarkNativeAsOptional("HasEndOfMapVoteFinished");
+	MarkNativeAsOptional("EndOfMapVoteEnabled");
+	return 0;
+}
+

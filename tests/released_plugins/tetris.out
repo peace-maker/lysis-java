@@ -2893,158 +2893,158 @@ bool:MoveCurrentObjectDown(client, &bool:bGameOver)
  function "MoveCurrentObjectDown" (number 73)
 
 bool:IsObjectColliding(bool:bGameField1[16][10], bool:bGameField2[16][10])
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			new var1;
+			if (bGameField1[y][x] && bGameField2[y][x])
 			{
-				new y;
-				while (y < 16)
-				{
-					new x;
-					while (x < 10)
-					{
-						new var1;
-						if (bGameField1[y][x] && bGameField2[y][x])
-						{
-							return true;
-						}
-						x++;
-					}
-					y++;
-				}
-				return false;
+				return true;
 			}
+			x++;
+		}
+		y++;
+	}
+	return false;
+}
 
 MergeGameFields(bool:bGameField[16][10], bool:bGameFieldAdd[16][10])
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			new var1;
+			if (!bGameField[y][x] && bGameFieldAdd[y][x])
 			{
-				new y;
-				while (y < 16)
-				{
-					new x;
-					while (x < 10)
-					{
-						new var1;
-						if (!bGameField[y][x] && bGameFieldAdd[y][x])
-						{
-							bGameField[y][x] = true;
-						}
-						x++;
-					}
-					y++;
-				}
-				return 0;
+				bGameField[y][x] = true;
 			}
+			x++;
+		}
+		y++;
+	}
+	return 0;
+}
 
 
 /* ERROR! null */
  function "RemoveFullLines" (number 76)
 
 SaveCurrentObject(client)
-			{
+{
 
 /* ERROR! null */
  function "SaveCurrentObject" (number 77)
 
 public ConVar_OnChange(Handle:convar, String:oldValue[], String:newValue[])
-						{
-							if (StrEqual(newValue, oldValue, true))
-							{
-								return 0;
-							}
-							if (g_hCVDisableHardDrop == convar)
-							{
-								if (StrEqual(newValue, "1", true))
-								{
-									g_bDisableHardDrop = true;
-								}
-								else
-								{
-									g_bDisableHardDrop = false;
-								}
-							}
-							else
-							{
-								if (g_hCVDisableSounds == convar)
-								{
-									if (StrEqual(newValue, "1", true))
-									{
-										g_bDisableSounds = true;
-									}
-									else
-									{
-										g_bDisableSounds = false;
-									}
-								}
-								if (g_hCVOnlyDead == convar)
-								{
-									if (StrEqual(newValue, "1", true))
-									{
-										g_bOnlyDead = true;
-									}
-									else
-									{
-										g_bOnlyDead = false;
-									}
-								}
-								if (g_hCVDisableStats == convar)
-								{
-									if (StrEqual(newValue, "1", true))
-									{
-										g_bDisableStats = true;
-									}
-									g_bDisableStats = false;
-								}
-							}
-							return 0;
-						}
+{
+	if (StrEqual(newValue, oldValue, true))
+	{
+		return 0;
+	}
+	if (g_hCVDisableHardDrop == convar)
+	{
+		if (StrEqual(newValue, "1", true))
+		{
+			g_bDisableHardDrop = true;
+		}
+		else
+		{
+			g_bDisableHardDrop = false;
+		}
+	}
+	else
+	{
+		if (g_hCVDisableSounds == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bDisableSounds = true;
+			}
+			else
+			{
+				g_bDisableSounds = false;
+			}
+		}
+		if (g_hCVOnlyDead == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bOnlyDead = true;
+			}
+			else
+			{
+				g_bOnlyDead = false;
+			}
+		}
+		if (g_hCVDisableStats == convar)
+		{
+			if (StrEqual(newValue, "1", true))
+			{
+				g_bDisableStats = true;
+			}
+			g_bDisableStats = false;
+		}
+	}
+	return 0;
+}
 
 public Native_IsClientInTetrisGame(Handle:plugin, numParams)
-						{
-							new client = GetNativeCell(1);
-							new var1;
-							if (client < 1 || client > MaxClients)
-							{
-								return ThrowNativeError(23, "Invalid client index (%d)", client);
-							}
-							return g_hPlayerGameThink[client] != 0;
-						}
+{
+	new client = GetNativeCell(1);
+	new var1;
+	if (client < 1 || client > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index (%d)", client);
+	}
+	return g_hPlayerGameThink[client] != 0;
+}
 
 ResetGameField(bool:bGameField[16][10])
-						{
-							new y;
-							while (y < 16)
-							{
-								new x;
-								while (x < 10)
-								{
-									bGameField[y][x] = false;
-									x++;
-								}
-								y++;
-							}
-							return 0;
-						}
+{
+	new y;
+	while (y < 16)
+	{
+		new x;
+		while (x < 10)
+		{
+			bGameField[y][x] = false;
+			x++;
+		}
+		y++;
+	}
+	return 0;
+}
 
 Reset4x4(iMatrix[4][4])
-						{
-							new x;
-							while (x < 4)
-							{
-								new y;
-								while (y < 4)
-								{
-									iMatrix[x][y] = -1;
-									y++;
-								}
-								x++;
-							}
-							return 0;
-						}
+{
+	new x;
+	while (x < 4)
+	{
+		new y;
+		while (y < 4)
+		{
+			iMatrix[x][y] = -1;
+			y++;
+		}
+		x++;
+	}
+	return 0;
+}
 
 ClearTimer(&Handle:timer, bool:autoClose)
-						{
-							if (timer)
-							{
-								KillTimer(timer, autoClose);
-							}
-							timer = 0;
-							return 0;
-						}
+{
+	if (timer)
+	{
+		KillTimer(timer, autoClose);
+	}
+	timer = 0;
+	return 0;
+}
 

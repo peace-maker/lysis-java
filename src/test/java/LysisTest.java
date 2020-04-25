@@ -105,6 +105,7 @@ public class LysisTest {
 				out.println("");
 				out.println("/* ERROR! " + e.getMessage() + " */");
 				out.println(" function \"" + fun.name() + "\" (number " + i + ")");
+				source = new SourceBuilder(file, out);
 			}
 			// System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
 			out.println("");

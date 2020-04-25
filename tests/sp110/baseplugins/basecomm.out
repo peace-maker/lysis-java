@@ -1,0 +1,1077 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_topmenus =
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+	autoload = 1,
+	required = 0,
+};
+public SharedPlugin:__pl_adminmenu =
+{
+	name = "adminmenu",
+	file = "adminmenu.smx",
+	required = 0,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:16"
+};
+public Plugin:myinfo =
+{
+	name = "Basic Comm Control",
+	description = "Provides methods of controlling communication.",
+	author = "AlliedModders LLC",
+	version = "1.10.0.6484",
+	url = "http://www.sourcemod.net/"
+};
+new g_var1618;
+new g_var1634;
+new g_var10d4;
+new g_var10d8;
+new g_var10dc;
+new g_var10e0;
+void:FireOnClientMute(_arg0, bool:_arg1)
+{
+	if (!g_var1618)
+	{
+		g_var1618 = CreateGlobalForward("BaseComm_OnClientMute", 0, 2, 2);
+	}
+	Call_StartForward(g_var1618);
+	Call_PushCell(_arg0);
+	Call_PushCell(_arg1);
+	Call_Finish(0);
+	return 0;
+}
+
+void:FireOnClientGag(_arg0, bool:_arg1)
+{
+	if (!g_var1634)
+	{
+		g_var1634 = CreateGlobalForward("BaseComm_OnClientGag", 0, 2, 2);
+	}
+	Call_StartForward(g_var1634);
+	Call_PushCell(_arg0);
+	Call_PushCell(_arg1);
+	Call_Finish(0);
+	return 0;
+}
+
+void:ReplyToTargetError(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case -7:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2492);
+		}
+		case -6:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2464);
+		}
+		case -5:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2436);
+		}
+		case -4:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2408);
+		}
+		case -3:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2376);
+		}
+		case -2:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2348);
+		}
+		case -1:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2316);
+		}
+		case 0:
+		{
+			ReplyToCommand(_arg0, "[SM] %t", 2288);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+void:DisplayGagTypesMenu(_arg0)
+{
+	new var2;
+	var2 = Menu.Menu(51, 28);
+	new var3;
+	var3 = 3252[_arg0][2];
+	new var4 = 0;
+	Format(var4, 100, "%T: %N", "Choose Type", _arg0, var3);
+	Menu.SetTitle(var2, var4);
+	Menu.ExitBackButton.set(var2, true);
+	if (3252[var3])
+	{
+		AddTranslatedMenuItem(var2, "1", "UnMute Player", _arg0);
+	}
+	else
+	{
+		AddTranslatedMenuItem(var2, "0", "Mute Player", _arg0);
+	}
+	if (3252[var3][1])
+	{
+		AddTranslatedMenuItem(var2, "3", "UnGag Player", _arg0);
+	}
+	else
+	{
+		AddTranslatedMenuItem(var2, "2", "Gag Player", _arg0);
+	}
+	new var1;
+	if (3252[var3] && 3252[var3][1])
+	{
+		AddTranslatedMenuItem(var2, "4", "Silence Player", _arg0);
+	}
+	else
+	{
+		AddTranslatedMenuItem(var2, "5", "UnSilence Player", _arg0);
+	}
+	Menu.Display(var2, _arg0, 0);
+	return 0;
+}
+
+void:AddTranslatedMenuItem(Menu:_arg0, String:_arg1[], String:_arg2[], _arg3)
+{
+	new var1 = 0;
+	Format(var1, 128, "%T", _arg2[0], _arg3);
+	Menu.AddItem(_arg0, _arg1[0], var1, 0);
+	return 0;
+}
+
+void:DisplayGagPlayerMenu(_arg0)
+{
+	new var1;
+	var1 = Menu.Menu(49, 28);
+	new var2 = 0;
+	Format(var2, 100, "%T:", "Gag/Mute player", _arg0);
+	Menu.SetTitle(var1, var2);
+	Menu.ExitBackButton.set(var1, true);
+	AddTargetsToMenu(var1, _arg0, true, false);
+	Menu.Display(var1, _arg0, 0);
+	return 0;
+}
+
+void:PerformMute(_arg0, _arg1, bool:_arg2)
+{
+	3252[_arg1] = 1;
+	SetClientListeningFlags(_arg1, 1);
+	FireOnClientMute(_arg1, true);
+	if (!_arg2)
+	{
+		LogAction(_arg0, _arg1, "\"%L\" muted \"%L\"", _arg0, _arg1);
+	}
+	return 0;
+}
+
+void:PerformUnMute(_arg0, _arg1, bool:_arg2)
+{
+	3252[_arg1] = 0;
+	new var1;
+	if (ConVar.IntValue.get(g_var10d4) == 1 && IsPlayerAlive(_arg1))
+	{
+		SetClientListeningFlags(_arg1, 4);
+	}
+	else
+	{
+		new var2;
+		if (ConVar.IntValue.get(g_var10d4) == 2 && IsPlayerAlive(_arg1))
+		{
+			SetClientListeningFlags(_arg1, 8);
+		}
+		SetClientListeningFlags(_arg1, 0);
+	}
+	FireOnClientMute(_arg1, false);
+	if (!_arg2)
+	{
+		LogAction(_arg0, _arg1, "\"%L\" unmuted \"%L\"", _arg0, _arg1);
+	}
+	return 0;
+}
+
+void:PerformGag(_arg0, _arg1, bool:_arg2)
+{
+	3252[_arg1][1] = 1;
+	FireOnClientGag(_arg1, true);
+	if (!_arg2)
+	{
+		LogAction(_arg0, _arg1, "\"%L\" gagged \"%L\"", _arg0, _arg1);
+	}
+	return 0;
+}
+
+void:PerformUnGag(_arg0, _arg1, bool:_arg2)
+{
+	3252[_arg1][1] = 0;
+	FireOnClientGag(_arg1, false);
+	if (!_arg2)
+	{
+		LogAction(_arg0, _arg1, "\"%L\" ungagged \"%L\"", _arg0, _arg1);
+	}
+	return 0;
+}
+
+void:PerformSilence(_arg0, _arg1)
+{
+	if (!3252[_arg1][1])
+	{
+		3252[_arg1][1] = 1;
+		FireOnClientGag(_arg1, true);
+	}
+	if (!3252[_arg1])
+	{
+		3252[_arg1] = 1;
+		SetClientListeningFlags(_arg1, 1);
+		FireOnClientMute(_arg1, true);
+	}
+	LogAction(_arg0, _arg1, "\"%L\" silenced \"%L\"", _arg0, _arg1);
+	return 0;
+}
+
+void:PerformUnSilence(_arg0, _arg1)
+{
+	if (3252[_arg1][1])
+	{
+		3252[_arg1][1] = 0;
+		FireOnClientGag(_arg1, false);
+	}
+	if (3252[_arg1])
+	{
+		3252[_arg1] = 0;
+		new var1;
+		if (ConVar.IntValue.get(g_var10d4) == 1 && IsPlayerAlive(_arg1))
+		{
+			SetClientListeningFlags(_arg1, 4);
+		}
+		else
+		{
+			new var2;
+			if (ConVar.IntValue.get(g_var10d4) == 2 && IsPlayerAlive(_arg1))
+			{
+				SetClientListeningFlags(_arg1, 8);
+			}
+			SetClientListeningFlags(_arg1, 0);
+		}
+		FireOnClientMute(_arg1, false);
+	}
+	LogAction(_arg0, _arg1, "\"%L\" unsilenced \"%L\"", _arg0, _arg1);
+	return 0;
+}
+
+public void:AdminMenu_Gag(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+{
+	if (_arg1)
+	{
+		if (_arg1 == 2)
+		{
+			DisplayGagPlayerMenu(_arg3);
+		}
+	}
+	else
+	{
+		Format(_arg4[0], _arg5, "%T", "Gag/Mute player", _arg3);
+	}
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
+{
+	CreateNative("BaseComm_IsClientGagged", 53);
+	CreateNative("BaseComm_IsClientMuted", 55);
+	CreateNative("BaseComm_SetClientGag", 57);
+	CreateNative("BaseComm_SetClientMute", 59);
+	RegPluginLibrary("basecomm");
+	return 0;
+}
+
+public Action:Command_Gag(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_gag <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		PerformGag(_arg0, var7, false);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Gagged target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Gagged target", "_s", var2);
+	}
+	return 3;
+}
+
+public Action:Command_Mute(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_mute <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		PerformMute(_arg0, var7, false);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Muted target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Muted target", "_s", var2);
+	}
+	return 3;
+}
+
+public Action:Command_Silence(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_silence <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		PerformSilence(_arg0, var7);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Silenced target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Silenced target", "_s", var2);
+	}
+	return 3;
+}
+
+public Action:Command_Ungag(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_ungag <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		PerformUnGag(_arg0, var7, false);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Ungagged target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Ungagged target", "_s", var2);
+	}
+	return 3;
+}
+
+public Action:Command_Unmute(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_unmute <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		if (3252[var7])
+		{
+			PerformUnMute(_arg0, var7, false);
+		}
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Unmuted target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Unmuted target", "_s", var2);
+	}
+	return 3;
+}
+
+public Action:Command_Unsilence(_arg0, _arg1)
+{
+	if (_arg1 < 1)
+	{
+		ReplyToCommand(_arg0, "[SM] Usage: sm_unsilence <player>");
+		return 3;
+	}
+	new var1 = 0;
+	GetCmdArg(1, var1, 64);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 0, var2, 64, var5)))
+	{
+		ReplyToTargetError(_arg0, var4);
+		return 3;
+	}
+	new var6 = 0;
+	while (var6 < var4)
+	{
+		new var7;
+		var7 = var3[var6];
+		PerformUnSilence(_arg0, var7);
+		var6++;
+	}
+	if (var5)
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Unsilenced target", var2);
+	}
+	else
+	{
+		ShowActivity2(_arg0, "[SM] ", "%t", "Unsilenced target", "_s", var2);
+	}
+	return 3;
+}
+
+public void:ConVarChange_Alltalk(ConVar:_arg0, String:_arg1[], String:_arg2[])
+{
+	new var1;
+	var1 = ConVar.IntValue.get(g_var10d4);
+	new var2 = 1;
+	while (var2 <= MaxClients)
+	{
+		if (IsClientInGame(var2))
+		{
+			if (3252[var2])
+			{
+				SetClientListeningFlags(var2, 1);
+			}
+			else
+			{
+				if (ConVar.BoolValue.get(g_var10d8))
+				{
+					SetClientListeningFlags(var2, 0);
+				}
+				if (!(IsPlayerAlive(var2)))
+				{
+					if (var1 == 1)
+					{
+						SetClientListeningFlags(var2, 4);
+					}
+					if (var1 == 2)
+					{
+						SetClientListeningFlags(var2, 8);
+					}
+				}
+			}
+		}
+		var2++;
+	}
+	return 0;
+}
+
+public void:ConVarChange_Deadtalk(ConVar:_arg0, String:_arg1[], String:_arg2[])
+{
+	if (ConVar.IntValue.get(g_var10d4))
+	{
+		HookEvent("player_spawn", 47, 1);
+		HookEvent("player_death", 45, 1);
+		g_var10dc = 1;
+	}
+	else
+	{
+		if (g_var10dc)
+		{
+			UnhookEvent("player_spawn", 47, 1);
+			UnhookEvent("player_death", 45, 1);
+			g_var10dc = 0;
+		}
+	}
+	return 0;
+}
+
+public void:Event_PlayerDeath(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	new var1;
+	var1 = GetClientOfUserId(Event.GetInt(_arg0, "userid", 0));
+	if (var1)
+	{
+		if (3252[var1])
+		{
+			SetClientListeningFlags(var1, 1);
+			return 0;
+		}
+		if (ConVar.BoolValue.get(g_var10d8))
+		{
+			SetClientListeningFlags(var1, 0);
+			return 0;
+		}
+		new var2;
+		var2 = ConVar.IntValue.get(g_var10d4);
+		if (var2 == 1)
+		{
+			SetClientListeningFlags(var1, 4);
+		}
+		else
+		{
+			if (var2 == 2)
+			{
+				SetClientListeningFlags(var1, 8);
+			}
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public void:Event_PlayerSpawn(Event:_arg0, String:_arg1[], bool:_arg2)
+{
+	new var1;
+	var1 = GetClientOfUserId(Event.GetInt(_arg0, "userid", 0));
+	if (var1)
+	{
+		if (3252[var1])
+		{
+			SetClientListeningFlags(var1, 1);
+		}
+		else
+		{
+			SetClientListeningFlags(var1, 0);
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public MenuHandler_GagPlayer(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_var10e0)
+			{
+				TopMenu.Display(g_var10e0, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			new var3 = 0;
+			new var4 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
+			var3 = StringToInt(var2, 10);
+			if ((var4 = GetClientOfUserId(var3)))
+			{
+				if (CanUserTarget(_arg2, var4))
+				{
+					3252[_arg2][2] = GetClientOfUserId(var3);
+					DisplayGagTypesMenu(_arg2);
+				}
+				PrintToChat(_arg2, "[SM] %t", 4552);
+			}
+			else
+			{
+				PrintToChat(_arg2, "[SM] %t", 4516);
+			}
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_GagTypes(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+{
+	if (_arg1 == 16)
+	{
+		CloseHandle(_arg0);
+		_arg0 = 0;
+	}
+	else
+	{
+		if (_arg1 == 8)
+		{
+			new var1;
+			if (_arg3 == -6 && g_var10e0)
+			{
+				TopMenu.Display(g_var10e0, _arg2, 3);
+			}
+		}
+		if (_arg1 == 4)
+		{
+			new var2 = 0;
+			new var3 = 0;
+			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
+			var3 = StringToInt(var2, 10);
+			new var4;
+			var4 = 3252[_arg2][2];
+			new var5 = 0;
+			GetClientName(var4, var5, 128);
+			switch (var3)
+			{
+				case 0:
+				{
+					PerformMute(_arg2, var4, false);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Muted target", "_s", var5);
+				}
+				case 1:
+				{
+					PerformUnMute(_arg2, var4, false);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Unmuted target", "_s", var5);
+				}
+				case 2:
+				{
+					PerformGag(_arg2, var4, false);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Gagged target", "_s", var5);
+				}
+				case 3:
+				{
+					PerformUnGag(_arg2, var4, false);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Ungagged target", "_s", var5);
+				}
+				case 4:
+				{
+					PerformSilence(_arg2, var4);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Silenced target", "_s", var5);
+				}
+				case 5:
+				{
+					PerformUnSilence(_arg2, var4);
+					ShowActivity2(_arg2, "[SM] ", "%t", "Unsilenced target", "_s", var5);
+				}
+				default:
+				{
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+public Native_IsClientGagged(Handle:_arg0, _arg1)
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var1;
+	if (var2 < 1 || var2 > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index %d", var2);
+	}
+	if (IsClientInGame(var2))
+	{
+		return 3252[var2][1];
+	}
+	return ThrowNativeError(23, "Client %d is not in game", var2);
+}
+
+public Native_IsClientMuted(Handle:_arg0, _arg1)
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var1;
+	if (var2 < 1 || var2 > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index %d", var2);
+	}
+	if (IsClientInGame(var2))
+	{
+		return 3252[var2];
+	}
+	return ThrowNativeError(23, "Client %d is not in game", var2);
+}
+
+public Native_SetClientGag(Handle:_arg0, _arg1)
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var1;
+	if (var2 < 1 || var2 > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index %d", var2);
+	}
+	if (IsClientInGame(var2))
+	{
+		new var3;
+		var3 = GetNativeCell(2);
+		if (var3)
+		{
+			if (3252[var2][1])
+			{
+				return 0;
+			}
+			PerformGag(-1, var2, true);
+		}
+		else
+		{
+			if (3252[var2][1])
+			{
+				PerformUnGag(-1, var2, true);
+			}
+			return 0;
+		}
+		return 1;
+	}
+	return ThrowNativeError(23, "Client %d is not in game", var2);
+}
+
+public Native_SetClientMute(Handle:_arg0, _arg1)
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var1;
+	if (var2 < 1 || var2 > MaxClients)
+	{
+		return ThrowNativeError(23, "Invalid client index %d", var2);
+	}
+	if (IsClientInGame(var2))
+	{
+		new var3;
+		var3 = GetNativeCell(2);
+		if (var3)
+		{
+			if (3252[var2])
+			{
+				return 0;
+			}
+			PerformMute(-1, var2, true);
+		}
+		else
+		{
+			if (3252[var2])
+			{
+				PerformUnMute(-1, var2, true);
+			}
+			return 0;
+		}
+		return 1;
+	}
+	return ThrowNativeError(23, "Client %d is not in game", var2);
+}
+
+public void:OnAdminMenuReady(Handle:_arg0)
+{
+	new var1;
+	var1 = TopMenu.FromHandle(_arg0);
+	if (g_var10e0 == var1)
+	{
+		return 0;
+	}
+	g_var10e0 = var1;
+	new var2;
+	var2 = TopMenu.FindCategory(g_var10e0, "PlayerCommands");
+	if (var2)
+	{
+		TopMenu.AddItem(g_var10e0, "sm_gag", 25, var2, "sm_gag", 512, "");
+	}
+	return 0;
+}
+
+public bool:OnClientConnect(_arg0, String:_arg1[], _arg2)
+{
+	3252[_arg0][1] = 0;
+	3252[_arg0] = 0;
+	return 1;
+}
+
+public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
+{
+	new var1;
+	if (_arg0 && 3252[_arg0][1])
+	{
+		return 4;
+	}
+	return 0;
+}
+
+public void:OnPluginStart()
+{
+	LoadTranslations("common.phrases");
+	LoadTranslations("basecomm.phrases");
+	g_var10d4 = CreateConVar("sm_deadtalk", "0", "Controls how dead communicate. 0 - Off. 1 - Dead players ignore teams. 2 - Dead players talk to living teammates.", 0, true, 0.0, true, 2.0);
+	g_var10d8 = FindConVar("sv_alltalk");
+	RegAdminCmd("sm_mute", 31, 512, "sm_mute <player> - Removes a player's ability to use voice.", "", 0);
+	RegAdminCmd("sm_gag", 29, 512, "sm_gag <player> - Removes a player's ability to use chat.", "", 0);
+	RegAdminCmd("sm_silence", 33, 512, "sm_silence <player> - Removes a player's ability to use voice or chat.", "", 0);
+	RegAdminCmd("sm_unmute", 37, 512, "sm_unmute <player> - Restores a player's ability to use voice.", "", 0);
+	RegAdminCmd("sm_ungag", 35, 512, "sm_ungag <player> - Restores a player's ability to use chat.", "", 0);
+	RegAdminCmd("sm_unsilence", 39, 512, "sm_unsilence <player> - Restores a player's ability to use voice and chat.", "", 0);
+	ConVar.AddChangeHook(g_var10d4, 43);
+	ConVar.AddChangeHook(g_var10d8, 41);
+	new var2 = 0;
+	new var1;
+	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	{
+		OnAdminMenuReady(var2);
+	}
+	return 0;
+}
+
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+public void:__ext_topmenus_SetNTVOptional()
+{
+	MarkNativeAsOptional("CreateTopMenu");
+	MarkNativeAsOptional("LoadTopMenuConfig");
+	MarkNativeAsOptional("AddToTopMenu");
+	MarkNativeAsOptional("RemoveFromTopMenu");
+	MarkNativeAsOptional("DisplayTopMenu");
+	MarkNativeAsOptional("DisplayTopMenuCategory");
+	MarkNativeAsOptional("FindTopMenuCategory");
+	MarkNativeAsOptional("SetTopMenuTitleCaching");
+	MarkNativeAsOptional("TopMenu.TopMenu");
+	MarkNativeAsOptional("TopMenu.FromHandle");
+	MarkNativeAsOptional("TopMenu.LoadConfig");
+	MarkNativeAsOptional("TopMenu.AddCategory");
+	MarkNativeAsOptional("TopMenu.AddItem");
+	MarkNativeAsOptional("TopMenu.GetInfoString");
+	MarkNativeAsOptional("TopMenu.GetObjName");
+	MarkNativeAsOptional("TopMenu.Remove");
+	MarkNativeAsOptional("TopMenu.Display");
+	MarkNativeAsOptional("TopMenu.DisplayCategory");
+	MarkNativeAsOptional("TopMenu.FindCategory");
+	MarkNativeAsOptional("TopMenu.CacheTitles.set");
+	return 0;
+}
+
+public void:__pl_adminmenu_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetAdminTopMenu");
+	MarkNativeAsOptional("AddTargetsToMenu");
+	MarkNativeAsOptional("AddTargetsToMenu2");
+	return 0;
+}
+
