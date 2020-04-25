@@ -1980,8 +1980,7 @@ public Action:Commands_EventDisconnect(Handle:event, String:name[], bool:dontBro
 	while (i < f_iLength)
 	{
 		new var2;
-		if (f_sReason[i] < ' ' && f_sReason[i] != '
-')
+		if (f_sReason[i] < ' ' && f_sReason[i] != '\n')
 		{
 			new var3;
 			if (1 <= client <= MaxClients && IsClientConnected(client))
