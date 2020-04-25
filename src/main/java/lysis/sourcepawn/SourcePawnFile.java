@@ -150,7 +150,7 @@ public class SourcePawnFile extends PawnFile {
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
 			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info", ".dbg.strings",
-			"rtti.data", "rtti.methods" };
+			"rtti.data", "rtti.methods", "rtti.natives" };
 
 	public SourcePawnFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -754,6 +754,45 @@ public class SourcePawnFile extends PawnFile {
 			}
 
 			functions_ = functions.toArray(new Function[0]);
+
+			br.close();
+		}
+		
+		if (sections_.containsKey("rtti.natives")) {
+			Section sc = sections_.get("rtti.natives");
+			ExtendedDataInputStream br = new ExtendedDataInputStream(
+					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+			RttiListTable rt = new RttiListTable(br);
+
+			for (int i = 0; i < rt.rowcount; i++) {
+				long nameoffs = br.ReadUInt32();
+				long signatureOffs = br.ReadUInt32();
+				String name = ReadString(binary, namesOffset + nameoffs);
+				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
+				RttiType type = tb.decodeFunction();
+				
+				// Build argument type list right away.
+				Argument[] args = new Argument[type.getArguments().size()];
+				for (int j = 0; j < type.getArguments().size(); j++) {
+					RttiType arg = type.getArguments().get(j);
+					LinkedList<Dimension> dims = new LinkedList<>();
+					RttiType arrayType = arg;
+					while (arrayType.isArrayType()) {
+						// non FixedArrays have a size of 0.
+						dims.add(0, new Dimension((int) arrayType.getData()));
+						arrayType = arrayType.getInnerType();
+					}
+					args[j] = new Argument(arg.toVariableType(), "_arg" + j, arg,
+							dims.toArray(new Dimension[0]));
+				}
+
+				if (name != null && !name.equals(natives_[i].name()))
+					System.err.printf(
+							"// Error reading rtti.natives section. Native %d has different names. (\"%s\" != \"%s\")\n",
+							i, natives_[i].name(), name);
+				
+				natives_[i].setDebugInfo(type, args);
+			}
 
 			br.close();
 		}
