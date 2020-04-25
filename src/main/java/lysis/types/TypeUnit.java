@@ -3,6 +3,7 @@ package lysis.types;
 import lysis.lstructure.Argument;
 import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
+import lysis.types.rtti.RttiType;
 
 public class TypeUnit {
 	public enum Kind {
@@ -13,6 +14,7 @@ public class TypeUnit {
 	private PawnType type_; // kind_ == Cell or Array
 	private int dims_; // kind_ == Array
 	private TypeUnit ref_; // kind_ == Reference
+	private RttiType rtti_type_;
 
 	public TypeUnit(PawnType type) {
 		kind_ = Kind.Cell;
@@ -59,7 +61,7 @@ public class TypeUnit {
 		}
 		assert (kind_ == Kind.Array);
 		if (dims_ == 1) {
-			if (type_.isString())
+			if (isString())
 				return new TypeUnit(new PawnType(CellType.Character));
 			return new TypeUnit(type_);
 		}
@@ -83,11 +85,43 @@ public class TypeUnit {
 		return true;
 	}
 
+	public boolean isString() {
+		// Legacy tag detection.
+		if (type_.type() == CellType.Tag && type_.tag().name().equals("String"))
+			return true;
+		// char array.
+		if (type_.type() == CellType.Character && dims_ == 1)
+			return true;
+		return false;
+	}
+
 	public static TypeUnit FromTag(Tag tag) {
 		return new TypeUnit(new PawnType(tag));
 	}
 
 	public static TypeUnit FromVariable(Variable var) {
+		if (var.rttiType() != null) {
+			RttiType type = var.rttiType();
+			switch (var.type()) {
+			case Normal:
+				return new TypeUnit(new PawnType(type));
+			case Array:
+				return new TypeUnit(new PawnType(type), var.dims().length);
+			case Reference: {
+				TypeUnit tu = new TypeUnit(new PawnType(type));
+				return new TypeUnit(tu);
+			}
+			case ArrayReference: {
+				TypeUnit tu = new TypeUnit(new PawnType(type), var.dims().length);
+				return new TypeUnit(tu);
+			}
+			default:
+				break;
+			}
+			return null;
+		}
+		
+		// Old .dbg.symbols / .dbg.natives symbol information
 		switch (var.type()) {
 		case Normal:
 			return FromTag(var.tag());
@@ -110,10 +144,16 @@ public class TypeUnit {
 	public static TypeUnit FromArgument(Argument arg) {
 		switch (arg.type()) {
 		case Normal:
-			return FromTag(arg.tag());
+			if (arg.rttiType() == null)
+				return FromTag(arg.tag());
+			else
+				return new TypeUnit(new PawnType(arg.rttiType()));
 		case Array:
 		case ArrayReference:
-			return new TypeUnit(new PawnType(arg.tag()), arg.dimensions().length);
+			if (arg.rttiType() == null)
+				return new TypeUnit(new PawnType(arg.tag()), arg.dimensions().length);
+			else
+				return new TypeUnit(new PawnType(arg.rttiType()), arg.dimensions().length);
 		default:
 			break;
 		}

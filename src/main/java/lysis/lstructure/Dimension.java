@@ -10,6 +10,12 @@ public class Dimension {
 		tag_ = tag;
 		size_ = size;
 	}
+	
+	public Dimension(int size) {
+		tag_id_ = -1;
+		tag_ = null;
+		size_ = size;
+	}
 
 	public Tag tag() {
 		return tag_;

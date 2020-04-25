@@ -1,6 +1,8 @@
 package lysis.sourcepawn;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +28,9 @@ import lysis.lstructure.Scope;
 import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
+import lysis.types.rtti.RttiType;
+import lysis.types.rtti.TypeBuilder;
+import lysis.types.rtti.TypeFlag;
 
 public class SourcePawnFile extends PawnFile {
 
@@ -65,6 +70,18 @@ public class SourcePawnFile extends PawnFile {
 			this.dataoffs = dataoffs;
 			this.size = size;
 			this.name = name;
+		}
+	}
+
+	private class RttiListTable {
+		public long headersize;
+		public long rowsize;
+		public long rowcount;
+
+		public RttiListTable(ExtendedDataInputStream br) throws IOException {
+			this.headersize = br.ReadUInt32();
+			this.rowsize = br.ReadUInt32();
+			this.rowcount = br.ReadUInt32();
 		}
 	}
 
@@ -124,14 +141,16 @@ public class SourcePawnFile extends PawnFile {
 	public static boolean debugUnpacked_;
 	private HashMap<String, Section> sections_;
 	private HashSet<AddressRange> stringRanges_ = new HashSet<>();
+	private byte[] binary_ = null;
+	private ByteArrayInputStream rttiData_ = null;
 
 	// Detect and match (Float) operators in the .publics and .dbg.symbols tables.
 	private Pattern publicOperator = Pattern.compile("^\\.\\d+\\.(\\d+)(.)(\\d+)$");
 	private Pattern symbolsOperator = Pattern.compile("^operator(.)\\(([^:]+):,([^:]+):\\)$");
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
-			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info",
-			".dbg.strings" };
+			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info", ".dbg.strings",
+			"rtti.data", "rtti.methods" };
 
 	public SourcePawnFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -188,7 +207,7 @@ public class SourcePawnFile extends PawnFile {
 					else
 						recoveredName += new String(binary, offset, 1, "UTF-8");
 				}
-				
+
 				if (!recoveredName.equals(previousSection.name))
 					System.err.printf("// Recovered name of previous section as \"%s\".%n", recoveredName);
 				previousSection.name = recoveredName;
@@ -280,7 +299,7 @@ public class SourcePawnFile extends PawnFile {
 		// and the packing changed, at the same time .dbg.ntvarg was introduced.
 		// Once the incompatibility was noted, version was bumped to 0x0102.
 		debugUnpacked_ = (header_.version == 0x0101) && !sections_.containsKey(".dbg.natives");
-		
+
 		// The .dbg.strings section is obsolete in newer binary versions.
 		Section debugStringsSection = sections_.get(".dbg.strings");
 		if (debugStringsSection == null)
@@ -311,6 +330,9 @@ public class SourcePawnFile extends PawnFile {
 			break;
 		}
 		}
+
+		// Keep the raw data for reference.
+		binary_ = binary;
 
 		if (sections_.containsKey(".code")) {
 			Section sc = sections_.get(".code");
@@ -347,53 +369,17 @@ public class SourcePawnFile extends PawnFile {
 			// Maybe the .dbg.symbols section was inserted before this one?
 			// Merge the lists.
 			LinkedList<Function> functions = new LinkedList<Function>();
-			if (functions_ != null)
-				functions.addAll(Arrays.asList(functions_));
 
 			int numPublics = sc.size / 8;
 			publics_ = new Public[numPublics];
-			publicLoop: for (int i = 0; i < numPublics; i++) {
+			for (int i = 0; i < numPublics; i++) {
 				long address = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
 				String name = ReadString(binary, sections_.get(".names").dataoffs + (int) nameOffset);
 				publics_[i] = new Public(name, address);
 
-				// Search for this function in the .dbg.symbols table.
-				for (Function func : functions) {
-					// This function isn't what we're looking for.
-					if (func.address() != address)
-						continue;
-
-					// That function was in the .dbg.symbols table with the same name.
-					// No need to add it again.
-					if (name.equals(func.name()))
-						continue publicLoop;
-
-					// This is the "private name" of a non-public function in the .publics
-					// section used for allowing non-public functions as callbacks.
-					// "MyFunc" becomes ".1234.MyFunc"
-					if (name.endsWith(func.name()) && name.matches("\\.\\d+\\..+"))
-						continue publicLoop;
-
-					// Operators are named differently in .publics and .dbg.symbols
-					// "operator-(Float:,_:)" in .dbg.symbols becomes
-					// ".1234.40000005-0" in .publics with the first part between the dots
-					// being the address of the function again like above and
-					// 40000005 being the tag_id of the left operand and 0 being
-					// the tag_id of the right operand.
-					Matcher pubMatcher = publicOperator.matcher(name);
-					Matcher symMatcher = symbolsOperator.matcher(func.name());
-					if (pubMatcher.find() && symMatcher.find()) {
-						// This operator is for the same operation.
-						// TODO: Check tags.
-						if (pubMatcher.group(2).equals(symMatcher.group(1)))
-							continue publicLoop;
-					}
-
-				}
-				Function f = new Function(address, address, code().bytes().length + 1, name, null);
+				Function f = new Function(address, address, code().bytes().length + 1, name);
 				functions.add(f);
-
 			}
 			// Add the public functions to the list right away.
 			functions_ = functions.toArray(new Function[0]);
@@ -405,26 +391,16 @@ public class SourcePawnFile extends PawnFile {
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
 
-			// Maybe the .dbg.symbols section was inserted before this one?
-			// Merge the lists.
 			LinkedList<Variable> globals = new LinkedList<Variable>();
-			if (globals_ != null)
-				globals.addAll(Arrays.asList(globals_));
 
 			int numPubVars = sc.size / 8;
 			pubvars_ = new PubVar[numPubVars];
-			pubvarLoop: for (int i = 0; i < numPubVars; i++) {
+			for (int i = 0; i < numPubVars; i++) {
 				long address = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
 				String name = ReadString(binary, sections_.get(".names").dataoffs + (int) nameOffset);
 				pubvars_[i] = new PubVar(name, address);
 
-				// Search for this variable in the .dbg.symbols table.
-				for (Variable glob : globals) {
-					// That variable was in the .dbg.symbols table
-					if (name.equals(glob.name()))
-						continue pubvarLoop;
-				}
 				Variable v = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global,
 						name, null);
 				globals.add(v);
@@ -552,52 +528,14 @@ public class SourcePawnFile extends PawnFile {
 					Tag tag = tagid >= tags_.length ? null : tags_[tagid];
 
 					// Been in .publics as well?
-					Function existingFunction = null;
-					for (Function func : functions) {
-						// That function was in the .dbg.symbols table
-						if (name.equals(func.name())) {
-							existingFunction = func;
-							break;
-						}
-
-						// Workaround non-public functions named like .10313.FunctionName in the
-						// .publics section for callbacks
-						if (func.name().endsWith(name) && func.name().matches("\\.\\d+\\..+")) {
-							existingFunction = func;
-							break;
-						}
-
-						// Operators are named differently in .publics and .dbg.symbols
-						// "operator-(Float:,_:)" in .dbg.symbols becomes
-						// ".1234.40000005-0" in .publics with the first part between the dots
-						// being the address of the function again like above and
-						// 40000005 being the tag_id of the left operand and 0 being
-						// the tag_id of the right operand.
-						Matcher pubMatcher = publicOperator.matcher(func.name());
-						Matcher symMatcher = symbolsOperator.matcher(name);
-						if (pubMatcher.find() && symMatcher.find()) {
-							// This operator is for the same operation.
-							// TODO: Check tags.
-							if (pubMatcher.group(2).equals(symMatcher.group(1))) {
-								existingFunction = func;
-								break;
-							}
-						}
-					}
-
-					// This function came up already.
-					if (existingFunction != null) {
-						if (existingFunction.address() != addr || existingFunction.codeStart() != codestart) {
-							System.err.printf(
-									"// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
-									name, addr, existingFunction.address());
-							continue;
-						}
-						// Remove the old one from the list as this might have more info.
-						functions.remove(existingFunction);
-					}
-
 					Function func = new Function((long) addr, codestart, codeend, name, tag);
+					try {
+						findDuplicateFunction(name, func, functions);
+					} catch (Exception e) {
+						System.err.println(e.getMessage());
+						continue;
+					}
+
 					functions.add(func);
 				} else {
 					VariableType type = FromIdent(ident);
@@ -661,7 +599,7 @@ public class SourcePawnFile extends PawnFile {
 					if (pub.name().endsWith(func.name()) && pub.name().matches("\\.\\d+\\..+"))
 						continue publicLoop;
 				}
-				Function f = new Function(pub.address(), pub.address(), code().bytes().length + 1, pub.name(), null);
+				Function f = new Function(pub.address(), pub.address(), code().bytes().length + 1, pub.name());
 				functions.add(f);
 			}
 
@@ -765,6 +703,111 @@ public class SourcePawnFile extends PawnFile {
 			}
 			br.close();
 		}
+
+		// Parse Runtime Type Information sections.
+		int namesOffset = sections_.get(".names").dataoffs;
+		if (sections_.containsKey("rtti.methods")) {
+			Section sc = sections_.get("rtti.methods");
+			ExtendedDataInputStream br = new ExtendedDataInputStream(
+					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+			RttiListTable rt = new RttiListTable(br);
+
+			LinkedList<Function> functions = new LinkedList<>();
+			if (functions_ != null)
+				functions.addAll(Arrays.asList(functions_));
+			for (int i = 0; i < rt.rowcount; i++) {
+				long nameoffs = br.ReadUInt32();
+				long pcodeStart = br.ReadUInt32();
+				long pcodeEnd = br.ReadUInt32();
+				long signatureOffs = br.ReadUInt32();
+				String name = ReadString(binary, namesOffset + nameoffs);
+				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
+				RttiType type = tb.decodeFunction();
+				
+				// Been in .publics as well?
+				Function func = new Function(pcodeStart, pcodeStart, pcodeEnd, name, type);
+				try {
+					findDuplicateFunction(name, func, functions);
+				} catch (Exception e) {
+					System.err.println(e.getMessage());
+					continue;
+				}
+				
+				// Build argument type list right away.
+				LinkedList<Argument> args = new LinkedList<>();
+				for (int j = 0; j < type.getArguments().size(); j++) {
+					RttiType arg = type.getArguments().get(j);
+					LinkedList<Dimension> dims = new LinkedList<>();
+					RttiType arrayType = arg;
+					while (arrayType.isArrayType()) {
+						// non FixedArrays have a size of 0.
+						dims.add(0, new Dimension((int) arrayType.getData()));
+						arrayType = arrayType.getInnerType();
+					}
+					Variable var = insertArgumentVar(func, j, arg, dims);
+					args.add(new Argument(var.type(), var.name(), arg,
+							var.dims()));
+				}
+
+				func.setArguments(args);
+				functions.add(func);
+			}
+
+			functions_ = functions.toArray(new Function[0]);
+
+			br.close();
+		}
+	}
+	
+	private void findDuplicateFunction(String name, Function newFunction, LinkedList<Function> functions) throws Exception {
+		// Been in .publics as well?
+		Function existingFunction = null;
+		for (Function func : functions) {
+			// That function was in the .dbg.symbols table
+			if (name.equals(func.name())) {
+				existingFunction = func;
+				break;
+			}
+
+			// Workaround non-public functions named like .10313.FunctionName in the
+			// .publics section for callbacks
+			if (func.name().endsWith(name) && func.name().matches("\\.\\d+\\..+")) {
+				existingFunction = func;
+				break;
+			}
+
+			// Operators are named differently in .publics and .dbg.symbols
+			// "operator-(Float:,_:)" in .dbg.symbols becomes
+			// ".1234.40000005-0" in .publics with the first part between the dots
+			// being the address of the function again like above and
+			// 40000005 being the tag_id of the left operand and 0 being
+			// the tag_id of the right operand.
+			Matcher pubMatcher = publicOperator.matcher(func.name());
+			Matcher symMatcher = symbolsOperator.matcher(name);
+			if (pubMatcher.find() && symMatcher.find()) {
+				// This operator is for the same operation.
+				// TODO: Check tags.
+				if (pubMatcher.group(2).equals(symMatcher.group(1))) {
+					existingFunction = func;
+					break;
+				}
+			}
+		}
+
+		// This function came up already.
+		if (existingFunction != null) {
+			if (existingFunction.address() != newFunction.address() || existingFunction.codeStart() != newFunction.codeStart()) {
+				throw new Exception(String.format("// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
+						name, newFunction.address(), existingFunction.address()));
+			}
+			// Remove the old one from the list as this might have more info.
+			functions.remove(existingFunction);
+		}
+	}
+
+	public InputStream getRTTIDataBytes() {
+		Section sc = sections_.get("rtti.data");
+		return new ByteArrayInputStream(binary_, sc.dataoffs, sc.size);
 	}
 
 	public Scope getScope(byte b) {

@@ -2,6 +2,8 @@ package lysis.types;
 
 import lysis.lstructure.Tag;
 import lysis.sourcepawn.OpcodeHelpers;
+import lysis.types.rtti.RttiType;
+import lysis.types.rtti.TypeFlag;
 
 public class PawnType {
 	private CellType type_;
@@ -17,10 +19,6 @@ public class PawnType {
 
 	public Tag tag() {
 		return tag_;
-	}
-
-	public boolean isString() {
-		return type_ == CellType.Tag && tag_.name().equals("String");
 	}
 
 	public PawnType(Tag tag) {
@@ -39,6 +37,32 @@ public class PawnType {
 		} else {
 			type_ = CellType.Tag;
 			tag_ = tag;
+		}
+	}
+	
+	public PawnType(RttiType type) {
+		// Ignore array dimensions and get the base type of the array.
+		while (type.isArrayType())
+			type = type.getInnerType();
+
+		tag_ = null;
+		switch (type.getTypeFlag()) {
+		case TypeFlag.Bool:
+			type_ = CellType.Bool;
+			break;
+		case TypeFlag.Char8:
+			type_ = CellType.Character;
+			break;
+		case TypeFlag.Float32:
+			type_ = CellType.Float;
+			break;
+		case TypeFlag.TopFunction:
+			type_ = CellType.Function;
+			break;
+		//case TypeFlag.Int32:
+		default:
+			type_ = CellType.None;
+			break;
 		}
 	}
 

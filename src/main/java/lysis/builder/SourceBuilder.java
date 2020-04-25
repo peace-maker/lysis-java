@@ -57,6 +57,7 @@ import lysis.sourcepawn.SPOpcode;
 import lysis.types.CellType;
 import lysis.types.PawnType;
 import lysis.types.TypeUnit;
+import lysis.types.rtti.RttiType;
 
 public class SourceBuilder {
 	private PawnFile file_;
@@ -155,15 +156,43 @@ public class SourceBuilder {
 		if (type.type() == CellType.Float)
 			return "Float:";
 		if (type.type() == CellType.Tag)
-			return buildTag(type.tag());
+			return buildType(type.tag());
 		return "";
 	}
+	
+	private String buildType(Variable var) {
+		if (var.tag() == null && var.rttiType() == null)
+			return "";
+		
+		if (var.tag() != null) {
+			String prefix = var.type() == VariableType.Reference ? "&" : "";
+			return prefix + buildType(var.tag());
+		}
+		
+		return buildType(var.rttiType()) + " ";
+	}
 
-	private String buildTag(Tag tag) {
+	private String buildType(Argument arg) {
+		if (arg.tag() == null && arg.rttiType() == null)
+			return "";
+		
+		if (arg.tag() != null) {
+			String prefix = arg.type() == VariableType.Reference ? "&" : "";
+			return prefix + buildType(arg.tag());
+		}
+		
+		return buildType(arg.rttiType()) + " ";
+	}
+	
+	private String buildType(Tag tag) {
 		// TODO: why wouldn't one print "any"?
 		if (tag == null || tag.name().equals("_")/* || tag.name().equals("any") */)
 			return "";
 		return tag.name() + ":";
+	}
+	
+	private String buildType(RttiType type) {
+		return type.toString();
 	}
 
 	private void writeSignature(NodeBlock entry) throws IOException {
@@ -179,7 +208,7 @@ public class SourceBuilder {
 		if (pub != null && !pub.name().matches("\\.\\d+\\..+"))
 			out_.print("public ");
 
-		out_.print(buildTag(f.returnType()) + f.name());
+		out_.print(buildType(f.returnType()) + f.name());
 
 		out_.print("(");
 		if (f.args() != null) {
@@ -419,7 +448,7 @@ public class SourceBuilder {
 
 		String text = "{" + System.lineSeparator();
 		increaseIndent();
-		if (tu.type().isString())
+		if (tu.isString())
 			text += dumpStringArray(var, ia.address(), 0);
 		else
 			text += dumpArray(var, ia.address(), 0);
@@ -453,7 +482,7 @@ public class SourceBuilder {
 
 		assert (tu.dims() == 1);
 
-		if (tu.type().isString()) {
+		if (tu.isString()) {
 			String s = file_.stringFromData(ia.address(), (int) ia.size() - 1);
 			return buildString(s);
 		}
@@ -566,8 +595,7 @@ public class SourceBuilder {
 	}
 
 	private String buildArgDeclaration(Argument arg) {
-		String prefix = arg.type() == VariableType.Reference ? "&" : "";
-		String decl = prefix + buildTag(arg.tag()) + arg.name();
+		String decl = buildType(arg) + arg.name();
 		if (arg.dimensions() != null) {
 			for (int i = 0; i < arg.dimensions().length; i++) {
 				Dimension dim = arg.dimensions()[i];
@@ -585,8 +613,7 @@ public class SourceBuilder {
 	}
 
 	private String buildVarDeclaration(Variable var) {
-		String prefix = var.type() == VariableType.Reference ? "&" : "";
-		String decl = prefix + buildTag(var.tag()) + var.name();
+		String decl = buildType(var) + var.name();
 		if (var.dims() != null) {
 			for (int i = 0; i < var.dims().length; i++) {
 				Dimension dim = var.dims()[i];
@@ -1213,7 +1240,7 @@ public class SourceBuilder {
 					text += " = " + buildString(primer);
 				outputLine(text + ";");
 			} else {
-				String text = decl + " " + buildTag(var.tag()) + var.name();
+				String text = decl + " " + buildType(var) + var.name();
 				if (var.dims() != null) {
 					for (int i = 0; i < var.dims().length; i++) {
 						// Display the correct number of bytes for the last dim of a string array
@@ -1239,7 +1266,7 @@ public class SourceBuilder {
 				outputLine("};");
 			}
 		} else if (var.dims() == null || var.dims().length == 0) {
-			String text = decl + " " + buildTag(var.tag()) + var.name();
+			String text = decl + " " + buildType(var) + var.name();
 
 			long value = file_.int32FromData(var.address());
 			if (value != 0) {
@@ -1255,14 +1282,14 @@ public class SourceBuilder {
 
 			outputLine(text);
 		} else if (isArrayEmpty(var)) {
-			String text = decl + " " + buildTag(var.tag()) + var.name();
+			String text = decl + " " + buildType(var) + var.name();
 			if (var.dims() != null) {
 				for (int i = 0; i < var.dims().length; i++)
 					text += "[" + var.dims()[i].size() + "]";
 			}
 			outputLine(text + ";");
 		} else {
-			String text = decl + " " + buildTag(var.tag()) + var.name();
+			String text = decl + " " + buildType(var) + var.name();
 			if (var.dims() != null) {
 				for (int i = 0; i < var.dims().length; i++)
 					text += "[" + var.dims()[i].size() + "]";

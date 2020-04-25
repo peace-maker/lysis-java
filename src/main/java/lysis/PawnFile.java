@@ -3,9 +3,11 @@ package lysis;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 import lysis.amxmodx.AMXModXFile;
 import lysis.lstructure.Argument;
+import lysis.lstructure.Dimension;
 import lysis.lstructure.Function;
 import lysis.lstructure.Native;
 import lysis.lstructure.Scope;
@@ -13,6 +15,7 @@ import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
 import lysis.sourcepawn.SourcePawnFile;
+import lysis.types.rtti.RttiType;
 
 public abstract class PawnFile {
 	protected Function[] functions_;
@@ -211,17 +214,34 @@ public abstract class PawnFile {
 		return f;
 	}
 
-	public boolean addArgumentVar(Function func, int num) {
+	public boolean addArgumentDummyVar(Function func, int num) {
 		long varAddr = 12 + num * 4;
 
 		// Variable already exists.
 		if (lookupVariable(func.address(), varAddr) != null)
 			return false;
 
-		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
-		variables_[variables_.length - 1] = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(),
+		Variable var = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(),
 				VariableType.Normal, Scope.Local, "_arg" + num, null);
+		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
+		variables_[variables_.length - 1] = var;
 		return true;
+	}
+	
+	public Variable insertArgumentVar(Function func, int argNum, RttiType type, LinkedList<Dimension> dims) {
+		long varAddr = 12 + argNum * 4;
+		
+		// Variable already exists.
+		if (lookupVariable(func.address(), varAddr) != null)
+			return null;
+		Dimension[] dimarray = null;
+		if (!dims.isEmpty())
+			dimarray = dims.toArray(new Dimension[0]);
+		Variable var = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(),
+				type.toVariableType(), Scope.Local, "_arg" + argNum, dimarray, type);
+		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
+		variables_[variables_.length - 1] = var;
+		return var;
 	}
 
 	public Argument buildArgumentInfo(Function func, int argNum) {

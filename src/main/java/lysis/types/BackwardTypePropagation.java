@@ -68,7 +68,7 @@ public class BackwardTypePropagation extends NodeVisitor {
 		if (global != null)
 			return new DGlobal(global);
 
-		if (tu != null && tu.type().isString())
+		if (tu != null && tu.isString())
 			return new DString(graph_.file().stringFromData(node.value()));
 		return null;
 	}

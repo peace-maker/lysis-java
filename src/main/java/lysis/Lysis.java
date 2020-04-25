@@ -51,7 +51,7 @@ public class Lysis {
 				// See if this argument is already there.
 				// Implementations of functions for different states don't have their arguments
 				// fetched when parsing the debug sections.
-				if (!file.addArgumentVar(func, i))
+				if (!file.addArgumentDummyVar(func, i))
 					arg = file.buildArgumentInfo(func, i);
 
 				args.add(arg);
