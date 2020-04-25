@@ -384,7 +384,7 @@ public class BackwardTypePropagation extends NodeVisitor {
 	public void visit(DReturn ret) {
 		if (graph_.function() != null) {
 			DNode input = ret.getOperand(0);
-			TypeUnit tu = TypeUnit.FromTag(graph_.function().returnType());
+			TypeUnit tu = TypeUnit.FromFunction(graph_.function());
 			input.typeSet().addType(tu);
 		}
 	}

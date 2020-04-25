@@ -54,10 +54,12 @@ import lysis.nodes.types.DSysReq;
 import lysis.nodes.types.DTempName;
 import lysis.nodes.types.DUnary;
 import lysis.sourcepawn.SPOpcode;
+import lysis.sourcepawn.SourcePawnFile;
 import lysis.types.CellType;
 import lysis.types.PawnType;
 import lysis.types.TypeUnit;
 import lysis.types.rtti.RttiType;
+import lysis.types.rtti.TypeFlag;
 
 public class SourceBuilder {
 	private PawnFile file_;
@@ -169,7 +171,7 @@ public class SourceBuilder {
 			return prefix + buildType(var.tag());
 		}
 		
-		return buildType(var.rttiType()) + " ";
+		return buildType(var.rttiType());
 	}
 
 	private String buildType(Argument arg) {
@@ -181,7 +183,7 @@ public class SourceBuilder {
 			return prefix + buildType(arg.tag());
 		}
 		
-		return buildType(arg.rttiType()) + " ";
+		return buildType(arg.rttiType());
 	}
 	
 	private String buildType(Tag tag) {
@@ -192,7 +194,50 @@ public class SourceBuilder {
 	}
 	
 	private String buildType(RttiType type) {
-		return type.toString();
+		switch (type.getTypeFlag()) {
+		case TypeFlag.Bool:
+			return "bool:";
+		case TypeFlag.Int32:
+			return "";
+		case TypeFlag.Float32:
+			return "Float:";
+		case TypeFlag.Char8:
+			return "String:";
+		case TypeFlag.Any:
+			return "any:";
+		case TypeFlag.TopFunction:
+			return "Function:";
+		case TypeFlag.Void:
+			return "void:";
+		case TypeFlag.FixedArray:
+		case TypeFlag.Array:
+			while (type.isArrayType())
+				type = type.getInnerType();
+			return buildType(type);
+		case TypeFlag.Enum:
+			// FIXME: Hack to access rtti info
+			SourcePawnFile spf = (SourcePawnFile)file_;
+			return spf.getEnumName((int) type.getData()) + ":";
+		case TypeFlag.Typedef:
+			return "<typedef " + type.getData() + ">:";
+		case TypeFlag.Typeset:
+			return "<typeset " + type.getData() + ">:";
+		case TypeFlag.Classdef:
+			return "<classdef " + type.getData() + ">:";
+		case TypeFlag.EnumStruct:
+			return "<enumstruct" + type.getData() + ">:";
+		case TypeFlag.Function:
+			// Only print the return type.
+			return buildType(type.getInnerType());
+		}
+		return "";
+	}
+	
+	// Build return type string
+	private String buildType(Function func) {
+		if (func.returnType() != null)
+			return buildType(func.returnType());
+		return buildType(func.returnTag());
 	}
 
 	private void writeSignature(NodeBlock entry) throws IOException {
@@ -208,7 +253,7 @@ public class SourceBuilder {
 		if (pub != null && !pub.name().matches("\\.\\d+\\..+"))
 			out_.print("public ");
 
-		out_.print(buildType(f.returnType()) + f.name());
+		out_.print(buildType(f) + f.name());
 
 		out_.print("(");
 		if (f.args() != null) {

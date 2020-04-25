@@ -696,7 +696,7 @@ public class MethodParser {
 		Function default_func = file_.addFunction(function_list.defaultCase().pc());
 		default_func.setName(func_.name());
 		default_func.setStateAddr(state_var.address());
-		default_func.setTag(func_.returnType());
+		default_func.setTag(func_.returnTag());
 		default_func.setTagId(func_.tag_id());
 
 		// Parse all implementations for different states.
@@ -710,7 +710,7 @@ public class MethodParser {
 			state_func.setName(func_.name());
 			state_func.setStateId((short) state_id);
 			state_func.setStateAddr(state_var.address());
-			state_func.setTag(func_.returnType());
+			state_func.setTag(func_.returnTag());
 			state_func.setTagId(func_.tag_id());
 		}
 	}

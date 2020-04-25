@@ -1,6 +1,7 @@
 package lysis.types;
 
 import lysis.lstructure.Argument;
+import lysis.lstructure.Function;
 import lysis.lstructure.Tag;
 import lysis.lstructure.Variable;
 import lysis.types.rtti.RttiType;
@@ -98,13 +99,23 @@ public class TypeUnit {
 	public static TypeUnit FromTag(Tag tag) {
 		return new TypeUnit(new PawnType(tag));
 	}
+	
+	public static TypeUnit FromType(RttiType type) {
+		return new TypeUnit(new PawnType(type));
+	}
+	
+	public static TypeUnit FromFunction(Function func) {
+		if (func.returnType() != null)
+			return FromType(func.returnType());
+		return FromTag(func.returnTag());
+	}
 
 	public static TypeUnit FromVariable(Variable var) {
 		if (var.rttiType() != null) {
 			RttiType type = var.rttiType();
 			switch (var.type()) {
 			case Normal:
-				return new TypeUnit(new PawnType(type));
+				return FromType(type);
 			case Array:
 				return new TypeUnit(new PawnType(type), var.dims().length);
 			case Reference: {

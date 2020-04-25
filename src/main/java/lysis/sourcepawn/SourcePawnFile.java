@@ -142,7 +142,10 @@ public class SourcePawnFile extends PawnFile {
 	private HashMap<String, Section> sections_;
 	private HashSet<AddressRange> stringRanges_ = new HashSet<>();
 	private byte[] binary_ = null;
+	
+	// RTTI data
 	private ByteArrayInputStream rttiData_ = null;
+	private String[] enums_ = null;
 
 	// Detect and match (Float) operators in the .publics and .dbg.symbols tables.
 	private Pattern publicOperator = Pattern.compile("^\\.\\d+\\.(\\d+)(.)(\\d+)$");
@@ -150,7 +153,7 @@ public class SourcePawnFile extends PawnFile {
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
 			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info", ".dbg.strings",
-			"rtti.data", "rtti.methods", "rtti.natives" };
+			"rtti.data", "rtti.enums", "rtti.methods", "rtti.natives" };
 
 	public SourcePawnFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -706,6 +709,20 @@ public class SourcePawnFile extends PawnFile {
 
 		// Parse Runtime Type Information sections.
 		int namesOffset = sections_.get(".names").dataoffs;
+		if (sections_.containsKey("rtti.enums")) {
+			Section sc = sections_.get("rtti.enums");
+			ExtendedDataInputStream br = new ExtendedDataInputStream(
+					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+			RttiListTable rt = new RttiListTable(br);
+			
+			enums_ = new String[(int) rt.rowcount];
+			for (int i = 0; i < rt.rowcount; i++) {
+				long nameoffs = br.ReadUInt32();
+				br.skipBytes(12); // reserved 0-2
+				enums_[i] = ReadString(binary, namesOffset + nameoffs);
+			}
+		}
+		
 		if (sections_.containsKey("rtti.methods")) {
 			Section sc = sections_.get("rtti.methods");
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
@@ -847,6 +864,10 @@ public class SourcePawnFile extends PawnFile {
 	public InputStream getRTTIDataBytes() {
 		Section sc = sections_.get("rtti.data");
 		return new ByteArrayInputStream(binary_, sc.dataoffs, sc.size);
+	}
+	
+	public String getEnumName(int index) {
+		return enums_[index];
 	}
 
 	public Scope getScope(byte b) {

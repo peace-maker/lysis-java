@@ -15,8 +15,12 @@ public class Signature {
 		name_ = name;
 	}
 
-	public Tag returnType() {
+	public Tag returnTag() {
 		return tag_;
+	}
+	
+	public RttiType returnType() {
+		return rtti_type_;
 	}
 
 	public long tag_id() {
