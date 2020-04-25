@@ -211,9 +211,7 @@ public class SourceBuilder {
 			return "void:";
 		case TypeFlag.FixedArray:
 		case TypeFlag.Array:
-			while (type.isArrayType())
-				type = type.getInnerType();
-			return buildType(type);
+			return buildType(type.getArrayBaseType());
 		case TypeFlag.Enum:
 			// FIXME: Hack to access rtti info
 			SourcePawnFile spf = (SourcePawnFile)file_;
@@ -646,7 +644,7 @@ public class SourceBuilder {
 				Dimension dim = arg.dimensions()[i];
 				decl += "[";
 				if (dim.size() >= 1) {
-					if (arg.tag() != null && arg.tag().name().equals("String"))
+					if (arg.isString())
 						decl += dim.size() * 4;
 					else
 						decl += dim.size();
@@ -664,7 +662,7 @@ public class SourceBuilder {
 				Dimension dim = var.dims()[i];
 				decl += "[";
 				if (dim.size() >= 1) {
-					if (var.tag() != null && var.tag().name().equals("String") && i == var.dims().length - 1)
+					if (var.isString() && i == var.dims().length - 1)
 						decl += dim.size() * 4;
 					else
 						decl += dim.size();
@@ -1090,7 +1088,7 @@ public class SourceBuilder {
 		int[] dims = new int[var.dims().length];
 		for (int i = 0; i < var.dims().length; i++)
 			dims[i] = var.dims()[i].size();
-		if (var.tag() != null && var.tag().name().equals("String"))
+		if (var.isString())
 			dims[dims.length - 1] /= 4;
 
 		// Don't try to print an array with invalid indirection vectors.
@@ -1277,7 +1275,7 @@ public class SourceBuilder {
 			outputLine("time = " + buildString(time));
 			decreaseIndent();
 			outputLine("};");
-		} else if (var.tag() != null && var.tag().name().equals("String")) {
+		} else if (var.isString()) {
 			if (var.dims().length == 1) {
 				String text = decl + " String:" + var.name() + "[" + var.dims()[0].size() * 4 + "]";
 				String primer = file_.stringFromData(var.address());

@@ -55,7 +55,7 @@ public class DConstant extends DNullaryNode {
 				global = file.lookupVariable(pc(), value(), Scope.Static);
 			if (global != null)
 				return new DGlobal(global);
-			if (tag.name() == "String")
+			if (tag.isString())
 				return new DString(file.stringFromData(value()));
 			break;
 		}

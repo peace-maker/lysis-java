@@ -88,7 +88,7 @@ public class TypeUnit {
 
 	public boolean isString() {
 		// Legacy tag detection.
-		if (type_.type() == CellType.Tag && type_.tag().name().equals("String"))
+		if (type_.type() == CellType.Tag && type_.tag().isString())
 			return true;
 		// char array.
 		if (type_.type() == CellType.Character && dims_ == 1)

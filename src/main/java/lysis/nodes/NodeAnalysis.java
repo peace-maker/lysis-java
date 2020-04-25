@@ -622,8 +622,7 @@ public class NodeAnalysis {
 
 				if (next.type() == NodeType.Call) {
 					DCall call = (DCall) next;
-					// TODO: RTTI
-					if (call.function().returnTag() != null && call.function().returnTag().name().equals("String")) {
+					if (call.function().isStringReturn()) {
 						use.node().replaceOperand(use.index(), call);
 						return true;
 					}

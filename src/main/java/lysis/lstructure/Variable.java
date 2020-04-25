@@ -101,4 +101,12 @@ public class Variable {
 	public RttiType rttiType() {
 		return rtti_type_;
 	}
+	
+	public boolean isString() {
+		if (tag_ != null && tag_.isString())
+			return true;
+		if (rtti_type_ != null && rtti_type_.isString())
+			return true;
+		return false;
+	}
 }

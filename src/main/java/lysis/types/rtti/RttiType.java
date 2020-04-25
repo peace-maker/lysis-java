@@ -31,6 +31,17 @@ public class RttiType {
 		return typeflag_ == TypeFlag.Array || typeflag_ == TypeFlag.FixedArray;
 	}
 	
+	public boolean isString() {
+		return getArrayBaseType().getTypeFlag() == TypeFlag.Char8;
+	}
+	
+	public RttiType getArrayBaseType() {
+		RttiType type = this;
+		while (type.isArrayType())
+			type = type.getInnerType();
+		return type;
+	}
+	
 	public void setConst() {
 		isConst_ = true;
 	}

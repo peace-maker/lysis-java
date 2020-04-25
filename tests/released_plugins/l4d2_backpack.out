@@ -871,19 +871,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_mols[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "pipe_bomb", false) != -1)
 									{
 										pack_pipes[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "vomitjar", false) != -1)
 									{
 										pack_biles[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -919,19 +919,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_pipes[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "molotov", false) != -1)
 									{
 										pack_mols[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "vomitjar", false) != -1)
 									{
 										pack_biles[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -967,19 +967,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_biles[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "molotov", false) != -1)
 									{
 										pack_mols[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "pipe_bomb", false) != -1)
 									{
 										pack_pipes[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1015,24 +1015,24 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_kits[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "defibrillator", false) != -1)
 									{
 										pack_defibs[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_incendiary", false) != -1)
 									{
 										pack_firepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_explosive", false) != -1)
 									{
 										pack_explodepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1068,24 +1068,24 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_defibs[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "first_aid_kit", false) != -1)
 									{
 										pack_kits[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_incendiary", false) != -1)
 									{
 										pack_firepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_explosive", false) != -1)
 									{
 										pack_explodepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1121,24 +1121,24 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_firepacks[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "first_aid_kit", false) != -1)
 									{
 										pack_kits[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "defibrillator", false) != -1)
 									{
 										pack_defibs[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_explosive", false) != -1)
 									{
 										pack_explodepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1174,24 +1174,24 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_explodepacks[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "first_aid_kit", false) != -1)
 									{
 										pack_kits[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "defibrillator", false) != -1)
 									{
 										pack_defibs[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 									if (StrContains(SlotItem, "upgradepack_incendiary", false) != -1)
 									{
 										pack_firepacks[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1227,14 +1227,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_pills[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "adrenaline", false) != -1)
 									{
 										pack_adrens[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);
@@ -1270,14 +1270,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 										return Action:0;
 									}
 									pack_adrens[client] += 1;
-									RequestFrame(RequestFrameCallback:97, any:0);
+									RequestFrame(RequestFrameCallback, any:0);
 								}
 								else
 								{
 									if (StrContains(SlotItem, "pain_pills", false) != -1)
 									{
 										pack_pills[client] += 1;
-										RequestFrame(RequestFrameCallback:97, any:0);
+										RequestFrame(RequestFrameCallback, any:0);
 									}
 								}
 								RemovePlayerItem(client, slotref);

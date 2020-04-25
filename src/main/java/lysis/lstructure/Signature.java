@@ -50,4 +50,12 @@ public class Signature {
 	public void setArguments(List<Argument> from) {
 		args_ = from.toArray(new Argument[0]);
 	}
+	
+	public boolean isStringReturn() {
+		if (tag_ != null && tag_.isString())
+			return true;
+		if (rtti_type_ != null && rtti_type_.isString())
+			return true;
+		return false;
+	}
 }

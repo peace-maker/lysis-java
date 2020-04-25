@@ -25,13 +25,13 @@ public class PawnType {
 		if (tag == null || tag.name().equals("_")) {
 			type_ = CellType.None;
 			tag_ = null;
-		} else if (tag.name().equals("Float")) {
+		} else if (tag.isFloat()) {
 			type_ = CellType.Float;
 			tag_ = null;
-		} else if (tag.name().equals("bool")) {
+		} else if (tag.isBoolean()) {
 			type_ = CellType.Bool;
 			tag_ = null;
-		} else if (OpcodeHelpers.IsFunctionTag(tag)) {
+		} else if (tag.isFunction()) {
 			type_ = CellType.Function;
 			tag_ = null;
 		} else {
