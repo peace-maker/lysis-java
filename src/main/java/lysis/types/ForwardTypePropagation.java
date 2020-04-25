@@ -57,8 +57,15 @@ public class ForwardTypePropagation extends NodeVisitor {
 			TypeUnit tu = TypeUnit.FromVariable(var);
 			assert (tu != null);
 			local.addType(new TypeUnit(tu));
-			if (local.value() != null && local.value().type() == NodeType.Constant && var.tag().name().equals("Float"))
-				local.value().addType(TypeUnit.FromTag(var.tag()));
+			if (local.value() != null && local.value().type() == NodeType.Constant && var.isFloat()) {
+				// Assign the raw non-array and non-reference type to the constant. 
+				TypeUnit rawType = null;
+				if (var.tag() != null)
+					rawType = TypeUnit.FromTag(var.tag());
+				if (var.rttiType() != null)
+					rawType = TypeUnit.FromType(var.rttiType());
+				local.value().addType(rawType);
+			}
 		}
 	}
 

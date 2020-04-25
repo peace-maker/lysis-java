@@ -109,4 +109,12 @@ public class Variable {
 			return true;
 		return false;
 	}
+	
+	public boolean isFloat() {
+		if (tag_ != null && tag_.isFloat())
+			return true;
+		if (rtti_type_ != null && rtti_type_.isFloat())
+			return true;
+		return false;
+	}
 }

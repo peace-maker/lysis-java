@@ -35,6 +35,10 @@ public class RttiType {
 		return getArrayBaseType().getTypeFlag() == TypeFlag.Char8;
 	}
 	
+	public boolean isFloat() {
+		return getArrayBaseType().getTypeFlag() == TypeFlag.Float32;
+	}
+	
 	public RttiType getArrayBaseType() {
 		RttiType type = this;
 		while (type.isArrayType())
