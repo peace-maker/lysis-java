@@ -1,3 +1,6 @@
+
+/* ERROR PREPROCESSING! null */
+ function "RemoveFullLines" (number 76)
 public PlVers:__version =
 {
 	version = 5,
@@ -1536,29 +1539,10 @@ public void:OnClientCookiesCached(client)
 	return void:0;
 }
 
-java.lang.ClassCastException: lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition
-	at lysis.builder.structure.SourceStructureBuilder.buildLogicChain(SourceStructureBuilder.java:195)
-	at lysis.builder.structure.SourceStructureBuilder.traverseComplexIf(SourceStructureBuilder.java:300)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:395)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:437)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:655)
-	at lysis.builder.structure.SourceStructureBuilder.traverseComplexIf(SourceStructureBuilder.java:377)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:395)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:437)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.build(SourceStructureBuilder.java:705)
-	at lysis.Lysis.DumpMethod(Lysis.java:140)
-	at lysis.Lysis.main(Lysis.java:213)
 
-/* ERROR! lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition */
+/* ERROR! null */
  function "OnPlayerRunCmd" (number 49)
+
 public Event_OnPlayerSpawn(Handle:event, String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid", 0));
@@ -2904,405 +2888,163 @@ DrawTetrisGameField(client, bool:bGameOver)
 
 bool:MoveCurrentObjectDown(client, &bool:bGameOver)
 {
-	new bool:bGameField[16][10] = {
-		{
-			64, 100, 136, 172, 208, 244, 280, 316, 352, 388
-		},
-		{
-			424, 460, 496, 532, 568, 604, 1920230772, 1949266793, 1769108581, 1886203507
-		},
-		{
-			51, 1920230772, 1714385769, 1600941173, 1701734764, 863005998, 0, 1920230772, 1882157929, 1701011820
-		},
-		{
-			1869374047, 1831758691, 13168, 1920230772, 1815049065, 1818588773, 779122015, 3371117, 49, 49
-		},
-		{
-			49, 49, 1635151433, 543451500, 1701407843, 1763734638, 2019910766, 1680156704, 41, 0
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		}
-	};
-	new iTempPosition2[2];
-	new var1 = g_iObjectPosition[client];
-	iTempPosition2 = var1;
-	iTempPosition2[1]--;
-	if (0 > iTempPosition2[1])
-	{
-		SaveCurrentObject(client);
-		if (g_hDrawInfoPanel[client])
-		{
-			TriggerTimer(g_hDrawInfoPanel[client], false);
-		}
-		ResetGameField(bGameField);
-		PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
-		if (IsObjectColliding(g_bGameField[client], bGameField))
-		{
-			bGameOver = 1;
-		}
-		return false;
-	}
-	PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], iTempPosition2, bGameField);
-	if (IsObjectColliding(g_bGameField[client], bGameField))
-	{
-		SaveCurrentObject(client);
-		if (g_hDrawInfoPanel[client])
-		{
-			TriggerTimer(g_hDrawInfoPanel[client], false);
-		}
-		ResetGameField(bGameField);
-		PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
-		if (IsObjectColliding(g_bGameField[client], bGameField))
-		{
-			bGameOver = 1;
-		}
-		return false;
-	}
-	return true;
-}
+
+/* ERROR! null */
+ function "MoveCurrentObjectDown" (number 73)
 
 bool:IsObjectColliding(bool:bGameField1[16][10], bool:bGameField2[16][10])
-{
-	new y;
-	while (y < 16)
-	{
-		new x;
-		while (x < 10)
-		{
-			new var1;
-			if (bGameField1[y][x] && bGameField2[y][x])
 			{
-				return true;
+				new y;
+				while (y < 16)
+				{
+					new x;
+					while (x < 10)
+					{
+						new var1;
+						if (bGameField1[y][x] && bGameField2[y][x])
+						{
+							return true;
+						}
+						x++;
+					}
+					y++;
+				}
+				return false;
 			}
-			x++;
-		}
-		y++;
-	}
-	return false;
-}
 
 MergeGameFields(bool:bGameField[16][10], bool:bGameFieldAdd[16][10])
-{
-	new y;
-	while (y < 16)
-	{
-		new x;
-		while (x < 10)
-		{
-			new var1;
-			if (!bGameField[y][x] && bGameFieldAdd[y][x])
 			{
-				bGameField[y][x] = true;
-			}
-			x++;
-		}
-		y++;
-	}
-	return 0;
-}
-
-RemoveFullLines(bool:bGameField[16][10])
-{
-	new iRemovedLines;
-	new y;
-	while (y < 16)
-	{
-		new x;
-		while (x < 10)
-		{
-			if (bGameField[y][x])
-			{
-				if (x == 9)
+				new y;
+				while (y < 16)
 				{
-					iRemovedLines++;
-					new y2 = y;
-					while (y2 < 15)
+					new x;
+					while (x < 10)
 					{
-						new x2;
-						while (x2 < 10)
+						new var1;
+						if (!bGameField[y][x] && bGameFieldAdd[y][x])
 						{
-							bGameField[y2][x2] = bGameField[y2 + 1][x2];
-							bGameField[y2 + 1][x2] = false;
-							x2++;
+							bGameField[y][x] = true;
 						}
-						y2++;
+						x++;
 					}
-					y--;
+					y++;
 				}
-				x++;
+				return 0;
 			}
-			y++;
-		}
-		y++;
-	}
-	return iRemovedLines;
-}
+
+
+/* ERROR! null */
+ function "RemoveFullLines" (number 76)
 
 SaveCurrentObject(client)
-{
-	new bool:bGameField[16][10] = {
-		{
-			1920230772, 1949266793, 1769108581, 1886203507, 51, 1920230772, 1714385769, 1600941173, 1701734764, 863005998
-		},
-		{
-			0, 1920230772, 1882157929, 1701011820, 1869374047, 1831758691, 13168, 1920230772, 1815049065, 1818588773
-		},
-		{
-			779122015, 3371117, 49, 49, 49, 49, 1635151433, 543451500, 1701407843, 1763734638
-		},
-		{
-			2019910766, 1680156704, 41, 0, 0, 0, 0, 0, 0, 0
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		},
-		{
-			0, ...
-		}
-	};
-	PutObjectOnGameField(g_iObjectType[client], g_iObjectRotation[client], g_iObjectPosition[client], bGameField);
-	MergeGameFields(g_bGameField[client], bGameField);
-	new iLinesCleared = RemoveFullLines(g_bGameField[client]);
-	new var1;
-	if (!g_bDisableSounds && g_bEnableSound[client])
-	{
-		if (iLinesCleared == 4)
-		{
-			EmitSoundToClientAny(client, "tetris/tetris.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-		}
-		if (0 < iLinesCleared)
-		{
-			EmitSoundToClientAny(client, "tetris/full_line.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-		}
-		EmitSoundToClientAny(client, "tetris/place_block.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-	}
-	new var2;
-	if (g_iCombo[client] > 0 && iLinesCleared)
-	{
-		new var4 = g_iScore[client];
-		var4 = var4[g_iLevel[client] * g_iCombo[client] * 50];
-		g_iCombo[client] = 0;
-	}
-	else
-	{
-		if (0 < iLinesCleared)
-		{
-			g_iCombo[client]++;
-		}
-	}
-	switch (iLinesCleared)
-	{
-		case 1:
-		{
-			new var8 = g_iScore[client];
-			var8 = var8[g_iLevel[client] * 100];
-			g_iLinesCleared[client] += 1;
-		}
-		case 2:
-		{
-			new var7 = g_iScore[client];
-			var7 = var7[g_iLevel[client] * 300];
-			g_iLinesCleared[client] += 3;
-		}
-		case 3:
-		{
-			new var6 = g_iScore[client];
-			var6 = var6[g_iLevel[client] * 500];
-			g_iLinesCleared[client] += 5;
-		}
-		case 4:
-		{
-			new var5 = g_iScore[client];
-			var5 = var5[g_iLevel[client] * 800];
-			g_iLinesCleared[client] += 8;
-		}
-		default:
-		{
-		}
-	}
-	new var9 = g_iScore[client];
-	var9 = var9[g_iHardDrop[client][0] * 2];
-	while (g_iLinesCleared[client] >= g_iLevel[client] * 5)
-	{
-		g_iLevel[client]++;
-		new var3;
-		if (!g_bDisableSounds && g_bEnableSound[client])
-		{
-			EmitSoundToClientAny(client, "tetris/level_up.mp3", -2, 0, 75, 0, 1.0, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
-		}
-	}
-	if (g_hDrawInfoPanel[client])
-	{
-		TriggerTimer(g_hDrawInfoPanel[client], false);
-	}
-	SelectRandomObject(client);
-	return 0;
-}
+			{
+
+/* ERROR! null */
+ function "SaveCurrentObject" (number 77)
 
 public ConVar_OnChange(Handle:convar, String:oldValue[], String:newValue[])
-{
-	if (StrEqual(newValue, oldValue, true))
-	{
-		return 0;
-	}
-	if (g_hCVDisableHardDrop == convar)
-	{
-		if (StrEqual(newValue, "1", true))
-		{
-			g_bDisableHardDrop = true;
-		}
-		else
-		{
-			g_bDisableHardDrop = false;
-		}
-	}
-	else
-	{
-		if (g_hCVDisableSounds == convar)
-		{
-			if (StrEqual(newValue, "1", true))
-			{
-				g_bDisableSounds = true;
-			}
-			else
-			{
-				g_bDisableSounds = false;
-			}
-		}
-		if (g_hCVOnlyDead == convar)
-		{
-			if (StrEqual(newValue, "1", true))
-			{
-				g_bOnlyDead = true;
-			}
-			else
-			{
-				g_bOnlyDead = false;
-			}
-		}
-		if (g_hCVDisableStats == convar)
-		{
-			if (StrEqual(newValue, "1", true))
-			{
-				g_bDisableStats = true;
-			}
-			g_bDisableStats = false;
-		}
-	}
-	return 0;
-}
+						{
+							if (StrEqual(newValue, oldValue, true))
+							{
+								return 0;
+							}
+							if (g_hCVDisableHardDrop == convar)
+							{
+								if (StrEqual(newValue, "1", true))
+								{
+									g_bDisableHardDrop = true;
+								}
+								else
+								{
+									g_bDisableHardDrop = false;
+								}
+							}
+							else
+							{
+								if (g_hCVDisableSounds == convar)
+								{
+									if (StrEqual(newValue, "1", true))
+									{
+										g_bDisableSounds = true;
+									}
+									else
+									{
+										g_bDisableSounds = false;
+									}
+								}
+								if (g_hCVOnlyDead == convar)
+								{
+									if (StrEqual(newValue, "1", true))
+									{
+										g_bOnlyDead = true;
+									}
+									else
+									{
+										g_bOnlyDead = false;
+									}
+								}
+								if (g_hCVDisableStats == convar)
+								{
+									if (StrEqual(newValue, "1", true))
+									{
+										g_bDisableStats = true;
+									}
+									g_bDisableStats = false;
+								}
+							}
+							return 0;
+						}
 
 public Native_IsClientInTetrisGame(Handle:plugin, numParams)
-{
-	new client = GetNativeCell(1);
-	new var1;
-	if (client < 1 || client > MaxClients)
-	{
-		return ThrowNativeError(23, "Invalid client index (%d)", client);
-	}
-	return g_hPlayerGameThink[client] != 0;
-}
+						{
+							new client = GetNativeCell(1);
+							new var1;
+							if (client < 1 || client > MaxClients)
+							{
+								return ThrowNativeError(23, "Invalid client index (%d)", client);
+							}
+							return g_hPlayerGameThink[client] != 0;
+						}
 
 ResetGameField(bool:bGameField[16][10])
-{
-	new y;
-	while (y < 16)
-	{
-		new x;
-		while (x < 10)
-		{
-			bGameField[y][x] = false;
-			x++;
-		}
-		y++;
-	}
-	return 0;
-}
+						{
+							new y;
+							while (y < 16)
+							{
+								new x;
+								while (x < 10)
+								{
+									bGameField[y][x] = false;
+									x++;
+								}
+								y++;
+							}
+							return 0;
+						}
 
 Reset4x4(iMatrix[4][4])
-{
-	new x;
-	while (x < 4)
-	{
-		new y;
-		while (y < 4)
-		{
-			iMatrix[x][y] = -1;
-			y++;
-		}
-		x++;
-	}
-	return 0;
-}
+						{
+							new x;
+							while (x < 4)
+							{
+								new y;
+								while (y < 4)
+								{
+									iMatrix[x][y] = -1;
+									y++;
+								}
+								x++;
+							}
+							return 0;
+						}
 
 ClearTimer(&Handle:timer, bool:autoClose)
-{
-	if (timer)
-	{
-		KillTimer(timer, autoClose);
-	}
-	timer = 0;
-	return 0;
-}
+						{
+							if (timer)
+							{
+								KillTimer(timer, autoClose);
+							}
+							timer = 0;
+							return 0;
+						}
 

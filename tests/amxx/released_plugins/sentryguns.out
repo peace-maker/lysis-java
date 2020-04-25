@@ -133,9 +133,9 @@ bool:operator<=(Float:,_:)(Float:oper1, oper2)
 
 FVecIVec(Float:FVec[3], IVec[3])
 {
-	IVec[0] = floatround(FVec[0], 0);
-	IVec[1] = floatround(FVec[1], 0);
-	IVec[2] = floatround(FVec[2], 0);
+	IVec[0] = floatround(FVec[0], PLUGINNAME);
+	IVec[1] = floatround(FVec[1], PLUGINNAME);
+	IVec[2] = floatround(FVec[2], PLUGINNAME);
 	return 1;
 }
 
@@ -159,7 +159,7 @@ SetSentryPeople(SENTRY, WHO, IS)
 
 GetSentrySettings(SENTRY, SETTING)
 {
-	new data = entity_get_int(SENTRY, 3);
+	new data = entity_get_int(SENTRY, "");
 	data = MASKS_SETTINGS[SETTING] | data;
 	data = MASKS_SETTINGS[SETTING] ^ data;
 	return data >>> SETTING * 2;
@@ -167,9 +167,9 @@ GetSentrySettings(SENTRY, SETTING)
 
 SetSentrySettings(SENTRY, SETTING, VALUE)
 {
-	new data = entity_get_int(SENTRY, 3);
+	new data = entity_get_int(SENTRY, "");
 	data = MASKS_SETTINGS[SETTING] & data;
-	entity_set_int(SENTRY, 3, VALUE << SETTING * 2 | data);
+	entity_set_int(SENTRY, "", VALUE << SETTING * 2 | data);
 	return 0;
 }
 
@@ -226,13 +226,13 @@ public createsentryhere(id)
 		new var2;
 		if (GetSentryLevel(sentry) && GetSentryPeople(sentry, 0) == id)
 		{
-			client_print(id, 4, 35532);
+			client_print(id, 4, "You cannot upgrade your own sentry gun to level 2, a team mate must do this!");
 			return 1;
 		}
 		new var3;
 		if (GetSentryLevel(sentry) == 1 && GetSentryPeople(sentry, 1) == id)
 		{
-			client_print(id, 4, 35840);
+			client_print(id, 4, "You cannot upgrade this sentry gun another time to level 3, a team mate must do this!");
 			return 1;
 		}
 		g_aimSentry[id + -1] = sentry;
@@ -265,31 +265,31 @@ public sentry_build(id)
 		{
 			var1 = 36336;
 		}
-		client_print(id, 4, 36184, wordnumbers, var1);
+		client_print(id, 4, "You can only build %s sentry gun%s!", wordnumbers, var1);
 		return 0;
 	}
 	if (g_inBuilding[id + -1])
 	{
-		client_print(id, 4, 36340);
+		client_print(id, 4, "Wow, you're a fast builder...");
 		return 0;
 	}
 	if (g_COST[0] > cs_get_user_money(id))
 	{
-		client_print(id, 4, 36460, 180);
+		client_print(id, 4, "You don't have enough money to build a sentry gun! ($%d needed)", g_COST);
 		return 0;
 	}
 	if (!entity_is_on_ground(id))
 	{
-		client_print(id, 4, 36716);
+		client_print(id, 4, "You must stand on the ground to build a sentry gun!");
 		return 0;
 	}
 	if (entity_get_int(id, 9))
 	{
-		client_print(id, 4, 36924);
+		client_print(id, 4, "Yeah, right, try building a sentry gun sitting on your ***!");
 		return 0;
 	}
 	new Float:playerOrigin[3] = 0.0;
-	entity_get_vector(id, 0, playerOrigin);
+	entity_get_vector(id, PLUGINNAME, playerOrigin);
 	new Float:vNewOrigin[3] = 0.0;
 	new Float:vTraceDirection[3] = 0.0;
 	new Float:vTraceEnd[3] = 0.0;
@@ -308,7 +308,7 @@ public sentry_build(id)
 	}
 	else
 	{
-		client_print(id, 4, 37164);
+		client_print(id, 4, "Cannot build sentry here");
 	}
 	return 0;
 }
@@ -355,7 +355,7 @@ IncreaseSentryCount(id, sentryEntity)
 	g_playerSentries[id + -1] = g_playerSentries[id + -1] + 1;
 	new Float:sentryOrigin[3] = 0.0;
 	new iSentryOrigin[3];
-	entity_get_vector(sentryEntity, 0, sentryOrigin);
+	entity_get_vector(sentryEntity, PLUGINNAME, sentryOrigin);
 	FVecIVec(sentryOrigin, iSentryOrigin);
 	new name[32];
 	get_user_name(id, name, 31);
@@ -369,7 +369,7 @@ IncreaseSentryCount(id, sentryEntity)
 		}
 		else
 		{
-			client_print(i, 4, 37264, name, floatround(entity_range(i, sentryEntity), 0));
+			client_print(i, 4, "%s has built a sentry gun %d units away from you", name, floatround(entity_range(i, sentryEntity), PLUGINNAME));
 			message_begin(1, g_msgHostagePos, 37460, i);
 			write_byte(i);
 			write_byte(21);
@@ -417,7 +417,7 @@ bool:CreateSentryBase(Float:origin[3], creator)
 	new var3 = origin;
 	originDown = var3;
 	originDown[2] = -5000.0;
-	trace_line(0, origin, originDown, hitPoint);
+	trace_line(PLUGINNAME, origin, originDown, hitPoint);
 	new Float:baDistanceFromGround = vector_distance(origin, hitPoint);
 	new Float:difference = floatsub(1108344832, baDistanceFromGround);
 	new var2;
@@ -425,28 +425,28 @@ bool:CreateSentryBase(Float:origin[3], creator)
 	{
 		return false;
 	}
-	new entbase = create_entity(37484);
+	new entbase = create_entity("func_breakable");
 	if (!entbase)
 	{
 		return false;
 	}
-	new hull = create_entity(37544);
+	new hull = create_entity("func_wall");
 	if (!hull)
 	{
 		return false;
 	}
 	new healthstring[16];
-	num_to_str(floatround(g_HEALTHS[0], 0), healthstring, 15);
-	DispatchKeyValue(entbase, 37584, healthstring);
-	DispatchKeyValue(entbase, 37612, 37648);
+	num_to_str(floatround(g_HEALTHS[0], PLUGINNAME), healthstring, 15);
+	DispatchKeyValue(entbase, "health", healthstring);
+	DispatchKeyValue(entbase, "material", 37648);
 	DispatchSpawn(entbase);
-	entity_set_string(entbase, 0, 37656);
-	entity_set_string(hull, 0, 37700);
-	entity_set_model(entbase, 37744);
-	entity_set_model(hull, 37844);
+	entity_set_string(entbase, PLUGINNAME, "sentrybase");
+	entity_set_string(hull, PLUGINNAME, "sentryhull");
+	entity_set_model(entbase, "models/sentries/base.mdl");
+	entity_set_model(hull, "models/sentries/base.mdl");
 	entity_set_int(hull, 32, 1);
-	entity_set_float(hull, 29, 0);
-	entity_set_int(hull, 33, 0);
+	entity_set_float(hull, 29, PLUGINNAME);
+	entity_set_int(hull, 33, PLUGINNAME);
 	new Float:mins[3] = 0.0;
 	new Float:maxs[3] = 0.0;
 	mins[0] = -17.0;
@@ -457,21 +457,21 @@ bool:CreateSentryBase(Float:origin[3], creator)
 	maxs[2] = 1000.0;
 	entity_set_size(entbase, mins, maxs);
 	entity_set_origin(entbase, origin);
-	entity_set_int(entbase, 15, 3);
-	entity_set_int(hull, 15, 3);
+	entity_set_int(entbase, 15, "");
+	entity_set_int(hull, 15, "");
 	entity_set_int(entbase, 14, 6);
 	entity_set_int(hull, 14, 6);
-	entity_set_int(entbase, 3, cs_get_user_team(creator, 0));
-	entity_set_int(hull, 3, cs_get_user_team(creator, 0));
+	entity_set_int(entbase, "", cs_get_user_team(creator, 0));
+	entity_set_int(hull, "", cs_get_user_team(creator, 0));
 	entity_set_edict(entbase, 9, creator);
 	entity_set_edict(hull, 7, entbase);
 	new parms[3];
 	parms[2] = hull;
 	parms[0] = entbase;
 	parms[1] = creator;
-	set_task(1073741824, 37944, 0, parms, 3, 38012, 0);
+	set_task(1073741824, "createsentryhead", PLUGINNAME, parms, "", 38012, PLUGINNAME);
 	g_inBuilding[creator + -1] = 1;
-	emit_sound(creator, 0, 38016, 1065353216, 1061997773, 0, 100);
+	emit_sound(creator, PLUGINNAME, "sentries/building.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 	new Float:vector[3] = 0.0;
 	vector[0] = 0.0;
 	vector[1] = 0.0;
@@ -501,7 +501,7 @@ public createsentryhead(parms[3])
 	new Float:origin[3] = 0.0;
 	new var5 = g_sentryOrigins[creator + -1];
 	origin = var5;
-	new ent = create_entity(38104);
+	new ent = create_entity("func_breakable");
 	if (!ent)
 	{
 		if (is_valid_ent(entbase))
@@ -540,7 +540,7 @@ public createsentryhead(parms[3])
 		{
 			entity_set_edict(entbase, 8, hull);
 			new Float:baseOrigin[3] = 0.0;
-			entity_get_vector(entbase, 0, baseOrigin);
+			entity_get_vector(entbase, PLUGINNAME, baseOrigin);
 			entity_set_origin(hull, baseOrigin);
 		}
 	}
@@ -558,12 +558,12 @@ public createsentryhead(parms[3])
 	}
 	g_sentries[g_sentriesNum] = ent;
 	new healthstring[16];
-	num_to_str(floatround(g_HEALTHS[0], 0), healthstring, 15);
-	DispatchKeyValue(ent, 38164, healthstring);
-	DispatchKeyValue(ent, 38192, 38228);
+	num_to_str(floatround(g_HEALTHS[0], PLUGINNAME), healthstring, 15);
+	DispatchKeyValue(ent, "health", healthstring);
+	DispatchKeyValue(ent, "material", 38228);
 	DispatchSpawn(ent);
-	entity_set_string(ent, 0, 38236);
-	entity_set_model(ent, 38264);
+	entity_set_string(ent, PLUGINNAME, "sentry");
+	entity_set_model(ent, "models/sentries/sentry1.mdl");
 	mins[0] = -16.0;
 	mins[1] = -16.0;
 	mins[2] = 0.0;
@@ -579,7 +579,7 @@ public createsentryhead(parms[3])
 	entity_set_float(ent, 33, origin[1]);
 	origin[2] = 0.0;
 	entity_set_vector(ent, 6, origin);
-	entity_set_int(ent, 15, 3);
+	entity_set_int(ent, 15, "");
 	entity_set_int(ent, 14, 6);
 	set_pev(ent, 107, 127);
 	set_pev(ent, 108, 127);
@@ -613,12 +613,12 @@ public createsentryhead(parms[3])
 	new map = bottomColor << 8 | topColor;
 	entity_set_int(ent, 28, map);
 	g_sentriesNum += 1;
-	emit_sound(ent, 0, 38376, 1065353216, 1061997773, 0, 100);
+	emit_sound(ent, PLUGINNAME, "sentries/turrset.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 	IncreaseSentryCount(creator, ent);
 	new parm[1];
 	parm[0] = ent;
-	set_task(g_THINKFREQUENCIES[0], 38460, parm[0] + 4000, parm, 1, 38012, 0);
-	new directions = random_num(0, 1) << 1 | random_num(0, 1) << 0;
+	set_task(g_THINKFREQUENCIES[0], "sentry_think", parm[0] + 4000, parm, 1, 38012, PLUGINNAME);
+	new directions = random_num(PLUGINNAME, 1) << 1 | random_num(PLUGINNAME, 1) << 0;
 	SetSentryPenddir(ent, directions);
 	g_inBuilding[creator + -1] = 0;
 	if (!entbaseIsValid)
@@ -719,7 +719,7 @@ bool:sentry_pendulum(sentry, Float:deltaTime)
 					}
 				}
 				entity_set_float(sentry, 36, radarAngle);
-				set_pev(sentry, 109, floatround(radarAngle, 0));
+				set_pev(sentry, 109, floatround(radarAngle, PLUGINNAME));
 			}
 			return true;
 		}
@@ -835,7 +835,7 @@ bool:TraceCheckCollides(Float:origin[3], Float:BOUNDS)
 		{
 			return true;
 		}
-		hitEnt = trace_line(0, origin, traceEnds[i], traceHit);
+		hitEnt = trace_line(PLUGINNAME, origin, traceEnds[i], traceHit);
 		if (hitEnt)
 		{
 			return true;
@@ -860,7 +860,7 @@ tracer(Float:start[3], Float:end[3])
 	new end_[3];
 	FVecIVec(start, start_);
 	FVecIVec(end, end_);
-	message_begin(0, 23, 38544, 0);
+	message_begin(PLUGINNAME, 23, 38544, PLUGINNAME);
 	write_byte(6);
 	write_coord(start_[0]);
 	write_coord(start_[1]);
@@ -876,21 +876,21 @@ create_explosion(Float:origin_[3])
 {
 	new origin[3];
 	FVecIVec(origin_, origin);
-	message_begin(0, 23, origin, 0);
-	write_byte(3);
+	message_begin(PLUGINNAME, 23, origin, PLUGINNAME);
+	write_byte("");
 	write_coord(origin[0]);
 	write_coord(origin[1]);
 	write_coord(origin[2]);
 	write_short(g_sModelIndexFireball);
-	write_byte(random_num(0, 20) + 50);
+	write_byte(random_num(PLUGINNAME, 20) + 50);
 	write_byte(12);
-	write_byte(0);
+	write_byte(PLUGINNAME);
 	message_end();
-	genericShock(origin_, 250.0, 38556, 32, 3.0, OBJECTTYPE:0);
-	genericShock(origin_, 250.0, 38596, 32, 3.0, OBJECTTYPE:3);
-	genericShock(origin_, 250.0, 38656, 32, 3.0, OBJECTTYPE:2);
-	genericShock(origin_, 250.0, 38684, 32, 3.0, OBJECTTYPE:1);
-	genericShock(origin_, 250.0, 38716, 32, 3.0, OBJECTTYPE:0);
+	genericShock(origin_, 250.0, "weaponbox", 32, 3.0, OBJECTTYPE:0);
+	genericShock(origin_, 250.0, "armoury_entity", 32, 3.0, OBJECTTYPE:3);
+	genericShock(origin_, 250.0, "player", 32, 3.0, OBJECTTYPE:2);
+	genericShock(origin_, 250.0, "grenade", 32, 3.0, OBJECTTYPE:1);
+	genericShock(origin_, 250.0, "hostage_entity", 32, 3.0, OBJECTTYPE:0);
 	new Float:playerOrigin[3] = 0.0;
 	new Float:distance = 0.0;
 	new Float:flDmgToDo = 0.0;
@@ -905,20 +905,20 @@ create_explosion(Float:origin_[3])
 		}
 		else
 		{
-			entity_get_vector(i, 0, playerOrigin);
+			entity_get_vector(i, PLUGINNAME, playerOrigin);
 			distance = vector_distance(playerOrigin, origin_);
 			if (distance <= 250.0)
 			{
 				flDmgToDo = floatsub(dmgbase, floatmul(dmgbase, floatdiv(distance, 1132068864)));
-				newHealth = get_user_health(i) - floatround(flDmgToDo, 0);
+				newHealth = get_user_health(i) - floatround(flDmgToDo, PLUGINNAME);
 				if (0 >= newHealth)
 				{
-					set_task(0, 38776, i, 38828, 0, 38012, 0);
+					set_task(PLUGINNAME, "TicketToHell", i, 38828, PLUGINNAME, 38012, PLUGINNAME);
 				}
 				set_user_health(i, newHealth);
 				message_begin(8, g_msgDamage, 38832, i);
-				write_byte(floatround(flDmgToDo, 0));
-				write_byte(floatround(flDmgToDo, 0));
+				write_byte(floatround(flDmgToDo, PLUGINNAME));
+				write_byte(floatround(flDmgToDo, PLUGINNAME));
 				write_long(64);
 				write_coord(origin[0]);
 				write_coord(origin[1]);
@@ -944,7 +944,7 @@ public TicketToHell(player)
 	parms[1] = frags;
 	parms[2] = cs_get_user_deaths(player);
 	parms[3] = cs_get_user_team(player, 0);
-	set_task(0, 38844, 0, parms, 4, 38012, 0);
+	set_task(PLUGINNAME, "DelayedScoreInfoUpdate", PLUGINNAME, parms, 4, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -954,28 +954,15 @@ public DelayedScoreInfoUpdate(parms[4])
 	return 0;
 }
 
-java.lang.AssertionError
 
 /* ERROR! null */
  function "genericShock" (number 38)
+
 entity_is_on_ground(entity)
 {
 	return entity_get_int(entity, 27) & 512;
 }
 
-	at lysis.builder.structure.SourceStructureBuilder.traverseSwitch(SourceStructureBuilder.java:622)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:689)
-	at lysis.builder.structure.SourceStructureBuilder.traverseLoop(SourceStructureBuilder.java:596)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:698)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:683)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:655)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:441)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:663)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:700)
-	at lysis.builder.structure.SourceStructureBuilder.build(SourceStructureBuilder.java:705)
-	at lysis.Lysis.DumpMethod(Lysis.java:140)
-	at lysis.Lysis.main(Lysis.java:213)
 public message_tempentity()
 {
 	new var1;
@@ -1016,7 +1003,7 @@ sentrybase_broke(sentrybase)
 	}
 	if (sentry)
 	{
-		entity_set_edict(sentry, 7, 0);
+		entity_set_edict(sentry, 7, PLUGINNAME);
 		SetSentryFiremode(sentry, 2);
 		set_pev(sentry, 107, 127);
 		return 0;
@@ -1052,13 +1039,13 @@ sentry_detonate(sentry, bool:quiet, bool:isIndex)
 			j++;
 		}
 	}
-	remove_task(sentry + 4000, 0);
-	remove_task(sentry + 5000, 0);
-	remove_task(sentry + 6000, 0);
+	remove_task(sentry + 4000, PLUGINNAME);
+	remove_task(sentry + 5000, PLUGINNAME);
+	remove_task(sentry + 6000, PLUGINNAME);
 	new owner = GetSentryPeople(sentry, 0);
 	if (entity_get_edict(sentry, 8))
 	{
-		remove_task(owner + 7000, 0);
+		remove_task(owner + 7000, PLUGINNAME);
 		new parms[3];
 		parms[0] = owner;
 		parms[1] = entity_get_edict(sentry, 8);
@@ -1068,9 +1055,9 @@ sentry_detonate(sentry, bool:quiet, bool:isIndex)
 	if (!quiet)
 	{
 		new Float:origin[3] = 0.0;
-		entity_get_vector(sentry, 0, origin);
+		entity_get_vector(sentry, PLUGINNAME, origin);
 		create_explosion(origin);
-		client_print(owner, 4, 39000);
+		client_print(owner, 4, "Your sentry gun detonated!");
 	}
 	DecreaseSentryCount(owner, sentry);
 	if (GetSentryFiremode(sentry) != 2)
@@ -1113,7 +1100,7 @@ public sentry_think(parm[1])
 {
 	if (!is_valid_ent(parm[0]))
 	{
-		client_print(0, 3, 39108, parm);
+		client_print(PLUGINNAME, "", "%d is not a valid ent, ending sentry_think!", parm);
 		return 0;
 	}
 	new ent = parm[0];
@@ -1125,7 +1112,7 @@ public sentry_think(parm[1])
 	new Float:sentryOrigin[3] = 0.0;
 	new Float:hitOrigin[3] = 0.0;
 	new hitent;
-	entity_get_vector(ent, 0, sentryOrigin);
+	entity_get_vector(ent, PLUGINNAME, sentryOrigin);
 	new var7 = sentryOrigin[2];
 	var7 = floatadd(1101004800, var7);
 	new target = GetSentryPeople(ent, 3);
@@ -1140,7 +1127,7 @@ public sentry_think(parm[1])
 		}
 		new sentryLevel = GetSentryLevel(ent);
 		new Float:targetOrigin[3] = 0.0;
-		entity_get_vector(target, 0, targetOrigin);
+		entity_get_vector(target, PLUGINNAME, targetOrigin);
 		if (entity_get_int(target, 27) & 16384)
 		{
 			new var8 = targetOrigin[2];
@@ -1160,8 +1147,8 @@ public sentry_think(parm[1])
 		if (target == hitent)
 		{
 			sentry_turntotarget(ent, sentryOrigin, target, targetOrigin);
-			emit_sound(ent, 1, g_FIRESOUNDS[random_num(0, 1)], 1065353216, 1061997773, 0, 100);
-			new Float:hitRatio = floatsub(random_float(0, 1065353216), g_HITRATIOS[sentryLevel]);
+			emit_sound(ent, 1, g_FIRESOUNDS[random_num(PLUGINNAME, 1)], 1065353216, 1061997773, PLUGINNAME, AUTHOR);
+			new Float:hitRatio = floatsub(random_float(PLUGINNAME, 1065353216), g_HITRATIOS[sentryLevel]);
 			new var3;
 			if (!get_user_godmode(target) && hitRatio <= 0.0)
 			{
@@ -1172,7 +1159,7 @@ public sentry_think(parm[1])
 				new Float:sentryAngle[3] = 0.0;
 				new Float:x = floatsub(hitOrigin[0], sentryOrigin[0]);
 				new Float:z = floatsub(hitOrigin[1], sentryOrigin[1]);
-				new Float:radians = floatatan(floatdiv(z, x), 0);
+				new Float:radians = floatatan(floatdiv(z, x), PLUGINNAME);
 				sentryAngle[1] = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
 				if (hitOrigin[0] < sentryOrigin[0])
 				{
@@ -1181,7 +1168,7 @@ public sentry_think(parm[1])
 				}
 				new Float:h = floatsub(hitOrigin[2], sentryOrigin[2]);
 				new Float:b = vector_distance(sentryOrigin, hitOrigin);
-				radians = floatatan(floatdiv(h, b), 0);
+				radians = floatatan(floatdiv(h, b), PLUGINNAME);
 				sentryAngle[0] = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
 				sentryAngle[0] = floatadd(sentryAngle[0], random_float(floatmul(-1054867456, hitRatio), floatmul(1092616192, hitRatio)));
 				new var10 = sentryAngle[1];
@@ -1207,7 +1194,7 @@ public sentry_think(parm[1])
 				} while ((hitEnt = trace_line(hitEnt, hitOrigin, traceEnd, hitOrigin)));
 			}
 			tracer(sentryOrigin, hitOrigin);
-			set_task(1036831949, 39284, parm[0] + 4000, parm, 1, 38012, 0);
+			set_task(1036831949, "sentry_think", parm[0] + 4000, parm, 1, 38012, PLUGINNAME);
 			return 0;
 		}
 		SetSentryFiremode(ent, 0);
@@ -1217,20 +1204,20 @@ public sentry_think(parm[1])
 		if (firemode == 2)
 		{
 			new hitEnt = entityviewhitpoint(ent, sentryOrigin, hitOrigin);
-			emit_sound(ent, 1, 39336, 1065353216, 1061997773, 0, 100);
+			emit_sound(ent, 1, "weapons/m249-1.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 			tracer(sentryOrigin, hitOrigin);
 			new var4;
 			if (is_user_connected(hitEnt) && is_user_alive(hitEnt) && !get_user_godmode(hitEnt))
 			{
 				sentry_damagetoplayer(ent, GetSentryLevel(ent), sentryOrigin, hitEnt);
 			}
-			set_task(1036831949, 39412, parm[0] + 4000, parm, 1, 38012, 0);
+			set_task(1036831949, "sentry_think", parm[0] + 4000, parm, 1, 38012, PLUGINNAME);
 			return 0;
 		}
 	}
-	if (10 > random_num(0, 99))
+	if (10 > random_num(PLUGINNAME, ""))
 	{
-		emit_sound(ent, 0, 39464, 1065353216, 1061997773, 0, 100);
+		emit_sound(ent, PLUGINNAME, "sentries/turridle.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 	}
 	new closestTarget;
 	new Float:closestDistance = 0.0;
@@ -1247,7 +1234,7 @@ public sentry_think(parm[1])
 		}
 		else
 		{
-			entity_get_vector(i, 0, playerOrigin);
+			entity_get_vector(i, PLUGINNAME, playerOrigin);
 			if (entity_get_int(i, 27) & 16384)
 			{
 				new var11 = playerOrigin[2];
@@ -1261,6 +1248,7 @@ public sentry_think(parm[1])
 			if (i == hitent)
 			{
 				distance = vector_distance(sentryOrigin, playerOrigin);
+				closestOrigin = playerOrigin;
 				new var6;
 				if (distance < closestDistance || closestTarget)
 				{
@@ -1273,7 +1261,7 @@ public sentry_think(parm[1])
 	}
 	if (closestTarget)
 	{
-		emit_sound(ent, 0, 39552, 1065353216, 1061997773, 0, 100);
+		emit_sound(ent, PLUGINNAME, "sentries/turrspot.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 		sentry_turntotarget(ent, sentryOrigin, closestTarget, closestOrigin);
 		SetSentryFiremode(ent, 1);
 		SetSentryPeople(ent, 3, closestTarget);
@@ -1285,7 +1273,7 @@ public sentry_think(parm[1])
 		SetSentryFiremode(ent, 0);
 	}
 	Label_93F4:
-	set_task(g_THINKFREQUENCIES[GetSentryLevel(ent)], 39640, parm[0] + 4000, parm, 1, 38012, 0);
+	set_task(g_THINKFREQUENCIES[GetSentryLevel(ent)], "sentry_think", parm[0] + 4000, parm, 1, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -1321,11 +1309,11 @@ sentry_damagetoplayer(sentry, sentryLevel, Float:sentryOrigin[3], target)
 			}
 			i++;
 		}
-		message_begin(2, g_msgDeathMsg, 39692, 0);
+		message_begin(2, g_msgDeathMsg, 39692, PLUGINNAME);
 		write_byte(owner);
 		write_byte(target);
-		write_byte(0);
-		write_string(39704);
+		write_byte(PLUGINNAME);
+		write_string("sentry gun");
 		message_end();
 		scoreinfo_update(owner, ownerFrags, cs_get_user_deaths(owner), cs_get_user_team(owner, 0));
 		set_msg_block(g_msgDeathMsg, 1);
@@ -1337,20 +1325,20 @@ sentry_damagetoplayer(sentry, sentryLevel, Float:sentryOrigin[3], target)
 	write_byte(g_DMG[sentryLevel]);
 	write_byte(g_DMG[sentryLevel]);
 	write_long(2);
-	write_coord(floatround(sentryOrigin[0], 0));
-	write_coord(floatround(sentryOrigin[1], 0));
-	write_coord(floatround(sentryOrigin[2], 0));
+	write_coord(floatround(sentryOrigin[0], PLUGINNAME));
+	write_coord(floatround(sentryOrigin[1], PLUGINNAME));
+	write_coord(floatround(sentryOrigin[2], PLUGINNAME));
 	message_end();
 	return 0;
 }
 
 scoreinfo_update(id, frags, deaths, team)
 {
-	message_begin(2, g_msgScoreInfo, 38544, 0);
+	message_begin(2, g_msgScoreInfo, 38544, PLUGINNAME);
 	write_byte(id);
 	write_short(frags);
 	write_short(deaths);
-	write_short(0);
+	write_short(PLUGINNAME);
 	write_short(team);
 	message_end();
 	return 0;
@@ -1366,7 +1354,7 @@ sentry_turntotarget(ent, Float:sentryOrigin[3], target, Float:closestOrigin[3])
 		entity_get_vector(ent, 6, newAngle);
 		new Float:x = floatsub(closestOrigin[0], sentryOrigin[0]);
 		new Float:z = floatsub(closestOrigin[1], sentryOrigin[1]);
-		new Float:radians = floatatan(floatdiv(z, x), 0);
+		new Float:radians = floatatan(floatdiv(z, x), PLUGINNAME);
 		newAngle[1] = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
 		if (closestOrigin[0] < sentryOrigin[0])
 		{
@@ -1376,12 +1364,12 @@ sentry_turntotarget(ent, Float:sentryOrigin[3], target, Float:closestOrigin[3])
 		entity_set_float(ent, 33, newAngle[1]);
 		new Float:h = floatsub(closestOrigin[2], sentryOrigin[2]);
 		new Float:b = vector_distance(sentryOrigin, closestOrigin);
-		radians = floatatan(floatdiv(h, b), 0);
+		radians = floatatan(floatdiv(h, b), PLUGINNAME);
 		new Float:degs = floatmul(radians, g_ONEEIGHTYTHROUGHPI);
 		new Float:RADIUS = 830.0;
 		new Float:degreeByte = floatdiv(RADIUS, 1132462080);
 		new Float:tilt = floatsub(1123942400, floatmul(degreeByte, degs));
-		set_pev(ent, 107, floatround(tilt, 0));
+		set_pev(ent, 107, floatround(tilt, PLUGINNAME));
 		entity_set_vector(ent, 6, newAngle);
 	}
 	return 0;
@@ -1410,18 +1398,18 @@ AimingAtSentry(id, bool:alwaysReturn)
 	{
 		new classname[32];
 		new l_sentry;
-		entity_get_string(hitEnt, 0, classname, 31);
-		if (equal(classname, 39760, 0))
+		entity_get_string(hitEnt, PLUGINNAME, classname, 31);
+		if (equal(classname, "sentrybase", PLUGINNAME))
 		{
 			l_sentry = entity_get_edict(hitEnt, 7);
 		}
 		else
 		{
-			if (equal(classname, 39804, 0))
+			if (equal(classname, "sentry", PLUGINNAME))
 			{
 				l_sentry = hitEnt;
 			}
-			if (equal(classname, 39832, 0))
+			if (equal(classname, "sentryhull", PLUGINNAME))
 			{
 				l_sentry = entity_get_edict(entity_get_edict(hitEnt, 7), 7);
 			}
@@ -1459,7 +1447,7 @@ menumain_starter(id)
 	new menuBuffer[256];
 	new len;
 	new flags = 512;
-	len = format(menuBuffer[len], 255 - len, 39876) + len;
+	len = format(menuBuffer[len], 255 - len, "\ySentry gun menu\n\n") + len;
 	new var1;
 	if (GetSentryCount(id) < 2 && cs_get_user_money(id) >= g_COST[0])
 	{
@@ -1469,7 +1457,7 @@ menumain_starter(id)
 	{
 		var2 = 40064;
 	}
-	len = format(menuBuffer[len], 255 - len, 39956, var2, 180) + len;
+	len = format(menuBuffer[len], 255 - len, "%s1. Build sentry, $%d\n", var2, g_COST) + len;
 	new var3;
 	if (GetSentryCount(id) > 0 && g_selectedSentry[id + -1] == -1)
 	{
@@ -1480,7 +1468,7 @@ menumain_starter(id)
 		new parm[2];
 		parm[0] = id;
 		parm[1] = g_selectedSentry[id + -1];
-		set_task(0, 40076, g_selectedSentry[id + -1][1500], parm, 2, 38012, 0);
+		set_task(PLUGINNAME, "SentryRadarBlink", g_selectedSentry[id + -1][1500], parm, 2, 38012, PLUGINNAME);
 	}
 	new var4;
 	if (GetSentryCount(id) > 0)
@@ -1491,7 +1479,7 @@ menumain_starter(id)
 	{
 		var4 = 40316;
 	}
-	len = format(menuBuffer[len], 255 - len, 40144, var4) + len;
+	len = format(menuBuffer[len], 255 - len, "%s2. Detonate sentry flashing on radar\n", var4) + len;
 	if (len)
 	{
 		new sentry = AimingAtSentry(id, false);
@@ -1502,26 +1490,26 @@ menumain_starter(id)
 			{
 				if (g_COST[sentryLevel + 1] <= cs_get_user_money(id))
 				{
-					len = format(menuBuffer[len], 255 - len, 40328, g_COST[sentryLevel + 1]) + len;
+					len = format(menuBuffer[len], 255 - len, "\w3. Upgrade this sentry, $%d\n", g_COST[sentryLevel + 1]) + len;
 					flags |= 4;
 					g_aimSentry[id + -1] = sentry;
 				}
 				else
 				{
-					len = format(menuBuffer[len], 255 - len, 40452, g_COST[sentryLevel + 1]) + len;
+					len = format(menuBuffer[len], 255 - len, "\d3. Upgrade this sentry (needs $%d)\n", g_COST[sentryLevel + 1]) + len;
 				}
 			}
 			else
 			{
-				len = format(menuBuffer[len], 255 - len, 40604, g_COST[sentryLevel + 1]) + len;
+				len = format(menuBuffer[len], 255 - len, "\d3. Upgrade this sentry, $%d (out of range)\n", g_COST[sentryLevel + 1]) + len;
 			}
 		}
 	}
 	if (1 < GetSentryCount(id))
 	{
-		len = format(menuBuffer[len], 255 - len, 40788) + len;
-		len = format(menuBuffer[len], 255 - len, 40900) + len;
-		len = format(menuBuffer[len], 255 - len, 41020) + len;
+		len = format(menuBuffer[len], 255 - len, "\w4. Detonate all sentries\n") + len;
+		len = format(menuBuffer[len], 255 - len, "\n\w5. Select previous sentry\n") + len;
+		len = format(menuBuffer[len], 255 - len, "\w6. Select next sentry\n") + len;
 		flags |= 56;
 	}
 	new var5;
@@ -1533,12 +1521,12 @@ menumain_starter(id)
 	{
 		var5 = 41296;
 	}
-	len = format(menuBuffer[len], 255 - len, 41120, var5) + len;
+	len = format(menuBuffer[len], 255 - len, "%s7. View from sentry flashing on radar\n", var5) + len;
 	if (g_selectedSentry[id + -1] != -1)
 	{
 		flags |= 64;
 	}
-	len = format(menuBuffer[len], 255 - len, 41308) + len;
+	len = format(menuBuffer[len], 255 - len, "\n\w0. Exit") + len;
 	if (0 < GetSentryCount(id))
 	{
 		flags |= 2;
@@ -1560,13 +1548,13 @@ public SentryRadarBlink(parm[2])
 		return 0;
 	}
 	new Float:sentryOrigin[3] = 0.0;
-	entity_get_vector(parm[1], 0, sentryOrigin);
+	entity_get_vector(parm[1], PLUGINNAME, sentryOrigin);
 	message_begin(1, g_msgHostagePos, 41356, parm[0]);
 	write_byte(parm[0]);
 	write_byte(20);
-	write_coord(floatround(sentryOrigin[0], 0));
-	write_coord(floatround(sentryOrigin[1], 0));
-	write_coord(floatround(sentryOrigin[2], 0));
+	write_coord(floatround(sentryOrigin[0], PLUGINNAME));
+	write_coord(floatround(sentryOrigin[1], PLUGINNAME));
+	write_coord(floatround(sentryOrigin[2], PLUGINNAME));
 	message_end();
 	message_begin(1, g_msgHostageK, 41368, parm[0]);
 	write_byte(20);
@@ -1576,7 +1564,7 @@ public SentryRadarBlink(parm[2])
 	get_user_menu(parm[0], usermenuid, keys);
 	if (usermenuid == g_menuId)
 	{
-		set_task(1069547520, 41380, parm[1] + 6000, parm, 2, 38012, 0);
+		set_task(1069547520, "SentryRadarBlink", parm[1] + 6000, parm, 2, 38012, PLUGINNAME);
 	}
 	return 0;
 }
@@ -1647,7 +1635,7 @@ public menumain_handle(id, key)
 				parms[0] = id;
 				parms[1] = spycam;
 				parms[2] = g_selectedSentry[id + -1];
-				set_task(1084227584, 41448, id + 7000, parms, 3, 38012, 0);
+				set_task(1084227584, "DestroySpyCam", id + 7000, parms, "", 38012, PLUGINNAME);
 			}
 		}
 		case 9:
@@ -1666,26 +1654,26 @@ public menumain_handle(id, key)
 
 CreateSpyCam(id, sentry)
 {
-	new spycam = create_entity(41504);
+	new spycam = create_entity("info_target");
 	if (!spycam)
 	{
 		return 0;
 	}
 	entity_set_edict(sentry, 8, spycam);
-	entity_set_string(spycam, 0, 41552);
+	entity_set_string(spycam, PLUGINNAME, "spycam");
 	new Float:origin[3] = 0.0;
-	entity_get_vector(sentry, 0, origin);
+	entity_get_vector(sentry, PLUGINNAME, origin);
 	new var1 = origin[2];
 	var1 = floatadd(var1, g_spyCamOffset[GetSentryLevel(sentry)]);
-	entity_set_vector(spycam, 0, origin);
-	entity_set_model(spycam, 41580);
+	entity_set_vector(spycam, PLUGINNAME, origin);
+	entity_set_model(spycam, "models/sentries/base.mdl");
 	entity_set_int(spycam, 32, 1);
-	entity_set_float(spycam, 29, 0);
-	entity_set_int(spycam, 33, 0);
+	entity_set_float(spycam, 29, PLUGINNAME);
+	entity_set_int(spycam, 33, PLUGINNAME);
 	new Float:angles[3] = 0.0;
 	entity_get_vector(sentry, 6, angles);
 	entity_set_vector(spycam, 6, angles);
-	engfunc(48, id, spycam);
+	engfunc(VERSION, id, spycam);
 	g_inSpyCam[id + -1] = 1;
 	return spycam;
 }
@@ -1698,12 +1686,12 @@ public DestroySpyCam(parms[3])
 	g_inSpyCam[id + -1] = 0;
 	if (is_user_connected(id))
 	{
-		engfunc(48, id, id);
+		engfunc(VERSION, id, id);
 	}
 	new var1;
 	if (is_valid_ent(sentry) && spycam == entity_get_edict(sentry, 8))
 	{
-		entity_set_edict(sentry, 8, 0);
+		entity_set_edict(sentry, 8, PLUGINNAME);
 	}
 	remove_entity(spycam);
 	return 0;
@@ -1722,7 +1710,7 @@ CycleSelectedSentry(id, steps)
 			{
 				return 0;
 			}
-			remove_task(g_selectedSentry[id + -1][1500], 0);
+			remove_task(g_selectedSentry[id + -1][1500], PLUGINNAME);
 			if (0 < steps)
 			{
 				do {
@@ -1757,7 +1745,7 @@ CycleSelectedSentry(id, steps)
 	{
 		return 0;
 	}
-	remove_task(g_selectedSentry[id + -1][1500], 0);
+	remove_task(g_selectedSentry[id + -1][1500], PLUGINNAME);
 	if (0 < steps)
 	{
 		do {
@@ -1792,12 +1780,12 @@ sentry_upgrade(id, sentry)
 	new sentryLevel = GetSentryLevel(sentry);
 	if (GetSentryFiremode(sentry) == 2)
 	{
-		client_print(id, 4, 41680);
+		client_print(id, 4, "This sentry cannot be upgraded.");
 		return 0;
 	}
 	if (GetSentryTeam(sentry) != cs_get_user_team(id, 0))
 	{
-		client_print(id, 4, 41808);
+		client_print(id, 4, "You can only upgrade your own team's sentries.");
 		return 0;
 	}
 	new var1;
@@ -1817,12 +1805,12 @@ sentry_upgrade(id, sentry)
 	{
 		case 1:
 		{
-			entity_set_model(sentry, 41996);
+			entity_set_model(sentry, "models/sentries/sentry2.mdl");
 			upgraderField = 1;
 		}
 		case 2:
 		{
-			entity_set_model(sentry, 42108);
+			entity_set_model(sentry, "models/sentries/sentry3.mdl");
 			upgraderField = 2;
 		}
 		default:
@@ -1834,7 +1822,7 @@ sentry_upgrade(id, sentry)
 	{
 		if (0 > cs_get_user_money(id) - g_COST[sentryLevel])
 		{
-			client_print(id, 4, 42220, g_COST[sentryLevel]);
+			client_print(id, 4, "You don't have enough money to upgrade this sentry gun! (needed $%d)", g_COST[sentryLevel]);
 			return 0;
 		}
 		cs_set_user_money(id, cs_get_user_money(id) - g_COST[sentryLevel], 1);
@@ -1847,7 +1835,7 @@ sentry_upgrade(id, sentry)
 		maxs[1] = 16.0;
 		maxs[2] = 48.0;
 		entity_set_size(sentry, mins, maxs);
-		emit_sound(sentry, 0, 42496, 1065353216, 1061997773, 0, 100);
+		emit_sound(sentry, PLUGINNAME, "sentries/turrset.wav", 1065353216, 1061997773, PLUGINNAME, AUTHOR);
 		SetSentryLevel(sentry, sentryLevel);
 		entity_set_float(sentry, 13, g_HEALTHS[sentryLevel]);
 		entity_set_float(entity_get_edict(sentry, 7), 13, g_HEALTHS[0]);
@@ -1856,7 +1844,7 @@ sentry_upgrade(id, sentry)
 		{
 			new upgraderName[32];
 			get_user_name(id, upgraderName, 31);
-			client_print(GetSentryPeople(sentry, 0), 4, 42580, upgraderName, sentryLevel + 1);
+			client_print(GetSentryPeople(sentry, 0), 4, "%s upgraded your sentry gun to level %d", upgraderName, sentryLevel + 1);
 		}
 	}
 	return 0;
@@ -1866,7 +1854,7 @@ entityviewhitpoint(index, Float:origin[3], Float:hitorigin[3])
 {
 	if (!is_valid_ent(index))
 	{
-		log_amx(42740, index);
+		log_amx("ERROR in plugin - %d is not a valid entity index", index);
 		return 0;
 	}
 	new Float:angle[3] = 0.0;
@@ -1902,7 +1890,7 @@ public endround_event()
 	{
 		return 0;
 	}
-	set_task(1082130432, 42936, 0, 38828, 0, 38012, 0);
+	set_task(1082130432, "ResetArmouryFalse", PLUGINNAME, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -1922,14 +1910,14 @@ public client_putinserver(id)
 	}
 	else
 	{
-		set_task(1097859072, 43008, id, 38828, 0, 38012, 0);
+		set_task(1097859072, "dispInfo", id, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	}
 	return 0;
 }
 
 public dispInfo(id)
 {
-	client_print(id, 3, 43044);
+	client_print(id, "", "In this server you can build sentries! For help on how to bind the necessary buttons, say 'sentryhelp'!");
 	return 0;
 }
 
@@ -1938,36 +1926,36 @@ public check_say(id)
 	new said[32];
 	read_args(said, 31);
 	new var1;
-	if (equali(said, 43460, 0) || equali(said, 43512, 0))
+	if (equali(said, "\"sentryhelp\"", PLUGINNAME) || equali(said, "\"/sentryhelp\"", PLUGINNAME))
 	{
 		new msg[1537];
-		new len = format(msg[len], 1536 - len, 43568) + len;
-		len = format(msg[len], 1536 - len, 43620) + len;
-		len = format(msg[len], 1536 - len, 43860) + len;
-		len = format(msg[len], 1536 - len, 44244) + len;
-		len = format(msg[len], 1536 - len, 44628) + len;
-		len = format(msg[len], 1536 - len, 45088) + len;
-		len = format(msg[len], 1536 - len, 45672) + len;
-		len = format(msg[len], 1536 - len, 46072) + len;
-		len = format(msg[len], 1536 - len, 46744) + len;
-		len = format(msg[len], 1536 - len, 46780) + len;
-		len = format(msg[len], 1536 - len, 46904) + len;
-		len = format(msg[len], 1536 - len, 47124) + len;
-		len = format(msg[len], 1536 - len, 47736) + len;
-		len = format(msg[len], 1536 - len, 48316) + len;
-		len = format(msg[len], 1536 - len, 48352) + len;
-		len = format(msg[len], 1536 - len, 48476) + len;
-		len = format(msg[len], 1536 - len, 48784, 180) + len;
-		len = format(msg[len], 1536 - len, 48888, 180 + 4) + len;
-		len = format(msg[len], 1536 - len, 48992, 180 + 8) + len;
-		len = format(msg[len], 1536 - len, 49096) + len;
-		len = format(msg[len], 1536 - len, 49132) + len;
-		len = format(msg[len], 1536 - len, 49172) + len;
-		show_motd(id, msg, 49232);
+		new len = format(msg[len], 1536 - len, "<html><body>") + len;
+		len = format(msg[len], 1536 - len, "<p>Sentries in TFC were cool. Sentries in CS are cool.<br/>") + len;
+		len = format(msg[len], 1536 - len, "Sentry guns are stationary engineering wonders that fire bullets at and kill your enemies.<br/>") + len;
+		len = format(msg[len], 1536 - len, "Sentry guns can be upgraded twice, with the help of a team member, to be bigger and meaner.</p>") + len;
+		len = format(msg[len], 1536 - len, "<p>Open console and type \"bind j sentry_menu\" to bind the menu button to J. You can also bind \"sentry_build\".<br/>") + len;
+		len = format(msg[len], 1536 - len, "Note that you can bind to any button you choose. To bind the fast build/update command to a mouse button 4, write \"bind mouse4 sentry_build\".</p>") + len;
+		len = format(msg[len], 1536 - len, "<p>You <b>cannot</b> upgrade your own sentry from level 1 to level 2. A team mate must do this.</p>") + len;
+		len = format(msg[len], 1536 - len, "<p>A sentry at level 2 <b>cannot</b> be upgraded to level 3 by the same player that performed the first upgrade. A team mate must do this (original builder is OK).</p>") + len;
+		len = format(msg[len], 1536 - len, "<center>") + len;
+		len = format(msg[len], 1536 - len, "<table width=\"50%\" border=\"1\">") + len;
+		len = format(msg[len], 1536 - len, "<tr><td><b>Command</b></td><td><b>Description</b></td>") + len;
+		len = format(msg[len], 1536 - len, "<tr><td>sentry_menu</td><td>From this menu you can build, upgrade and detonate sentry guns. To upgrade a sentry, first point at it, then open menu.</td>") + len;
+		len = format(msg[len], 1536 - len, "<tr><td>sentry_build</td><td>Quick button to build and upgrade sentry guns. To upgrade a sentry, first point at it, then press this button.</td>") + len;
+		len = format(msg[len], 1536 - len, "</table>") + len;
+		len = format(msg[len], 1536 - len, "<table width=\"50%\" border=\"1\">") + len;
+		len = format(msg[len], 1536 - len, "<tr><td><b>Sentry gun level</b></td><td><b>Cost to build/upgrade to</b></td>") + len;
+		len = format(msg[len], 1536 - len, "<tr><td>1</td><td>%d</td>", g_COST) + len;
+		len = format(msg[len], 1536 - len, "<tr><td>2</td><td>%d</td>", 180 + 4) + len;
+		len = format(msg[len], 1536 - len, "<tr><td>3</td><td>%d</td>", 180 + 8) + len;
+		len = format(msg[len], 1536 - len, "</table>") + len;
+		len = format(msg[len], 1536 - len, "</center>") + len;
+		len = format(msg[len], 1536 - len, "</body></html>") + len;
+		show_motd(id, msg, "Sentry guns help");
 	}
 	else
 	{
-		if (containi(said, 49300) != -1)
+		if (containi(said, "sentr") != -1)
 		{
 			dispInfo(id);
 		}
@@ -1977,33 +1965,33 @@ public check_say(id)
 
 public plugin_modules()
 {
-	require_module(49324);
-	require_module(49352);
-	require_module(49368);
-	require_module(49400);
+	require_module("engine");
+	require_module("fun");
+	require_module("cstrike");
+	require_module("fakemeta");
 	return 0;
 }
 
 public plugin_precache()
 {
-	precache_model(49436);
-	precache_model(49536);
-	precache_model(49648);
-	precache_model(49760);
-	g_sModelIndexFireball = precache_model(49872);
-	precache_sound(49968);
-	precache_sound(50056);
-	precache_sound(50144);
-	precache_sound(50216);
-	precache_model(50288);
-	precache_sound(50384);
-	precache_sound(50468);
-	precache_sound(50552);
-	precache_sound(50636);
-	precache_sound(50720);
-	precache_sound(50808);
-	precache_sound(50892);
-	precache_sound(50980);
+	precache_model("models/sentries/base.mdl");
+	precache_model("models/sentries/sentry1.mdl");
+	precache_model("models/sentries/sentry2.mdl");
+	precache_model("models/sentries/sentry3.mdl");
+	g_sModelIndexFireball = precache_model("sprites/zerogxplode.spr");
+	precache_sound("debris/bustmetal1.wav");
+	precache_sound("debris/bustmetal2.wav");
+	precache_sound("debris/metal1.wav");
+	precache_sound("debris/metal3.wav");
+	precache_model("models/computergibs.mdl");
+	precache_sound("sentries/asscan1.wav");
+	precache_sound("sentries/asscan2.wav");
+	precache_sound("sentries/asscan3.wav");
+	precache_sound("sentries/asscan4.wav");
+	precache_sound("sentries/turridle.wav");
+	precache_sound("sentries/turrset.wav");
+	precache_sound("sentries/turrspot.wav");
+	precache_sound("sentries/building.wav");
 	new var1 = g_FIRESOUNDS;
 	precache_sound(var1[0][var1]);
 	precache_sound(g_FIRESOUNDS[1]);
@@ -2031,8 +2019,8 @@ public forward_traceline_post(Float:start[3], Float:end[3], noMonsters, player)
 	new sentry;
 	new base;
 	new hull;
-	entity_get_string(hitEnt, 0, classname, 10);
-	if (equal(classname, 51068, 0))
+	entity_get_string(hitEnt, PLUGINNAME, classname, 10);
+	if (equal(classname, "sentryhull", PLUGINNAME))
 	{
 		hull = hitEnt;
 		base = entity_get_edict(hull, 7);
@@ -2040,12 +2028,12 @@ public forward_traceline_post(Float:start[3], Float:end[3], noMonsters, player)
 	}
 	else
 	{
-		if (equal(classname, 51112, 0))
+		if (equal(classname, "sentrybase", PLUGINNAME))
 		{
 			base = hitEnt;
 			sentry = entity_get_edict(base, 7);
 		}
-		if (equal(classname, 51156, 0))
+		if (equal(classname, "sentry", PLUGINNAME))
 		{
 			sentry = hitEnt;
 			base = entity_get_edict(sentry, 7);
@@ -2053,7 +2041,7 @@ public forward_traceline_post(Float:start[3], Float:end[3], noMonsters, player)
 	}
 	if (base)
 	{
-		if (cs_get_user_team(player, 0) == entity_get_int(base, 3))
+		if (cs_get_user_team(player, 0) == entity_get_int(base, ""))
 		{
 			if (player != entity_get_edict(base, 9))
 			{
@@ -2087,29 +2075,30 @@ public forward_traceline_post(Float:start[3], Float:end[3], noMonsters, player)
 		entity_set_edict(base, 4, player);
 	}
 	new level = GetSentryLevel(sentry);
-	new upgradeInfo[128] = {0};
+	new upgradeInfo[128];
 	if (PlayerCanUpgradeSentry(player, sentry))
 	{
-		format(upgradeInfo, 127, 51184, level + 2, g_COST[level + 1]);
+		format(upgradeInfo, 127, "\n(Run into me to upgrade me to level %d for $%d)", level + 2, g_COST[level + 1]);
 	}
 	else
 	{
 		if (level < 2)
 		{
-			format(upgradeInfo, 127, 51380, g_COST[level + 1]);
+			format(upgradeInfo, 127, "\n(Upgrade cost: $%d)", g_COST[level + 1]);
 		}
+		upgradeInfo = {0};
 	}
 	new tempStatusBuffer[256];
-	format(tempStatusBuffer, 255, 51468, floatround(health, 0), floatround(g_HEALTHS[level], 0), floatround(basehealth, 0), floatround(g_HEALTHS[0], 0), level + 1, upgradeInfo);
+	format(tempStatusBuffer, 255, "Health: %d/%d\nBase health: %d/%d\nLevel: %d%s", floatround(health, PLUGINNAME), floatround(g_HEALTHS[level], PLUGINNAME), floatround(basehealth, PLUGINNAME), floatround(g_HEALTHS[0], PLUGINNAME), level + 1, upgradeInfo);
 	SetStatusTrigger(player, true);
 	new var3;
-	if (!task_exists(player + 3000, 0) || !equal(tempStatusBuffer, g_sentryStatusBuffer[player + -1], 0))
+	if (!task_exists(player + 3000, PLUGINNAME) || !equal(tempStatusBuffer, g_sentryStatusBuffer[player + -1], PLUGINNAME))
 	{
-		remove_task(player + 3000, 0);
+		remove_task(player + 3000, PLUGINNAME);
 		new parms[2];
 		parms[0] = player;
 		parms[1] = team;
-		set_task(0, 51648, player + 3000, parms, 2, 38012, 0);
+		set_task(PLUGINNAME, "displaysentrystatus", player + 3000, parms, 2, 38012, PLUGINNAME);
 	}
 	return 1;
 }
@@ -2172,9 +2161,9 @@ public displaysentrystatus(parms[2])
 	{
 		var2 = 0;
 	}
-	set_hudmessage(var2, 0, var1, -1082130432, 1051931443, 0, 0, floatadd(1056964608, 1036831949), 0, 0, 2);
+	set_hudmessage(var2, PLUGINNAME, var1, -1082130432, 1051931443, PLUGINNAME, PLUGINNAME, floatadd(1056964608, 1036831949), PLUGINNAME, PLUGINNAME, 2);
 	show_hudmessage(parms[0], g_sentryStatusBuffer[parms[0] - 1]);
-	set_task(1056964608, 51728, parms[0] + 3000, parms, 2, 38012, 0);
+	set_task(1056964608, "displaysentrystatus", parms[0] + 3000, parms, 2, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -2183,7 +2172,7 @@ ResetArmoury()
 	new entity;
 	new Float:NULLVELOCITY[3] = 0.0;
 	new Float:origin[3] = 0.0;
-	while ((entity = find_ent_by_class(entity, 51808)))
+	while ((entity = find_ent_by_class(entity, "armoury_entity")))
 	{
 		entity_set_vector(entity, 2, NULLVELOCITY);
 		entity_get_vector(entity, 19, origin);
@@ -2197,9 +2186,9 @@ public InitArmoury()
 	new entity;
 	new Float:origin[3] = 0.0;
 	new counter;
-	while ((entity = find_ent_by_class(entity, 51868)))
+	while ((entity = find_ent_by_class(entity, "armoury_entity")))
 	{
-		entity_get_vector(entity, 0, origin);
+		entity_get_vector(entity, PLUGINNAME, origin);
 		entity_set_vector(entity, 19, origin);
 		counter++;
 	}
@@ -2214,7 +2203,7 @@ getnumbers(number, wordnumbers[], length)
 {
 	if (0 > number)
 	{
-		format(wordnumbers, length, 51928);
+		format(wordnumbers, length, "error");
 		return 0;
 	}
 	new numberstr[20];
@@ -2253,12 +2242,12 @@ getnumbers(number, wordnumbers[], length)
 					case 3:
 					{
 						getsingledigit(numberstr, wordnumbers, length, false);
-						format(wordnumbers, length, 52324, wordnumbers);
+						format(wordnumbers, length, "%s hundred", wordnumbers);
 					}
 					case 4:
 					{
 						getsingledigit(numberstr, wordnumbers, length, false);
-						format(wordnumbers, length, 52276, wordnumbers);
+						format(wordnumbers, length, "%s thousand", wordnumbers);
 					}
 					case 5:
 					{
@@ -2266,7 +2255,7 @@ getnumbers(number, wordnumbers[], length)
 						new var5;
 						if (numberstr[0] == 49 || numberstr[1] == 48)
 						{
-							format(wordnumbers, length, 52228, wordnumbers);
+							format(wordnumbers, length, "%s thousand", wordnumbers);
 						}
 					}
 					case 6:
@@ -2282,20 +2271,20 @@ getnumbers(number, wordnumbers[], length)
 							{
 								var4 = 52224;
 							}
-							format(wordnumbers, length, 52132, wordnumbers, var4);
+							format(wordnumbers, length, "%s hundred%s", wordnumbers, var4);
 						}
 					}
 					case 7:
 					{
 						getsingledigit(numberstr, wordnumbers, length, false);
-						format(wordnumbers, length, 52088, wordnumbers);
+						format(wordnumbers, length, "%s million", wordnumbers);
 					}
 					case 8:
 					{
 						jumpnext = gettens(wordnumbers, length, numberstr);
 						if (jumpnext)
 						{
-							format(wordnumbers, length, 52044, wordnumbers);
+							format(wordnumbers, length, "%s million", wordnumbers);
 						}
 					}
 					case 9:
@@ -2311,12 +2300,12 @@ getnumbers(number, wordnumbers[], length)
 							{
 								var2 = 52040;
 							}
-							format(wordnumbers, length, 51952, wordnumbers, var2);
+							format(wordnumbers, length, "%s hundred%s", wordnumbers, var2);
 						}
 					}
 					default:
 					{
-						format(wordnumbers, length, 52368, wordnumbers);
+						format(wordnumbers, length, "%s TOO LONG", wordnumbers);
 						if (wordnumbers[0] == 32)
 						{
 							jghg_trim(wordnumbers, length, 1, true);
@@ -2338,7 +2327,7 @@ getnumbers(number, wordnumbers[], length)
 
 bool:gettens(wordnumbers[], length, numberstr[])
 {
-	new digitstr[11] = {84,69,78,83,69,82,82,79,82,0};
+	new digitstr[11];
 	new bool:dont;
 	new bool:jumpnext;
 	switch (numberstr[0])
@@ -2354,118 +2343,149 @@ bool:gettens(wordnumbers[], length, numberstr[])
 			{
 				case 48:
 				{
+					digitstr = {116,101,110,0};
 				}
 				case 49:
 				{
+					digitstr = {101,108,101,118,101,110,0};
 				}
 				case 50:
 				{
+					digitstr = {116,119,101,108,118,101,0};
 				}
 				case 51:
 				{
+					digitstr = {116,104,105,114,116,101,101,110,0};
 				}
 				case 52:
 				{
+					digitstr = {102,111,117,114,116,101,101,110,0};
 				}
 				case 53:
 				{
+					digitstr = {102,105,102,116,101,101,110,0};
 				}
 				case 54:
 				{
+					digitstr = {115,105,120,116,101,101,110,0};
 				}
 				case 55:
 				{
+					digitstr = {115,101,118,101,110,116,101,101,110,0};
 				}
 				case 56:
 				{
+					digitstr = {101,105,103,104,116,101,101,110,0};
 				}
 				case 57:
 				{
+					digitstr = {110,105,110,101,116,101,101,110,0};
 				}
 				default:
 				{
+					digitstr = {84,69,69,78,83,69,82,82,79,82,0};
 				}
 			}
 		}
 		case 50:
 		{
+			digitstr = {116,119,101,110,116,121,0};
 		}
 		case 51:
 		{
+			digitstr = {116,104,105,114,116,121,0};
 		}
 		case 52:
 		{
+			digitstr = {102,111,117,114,116,121,0};
 		}
 		case 53:
 		{
+			digitstr = {102,105,102,116,121,0};
 		}
 		case 54:
 		{
+			digitstr = {115,105,120,116,121,0};
 		}
 		case 55:
 		{
+			digitstr = {115,101,118,101,110,116,121,0};
 		}
 		case 56:
 		{
+			digitstr = {101,105,103,104,116,121,0};
 		}
 		case 57:
 		{
+			digitstr = {110,105,110,101,116,121,0};
 		}
 		default:
 		{
+			digitstr = {84,69,78,83,69,82,82,79,82,0};
 		}
 	}
 	if (!dont)
 	{
-		format(wordnumbers, length, 53040, wordnumbers, digitstr);
+		format(wordnumbers, length, "%s %s", wordnumbers, digitstr);
 	}
 	return jumpnext;
 }
 
 getsingledigit(digit[], numbers[], length, bool:getzero)
 {
-	new digitstr[11] = {100,105,103,105,116,101,114,114,111,114,0};
+	new digitstr[11];
 	switch (digit[0])
 	{
 		case 48:
 		{
-			if (!getzero)
+			if (getzero)
 			{
-				return 0;
+				digitstr = {122,101,114,111,0};
 			}
+			return 0;
 		}
 		case 49:
 		{
+			digitstr = {111,110,101,0};
 		}
 		case 50:
 		{
+			digitstr = {116,119,111,0};
 		}
 		case 51:
 		{
+			digitstr = {116,104,114,101,101,0};
 		}
 		case 52:
 		{
+			digitstr = {102,111,117,114,0};
 		}
 		case 53:
 		{
+			digitstr = {102,105,118,101,0};
 		}
 		case 54:
 		{
+			digitstr = {115,105,120,0};
 		}
 		case 55:
 		{
+			digitstr = {115,101,118,101,110,0};
 		}
 		case 56:
 		{
+			digitstr = {101,105,103,104,116,0};
 		}
 		case 57:
 		{
+			digitstr = {110,105,110,101,0};
 		}
 		default:
 		{
+			digitstr = {100,105,103,105,116,101,114,114,111,114,0};
 		}
 	}
-	format(numbers, length, 53308, numbers, digitstr);
+	format(numbers, length, "%s %s", numbers, digitstr);
 	return 1;
 }
 
@@ -2482,7 +2502,7 @@ jghg_trim(stringtotrim[], len, charstotrim, bool:fromleft)
 		{
 			charstotrim = maxlen;
 		}
-		format(stringtotrim, len, 53332, stringtotrim[charstotrim]);
+		format(stringtotrim, len, "%s", stringtotrim[charstotrim]);
 	}
 	else
 	{
@@ -2491,18 +2511,18 @@ jghg_trim(stringtotrim[], len, charstotrim, bool:fromleft)
 		{
 			maxlen = 0;
 		}
-		format(stringtotrim, maxlen, 53344, stringtotrim);
+		format(stringtotrim, maxlen, "%s", stringtotrim);
 	}
 	return 0;
 }
 
 BotBuild(bot, Float:closestTime, Float:longestTime)
 {
-	if (task_exists(bot, 0))
+	if (task_exists(bot, PLUGINNAME))
 	{
 		return 0;
 	}
-	new teamSentriesNear = GetStuffInVicinity(bot, 1500.0, true, 53384) + GetStuffInVicinity(bot, 1500.0, true, 53356);
+	new teamSentriesNear = GetStuffInVicinity(bot, 1500.0, true, "sentrybase") + GetStuffInVicinity(bot, 1500.0, true, "sentry");
 	if (teamSentriesNear >= 1)
 	{
 		new name[32];
@@ -2510,7 +2530,7 @@ BotBuild(bot, Float:closestTime, Float:longestTime)
 		return 0;
 	}
 	new Float:ltime = random_float(closestTime, longestTime);
-	set_task(ltime, 53428, bot, 38828, 0, 38012, 0);
+	set_task(ltime, "sentry_build", bot, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -2520,7 +2540,7 @@ public sentry_build_randomlybybot(taskid_and_id)
 	{
 		return 0;
 	}
-	new teamSentriesNear = GetStuffInVicinity(taskid_and_id + -2000, 1500.0, true, 53508) + GetStuffInVicinity(taskid_and_id + -2000, 1500.0, true, 53480);
+	new teamSentriesNear = GetStuffInVicinity(taskid_and_id + -2000, 1500.0, true, "sentrybase") + GetStuffInVicinity(taskid_and_id + -2000, 1500.0, true, "sentry");
 	if (teamSentriesNear >= 1)
 	{
 		return 0;
@@ -2534,21 +2554,21 @@ GetStuffInVicinity(entity, Float:RADIUS, bool:followTeam, STUFF[])
 	new classname[32];
 	new CsTeams:sentryTeam;
 	new nrOfStuffNear;
-	entity_get_string(entity, 0, classname, 31);
+	entity_get_string(entity, PLUGINNAME, classname, 31);
 	if (followTeam)
 	{
-		if (equal(classname, 53552, 0))
+		if (equal(classname, "player", PLUGINNAME))
 		{
 			sentryTeam = cs_get_user_team(entity, 0);
 		}
-		if (equal(classname, 53580, 0))
+		if (equal(classname, "sentry", PLUGINNAME))
 		{
 			sentryTeam = GetSentryTeam(entity);
 		}
 	}
 	if (followTeam)
 	{
-		if (equal(STUFF, 53608, 0))
+		if (equal(STUFF, "sentry", PLUGINNAME))
 		{
 			new i;
 			while (i < g_sentriesNum)
@@ -2564,13 +2584,13 @@ GetStuffInVicinity(entity, Float:RADIUS, bool:followTeam, STUFF[])
 				i++;
 			}
 		}
-		if (equal(STUFF, 53636, 0))
+		if (equal(STUFF, "sentrybase", PLUGINNAME))
 		{
 			new ent;
 			while ((ent = find_ent_by_class(ent, STUFF)))
 			{
 				new var3;
-				if (!((followTeam && sentryTeam != entity_get_int(ent, 3)) || (entity != ent && entity_get_edict(ent, 7) && entity_range(ent, entity) > RADIUS)))
+				if (!((followTeam && sentryTeam != entity_get_int(ent, "")) || (entity != ent && entity_get_edict(ent, 7) && entity_range(ent, entity) > RADIUS)))
 				{
 					nrOfStuffNear++;
 				}
@@ -2583,7 +2603,7 @@ GetStuffInVicinity(entity, Float:RADIUS, bool:followTeam, STUFF[])
 BotBuildRandomly(bot, Float:closestTime, Float:longestTime)
 {
 	new Float:ltime = random_float(closestTime, longestTime);
-	set_task(ltime, 53680, bot + 2000, 38828, 0, 38012, 0);
+	set_task(ltime, "sentry_build_randomlybybot", bot + 2000, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	new tempname[32];
 	get_user_name(bot, tempname, 31);
 	return 0;
@@ -2592,12 +2612,12 @@ BotBuildRandomly(bot, Float:closestTime, Float:longestTime)
 public playerreachedtarget(target, bot)
 {
 	new var1;
-	if (!is_user_bot(bot) || GetSentryCount(bot) >= 2 || entity_get_int(bot, 9) || cs_get_user_vip(bot) || get_systime(0) < g_lastObjectiveBuild[bot + -1][2])
+	if (!is_user_bot(bot) || GetSentryCount(bot) >= 2 || entity_get_int(bot, 9) || cs_get_user_vip(bot) || get_systime(PLUGINNAME) < g_lastObjectiveBuild[bot + -1][2])
 	{
 		return 0;
 	}
 	BotBuild(bot, 0.1, 5.0);
-	g_lastObjectiveBuild[bot + -1] = get_systime(0);
+	g_lastObjectiveBuild[bot + -1] = get_systime(PLUGINNAME);
 	return 0;
 }
 
@@ -2610,7 +2630,7 @@ public playertouchedweaponbox(weaponbox, bot)
 	}
 	new model[22];
 	entity_get_string(weaponbox, 2, model, 21);
-	if (!equal(model, 53788, 0))
+	if (!equal(model, "models/w_backpack.mdl", PLUGINNAME))
 	{
 		return 0;
 	}
@@ -2627,7 +2647,7 @@ public playerreachedhostagerescue(target, bot)
 	}
 	if (cs_get_user_team(bot, 0) == 2)
 	{
-		if (95 > random_num(0, 99))
+		if (95 > random_num(PLUGINNAME, ""))
 		{
 			return 0;
 		}
@@ -2743,10 +2763,10 @@ public botbuildsrandomly(parm[1])
 	{
 		return 0;
 	}
-	new Float:ltime = random_float(0, 1097859072);
-	new Float:ltime2 = floatadd(ltime, random_float(0, 1123024896));
+	new Float:ltime = random_float(PLUGINNAME, 1097859072);
+	new Float:ltime2 = floatadd(ltime, random_float(PLUGINNAME, 1123024896));
 	BotBuildRandomly(parm[0], ltime, ltime2);
-	set_task(ltime2, 53876, 0, parm, 1, 38012, 0);
+	set_task(ltime2, "botbuildsrandomly", PLUGINNAME, parm, 1, 38012, PLUGINNAME);
 	return 0;
 }
 
@@ -2765,7 +2785,7 @@ public client_PostThink(id)
 	new var1;
 	if (!g_inBuilding[id + -1] && g_lastInBuilding[id + -1])
 	{
-		set_task(1056964608, 53948, id, 38828, 0, 38012, 0);
+		set_task(1056964608, "resetspeed", id, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	}
 	else
 	{
@@ -2788,51 +2808,51 @@ public resetspeed(who)
 
 public plugin_init()
 {
-	register_plugin(0, 48, 100);
-	register_clcmd(53992, 54044, 0, 54112, -1);
-	register_clcmd(54252, 54300, 0, 54336, -1);
-	register_clcmd(54444, 54460, -1, 54500, -1);
-	register_clcmd(54504, 54540, -1, 54500, -1);
-	register_event(54580, 54620, 54676, 54688);
-	register_event(54704, 54740, 54800, 54808);
-	register_event(54812, 54852, 54912, 54920, 54984, 55044);
-	register_event(55120, 55152, 55212, 55220, 55260);
-	register_event(55300, 55332, 55392, 55400);
-	register_forward(30, 55496, 1);
-	if (find_ent_by_class(0, 55588))
+	register_plugin(PLUGINNAME, VERSION, AUTHOR);
+	register_clcmd("sentry_build", "createsentryhere", PLUGINNAME, "- build a sentry gun where you are", -1);
+	register_clcmd("sentry_menu", "menumain", PLUGINNAME, "- displays Sentry gun menu", -1);
+	register_clcmd("say", "check_say", -1, 54500, -1);
+	register_clcmd("say_team", "check_say", -1, 54500, -1);
+	register_event("CurWeapon", "holdwpn_event", "be", "1=1");
+	register_event("ResetHUD", "newround_event", 54800, 54808);
+	register_event("SendAudio", "endround_event", 54912, "2&%!MRAD_terwin", "2&%!MRAD_ctwin", "2&%!MRAD_rounddraw");
+	register_event("TextMsg", "endround_event", 55212, "2&#Game_C", "2&#Game_w");
+	register_event("TextMsg", "endround_event", 55392, "2&#Game_will_restart_in");
+	register_forward(30, "forward_traceline_post", 1);
+	if (find_ent_by_class(PLUGINNAME, "func_bomb_target"))
 	{
-		register_touch(55656, 55724, 55752);
-		register_touch(55832, 55872, 55900);
+		register_touch("func_bomb_target", "player", "playerreachedtarget");
+		register_touch("weaponbox", "player", "playertouchedweaponbox");
 	}
-	if (find_ent_by_class(0, 55992))
+	if (find_ent_by_class(PLUGINNAME, "func_hostage_rescue"))
 	{
-		register_touch(56072, 56152, 56180);
+		register_touch("func_hostage_rescue", "player", "playerreachedhostagerescue");
 	}
-	if (find_ent_by_class(0, 56288))
+	if (find_ent_by_class(PLUGINNAME, "func_vip_safetyzone"))
 	{
-		register_touch(56368, 56448, 56476);
+		register_touch("func_vip_safetyzone", "player", "playerreachedtarget");
 	}
-	if (find_ent_by_class(0, 56556))
+	if (find_ent_by_class(PLUGINNAME, "hostage_entity"))
 	{
-		register_touch(56616, 56676, 56704);
+		register_touch("hostage_entity", "player", "playertouchedhostage");
 	}
-	register_touch(56788, 56816, 56844);
-	register_touch(56924, 56968, 56996);
-	register_touch(57092, 57136, 57164);
-	register_touch(57260, 57304, 57332);
-	register_touch(57404, 57448, 57476);
-	g_menuId = register_menuid(57572, 0);
-	register_menucmd(g_menuId, 1023, 57644);
-	register_message(23, 57708);
-	register_think(57784, 57828);
-	g_msgDamage = get_user_msgid(57896);
-	g_msgDeathMsg = get_user_msgid(57924);
-	g_msgScoreInfo = get_user_msgid(57960);
-	g_msgHostagePos = get_user_msgid(58000);
-	g_msgHostageK = get_user_msgid(58044);
+	register_touch("sentry", "player", "playertouchedsentry");
+	register_touch("sentrybase", "player", "playertouchedsentrybase");
+	register_touch("sentryhull", "sentry", "sentryhulltouchedsentry");
+	register_touch("sentryhull", "player", "playertouchedhull");
+	register_touch("sentrybase", "sentry", "sentrybasetouchedsentry");
+	g_menuId = register_menuid("\ySentry gun menu", PLUGINNAME);
+	register_menucmd(g_menuId, 1023, "menumain_handle");
+	register_message(23, "message_tempentity");
+	register_think("sentrybase", "think_sentrybase");
+	g_msgDamage = get_user_msgid("Damage");
+	g_msgDeathMsg = get_user_msgid("DeathMsg");
+	g_msgScoreInfo = get_user_msgid("ScoreInfo");
+	g_msgHostagePos = get_user_msgid("HostagePos");
+	g_msgHostageK = get_user_msgid("HostageK");
 	g_MAXPLAYERS = get_global_int(16);
 	g_ONEEIGHTYTHROUGHPI = floatdiv(1127481344, 1078530011);
-	set_task(1084227584, 58080, 0, 38828, 0, 38012, 0);
+	set_task(1084227584, "InitArmoury", PLUGINNAME, 38828, PLUGINNAME, 38012, PLUGINNAME);
 	return 0;
 }
 

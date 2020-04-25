@@ -282,41 +282,10 @@ checkIP(ip[])
 	return 0;
 }
 
-java.lang.AssertionError
-	at lysis.builder.structure.SourceStructureBuilder.findLoopJoinAndBody(SourceStructureBuilder.java:462)
-	at lysis.builder.structure.SourceStructureBuilder.traverseLoop(SourceStructureBuilder.java:515)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:630)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:616)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:591)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:402)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:591)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:402)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:398)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:591)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:402)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:591)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:402)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.traverseJoin(SourceStructureBuilder.java:591)
-	at lysis.builder.structure.SourceStructureBuilder.traverseIf(SourceStructureBuilder.java:402)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlockNoLoop(SourceStructureBuilder.java:598)
-	at lysis.builder.structure.SourceStructureBuilder.traverseBlock(SourceStructureBuilder.java:632)
-	at lysis.builder.structure.SourceStructureBuilder.build(SourceStructureBuilder.java:636)
-	at lysis.Lysis.DumpMethod(Lysis.java:133)
-	at lysis.Lysis.main(Lysis.java:201)
 
 /* ERROR! null */
  function "displayUnBanMenu" (number 12)
+
 public actionUnBanMenu(id, key)
 {
 	switch (key)

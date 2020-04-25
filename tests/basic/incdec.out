@@ -1,0 +1,184 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6431",
+	date = "04/25/2020",
+	time = "18:18:25"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new glob = 1;
+public void:__ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return void:0;
+}
+
+public main()
+{
+	static s_var = 100;
+	glob += 1;
+	glob -= 1;
+	glob += 1;
+	if (glob == 2)
+	{
+		print("nope");
+	}
+	glob -= 1;
+	if (!glob)
+	{
+		print("yes");
+	}
+	new var1 = 5;
+	var1--;
+	var1--;
+	printnum(var1);
+	var1++;
+	var1++;
+	printnum(var1);
+	new var2;
+	if (glob > 1 && (var1 < 5 || var1 == 4 || var1 > 10) && var1 != 5)
+	{
+		print("local yup");
+	}
+	s_var += 1;
+	s_var -= 1;
+	new var3;
+	if ((var1 > 2 && s_var > 20) || -1 < s_var)
+	{
+		print("static wat");
+	}
+	return 0;
+}
+

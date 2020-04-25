@@ -1,3 +1,6 @@
+
+/* ERROR PREPROCESSING! null */
+ function "EventWeaponFire" (number 42)
 public PlVers:__version =
 {
 	version = 5,
@@ -1027,108 +1030,9 @@ public Float:GetDmg(client, cnt)
 	return ret;
 }
 
-public Action:EventWeaponFire(Handle:event, String:name[], bool:dontBroadcast)
-{
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new var1;
-	if (IsAdmin[client] && g_iNoFlash[client])
-	{
-		SetEntDataFloat(client, g_iFlashAlpha, 0.5, false);
-	}
-	new m_Offset = FindSendPropOffs("CCSPlayer", "m_iTeamNum");
-	new Float:angles[3] = 0.0;
-	new var5 = view_angles[client];
-	angles = var5;
-	if (Aimbot[client])
-	{
-		new i;
-		while (AimbotMulti[client] >= i)
-		{
-			new cnt = 1;
-			while (cnt <= MaxClients)
-			{
-				new t1;
-				new t2;
-				if (IsClientInGame(cnt))
-				{
-					t1 = GetEntData(client, m_Offset, 4);
-					t2 = GetEntData(cnt, m_Offset, 4);
-					if (!(IsClientObserver(cnt)))
-					{
-						if (IsPlayerAlive(cnt))
-						{
-							if (!(t2 == t1))
-							{
-								new var2;
-								if (!(t2 == 2 || t2 == 3))
-								{
-									if (!(client == cnt))
-									{
-										new Float:p1[3] = 0.0;
-										new Float:p2[3] = 0.0;
-										new Float:p3[3] = 0.0;
-										GetClientEyePosition(client, p1);
-										GetClientEyePosition(cnt, p2);
-										TR_TraceRayFilter(p1, p2, 33636363, RayType:0, TraceRayDontHitSelf, client);
-										new var3;
-										if (!(TR_GetFraction(Handle:0) < 1064682127 && cnt != TR_GetEntityIndex(Handle:0) && AimT[client]))
-										{
-											new Float:delta[3] = 0.0;
-											delta[0] = p1[0] - p2[0];
-											delta[1] = p1[1] - p2[1];
-											delta[2] = p1[2] - p2[2];
-											new Float:hyp = SquareRoot(delta[0] * delta[0] + delta[1] * delta[1]);
-											p3[0] = ArcTangent(delta[2] / hyp) * 180 / 3.141;
-											p3[1] = ArcTangent(delta[1] / delta[0]) * 180 / 3.141;
-											p3[2] = 0.0;
-											if (delta[0] >= 0.0)
-											{
-												p3[1] += 180.0;
-											}
-											new var4;
-											if (!(FloatAbs(p3[0] - angles[0]) > aFov[client] || FloatAbs(p3[1] - angles[1]) > aFov[client]))
-											{
-												if (Aimbot[client] == 2)
-												{
-													new int:dmgt = 2;
-													aimbot_event = cnt;
-													if (GetRandomFloat(0.0, 1.0) > HeadChance[client])
-													{
-														HeadChanceF[client] = 0;
-													}
-													else
-													{
-														HeadChanceF[client] = 1;
-													}
-													if (!(AimChance[client] < GetRandomFloat(0.0, 1.0)))
-													{
-														SDKHooks_TakeDamage(cnt, client, client, GetDmg(client, cnt), dmgt, -1, NULL_VECTOR, NULL_VECTOR);
-														i++;
-													}
-													cnt++;
-												}
-											}
-											cnt++;
-										}
-										cnt++;
-									}
-									cnt++;
-								}
-								cnt++;
-							}
-							cnt++;
-						}
-						cnt++;
-					}
-					cnt++;
-				}
-				cnt++;
-			}
-			i++;
-		}
-	}
-	return Action:0;
-}
+
+/* ERROR! null */
+ function "EventWeaponFire" (number 42)
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
@@ -1284,11 +1188,15 @@ public OnPreThinkPost(client)
 		return 0;
 	}
 	new WeaponIndex = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon");
-	new String:WeaponName[32] = "none";
+	decl String:WeaponName[32];
 	if (WeaponIndex != -1)
 	{
 		GetEdictClassname(WeaponIndex, WeaponName, 30);
 		ReplaceString(WeaponName, 30, "weapon_", "", false);
+	}
+	else
+	{
+		WeaponName = "none";
 	}
 	new var2;
 	if (1065353216 != All[client][4] && -1082130432 != All[client][4])
@@ -1450,11 +1358,15 @@ public OnPostThink(client)
 		if (Buttons & 2048)
 		{
 			new WeaponIndex = GetEntPropEnt(client, PropType:0, "m_hActiveWeapon");
-			new String:WeaponName[32] = "none";
+			decl String:WeaponName[32];
 			if (WeaponIndex != -1)
 			{
 				GetEdictClassname(WeaponIndex, WeaponName, 30);
 				ReplaceString(WeaponName, 30, "weapon_", "", false);
+			}
+			else
+			{
+				WeaponName = "none";
 			}
 			if (StrEqual("knife", WeaponName, false))
 			{

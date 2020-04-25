@@ -1,3 +1,9 @@
+
+/* ERROR PREPROCESSING! null */
+ function "vote_addNominations" (number 54)
+
+/* ERROR PREPROCESSING! null */
+ function "vote_addFiller" (number 55)
 new PLUGIN_VERSION[21] =
 {
 	49, 46, 49, 32, 36, 82, 101, 118, 105, 115, 105, 111, 110, 58, 32, 50, 57, 48, 32, 36, 0
@@ -137,7 +143,7 @@ Float:floatmax(Float:ValueA, Float:ValueB)
 
 is_user_admin(id)
 {
-	new __flags = get_user_flags(id, 0);
+	new __flags = get_user_flags(id, PLUGIN_VERSION);
 	new var1;
 	return __flags > 0 && !__flags & 33554432;
 }
@@ -167,7 +173,7 @@ cmd_access(id, level, cid, num, bool:accesssilent)
 				has_access = 1;
 			}
 		}
-		if (level & get_user_flags(id, 0))
+		if (level & get_user_flags(id, PLUGIN_VERSION))
 		{
 			has_access = 1;
 		}
@@ -184,14 +190,14 @@ cmd_access(id, level, cid, num, bool:accesssilent)
 			new hinfo[128];
 			new hflag;
 			get_concmd(cid, hcmd, 31, hflag, hinfo, 127, level, -1);
-			console_print(id, 140, id, 184, hcmd, hinfo);
+			console_print(id, "%L:  %s %s", id, "USAGE", hcmd, hinfo);
 			return 0;
 		}
 		return 1;
 	}
 	if (!accesssilent)
 	{
-		console_print(id, 84, id, 96);
+		console_print(id, "%L", id, "NO_ACC_COM");
 	}
 	return 0;
 }
@@ -201,22 +207,22 @@ colored_menus()
 	new mod_name[32];
 	get_modname(mod_name, 31);
 	new var1;
-	return equal(mod_name, 208, 0) || equal(mod_name, 240, 0) || equal(mod_name, 264, 0);
+	return equal(mod_name, "cstrike", PLUGIN_VERSION) || equal(mod_name, "czero", PLUGIN_VERSION) || equal(mod_name, "dod", PLUGIN_VERSION);
 }
 
 get_configsdir(name[], len)
 {
-	return get_localinfo(280, name, len);
+	return get_localinfo("amxx_configsdir", name, len);
 }
 
 get_datadir(name[], len)
 {
-	return get_localinfo(344, name, len);
+	return get_localinfo("amxx_datadir", name, len);
 }
 
 has_flag(id, flags[])
 {
-	return read_flags(flags) & get_user_flags(id, 0);
+	return read_flags(flags) & get_user_flags(id, PLUGIN_VERSION);
 }
 
 public plugin_init()
@@ -224,75 +230,75 @@ public plugin_init()
 	new jnk[1];
 	new version[8];
 	new rev[8];
-	parse(0, version, 7, jnk, 0, rev, 7, jnk, 0);
+	parse(PLUGIN_VERSION, version, 7, jnk, 0, rev, 7, jnk, 0);
 	new pluginVersion[16];
-	formatex(pluginVersion, 15, 10544, version, rev);
-	register_plugin(10568, pluginVersion, 10600);
-	register_cvar(10644, pluginVersion, 68, 0);
-	set_cvar_string(10692, pluginVersion);
-	register_cvar(10740, 10820, 64, 0);
-	cvar_emptyCycle = register_cvar(10828, 10904, 64, 0);
-	register_cvar(10912, 10952, 0, 0);
-	register_dictionary(10960);
-	register_dictionary(11004);
-	register_dictionary(11052);
-	if (module_exists(11100))
+	formatex(pluginVersion, 15, "%s.%s", version, rev);
+	register_plugin("Galileo", pluginVersion, "Brad Jones");
+	register_cvar("gal_version", pluginVersion, 68, PLUGIN_VERSION);
+	set_cvar_string("gal_version", pluginVersion);
+	register_cvar("gal_server_starting", 10820, 64, PLUGIN_VERSION);
+	cvar_emptyCycle = register_cvar("gal_in_empty_cycle", 10904, 64, PLUGIN_VERSION);
+	register_cvar("gal_debug", 10952, PLUGIN_VERSION, PLUGIN_VERSION);
+	register_dictionary("common.txt");
+	register_dictionary("nextmap.txt");
+	register_dictionary("galileo.txt");
+	if (module_exists("cstrike"))
 	{
-		register_event(11132, 11152, 11224, 11232, 11248);
+		register_event("HLTV", "event_round_start", 11224, "1=0", "2=0");
 	}
 	else
 	{
-		if (module_exists(11264))
+		if (module_exists("dodx"))
 		{
-			register_event(11284, 11328, 11400, 11408);
+			register_event("RoundState", "event_round_start", 11400, "1=1");
 		}
 	}
-	register_event(11424, 11456, 11544, 11552, 11628);
-	register_event(11724, 11736, 11812, 11820);
-	g_menuChooseMap = register_menuid(396, 0);
-	register_menucmd(g_menuChooseMap, 1023, 11824);
-	register_clcmd(11896, 11912, -1, 11944, -1);
-	register_clcmd(11948, 11996, 0, 12044, -1);
-	register_clcmd(12120, 12180, 0, 12240, -1);
-	register_clcmd(12328, 12356, 0, 12384, -1);
-	register_clcmd(12508, 12540, -1, 11944, -1);
-	register_clcmd(12604, 12640, -1, 11944, -1);
-	register_concmd(12708, 12764, 32, 12820, -1);
-	register_concmd(12824, 12896, 2048, 12820, -1);
-	register_cvar(12968, 13016, 76, 0);
-	cvar_extendmapMax = register_cvar(13020, 13092, 0, 0);
-	cvar_extendmapStep = register_cvar(13104, 13180, 0, 0);
-	cvar_cmdVotemap = register_cvar(13192, 13256, 0, 0);
-	cvar_cmdListmaps = register_cvar(13264, 13332, 0, 0);
-	cvar_listmapsPaginate = register_cvar(13340, 13428, 0, 0);
-	cvar_banRecent = register_cvar(13440, 13496, 0, 0);
-	cvar_banRecentStyle = register_cvar(13504, 13580, 0, 0);
-	cvar_endOnRound = register_cvar(13588, 13648, 0, 0);
-	cvar_endOfMapVote = register_cvar(13656, 13724, 0, 0);
-	cvar_emptyWait = register_cvar(13732, 13816, 0, 0);
-	cvar_emptyMapFile = register_cvar(13824, 13920, 0, 0);
-	cvar_srvStart = register_cvar(13924, 13980, 0, 0);
-	cvar_rtvCommands = register_cvar(13988, 14056, 0, 0);
-	cvar_rtvWait = register_cvar(14064, 14116, 0, 0);
-	cvar_rtvRatio = register_cvar(14128, 14184, 0, 0);
-	cvar_rtvReminder = register_cvar(14204, 14272, 0, 0);
-	cvar_nomPlayerAllowance = register_cvar(14280, 14376, 0, 0);
-	cvar_nomMapFile = register_cvar(14384, 14448, 0, 0);
-	cvar_nomPrefixes = register_cvar(14484, 14552, 0, 0);
-	cvar_nomQtyUsed = register_cvar(14560, 14624, 0, 0);
-	cvar_voteWeight = register_cvar(14632, 14696, 0, 0);
-	cvar_voteWeightFlags = register_cvar(14704, 14788, 0, 0);
-	cvar_voteMapFile = register_cvar(14796, 14864, 0, 0);
-	cvar_voteDuration = register_cvar(14916, 14988, 0, 0);
-	cvar_voteExpCountdown = register_cvar(15000, 15116, 0, 0);
-	cvar_voteMapChoiceCnt = register_cvar(15124, 15204, 0, 0);
-	cvar_voteAnnounceChoice = register_cvar(15212, 15308, 0, 0);
-	cvar_voteStatus = register_cvar(15316, 15396, 0, 0);
-	cvar_voteStatusType = register_cvar(15404, 15500, 0, 0);
-	cvar_voteUniquePrefixes = register_cvar(15508, 15604, 0, 0);
-	cvar_runoffEnabled = register_cvar(15612, 15688, 0, 0);
-	cvar_runoffDuration = register_cvar(15696, 15776, 0, 0);
-	cvar_soundsMute = register_cvar(15788, 15852, 0, 0);
+	register_event("TextMsg", "event_game_commencing", 11544, "2=#Game_Commencing", "2=#Game_will_restart_in");
+	register_event("30", "event_intermission", 11812, 11820);
+	g_menuChooseMap = register_menuid(MENU_CHOOSEMAP, PLUGIN_VERSION);
+	register_menucmd(g_menuChooseMap, 1023, "vote_handleChoice");
+	register_clcmd("say", "cmd_say", -1, 11944, -1);
+	register_clcmd("say nextmap", "cmd_nextmap", PLUGIN_VERSION, "- displays nextmap", -1);
+	register_clcmd("say currentmap", "cmd_currentmap", PLUGIN_VERSION, "- display current map", -1);
+	register_clcmd("say ff", "cmd_ff", PLUGIN_VERSION, "- display friendly fire status", -1);
+	register_clcmd("votemap", "cmd_HL1_votemap", -1, 11944, -1);
+	register_clcmd("listmaps", "cmd_HL1_listmaps", -1, 11944, -1);
+	register_concmd("gal_startvote", "cmd_startVote", 32, 12820, -1);
+	register_concmd("gal_createmapfile", "cmd_createMapFile", 2048, 12820, -1);
+	register_cvar("amx_nextmap", 13016, 76, PLUGIN_VERSION);
+	cvar_extendmapMax = register_cvar("amx_extendmap_max", "90", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_extendmapStep = register_cvar("amx_extendmap_step", "15", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_cmdVotemap = register_cvar("gal_cmd_votemap", 13256, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_cmdListmaps = register_cvar("gal_cmd_listmaps", 13332, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_listmapsPaginate = register_cvar("gal_listmaps_paginate", "10", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_banRecent = register_cvar("gal_banrecent", 13496, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_banRecentStyle = register_cvar("gal_banrecentstyle", 13580, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_endOnRound = register_cvar("gal_endonround", 13648, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_endOfMapVote = register_cvar("gal_endofmapvote", 13724, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_emptyWait = register_cvar("gal_emptyserver_wait", 13816, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_emptyMapFile = register_cvar("gal_emptyserver_mapfile", 13920, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_srvStart = register_cvar("gal_srv_start", 13980, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_rtvCommands = register_cvar("gal_rtv_commands", 14056, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_rtvWait = register_cvar("gal_rtv_wait", "10", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_rtvRatio = register_cvar("gal_rtv_ratio", "0.60", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_rtvReminder = register_cvar("gal_rtv_reminder", 14272, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_nomPlayerAllowance = register_cvar("gal_nom_playerallowance", 14376, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_nomMapFile = register_cvar("gal_nom_mapfile", "mapcycle", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_nomPrefixes = register_cvar("gal_nom_prefixes", 14552, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_nomQtyUsed = register_cvar("gal_nom_qtyused", 14624, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteWeight = register_cvar("gal_vote_weight", 14696, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteWeightFlags = register_cvar("gal_vote_weightflags", 14788, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteMapFile = register_cvar("gal_vote_mapfile", "mapcycle.txt", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteDuration = register_cvar("gal_vote_duration", "15", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteExpCountdown = register_cvar("gal_vote_expirationcountdown", 15116, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteMapChoiceCnt = register_cvar("gal_vote_mapchoices", 15204, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteAnnounceChoice = register_cvar("gal_vote_announcechoice", 15308, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteStatus = register_cvar("gal_vote_showstatus", 15396, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteStatusType = register_cvar("gal_vote_showstatustype", 15500, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_voteUniquePrefixes = register_cvar("gal_vote_uniqueprefixes", 15604, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_runoffEnabled = register_cvar("gal_runoff_enabled", 15688, PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_runoffDuration = register_cvar("gal_runoff_duration", "10", PLUGIN_VERSION, PLUGIN_VERSION);
+	cvar_soundsMute = register_cvar("gal_sounds_mute", 15852, PLUGIN_VERSION, PLUGIN_VERSION);
 	return 0;
 }
 
@@ -324,41 +330,41 @@ public dbg_fakeVotes()
 
 public plugin_cfg()
 {
-	formatex(DIR_CONFIGS[get_configsdir(DIR_CONFIGS, 63)], 63, 15860);
-	formatex(DIR_DATA[get_datadir(DIR_DATA, 63)], 63, 15896);
-	server_cmd(15932, 468);
+	formatex(DIR_CONFIGS[get_configsdir(DIR_CONFIGS, 63)], 63, "/galileo");
+	formatex(DIR_DATA[get_datadir(DIR_DATA, 63)], 63, "/galileo");
+	server_cmd("exec %s/galileo.cfg", DIR_CONFIGS);
 	server_exec();
 	if (colored_menus())
 	{
-		copy(980, 2, 16012);
-		copy(992, 2, 16024);
-		copy(1004, 2, 16036);
+		copy(CLR_RED, 2, "\r");
+		copy(CLR_WHITE, 2, "\w");
+		copy(CLR_YELLOW, 2, "\y");
 	}
 	g_rtvWait = get_pcvar_float(cvar_rtvWait);
-	get_pcvar_string(cvar_voteWeightFlags, 4400, 31);
-	get_mapname(3212, 31);
+	get_pcvar_string(cvar_voteWeightFlags, g_voteWeightFlags, 31);
+	get_mapname(g_currentMap, 31);
 	g_choiceMax = max(min(8, get_pcvar_num(cvar_voteMapChoiceCnt)), 2);
 	g_fillerMap = ArrayCreate(32, 32);
 	g_nominationMap = ArrayCreate(32, 32);
 	nomination_clearAll();
 	if (get_pcvar_num(cvar_banRecent))
 	{
-		register_clcmd(16048, 16108, 0, 11944, -1);
+		register_clcmd("say recentmaps", "cmd_listrecent", PLUGIN_VERSION, 11944, -1);
 		map_loadRecentList();
 		new var1;
-		if (get_cvar_num(16168) && get_pcvar_num(cvar_srvStart))
+		if (get_cvar_num("gal_server_starting") && get_pcvar_num(cvar_srvStart))
 		{
 			map_writeRecentList();
 		}
 	}
 	if (get_pcvar_num(cvar_rtvCommands) & 1)
 	{
-		register_clcmd(16248, 16312, 0, 11944, -1);
+		register_clcmd("say rockthevote", "cmd_rockthevote", PLUGIN_VERSION, 11944, -1);
 	}
 	if (get_pcvar_num(cvar_nomPlayerAllowance))
 	{
-		register_concmd(16376, 16428, -1, 12820, -1);
-		register_clcmd(16480, 16544, 0, 16608, -1);
+		register_concmd("gal_listmaps", "cmd_listmaps", -1, 12820, -1);
+		register_clcmd("say nominations", "cmd_nominations", PLUGIN_VERSION, "- displays current nominations for next map", -1);
 		if (get_pcvar_num(cvar_nomPrefixes))
 		{
 			map_loadPrefixList();
@@ -369,16 +375,16 @@ public plugin_cfg()
 	get_mapname(mapName, 31);
 	dbg_log(6, "[%s]", mapName);
 	dbg_log(6, 16804);
-	if (get_cvar_num(16808))
+	if (get_cvar_num("gal_server_starting"))
 	{
 		srv_handleStart();
 	}
-	set_task(1092616192, 16888, 0, 16944, 0, 16948, 0);
+	set_task(1092616192, "vote_setupEnd", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	if (get_pcvar_num(cvar_emptyWait))
 	{
 		g_emptyCycleMap = ArrayCreate(32, 32);
 		map_loadEmptyCycleList();
-		set_task(1114636288, 16952, 0, 16944, 0, 16948, 0);
+		set_task(1114636288, "srv_initEmptyCheck", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	}
 	return 0;
 }
@@ -391,25 +397,25 @@ public plugin_end()
 
 public vote_setupEnd()
 {
-	dbg_log(4, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(in)", get_cvar_float(17288), g_originalTimelimit);
-	g_originalTimelimit = get_cvar_float(17340);
+	dbg_log(4, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(in)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
+	g_originalTimelimit = get_cvar_float("mp_timelimit");
 	new nextMap[32];
 	if (get_pcvar_num(cvar_endOfMapVote))
 	{
-		formatex(nextMap, 31, 17392, 0, 17404);
+		formatex(nextMap, 31, "%L", 0, "GAL_NEXTMAP_UNKNOWN");
 	}
 	else
 	{
 		g_mapCycle = ArrayCreate(32, 32);
-		map_populateList(g_mapCycle, 17484);
+		map_populateList(g_mapCycle, "mapcycle.txt");
 		map_getNext(g_mapCycle, g_currentMap, nextMap);
 	}
 	map_setNext(nextMap);
 	if (g_originalTimelimit)
 	{
-		set_task(1097859072, 17536, 0, 16944, 0, 17596, 0);
+		set_task(1097859072, "vote_manageEnd", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 17596, PLUGIN_VERSION);
 	}
-	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(out)", get_cvar_float(17868), g_originalTimelimit);
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "vote_setupEnd(out)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
 	return 0;
 }
 
@@ -423,7 +429,7 @@ map_getNext(Array:mapArray, currentMap[], nextMap[32])
 	while (mapIdx < mapCnt)
 	{
 		ArrayGetString(mapArray, mapIdx, thisMap, 31);
-		if (equal(currentMap, thisMap, 0))
+		if (equal(currentMap, thisMap, PLUGIN_VERSION))
 		{
 			new var1;
 			if (mapCnt + -1 == mapIdx)
@@ -447,7 +453,7 @@ map_getNext(Array:mapArray, currentMap[], nextMap[32])
 
 public srv_handleStart()
 {
-	set_cvar_num(17920, 0);
+	set_cvar_num("gal_server_starting", PLUGIN_VERSION);
 	new startAction = get_pcvar_num(cvar_srvStart);
 	if (startAction)
 	{
@@ -456,8 +462,8 @@ public srv_handleStart()
 		if (startAction == 1 || startAction == 2)
 		{
 			new filename[256];
-			formatex(filename, 255, 18000, 724);
-			new file = fopen(filename, 18048);
+			formatex(filename, 255, "%s/info.dat", DIR_DATA);
+			new file = fopen(filename, "rt");
 			if (file)
 			{
 				fgets(file, nextMap, 31);
@@ -479,7 +485,7 @@ public srv_handleStart()
 				}
 				if (g_nominationMapCnt)
 				{
-					ArrayGetString(g_nominationMap, random_num(0, g_nominationMapCnt + -1), nextMap, 31);
+					ArrayGetString(g_nominationMap, random_num(PLUGIN_VERSION, g_nominationMapCnt + -1), nextMap, 31);
 				}
 			}
 		}
@@ -487,7 +493,7 @@ public srv_handleStart()
 		new var2;
 		if (nextMap[0] && is_map_valid(nextMap))
 		{
-			server_cmd(18060, nextMap);
+			server_cmd("changelevel %s", nextMap);
 		}
 		else
 		{
@@ -500,20 +506,20 @@ public srv_handleStart()
 vote_manageEarlyStart()
 {
 	g_voteStatus = g_voteStatus | 16;
-	set_task(1123024896, 18120, 0, 16944, 0, 16948, 0);
+	set_task(1123024896, "vote_startDirector", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	return 0;
 }
 
 map_setNext(nextMap[])
 {
-	set_cvar_string(18196, nextMap);
+	set_cvar_string("amx_nextmap", nextMap);
 	new filename[256];
-	formatex(filename, 255, 18244, 724);
-	new file = fopen(filename, 18292);
+	formatex(filename, 255, "%s/info.dat", DIR_DATA);
+	new file = fopen(filename, "wt");
 	if (file)
 	{
-		fprintf(file, 18304, 3212);
-		fprintf(file, 18316, nextMap);
+		fprintf(file, "%s", g_currentMap);
+		fprintf(file, "\n%s", nextMap);
 		fclose(file);
 	}
 	return 0;
@@ -538,8 +544,8 @@ public vote_manageEnd()
 public map_loadRecentList()
 {
 	new filename[256];
-	formatex(filename, 255, 18332, 724);
-	new file = fopen(filename, 18404);
+	formatex(filename, 255, "%s/recentmaps.dat", DIR_DATA);
+	new file = fopen(filename, "rt");
 	if (file)
 	{
 		new buffer[32];
@@ -565,15 +571,15 @@ public map_loadRecentList()
 public map_writeRecentList()
 {
 	new filename[256];
-	formatex(filename, 255, 18416, 724);
-	new file = fopen(filename, 18488);
+	formatex(filename, 255, "%s/recentmaps.dat", DIR_DATA);
+	new file = fopen(filename, "wt");
 	if (file)
 	{
-		fprintf(file, 18500, 3212);
+		fprintf(file, "%s", g_currentMap);
 		new idxMap;
 		while (get_pcvar_num(cvar_banRecent) - 1 > idxMap)
 		{
-			fprintf(file, 18512, g_recentMap[idxMap]);
+			fprintf(file, "\n%s", g_recentMap[idxMap]);
 			idxMap++;
 		}
 		fclose(file);
@@ -588,14 +594,14 @@ public map_loadFillerList(filename[])
 
 public cmd_rockthevote(id)
 {
-	client_print(id, 3, 18528, id, 18540);
+	client_print(id, "", "%L", id, "GAL_CMD_RTV");
 	vote_rock(id);
 	return 0;
 }
 
 public cmd_nominations(id)
 {
-	client_print(id, 3, 18588, id, 18600);
+	client_print(id, "", "%L", id, "GAL_CMD_NOMS");
 	nomination_list(id);
 	return 0;
 }
@@ -603,14 +609,14 @@ public cmd_nominations(id)
 public cmd_nextmap(id)
 {
 	new map[32];
-	get_cvar_string(18652, map, 31);
-	client_print(0, 3, 18700, -1, 18724, map);
+	get_cvar_string("amx_nextmap", map, 31);
+	client_print(PLUGIN_VERSION, "", "%L %s", -1, "NEXT_MAP", map);
 	return 0;
 }
 
 public cmd_currentmap(id)
 {
-	client_print(0, 3, 18760, -1, 18788, 3212);
+	client_print(PLUGIN_VERSION, "", "%L: %s", -1, "PLAYED_MAP", g_currentMap);
 	return 0;
 }
 
@@ -625,17 +631,17 @@ public cmd_listrecent(id)
 			new idx;
 			while (idx < g_cntRecentMap)
 			{
-				msgIdx = format(msg[msgIdx], 100 - msgIdx, 18832, g_recentMap[idx]) + msgIdx;
+				msgIdx = format(msg[msgIdx], 100 - msgIdx, ", %s", g_recentMap[idx]) + msgIdx;
 				idx++;
 			}
-			client_print(0, 3, 18852, -1, 18880, msg[2]);
+			client_print(PLUGIN_VERSION, "", "%L: %s", -1, "GAL_MAP_RECENTMAPS", msg[2]);
 		}
 		case 2:
 		{
 			new idx;
 			while (idx < g_cntRecentMap)
 			{
-				client_print(0, 3, 18956, -1, 19004, idx + 1, g_recentMap[idx]);
+				client_print(PLUGIN_VERSION, "", "%L (%i): %s", -1, "GAL_MAP_RECENTMAP", idx + 1, g_recentMap[idx]);
 				idx++;
 			}
 		}
@@ -654,19 +660,19 @@ public cmd_startVote(id, level, cid)
 	}
 	if (g_voteStatus & 1)
 	{
-		client_print(id, 3, 19076, id, 19088);
+		client_print(id, "", "%L", id, "GAL_VOTE_INPROGRESS");
 	}
 	else
 	{
 		if (g_voteStatus & 8)
 		{
-			client_print(id, 3, 19168, id, 19180);
+			client_print(id, "", "%L", id, "GAL_VOTE_ENDED");
 		}
 		if (read_argc() == 2)
 		{
 			new arg[32];
 			read_args(arg, 31);
-			if (equali(arg, 19240, 0))
+			if (equali(arg, "-nochange", PLUGIN_VERSION))
 			{
 				g_handleMapChange = false;
 			}
@@ -680,9 +686,9 @@ map_populateList(Array:mapArray, mapFilename[])
 {
 	ArrayClear(mapArray);
 	new mapCnt;
-	if (!equal(mapFilename, 19280, 0))
+	if (!equal(mapFilename, 19280, PLUGIN_VERSION))
 	{
-		new file = fopen(mapFilename, 19288);
+		new file = fopen(mapFilename, "rt");
 		if (file)
 		{
 			new buffer[32];
@@ -691,7 +697,7 @@ map_populateList(Array:mapArray, mapFilename[])
 				fgets(file, buffer, 31);
 				trim(buffer);
 				new var1;
-				if (buffer[0] && !equal(buffer, 19300, 2) && !equal(buffer, 19312, 1) && is_map_valid(buffer))
+				if (buffer[0] && !equal(buffer, "//", 2) && !equal(buffer, 19312, 1) && is_map_valid(buffer))
 				{
 					ArrayPushString(mapArray, buffer);
 					mapCnt++;
@@ -701,14 +707,14 @@ map_populateList(Array:mapArray, mapFilename[])
 		}
 		else
 		{
-			log_error(19, 19320, 0, 19332, mapFilename);
+			log_error(19, "%L", 0, "GAL_MAPS_FILEMISSING", mapFilename);
 		}
 	}
 	else
 	{
 		new dir;
 		new mapName[32];
-		dir = open_dir(19416, mapName, 31);
+		dir = open_dir("maps", mapName, 31);
 		if (dir)
 		{
 			new lenMapName;
@@ -716,7 +722,7 @@ map_populateList(Array:mapArray, mapFilename[])
 			{
 				lenMapName = strlen(mapName);
 				new var2;
-				if (lenMapName > 4 && equali(mapName[lenMapName + -4], 19436, 4))
+				if (lenMapName > 4 && equali(mapName[lenMapName + -4], ".bsp", 4))
 				{
 					mapName[lenMapName + -4] = 0;
 					if (is_map_valid(mapName))
@@ -730,7 +736,7 @@ map_populateList(Array:mapArray, mapFilename[])
 		}
 		else
 		{
-			log_error(19, 19456, 0, 19468);
+			log_error(19, "%L", 0, "GAL_MAPS_FOLDERMISSING");
 		}
 	}
 	return mapCnt;
@@ -747,7 +753,7 @@ public map_loadNominationList()
 public cmd_ff()
 {
 	new var1;
-	if (get_cvar_num(19636))
+	if (get_cvar_num("mp_friendlyfire"))
 	{
 		var1 = 19700;
 	}
@@ -755,7 +761,7 @@ public cmd_ff()
 	{
 		var1 = 19712;
 	}
-	client_print(0, 3, 19560, -1, 19588, -1, var1);
+	client_print(PLUGIN_VERSION, "", "%L: %L", -1, "FRIEND_FIRE", -1, var1);
 	return 0;
 }
 
@@ -778,12 +784,12 @@ public cmd_createMapFile(id, level, cid)
 			new file;
 			new mapCnt;
 			new lenMapName;
-			dir = open_dir(19728, mapName, 35);
+			dir = open_dir("maps", mapName, 35);
 			if (dir)
 			{
 				new filename[256];
-				formatex(filename, 255, 19748, 468, arg1);
-				file = fopen(filename, 19772);
+				formatex(filename, 255, "%s/%s", DIR_CONFIGS, arg1);
+				file = fopen(filename, "wt");
 				if (file)
 				{
 					mapCnt = 0;
@@ -791,13 +797,13 @@ public cmd_createMapFile(id, level, cid)
 					{
 						lenMapName = strlen(mapName);
 						new var1;
-						if (lenMapName > 4 && equali(mapName[lenMapName + -4], 19784, 4))
+						if (lenMapName > 4 && equali(mapName[lenMapName + -4], ".bsp", 4))
 						{
 							mapName[lenMapName + -4] = 0;
 							if (is_map_valid(mapName))
 							{
 								mapCnt++;
-								fprintf(file, 19804, mapName);
+								fprintf(file, "%s\n", mapName);
 							}
 						}
 					}
@@ -827,8 +833,8 @@ public cmd_createMapFile(id, level, cid)
 public map_loadPrefixList()
 {
 	new filename[256];
-	formatex(filename, 255, 20332, 468);
-	new file = fopen(filename, 20396);
+	formatex(filename, 255, "%s/prefixes.ini", DIR_CONFIGS);
+	new file = fopen(filename, "rt");
 	if (file)
 	{
 		new buffer[16];
@@ -836,7 +842,7 @@ public map_loadPrefixList()
 		{
 			fgets(file, buffer, 15);
 			new var1;
-			if (buffer[0] && !equal(buffer, 20408, 2))
+			if (buffer[0] && !equal(buffer, "//", 2))
 			{
 				if (g_mapPrefixCnt <= 32)
 				{
@@ -844,7 +850,7 @@ public map_loadPrefixList()
 					g_mapPrefixCnt += 1;
 					copy(g_mapPrefix[g_mapPrefixCnt], 15, buffer);
 				}
-				log_error(4, 20420, 0, 20432, 32, filename);
+				log_error(4, "%L", 0, "GAL_PREFIXES_TOOMANY", 32, filename);
 				fclose(file);
 			}
 		}
@@ -852,7 +858,7 @@ public map_loadPrefixList()
 	}
 	else
 	{
-		log_error(19, 20516, 0, 20528, filename);
+		log_error(19, "%L", 0, "GAL_PREFIXES_NOTFOUND", filename);
 	}
 	return 1;
 }
@@ -867,7 +873,7 @@ map_loadEmptyCycleList()
 
 public map_manageEnd()
 {
-	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(in)", get_cvar_float(20776));
+	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(in)", get_cvar_float("mp_timelimit"));
 	g_pauseMapEndManagerTask = 1;
 	if (1 >= get_realplayersnum())
 	{
@@ -881,25 +887,25 @@ public map_manageEnd()
 			g_wasLastRound = true;
 			if (g_voteStatus & 2)
 			{
-				client_print(0, 3, 20828, -1, 20840);
+				client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_CHANGE_NEXTROUND");
 			}
 			else
 			{
-				client_print(0, 3, 20924, -1, 20948, -1, 21040);
+				client_print(PLUGIN_VERSION, "", "%L %L", -1, "GAL_CHANGE_TIMEEXPIRED", -1, "GAL_CHANGE_NEXTROUND");
 			}
-			server_cmd(21124);
+			server_cmd("mp_timelimit 0");
 		}
 		else
 		{
-			message_begin(2, 30, 21184, 0);
+			message_begin(2, 30, 21184, PLUGIN_VERSION);
 			message_end();
-			set_task(floatmax(get_cvar_float(21196), 2.0), 21244, 0, 16944, 0, 16948, 0);
+			set_task(floatmax(get_cvar_float("mp_chattime"), 2.0), "map_change", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 		}
 		new map[32];
-		get_cvar_string(21288, map, 31);
-		client_print(0, 3, 21336, -1, 21348, map);
+		get_cvar_string("amx_nextmap", map, 31);
+		client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_NEXTMAP", map);
 	}
-	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(out)", get_cvar_float(21560));
+	dbg_log(2, "%32s mp_timelimit: %f", "map_manageEnd(out)", get_cvar_float("mp_timelimit"));
 	return 0;
 }
 
@@ -921,7 +927,7 @@ public event_game_commencing()
 public event_intermission()
 {
 	g_pauseMapEndManagerTask = 1;
-	set_task(floatmax(get_cvar_float(21612), 2.0), 21660, 0, 16944, 0, 16948, 0);
+	set_task(floatmax(get_cvar_float("mp_chattime"), 2.0), "map_change", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	return 0;
 }
 
@@ -933,12 +939,12 @@ map_getIdx(text[])
 	new prefixIdx;
 	while (prefixIdx < g_mapPrefixCnt)
 	{
-		formatex(map, 31, 21704, g_mapPrefix[prefixIdx], text);
+		formatex(map, 31, "%s%s", g_mapPrefix[prefixIdx], text);
 		mapIdx = 0;
 		while (mapIdx < g_nominationMapCnt)
 		{
 			ArrayGetString(g_nominationMap, mapIdx, nominationMap, 31);
-			if (equal(map, nominationMap, 0))
+			if (equal(map, nominationMap, PLUGIN_VERSION))
 			{
 				return mapIdx;
 			}
@@ -955,12 +961,12 @@ public cmd_say(id)
 	static arg2[32];
 	static arg1[32];
 	static text[70];
-	read_args(21724, 69);
-	remove_quotes(21724);
+	read_args(text, 69);
+	remove_quotes(text);
 	arg1[0] = 0;
 	arg2[0] = 0;
 	arg3[0] = 0;
-	parse(21724, 22004, 31, 22132, 31, 22260, 1);
+	parse(text, arg1, 31, arg2, 31, arg3, 1);
 	if (!arg3[0])
 	{
 		new idxMap;
@@ -969,12 +975,12 @@ public cmd_say(id)
 			if (get_pcvar_num(cvar_nomPlayerAllowance))
 			{
 				new var4;
-				if (equali(22004, 22356, 0) || equali(22004, 22392, 0))
+				if (equali(arg1, "nominate", PLUGIN_VERSION) || equali(arg1, "nom", PLUGIN_VERSION))
 				{
 					nomination_attempt(id, arg2);
 					return 1;
 				}
-				if (equali(22004, 22408, 0))
+				if (equali(arg1, "cancel", PLUGIN_VERSION))
 				{
 					idxMap = map_getIdx(arg2);
 					if (0 <= idxMap)
@@ -988,14 +994,14 @@ public cmd_say(id)
 		else
 		{
 			new var1;
-			if ((get_pcvar_num(cvar_rtvCommands) & 2 && equali(22004, 22268, 0)) || (get_pcvar_num(cvar_rtvCommands) & 4 && equali(22004, 22284, 7) && equali(arg1[strlen(22004) - 4], 22316, 0)))
+			if ((get_pcvar_num(cvar_rtvCommands) & 2 && equali(arg1, "rtv", PLUGIN_VERSION)) || (get_pcvar_num(cvar_rtvCommands) & 4 && equali(arg1, "rockthe", 7) && equali(arg1[strlen(arg1) - 4], "vote", PLUGIN_VERSION)))
 			{
 				vote_rock(id);
 				return 1;
 			}
 			if (get_pcvar_num(cvar_nomPlayerAllowance))
 			{
-				if (equali(22004, 22336, 0))
+				if (equali(arg1, "noms", PLUGIN_VERSION))
 				{
 					nomination_list(id);
 					return 1;
@@ -1015,7 +1021,7 @@ public cmd_say(id)
 nomination_attempt(id, nomination[])
 {
 	strtolower(nomination);
-	g_nominationMatchesMenu[id] = menu_create(22436, 22488, 0);
+	g_nominationMatchesMenu[id] = menu_create("Nominate Map", "nomination_handleMatchChoice", PLUGIN_VERSION);
 	new mapIdx;
 	new nominationMap[32];
 	new matchCnt;
@@ -1035,20 +1041,20 @@ nomination_attempt(id, nomination[])
 			disabledReason[0] = 0;
 			if (nomination_getPlayer(mapIdx))
 			{
-				formatex(disabledReason, 15, 22604, id, 22616);
+				formatex(disabledReason, 15, "%L", id, "GAL_MATCH_NOMINATED");
 			}
 			else
 			{
 				if (map_isTooRecent(nominationMap))
 				{
-					formatex(disabledReason, 15, 22696, id, 22708);
+					formatex(disabledReason, 15, "%L", id, "GAL_MATCH_TOORECENT");
 				}
-				if (equal(3212, nominationMap, 0))
+				if (equal(g_currentMap, nominationMap, PLUGIN_VERSION))
 				{
-					formatex(disabledReason, 15, 22788, id, 22800);
+					formatex(disabledReason, 15, "%L", id, "GAL_MATCH_CURRENTMAP");
 				}
 			}
-			formatex(choice, 63, 22884, nominationMap, disabledReason);
+			formatex(choice, 63, "%s %s", nominationMap, disabledReason);
 			new var2;
 			if (disabledReason[0])
 			{
@@ -1066,7 +1072,7 @@ nomination_attempt(id, nomination[])
 	{
 		case 0:
 		{
-			client_print(id, 3, 22908, id, 22920, nomination);
+			client_print(id, "", "%L", id, "GAL_NOM_FAIL_NOMATCHES", nomination);
 		}
 		case 1:
 		{
@@ -1074,26 +1080,33 @@ nomination_attempt(id, nomination[])
 		}
 		default:
 		{
-			client_print(id, 3, 23012, id, 23024, nomination);
+			client_print(id, "", "%L", id, "GAL_NOM_MATCHES", nomination);
 			if (matchCnt == 1000)
 			{
-				client_print(id, 3, 23088, id, 23100, 1000, 1000);
+				client_print(id, "", "%L", id, "GAL_NOM_MATCHES_MAX", 1000, 1000);
 			}
-			menu_display(id, g_nominationMatchesMenu[id], 0);
+			menu_display(id, g_nominationMatchesMenu[id], PLUGIN_VERSION);
 		}
 	}
 	return 0;
 }
 
-java.lang.NullPointerException
+public nomination_handleMatchChoice(id, menu, item)
+{
+	if (0 > item)
+	{
+		return 0;
+	}
+	new mapIdx;
+	new info[1];
+	new access;
+	new callback;
+	menu_item_getinfo(g_nominationMatchesMenu[id], item, access, info, 1, {0}, PLUGIN_VERSION, callback);
+	mapIdx = info[0];
+	map_nominate(id, mapIdx, -1);
+	return 1;
+}
 
-/* ERROR! null */
- function "nomination_handleMatchChoice" (number 46)
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapNode(NodeAnalysis.java:614)
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:666)
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:675)
-	at lysis.Lysis.DumpMethod(Lysis.java:107)
-	at lysis.Lysis.main(Lysis.java:205)
 nomination_getPlayer(idxMap)
 {
 	new idxNomination;
@@ -1133,12 +1146,12 @@ nomination_cancel(id, idxMap)
 {
 	if (g_voteStatus & 1)
 	{
-		client_print(id, 3, 23184, id, 23196);
+		client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_INPROGRESS");
 		return 0;
 	}
 	if (g_voteStatus & 8)
 	{
-		client_print(id, 3, 23304, id, 23316);
+		client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_VOTEOVER");
 		return 0;
 	}
 	new bool:nominationFound;
@@ -1165,11 +1178,11 @@ nomination_cancel(id, idxMap)
 				{
 					new name[32];
 					get_user_name(idNominator, name, 31);
-					client_print(id, 3, 23416, id, 23428, mapName, name);
+					client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_SOMEONEELSE", mapName, name);
 				}
 				else
 				{
-					client_print(id, 3, 23540, id, 23552, mapName);
+					client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_WASNOTYOU", mapName);
 				}
 			}
 			return 0;
@@ -1191,11 +1204,11 @@ nomination_cancel(id, idxMap)
 		{
 			new name[32];
 			get_user_name(idNominator, name, 31);
-			client_print(id, 3, 23416, id, 23428, mapName, name);
+			client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_SOMEONEELSE", mapName, name);
 		}
 		else
 		{
-			client_print(id, 3, 23540, id, 23552, mapName);
+			client_print(id, "", "%L", id, "GAL_CANCEL_FAIL_WASNOTYOU", mapName);
 		}
 	}
 	return 0;
@@ -1205,25 +1218,25 @@ map_nominate(id, idxMap, idNominator)
 {
 	if (g_voteStatus & 1)
 	{
-		client_print(id, 3, 23656, id, 23668);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_INPROGRESS");
 		return 0;
 	}
 	if (g_voteStatus & 8)
 	{
-		client_print(id, 3, 23764, id, 23776);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_VOTEOVER");
 		return 0;
 	}
 	new mapName[32];
 	ArrayGetString(g_nominationMap, idxMap, mapName, 31);
-	if (equal(3212, mapName, 0))
+	if (equal(g_currentMap, mapName, PLUGIN_VERSION))
 	{
-		client_print(id, 3, 23864, id, 23876, 3212);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_CURRENTMAP", g_currentMap);
 		return 0;
 	}
 	if (map_isTooRecent(mapName))
 	{
-		client_print(id, 3, 23972, id, 23984, mapName);
-		client_print(id, 3, 24076, id, 24088);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_TOORECENT", mapName);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_TOORECENT_HLP");
 		return 0;
 	}
 	if (idNominator == -1)
@@ -1234,12 +1247,12 @@ map_nominate(id, idxMap, idNominator)
 	{
 		if (id == idNominator)
 		{
-			client_print(id, 3, 24528, id, 24540, mapName);
+			client_print(id, "", "%L", id, "GAL_NOM_FAIL_ALREADY", mapName);
 		}
 		new name[32];
 		get_user_name(idNominator, name, 31);
-		client_print(id, 3, 24624, id, 24636, mapName, name);
-		client_print(id, 3, 24736, id, 24748);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_SOMEONEELSE", mapName, name);
+		client_print(id, "", "%L", id, "GAL_NOM_FAIL_SOMEONEELSE_HLP");
 	}
 	else
 	{
@@ -1278,18 +1291,18 @@ map_nominate(id, idxMap, idNominator)
 				{
 					var1 = 24228;
 				}
-				format(nominatedMaps, 255, 24196, nominatedMaps, var1, buffer);
+				format(nominatedMaps, 255, "%s%s%s", nominatedMaps, var1, buffer);
 				idxNomination++;
 			}
-			client_print(id, 3, 24240, id, 24252, playerNominationMax, nominatedMaps);
-			client_print(id, 3, 24336, id, 24348);
+			client_print(id, "", "%L", id, "GAL_NOM_FAIL_TOOMANY", playerNominationMax, nominatedMaps);
+			client_print(id, "", "%L", id, "GAL_NOM_FAIL_TOOMANY_HLP");
 		}
 		else
 		{
 			g_nomination[id][idxNominationOpen] = idxMap;
 			g_nominationCnt += 1;
 			map_announceNomination(id, mapName);
-			client_print(id, 3, 24448, id, 24460);
+			client_print(id, "", "%L", id, "GAL_NOM_GOOD_HLP");
 		}
 	}
 	return 0;
@@ -1313,11 +1326,11 @@ public nomination_list(id)
 			if (0 <= idxMap)
 			{
 				ArrayGetString(g_nominationMap, idxMap, mapName, 31);
-				format(msg, 100, 24864, msg, mapName);
+				format(msg, 100, "%s, %s", msg, mapName);
 				mapCnt++;
 				if (mapCnt == 4)
 				{
-					client_print(0, 3, 24892, -1, 24920, msg[2]);
+					client_print(PLUGIN_VERSION, "", "%L: %s", -1, "GAL_NOMINATIONS", msg[2]);
 					mapCnt = 0;
 					msg[0] = 0;
 				}
@@ -1328,34 +1341,116 @@ public nomination_list(id)
 	}
 	if (msg[0])
 	{
-		client_print(0, 3, 24984, -1, 25012, msg[2]);
+		client_print(PLUGIN_VERSION, "", "%L: %s", -1, "GAL_NOMINATIONS", msg[2]);
 	}
 	else
 	{
-		client_print(0, 3, 25076, -1, 25104, -1, 25168);
+		client_print(PLUGIN_VERSION, "", "%L: %L", -1, "GAL_NOMINATIONS", -1, "NONE");
 	}
 	return 0;
 }
 
-java.lang.NullPointerException
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapNode(NodeAnalysis.java:614)
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:666)
-	at lysis.nodes.NodeAnalysis.AnalyzeHeapUsage(NodeAnalysis.java:675)
-	at lysis.Lysis.DumpMethod(Lysis.java:107)
-	at lysis.Lysis.main(Lysis.java:205)
+public vote_startDirector(bool:forced)
+{
+	new choicesLoaded;
+	new voteDuration;
+	if (g_voteStatus & 4)
+	{
+		choicesLoaded = vote_loadRunoffChoices();
+		voteDuration = get_pcvar_num(cvar_runoffDuration);
+		if (get_realplayersnum())
+		{
+			dbg_log(4, "   [RUNOFF VOTE CHOICES (%i)]", choicesLoaded);
+		}
+	}
+	else
+	{
+		g_voteStatus = g_voteStatus | 1;
+		remove_task(52691153, PLUGIN_VERSION);
+		new var1;
+		if (forced || get_pcvar_num(cvar_endOfMapVote))
+		{
+			new nextMap[32];
+			formatex(nextMap, 31, "%L", 0, "GAL_NEXTMAP_VOTING");
+			map_setNext(nextMap);
+		}
+		g_pauseMapEndVoteTask = 1;
+		g_pauseMapEndManagerTask = 1;
+		if (forced)
+		{
+			g_voteStatus = g_voteStatus | 2;
+		}
+		choicesLoaded = vote_loadChoices();
+		voteDuration = get_pcvar_num(cvar_voteDuration);
+		if (get_realplayersnum())
+		{
+			dbg_log(4, "   [PRIMARY VOTE CHOICES (%i)]", choicesLoaded);
+		}
+		if (choicesLoaded)
+		{
+			nomination_clearAll();
+		}
+	}
+	if (choicesLoaded)
+	{
+		SortCustom2D(g_mapChoice, choicesLoaded, "sort_stringsi", {0}, PLUGIN_VERSION);
+		if (get_realplayersnum())
+		{
+			new dbgChoice;
+			while (dbgChoice < choicesLoaded)
+			{
+				dbg_log(4, "      %i. %s", dbgChoice + 1, g_mapChoice[dbgChoice]);
+				dbgChoice++;
+			}
+		}
+		new player[32];
+		new playerCnt;
+		get_players(player, playerCnt, "ch", 25644);
+		new idxPlayer;
+		while (idxPlayer < playerCnt)
+		{
+			g_voted[player[idxPlayer]] = 0;
+			idxPlayer++;
+		}
+		if (!get_pcvar_num(cvar_soundsMute) & 1)
+		{
+			client_cmd(PLUGIN_VERSION, "spk \"get red(e80) ninety(s45) to check(e20) use bay(s18) mass(e42) cap(s50)\"");
+		}
+		set_task(1065353216, "vote_countdownPendingVote", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 26060, 7);
+		set_task(1091043328, "vote_handleDisplay", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
+		if (get_pcvar_num(cvar_voteStatus))
+		{
+			new arg[3] = {-1,-1,0};
+			set_task(floatadd(1065353216, floatadd(1091043328, float(voteDuration))), "vote_display", PLUGIN_VERSION, arg, "", 16948, PLUGIN_VERSION);
+			set_task(floatadd(1086324736, floatadd(1091043328, float(voteDuration))), "vote_expire", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
+		}
+		else
+		{
+			set_task(floatadd(1077936128, floatadd(1091043328, float(voteDuration))), "vote_expire", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
+		}
+	}
+	else
+	{
+		client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_VOTE_NOMAPS");
+	}
+	if (get_realplayersnum())
+	{
+		dbg_log(4, 26380);
+		dbg_log(4, "   [PLAYER CHOICES]");
+	}
+	return 0;
+}
 
-/* ERROR! null */
- function "vote_startDirector" (number 52)
 public vote_countdownPendingVote()
 {
 	static countdown = 7;
-	set_hudmessage(0, 222, 50, -1082130432, 1040522936, 0, 1065353216, 1064346583, 0, 0, -1);
-	show_hudmessage(0, 26468, -1, 26480, 26464);
+	set_hudmessage(PLUGIN_VERSION, 222, 50, -1082130432, 1040522936, PLUGIN_VERSION, 1065353216, 1064346583, PLUGIN_VERSION, PLUGIN_VERSION, -1);
+	show_hudmessage(PLUGIN_VERSION, 26468, -1, "GAL_VOTE_COUNTDOWN", countdown);
 	if (!get_pcvar_num(cvar_soundsMute) & 2)
 	{
 		new word[6];
 		num_to_word(countdown, word, 5);
-		client_cmd(0, 26556, word);
+		client_cmd(PLUGIN_VERSION, "spk \"fvox/%s\"", word);
 	}
 	countdown -= 1;
 	if (!countdown)
@@ -1365,206 +1460,13 @@ public vote_countdownPendingVote()
 	return 0;
 }
 
-vote_addNominations()
-{
-	if (get_realplayersnum())
-	{
-		dbg_log(4, "   [NOMINATIONS (%i)]", g_nominationCnt);
-	}
-	if (g_nominationCnt)
-	{
-		new maxNominations = get_pcvar_num(cvar_nomQtyUsed);
-		new slotsAvailable = g_choiceMax - g_choiceCnt;
-		decl voteNominationMax;
-		new var1;
-		if (maxNominations)
-		{
-			var1 = min(maxNominations, slotsAvailable);
-		}
-		else
-		{
-			var1 = slotsAvailable;
-		}
-		voteNominationMax = var1;
-		new playerNominationMax = min(get_pcvar_num(cvar_nomPlayerAllowance), 5);
-		new idxMap;
-		new id;
-		new mapName[32];
-		if (get_realplayersnum())
-		{
-			new nominator_id;
-			new playerName[32];
-			new idxNomination = playerNominationMax;
-			while (idxNomination >= 1)
-			{
-				id = 1;
-				while (id <= 32)
-				{
-					idxMap = g_nomination[id][idxNomination];
-					if (0 <= idxMap)
-					{
-						ArrayGetString(g_nominationMap, idxMap, mapName, 31);
-						nominator_id = nomination_getPlayer(idxMap);
-						get_user_name(nominator_id, playerName, 31);
-						dbg_log(4, "      %-32s %s", mapName, playerName);
-					}
-					id++;
-				}
-				idxNomination--;
-			}
-			dbg_log(4, 26760);
-		}
-		new idxNomination = playerNominationMax;
-		while (idxNomination >= 1)
-		{
-			id = 1;
-			while (id <= 32)
-			{
-				idxMap = g_nomination[id][idxNomination];
-				if (0 <= idxMap)
-				{
-					ArrayGetString(g_nominationMap, idxMap, mapName, 31);
-					g_choiceCnt += 1;
-					copy(g_mapChoice[g_choiceCnt], 31, mapName);
-					if (voteNominationMax == g_choiceCnt)
-					{
-						if (voteNominationMax == g_choiceCnt)
-						{
-						}
-						idxNomination--;
-					}
-				}
-				id++;
-			}
-			if (voteNominationMax == g_choiceCnt)
-			{
-			}
-			idxNomination--;
-		}
-	}
-	return 0;
-}
 
-vote_addFiller()
-{
-	if (g_choiceMax == g_choiceCnt)
-	{
-		return 0;
-	}
-	new filename[256];
-	get_pcvar_string(cvar_voteMapFile, filename, 255);
-	new fillerFile[8][256] = {32,1052,2072,3092,4112,5132,6152,7172};
-	new mapsPerGroup[8];
-	new groupCnt;
-	if (!equal(filename, 26796, 0))
-	{
-		new file = fopen(filename, 26804);
-		if (file)
-		{
-			new buffer[16];
-			fgets(file, buffer, 15);
-			trim(buffer);
-			fclose(file);
-			if (equali(buffer, 26816, 0))
-			{
-				dbg_log(8, 26852);
-				dbg_log(8, 26860);
-				new groupIdx;
-				file = fopen(filename, 26956);
-				while (!feof(file))
-				{
-					fgets(file, buffer, 15);
-					trim(buffer);
-					if (isdigit(buffer[0]))
-					{
-						if (groupCnt < 8)
-						{
-							groupCnt++;
-							groupIdx = groupCnt;
-							mapsPerGroup[groupIdx] = str_to_num(buffer);
-							formatex(fillerFile[groupIdx], 255, 26968, 468, groupCnt);
-						}
-						log_error(4, 27008, 0, 27020, filename);
-						fclose(file);
-						if (!groupCnt)
-						{
-							log_error(27, 27104, 0, 27116, filename);
-							return 0;
-						}
-					}
-				}
-				fclose(file);
-				if (!groupCnt)
-				{
-					log_error(27, 27104, 0, 27116, filename);
-					return 0;
-				}
-			}
-			else
-			{
-				copy(fillerFile[0][fillerFile], 255, filename);
-				mapsPerGroup[0] = 8;
-				groupCnt = 1;
-			}
-		}
-		else
-		{
-			log_error(19, 27204, 0, 27216, fillerFile);
-		}
-	}
-	else
-	{
-		copy(fillerFile[0][fillerFile], 255, filename);
-		mapsPerGroup[0] = 8;
-		groupCnt = 1;
-	}
-	new mapCnt;
-	new mapKey;
-	new allowedCnt;
-	new unsuccessfulCnt;
-	new choiceIdx;
-	new mapName[32];
-	new groupIdx;
-	while (groupIdx < groupCnt)
-	{
-		mapCnt = map_loadFillerList(fillerFile[groupIdx]);
-		dbg_log(8, "[%i] groupCnt:%i   mapCnt: %i   g_choiceCnt: %i   g_choiceMax: %i   fillerFile: %s", groupIdx, groupCnt, mapCnt, g_choiceCnt, g_choiceMax, fillerFile[groupIdx]);
-		new var1;
-		if (g_choiceCnt < g_choiceMax && mapCnt)
-		{
-			unsuccessfulCnt = 0;
-			allowedCnt = min(min(mapsPerGroup[groupIdx], g_choiceMax - g_choiceCnt), mapCnt);
-			dbg_log(8, "[%i] allowedCnt: %i   mapsPerGroup: %i   Max-Cnt: %i", groupIdx, allowedCnt, mapsPerGroup[groupIdx], g_choiceMax - g_choiceCnt);
-			choiceIdx = 0;
-			while (choiceIdx < allowedCnt)
-			{
-				mapKey = random_num(0, mapCnt + -1);
-				ArrayGetString(g_fillerMap, mapKey, mapName, 31);
-				dbg_log(8, "[%i] choiceIdx: %i   allowedCnt: %i   mapKey: %i   mapName: %s", groupIdx, choiceIdx, allowedCnt, mapKey, mapName);
-				unsuccessfulCnt = 0;
-				while ((map_isInMenu(mapName) || equal(3212, mapName, 0) || map_isTooRecent(mapName) || prefix_isInMenu(mapName)) && unsuccessfulCnt < mapCnt)
-				{
-					unsuccessfulCnt++;
-					mapKey++;
-					if (mapCnt == mapKey)
-					{
-						mapKey = 0;
-					}
-					ArrayGetString(g_fillerMap, mapKey, mapName, 31);
-				}
-				if (!(mapCnt == unsuccessfulCnt))
-				{
-					g_choiceCnt += 1;
-					copy(g_mapChoice[g_choiceCnt], 31, mapName);
-					dbg_log(8, "[%i] mapName: %s   unsuccessfulCnt: %i   mapCnt: %i   g_choiceCnt: %i", groupIdx, mapName, unsuccessfulCnt, mapCnt, g_choiceCnt);
-					choiceIdx++;
-				}
-			}
-		}
-		groupIdx++;
-	}
-	return 0;
-}
+/* ERROR! null */
+ function "vote_addNominations" (number 54)
+
+
+/* ERROR! null */
+ function "vote_addFiller" (number 55)
 
 vote_loadChoices()
 {
@@ -1576,7 +1478,14 @@ vote_loadChoices()
 vote_loadRunoffChoices()
 {
 	new choiceCnt;
-	new runoffChoice[2][32] = {8,132};
+	new runoffChoice[2][32] = {
+		{
+			115, 112, 107, 32, 71, 109, 97, 110, 47, 71, 109, 97, 110, 95, 67, 104, 111, 111, 115, 101, 37, 105, 0, 37, 0, 103, 97, 108, 95, 100, 101, 98
+		},
+		{
+			117, 103, 0, 100, 98, 103, 95, 102, 97, 107, 101, 86, 111, 116, 101, 115, 0, 118, 111, 116, 101, 95, 100, 105, 115, 112, 108, 97, 121, 0, 97, 0
+		}
+	};
 	copy(runoffChoice[0][runoffChoice], 31, g_mapChoice[g_runoffChoice[0]]);
 	copy(runoffChoice[1], 31, g_mapChoice[g_runoffChoice[1]]);
 	new mapIdx;
@@ -1599,7 +1508,7 @@ public vote_handleDisplay()
 {
 	if (!get_pcvar_num(cvar_soundsMute) & 4)
 	{
-		client_cmd(0, 28380, random_num(1, 2));
+		client_cmd(PLUGIN_VERSION, 28380, random_num(1, 2));
 	}
 	if (g_voteStatus & 4)
 	{
@@ -1612,11 +1521,11 @@ public vote_handleDisplay()
 	new var1;
 	if (get_pcvar_num(cvar_voteStatus) && get_pcvar_num(cvar_voteStatusType) == 2)
 	{
-		copy(10252, 2, 28472);
+		copy(g_voteTallyType, 2, 28472);
 	}
-	if (get_cvar_num(28480) & 4)
+	if (get_cvar_num("gal_debug") & 4)
 	{
-		set_task(1073741824, 28520, 0, 16944, 0, 16948, 0);
+		set_task(1073741824, "dbg_fakeVotes", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	}
 	g_refreshVoteStatus = 1;
 	g_voteStatus = g_voteStatus & -33;
@@ -1626,11 +1535,11 @@ public vote_handleDisplay()
 	arg[2] = 0;
 	if (get_pcvar_num(cvar_voteStatus) == 1)
 	{
-		set_task(1065353216, 28576, 0, arg, 3, 28628, g_voteDuration);
+		set_task(1065353216, "vote_display", PLUGIN_VERSION, arg, "", 28628, g_voteDuration);
 	}
 	else
 	{
-		set_task(1065353216, 28636, 0, arg, 3, 16948, 0);
+		set_task(1065353216, "vote_display", PLUGIN_VERSION, arg, "", 16948, PLUGIN_VERSION);
 	}
 	return 0;
 }
@@ -1656,7 +1565,7 @@ public vote_display(arg[3])
 			var1 = -1;
 		}
 		snuff = var1;
-		dbg_log(4, "   [votedisplay()] id: %i  updateTimeRemaining: %i  unsnuffDisplay: %i  g_snuffDisplay: %i  g_refreshVoteStatus: %i  g_choiceCnt: %i  len(g_vote): %i  len(voteStatus): %i", arg[1], arg, arg[2], snuff, g_refreshVoteStatus, g_choiceCnt, strlen(8196), strlen(28696));
+		dbg_log(4, "   [votedisplay()] id: %i  updateTimeRemaining: %i  unsnuffDisplay: %i  g_snuffDisplay: %i  g_refreshVoteStatus: %i  g_choiceCnt: %i  len(g_vote): %i  len(voteStatus): %i", arg[1], arg, arg[2], snuff, g_refreshVoteStatus, g_choiceCnt, strlen(g_vote), strlen(voteStatus));
 	}
 	new var2;
 	if (id > 0 && g_snuffDisplay[id])
@@ -1682,28 +1591,28 @@ public vote_display(arg[3])
 		new isRunoff = g_voteStatus & 4;
 		decl bool:allowExtend;
 		new var8;
-		allowExtend = !allowStay && ((isRunoff && g_choiceCnt == 1) || (!g_voteStatus & 2 && !isRunoff && get_cvar_float(31492) < get_pcvar_float(cvar_extendmapMax)));
-		if (get_cvar_num(31544) & 4)
+		allowExtend = !allowStay && ((isRunoff && g_choiceCnt == 1) || (!g_voteStatus & 2 && !isRunoff && get_cvar_float("mp_timelimit") < get_pcvar_float(cvar_extendmapMax)));
+		if (get_cvar_num("gal_debug") & 4)
 		{
 			new var12;
-			if (!allowStay && ((isRunoff && g_choiceCnt == 1) || (!isRunoff && get_cvar_float(31584) < get_pcvar_float(cvar_extendmapMax))))
+			if (!allowStay && ((isRunoff && g_choiceCnt == 1) || (!isRunoff && get_cvar_float("mp_timelimit") < get_pcvar_float(cvar_extendmapMax))))
 			{
 			}
 		}
 		if (isVoteOver)
 		{
-			charCnt = formatex(28696, 511, 31636, 1004, 0, 31660);
+			charCnt = formatex(voteStatus, 511, "%s%L\n", CLR_YELLOW, 0, "GAL_RESULT");
 		}
 		else
 		{
-			charCnt = formatex(28696, 511, 31704, 1004, 0, 31728);
+			charCnt = formatex(voteStatus, 511, "%s%L\n", CLR_YELLOW, 0, "GAL_CHOOSE");
 		}
 		new choiceIdx;
 		while (choiceIdx < g_choiceCnt)
 		{
 			voteCnt = g_mapVote[choiceIdx];
 			vote_getTallyStr(voteTally, 15, voteCnt);
-			charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31772, 980, choiceIdx + 1, 992, g_mapChoice[choiceIdx], 30744) + charCnt;
+			charCnt = formatex(voteStatus[charCnt], 511 - charCnt, "\n%s%i. %s%s%s", CLR_RED, choiceIdx + 1, CLR_WHITE, g_mapChoice[choiceIdx], voteTally) + charCnt;
 			keys = 1 << choiceIdx | keys;
 			choiceIdx++;
 		}
@@ -1717,45 +1626,45 @@ public vote_display(arg[3])
 			vote_getTallyStr(voteTally, 15, g_mapVote[g_choiceCnt]);
 			if (allowExtend)
 			{
-				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31836, 980, g_choiceCnt + 1, 992, 0, 31892, 3212, floatround(get_pcvar_float(cvar_extendmapStep), 0), 30744) + charCnt;
+				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, "\n%s%i. %s%L%s", CLR_RED, g_choiceCnt + 1, CLR_WHITE, 0, "GAL_OPTION_EXTEND", g_currentMap, floatround(get_pcvar_float(cvar_extendmapStep), PLUGIN_VERSION), voteTally) + charCnt;
 			}
 			else
 			{
-				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 31964, 980, g_choiceCnt + 1, 992, 0, 32020, 30744) + charCnt;
+				charCnt = formatex(voteStatus[charCnt], 511 - charCnt, "\n%s%i. %s%L%s", CLR_RED, g_choiceCnt + 1, CLR_WHITE, 0, "GAL_OPTION_STAY", voteTally) + charCnt;
 			}
 			keys = 1 << g_choiceCnt | keys;
 		}
 		if (!g_vote[0])
 		{
-			new cleanCharCnt = copy(8196, 511, 28696);
-			formatex(g_vote[cleanCharCnt], 511 - cleanCharCnt, 32084, 980, 992, 0, 32132);
+			new cleanCharCnt = copy(g_vote, 511, voteStatus);
+			formatex(g_vote[cleanCharCnt], 511 - cleanCharCnt, "\n\n%s0. %s%L", CLR_RED, CLR_WHITE, 0, "GAL_OPTION_NONE");
 		}
-		charCnt = formatex(voteStatus[charCnt], 511 - charCnt, 32196) + charCnt;
+		charCnt = formatex(voteStatus[charCnt], 511 - charCnt, "\n\n") + charCnt;
 		g_refreshVoteStatus = 0;
 	}
 	static voteFooter[32];
 	new var14;
 	if (updateTimeRemaining && get_pcvar_num(cvar_voteExpCountdown))
 	{
-		charCnt = copy(32208, 31, 32336);
+		charCnt = copy(voteFooter, 31, "\n\n");
 		g_voteDuration -= 1;
 		if (g_voteDuration <= 10)
 		{
-			formatex(voteFooter[charCnt], 31 - charCnt, 32348, 1016, 0, 32392, 980, 8180);
+			formatex(voteFooter[charCnt], 31 - charCnt, "%s%L: %s%i", CLR_GREY, 0, "GAL_TIMELEFT", CLR_RED, g_voteDuration);
 		}
 	}
 	static menuDirty[512];
 	static menuClean[512];
 	menuClean[0] = 0;
 	menuDirty[0] = 0;
-	formatex(32444, 511, 36540, 8196, 32208);
+	formatex(menuClean, 511, "%s%s", g_vote, voteFooter);
 	if (!isVoteOver)
 	{
-		formatex(34492, 511, 36560, 28696, 32208);
+		formatex(menuDirty, 511, "%s%s", voteStatus, voteFooter);
 	}
 	else
 	{
-		formatex(34492, 511, 36580, 28696, 1004, 0, 36616);
+		formatex(menuDirty, 511, "%s\n\n%s%L", voteStatus, CLR_YELLOW, 0, "GAL_VOTE_ENDED");
 	}
 	new menuid;
 	new menukeys;
@@ -1772,7 +1681,7 @@ public vote_display(arg[3])
 			new var15;
 			if (menuid && g_menuChooseMap != menuid)
 			{
-				show_menu(id, allKeys, 34492, max(1, g_voteDuration), 396);
+				show_menu(id, allKeys, menuDirty, max(1, g_voteDuration), MENU_CHOOSEMAP);
 			}
 		}
 	}
@@ -1780,7 +1689,7 @@ public vote_display(arg[3])
 	{
 		new players[32];
 		new playerCnt;
-		get_players(players, playerCnt, 36836, 25644);
+		get_players(players, playerCnt, "ch", 25644);
 		new playerIdx;
 		while (playerIdx < playerCnt)
 		{
@@ -1799,7 +1708,7 @@ public vote_display(arg[3])
 				new var17;
 				if (menuid && g_menuChooseMap != menuid)
 				{
-					show_menu(id, keys, 32444, g_voteDuration, 396);
+					show_menu(id, keys, menuClean, g_voteDuration, MENU_CHOOSEMAP);
 				}
 			}
 			else
@@ -1827,7 +1736,7 @@ public vote_display(arg[3])
 						{
 							var22 = max(1, g_voteDuration);
 						}
-						show_menu(id, allKeys, 34492, var22, 396);
+						show_menu(id, allKeys, menuDirty, var22, MENU_CHOOSEMAP);
 					}
 				}
 			}
@@ -1851,7 +1760,7 @@ vote_getTallyStr(voteTally[], voteTallyLen, voteCnt)
 	new var2;
 	if (get_pcvar_num(cvar_voteStatus) && voteCnt)
 	{
-		formatex(voteTally, voteTallyLen, 37076, 1016, voteCnt, 10252);
+		formatex(voteTally, voteTallyLen, " %s(%i%s)", CLR_GREY, voteCnt, g_voteTallyType);
 	}
 	else
 	{
@@ -1866,7 +1775,7 @@ public vote_expire()
 	if (get_realplayersnum())
 	{
 		dbg_log(4, 37116);
-		dbg_log(4, 37120);
+		dbg_log(4, "   [VOTE RESULT]");
 		new voteTally[16];
 		new idxChoice;
 		while (idxChoice <= g_choiceCnt)
@@ -1929,18 +1838,18 @@ public vote_expire()
 		{
 			if (totalVotes / 2 >= firstPlaceVoteCnt)
 			{
-				client_print(0, 3, 37280, -1, 37292);
+				client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_RUNOFF_REQUIRED");
 				if (!get_pcvar_num(cvar_soundsMute) & 8)
 				{
-					client_cmd(0, 37372);
+					client_cmd(PLUGIN_VERSION, "spk \"run officer(e40) voltage(e30) accelerating(s70) is required\"");
 				}
 				g_voteStatus = g_voteStatus | 4;
 				new choice1Idx;
 				new choice2Idx;
 				if (firstPlaceCnt > 2)
 				{
-					choice1Idx = random_num(0, firstPlaceCnt + -1);
-					choice2Idx = random_num(0, firstPlaceCnt + -1);
+					choice1Idx = random_num(PLUGIN_VERSION, firstPlaceCnt + -1);
+					choice2Idx = random_num(PLUGIN_VERSION, firstPlaceCnt + -1);
 					if (choice1Idx == choice2Idx)
 					{
 						new var2;
@@ -1957,7 +1866,7 @@ public vote_expire()
 					}
 					g_runoffChoice[0] = firstPlace[choice1Idx];
 					g_runoffChoice[1] = firstPlace[choice2Idx];
-					client_print(0, 3, 37636, -1, 37648, firstPlaceCnt);
+					client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_RESULT_TIED1", firstPlaceCnt);
 				}
 				else
 				{
@@ -1972,18 +1881,18 @@ public vote_expire()
 						g_runoffChoice[1] = secondPlace[0];
 					}
 					g_runoffChoice[0] = firstPlace[0];
-					g_runoffChoice[1] = secondPlace[random_num(0, secondPlaceCnt + -1)];
-					client_print(0, 3, 37716, -1, 37728, secondPlaceCnt);
+					g_runoffChoice[1] = secondPlace[random_num(PLUGIN_VERSION, secondPlaceCnt + -1)];
+					client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_RESULT_TIED2", secondPlaceCnt);
 				}
 				vote_resetStats();
-				set_task(1084227584, 37796, 0, 16944, 0, 16948, 0);
+				set_task(1084227584, "vote_startDirector", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 				return 0;
 			}
 		}
 		if (firstPlaceCnt > 1)
 		{
-			idxWinner = firstPlace[random_num(0, firstPlaceCnt + -1)];
-			client_print(0, 3, 37872, -1, 37884, firstPlaceCnt);
+			idxWinner = firstPlace[random_num(PLUGIN_VERSION, firstPlaceCnt + -1)];
+			client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_WINNER_TIED", firstPlaceCnt);
 		}
 		else
 		{
@@ -1994,19 +1903,19 @@ public vote_expire()
 			if (get_pcvar_num(cvar_endOfMapVote))
 			{
 				new nextMap[32];
-				formatex(nextMap, 31, 37948, 0, 37960);
+				formatex(nextMap, 31, "%L", 0, "GAL_NEXTMAP_UNKNOWN");
 				map_setNext(nextMap);
 			}
 			g_pauseMapEndVoteTask = 0;
 			if (g_voteStatus & 16)
 			{
-				client_print(0, 3, 38040, -1, 38052);
+				client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_WINNER_STAY");
 				vote_resetStats();
 				g_voteStatus = g_voteStatus & -17;
 			}
 			else
 			{
-				client_print(0, 3, 38116, -1, 38128, floatround(get_pcvar_float(cvar_extendmapStep), 0));
+				client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_WINNER_EXTEND", floatround(get_pcvar_float(cvar_extendmapStep), PLUGIN_VERSION));
 				map_extend();
 			}
 		}
@@ -2014,15 +1923,15 @@ public vote_expire()
 		{
 			map_setNext(g_mapChoice[idxWinner]);
 			server_exec();
-			client_print(0, 3, 38200, -1, 38212, g_mapChoice[idxWinner]);
+			client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_NEXTMAP", g_mapChoice[idxWinner]);
 			g_voteStatus = g_voteStatus | 8;
 		}
 	}
 	else
 	{
-		idxWinner = random_num(0, g_choiceCnt + -1);
+		idxWinner = random_num(PLUGIN_VERSION, g_choiceCnt + -1);
 		map_setNext(g_mapChoice[idxWinner]);
-		client_print(0, 3, 38260, -1, 38272, g_mapChoice[idxWinner]);
+		client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_WINNER_RANDOM", g_mapChoice[idxWinner]);
 		g_voteStatus = g_voteStatus | 8;
 	}
 	g_refreshVoteStatus = 1;
@@ -2031,9 +1940,9 @@ public vote_expire()
 	if (g_handleMapChange)
 	{
 		new var4;
-		if ((g_voteStatus & 2 || (playerCnt == 1 && idxWinner < g_choiceCnt) || playerCnt) && !get_cvar_num(38344) & 4)
+		if ((g_voteStatus & 2 || (playerCnt == 1 && idxWinner < g_choiceCnt) || playerCnt) && !get_cvar_num("gal_debug") & 4)
 		{
-			set_task(1073741824, 38384, 0, 16944, 0, 16948, 0);
+			set_task(1073741824, "map_manageEnd", PLUGIN_VERSION, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 		}
 		g_pauseMapEndManagerTask = 0;
 	}
@@ -2042,24 +1951,24 @@ public vote_expire()
 
 map_extend()
 {
-	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(in)", get_cvar_float(38724), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
+	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(in)", get_cvar_float("mp_timelimit"), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
 	if (g_rtvWait)
 	{
-		g_rtvWait = floatadd(get_cvar_float(38776), g_rtvWait);
+		g_rtvWait = floatadd(get_cvar_float("mp_timelimit"), g_rtvWait);
 	}
-	set_cvar_float(38828, floatadd(get_cvar_float(38880), get_pcvar_float(cvar_extendmapStep)));
+	set_cvar_float("mp_timelimit", floatadd(get_cvar_float("mp_timelimit"), get_pcvar_float(cvar_extendmapStep)));
 	server_exec();
 	vote_resetStats();
 	g_voteStatus = g_voteStatus & -5;
-	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(out)", get_cvar_float(39220), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
+	dbg_log(2, "%32s mp_timelimit: %f  g_rtvWait: %f  extendmapStep: %f", "map_extend(out)", get_cvar_float("mp_timelimit"), g_rtvWait, get_pcvar_float(cvar_extendmapStep));
 	return 0;
 }
 
 vote_resetStats()
 {
 	g_votesCast = 0;
-	arrayset(8140, 0, 9);
-	arrayset(6676, 0, 33);
+	arrayset(g_mapVote, PLUGIN_VERSION, 9);
+	arrayset(g_rockedVote, PLUGIN_VERSION, 33);
 	g_rockedVoteCnt = 0;
 	return 0;
 }
@@ -2069,7 +1978,7 @@ map_isInMenu(map[])
 	new idxChoice;
 	while (idxChoice < g_choiceCnt)
 	{
-		if (equal(map, g_mapChoice[idxChoice], 0))
+		if (equal(map, g_mapChoice[idxChoice], PLUGIN_VERSION))
 		{
 			return 1;
 		}
@@ -2085,12 +1994,12 @@ prefix_isInMenu(map[])
 		new tentativePrefix[8];
 		new existingPrefix[8];
 		new junk[8];
-		strtok(map, tentativePrefix, 7, junk, 7, 95, 1);
+		strtok(map, tentativePrefix, 7, junk, 7, "", 1);
 		new idxChoice;
 		while (idxChoice < g_choiceCnt)
 		{
-			strtok(g_mapChoice[idxChoice], existingPrefix, 7, junk, 7, 95, 1);
-			if (equal(tentativePrefix, existingPrefix, 0))
+			strtok(g_mapChoice[idxChoice], existingPrefix, 7, junk, 7, "", 1);
+			if (equal(tentativePrefix, existingPrefix, PLUGIN_VERSION))
 			{
 				return 1;
 			}
@@ -2107,7 +2016,7 @@ map_isTooRecent(map[])
 		new idxBannedMap;
 		while (idxBannedMap < g_cntRecentMap)
 		{
-			if (equal(map, g_recentMap[idxBannedMap], 0))
+			if (equal(map, g_recentMap[idxBannedMap], PLUGIN_VERSION))
 			{
 				return 1;
 			}
@@ -2121,13 +2030,13 @@ public vote_handleChoice(id, key)
 {
 	if (g_voteStatus & 32)
 	{
-		client_cmd(id, 39272, key + 1);
+		client_cmd(id, "\"slot%i\"", key + 1);
 		return 0;
 	}
 	g_snuffDisplay[id] = 1;
 	if (g_voted[id])
 	{
-		client_cmd(id, 40124, key + 1);
+		client_cmd(id, "\"slot%i\"", key + 1);
 	}
 	else
 	{
@@ -2142,11 +2051,11 @@ public vote_handleChoice(id, key)
 			dbg_log(4, "      %-32s (none)", name);
 			if (get_pcvar_num(cvar_voteAnnounceChoice))
 			{
-				client_print(0, 3, 39384, -1, 39396, name);
+				client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_CHOICE_NONE_ALL", name);
 			}
 			else
 			{
-				client_print(id, 3, 39476, id, 39488);
+				client_print(id, "", "%L", id, "GAL_CHOICE_NONE");
 			}
 		}
 		else
@@ -2162,9 +2071,9 @@ public vote_handleChoice(id, key)
 					dbg_log(4, "      %-32s (extend)", name);
 					if (get_pcvar_num(cvar_voteAnnounceChoice))
 					{
-						client_print(0, 3, 39636, -1, 39648, name);
+						client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_CHOICE_EXTEND_ALL", name);
 					}
-					client_print(id, 3, 39736, id, 39748);
+					client_print(id, "", "%L", id, "GAL_CHOICE_EXTEND");
 				}
 			}
 			else
@@ -2172,9 +2081,9 @@ public vote_handleChoice(id, key)
 				dbg_log(4, "      %-32s %s", name, g_mapChoice[key]);
 				if (get_pcvar_num(cvar_voteAnnounceChoice))
 				{
-					client_print(0, 3, 39880, -1, 39892, name, g_mapChoice[key]);
+					client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_CHOICE_MAP_ALL", name, g_mapChoice[key]);
 				}
-				client_print(id, 3, 39968, id, 39980, g_mapChoice[key]);
+				client_print(id, "", "%L", id, "GAL_CHOICE_MAP", g_mapChoice[key]);
 			}
 			new voteWeight = get_pcvar_num(cvar_voteWeight);
 			new var1;
@@ -2183,7 +2092,7 @@ public vote_handleChoice(id, key)
 				new var2 = g_mapVote[key];
 				var2 = var2[voteWeight];
 				g_votesCast = voteWeight + -1 + g_votesCast;
-				client_print(id, 3, 40040, id, 40052, voteWeight);
+				client_print(id, "", "%L", id, "GAL_VOTE_WEIGHTED", voteWeight);
 			}
 			else
 			{
@@ -2199,7 +2108,7 @@ public vote_handleChoice(id, key)
 		arg[0] = 0;
 		arg[1] = id;
 		arg[2] = 1;
-		set_task(1036831949, 40160, 0, arg, 3, 16948, 0);
+		set_task(1036831949, "vote_display", PLUGIN_VERSION, arg, "", 16948, PLUGIN_VERSION);
 	}
 	return 0;
 }
@@ -2208,26 +2117,26 @@ public map_change()
 {
 	map_restoreOriginalTimeLimit();
 	new map[32];
-	get_cvar_string(40212, map, 31);
+	get_cvar_string("amx_nextmap", map, 31);
 	if (!is_map_valid(map))
 	{
-		copy(map, 31, 3212);
+		copy(map, 31, g_currentMap);
 	}
-	server_cmd(40260, map);
+	server_cmd("changelevel %s", map);
 	return 0;
 }
 
 Float:map_getMinutesElapsed()
 {
-	dbg_log(2, "%32s mp_timelimit: %f", "map_getMinutesElapsed(in/out)", get_cvar_float(40528));
-	return floatsub(get_cvar_float(40580), floatdiv(float(get_timeleft()), 1114636288));
+	dbg_log(2, "%32s mp_timelimit: %f", "map_getMinutesElapsed(in/out)", get_cvar_float("mp_timelimit"));
+	return floatsub(get_cvar_float("mp_timelimit"), floatdiv(float(get_timeleft()), 1114636288));
 }
 
 public vote_rock(id)
 {
 	if (g_voteStatus & 16)
 	{
-		client_print(id, 3, 40632, id, 40644);
+		client_print(id, "", "%L", id, "GAL_ROCK_FAIL_PENDINGVOTE");
 		return 0;
 	}
 	new Float:minutesElapsed = map_getMinutesElapsed();
@@ -2241,37 +2150,37 @@ public vote_rock(id)
 	{
 		if (minutesElapsed < g_rtvWait)
 		{
-			client_print(id, 3, 40748, id, 40760, floatround(floatsub(g_rtvWait, minutesElapsed), 2));
+			client_print(id, "", "%L", id, "GAL_ROCK_FAIL_TOOSOON", floatround(floatsub(g_rtvWait, minutesElapsed), 2));
 			return 0;
 		}
 	}
 	if (g_voteStatus & 1)
 	{
-		client_print(id, 3, 40848, id, 40860);
+		client_print(id, "", "%L", id, "GAL_ROCK_FAIL_INPROGRESS");
 		return 0;
 	}
 	if (g_voteStatus & 8)
 	{
-		client_print(id, 3, 40960, id, 40972);
+		client_print(id, "", "%L", id, "GAL_ROCK_FAIL_VOTEOVER");
 		return 0;
 	}
 	new rocksNeeded = vote_getRocksNeeded();
 	if (g_rockedVote[id])
 	{
-		client_print(id, 3, 41064, id, 41076, rocksNeeded - g_rockedVoteCnt);
+		client_print(id, "", "%L", id, "GAL_ROCK_FAIL_ALREADY", rocksNeeded - g_rockedVoteCnt);
 		rtv_remind(id + 52691153);
 		return 0;
 	}
 	g_rockedVote[id] = 1;
-	client_print(id, 3, 41164, id, 41176);
-	if (task_exists(52691153, 0))
+	client_print(id, "", "%L", id, "GAL_ROCK_SUCCESS");
+	if (task_exists(52691153, PLUGIN_VERSION))
 	{
-		remove_task(52691153, 0);
+		remove_task(52691153, PLUGIN_VERSION);
 	}
 	g_rockedVoteCnt += 1;
 	if (g_rockedVoteCnt >= rocksNeeded)
 	{
-		client_print(0, 3, 41244, -1, 41256);
+		client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_ROCK_ENOUGH");
 		vote_startDirector(true);
 	}
 	else
@@ -2279,7 +2188,7 @@ public vote_rock(id)
 		rtv_remind(52691153);
 		if (get_pcvar_num(cvar_rtvReminder))
 		{
-			set_task(floatmul(1114636288, get_pcvar_float(cvar_rtvReminder)), 41320, 52691153, 16944, 0, 41364, 0);
+			set_task(floatmul(1114636288, get_pcvar_float(cvar_rtvReminder)), "rtv_remind", 52691153, 16944, PLUGIN_VERSION, 41364, PLUGIN_VERSION);
 		}
 	}
 	return 0;
@@ -2303,7 +2212,7 @@ vote_getRocksNeeded()
 public rtv_remind(param)
 {
 	new who = param + -52691153;
-	client_print(who, 3, 41372, -1, 41384, vote_getRocksNeeded() - g_rockedVoteCnt);
+	client_print(who, "", "%L", -1, "GAL_ROCK_NEEDMORE", vote_getRocksNeeded() - g_rockedVoteCnt);
 	return 0;
 }
 
@@ -2352,7 +2261,7 @@ map_listAll(id)
 		lastMapDisplayed[id][0] = 0;
 	}
 	new command[32];
-	read_argv(0, command, 31);
+	read_argv(PLUGIN_VERSION, command, 31);
 	new arg1[8];
 	new start;
 	new mapCount = get_pcvar_num(cvar_listmapsPaginate);
@@ -2423,7 +2332,7 @@ map_listAll(id)
 		if (nominator_id)
 		{
 			get_user_name(nominator_id, name, 31);
-			formatex(nominated, 63, 42120, id, 42132, name);
+			formatex(nominated, 63, "%L", id, "GAL_NOMINATEDBY", name);
 		}
 		else
 		{
@@ -2448,12 +2357,12 @@ map_listAll(id)
 con_print(id, message[])
 {
 	new consoleMessage[256];
-	vformat(consoleMessage, 255, message, 3);
+	vformat(consoleMessage, 255, message, "");
 	if (id)
 	{
 		new authid[32];
 		get_user_authid(id, authid, 31);
-		if (!equal(authid, 42520, 0))
+		if (!equal(authid, "STEAM_ID_LAN", PLUGIN_VERSION))
 		{
 			console_print(id, consoleMessage);
 			return 0;
@@ -2480,7 +2389,7 @@ public client_disconnect(id)
 		{
 			ArrayGetString(g_nominationMap, idxMap, mapName, 31);
 			nominationCnt++;
-			format(nominatedMaps, 255, 42572, nominatedMaps, mapName);
+			format(nominatedMaps, 255, "%s%s, ", nominatedMaps, mapName);
 			g_nomination[id][idxNomination] = -1;
 		}
 		idxNomination++;
@@ -2501,7 +2410,7 @@ public client_disconnect(id)
 
 public client_connect(id)
 {
-	set_pcvar_num(cvar_emptyCycle, 0);
+	set_pcvar_num(cvar_emptyCycle, PLUGIN_VERSION);
 	vote_unrock(id);
 	return 0;
 }
@@ -2511,15 +2420,15 @@ public client_putinserver(id)
 	new var1;
 	if (g_voteStatus & 16 && !is_user_bot(id) && !is_user_hltv(id))
 	{
-		set_task(1101004800, 42768, id, 16944, 0, 16948, 0);
+		set_task(1101004800, "srv_announceEarlyVote", id, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	}
 	return 0;
 }
 
 srv_handleEmpty()
 {
-	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(in)", get_cvar_float(43124), g_originalTimelimit);
-	if (g_originalTimelimit != get_cvar_float(43176))
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(in)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
+	if (g_originalTimelimit != get_cvar_float("mp_timelimit"))
 	{
 		map_restoreOriginalTimeLimit();
 	}
@@ -2528,7 +2437,7 @@ srv_handleEmpty()
 	{
 		srv_startEmptyCountdown();
 	}
-	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(out)", get_cvar_float(43500), g_originalTimelimit);
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "srv_handleEmpty(out)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
 	return 0;
 }
 
@@ -2537,7 +2446,7 @@ public srv_announceEarlyVote(id)
 	if (is_user_connected(id))
 	{
 		new text[101];
-		formatex(text, 100, 43552, id, 43568);
+		formatex(text, 100, "\x04%L", id, "GAL_VOTE_EARLY");
 		print_color(id, text);
 	}
 	return 0;
@@ -2562,7 +2471,7 @@ srv_startEmptyCountdown()
 	new waitMinutes = get_pcvar_num(cvar_emptyWait);
 	if (waitMinutes)
 	{
-		set_task(float(waitMinutes * 60), 43628, 98176977, 16944, 0, 16948, 0);
+		set_task(float(waitMinutes * 60), "srv_startEmptyCycle", 98176977, 16944, PLUGIN_VERSION, 16948, PLUGIN_VERSION);
 	}
 	return 0;
 }
@@ -2582,7 +2491,7 @@ public srv_startEmptyCycle()
 
 nomination_announceCancellation(nominations[])
 {
-	client_print(0, 3, 43708, -1, 43720, nominations);
+	client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_CANCEL_SUCCESS", nominations);
 	return 0;
 }
 
@@ -2607,7 +2516,7 @@ map_announceNomination(id, map[])
 {
 	new name[32];
 	get_user_name(id, name, 31);
-	client_print(0, 3, 43796, -1, 43808, name, map);
+	client_print(PLUGIN_VERSION, "", "%L", -1, "GAL_NOM_SUCCESS", name, map);
 	return 0;
 }
 
@@ -2620,7 +2529,7 @@ get_realplayersnum()
 {
 	new players[32];
 	new playerCnt;
-	get_players(players, playerCnt, 43872, 25644);
+	get_players(players, playerCnt, "ch", 25644);
 	return playerCnt;
 }
 
@@ -2629,7 +2538,7 @@ percent(is, of)
 	new var1;
 	if (of)
 	{
-		var1 = floatround(floatmul(floatdiv(float(is), float(of)), 1120403456), 0);
+		var1 = floatround(floatmul(floatdiv(float(is), float(of)), 1120403456), PLUGIN_VERSION);
 	}
 	else
 	{
@@ -2640,7 +2549,7 @@ percent(is, of)
 
 print_color(id, text[])
 {
-	message_begin(1, get_user_msgid(43884), 43916, id);
+	message_begin(1, get_user_msgid("SayText"), 43916, id);
 	write_byte(id);
 	write_string(text);
 	message_end();
@@ -2649,25 +2558,25 @@ print_color(id, text[])
 
 map_restoreOriginalTimeLimit()
 {
-	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(in)", get_cvar_float(44248), g_originalTimelimit);
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(in)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
 	if (-1.0 != g_originalTimelimit)
 	{
-		server_cmd(44300, 3340);
+		server_cmd("mp_timelimit %f", g_originalTimelimit);
 		server_exec();
 	}
-	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(out)", get_cvar_float(44688), g_originalTimelimit);
+	dbg_log(2, "%32s mp_timelimit: %f  g_originalTimelimit: %f", "map_restoreOriginalTimeLimit(out)", get_cvar_float("mp_timelimit"), g_originalTimelimit);
 	return 0;
 }
 
 dbg_log(mode, text[])
 {
-	new dbg = get_cvar_num(44740);
+	new dbg = get_cvar_num("gal_debug");
 	if (dbg & mode)
 	{
 		new formattedText[1024];
 		format_args(formattedText, 1023, 1);
 		new Float:gameTime = get_gametime();
-		log_to_file(44780, 44832, gameTime, formattedText);
+		log_to_file("_galileo.log", "{%3.4f} %s", gameTime, formattedText);
 		new var1;
 		if (dbg & 1 && formattedText[0])
 		{
@@ -2676,7 +2585,7 @@ dbg_log(mode, text[])
 			{
 				isFound = replace(formattedText, 1023, 44876, 44884);
 			}
-			log_message(44892, formattedText);
+			log_message("\"<><><>\" triggered \"amx_chat\" (text \"[GAL] %s\")", formattedText);
 		}
 	}
 	if (text[0])

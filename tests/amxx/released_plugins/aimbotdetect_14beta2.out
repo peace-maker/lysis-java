@@ -158,7 +158,7 @@ Float:floatclamp(Float:Value, Float:MinValue, Float:MaxValue)
 
 is_user_admin(id)
 {
-	new __flags = get_user_flags(id, 0);
+	new __flags = get_user_flags(id, "%L");
 	new var1;
 	return __flags > 0 && !__flags & 33554432;
 }
@@ -188,7 +188,7 @@ cmd_access(id, level, cid, num, bool:accesssilent)
 				has_access = 1;
 			}
 		}
-		if (level & get_user_flags(id, 0))
+		if (level & get_user_flags(id, "%L"))
 		{
 			has_access = 1;
 		}
@@ -205,79 +205,25 @@ cmd_access(id, level, cid, num, bool:accesssilent)
 			new hinfo[128];
 			new hflag;
 			get_concmd(cid, hcmd, 31, hflag, hinfo, 127, level, -1);
-			console_print(id, 56, id, 100, hcmd, hinfo);
+			console_print(id, "%L:  %s %s", id, "USAGE", hcmd, hinfo);
 			return 0;
 		}
 		return 1;
 	}
 	if (!accesssilent)
 	{
-		console_print(id, 0, id, 12);
+		console_print(id, "%L", id, "NO_ACC_COM");
 	}
 	return 0;
 }
 
-cmd_target(id, arg[], flags)
-{
-	new player = find_player(124, arg);
-	if (player)
-	{
-		if (find_player(136, arg) != player)
-		{
-			console_print(id, 152, id, 164);
-			return 0;
-		}
-	}
-	else
-	{
-		new var1;
-		if ((player = find_player(224, arg)) && arg[0] == 35 && arg[1])
-		{
-			player = find_player(232, str_to_num(arg[1]));
-		}
-	}
-	if (!player)
-	{
-		console_print(id, 240, id, 252);
-		return 0;
-	}
-	if (flags & 1)
-	{
-		new var3;
-		if (get_user_flags(player, 0) & 1 && flags & 2)
-		{
-			new imname[32];
-			get_user_name(player, imname, 31);
-			console_print(id, 304, id, 316, imname);
-			return 0;
-		}
-	}
-	if (flags & 4)
-	{
-		if (!is_user_alive(player))
-		{
-			new imname[32];
-			get_user_name(player, imname, 31);
-			console_print(id, 360, id, 372, imname);
-			return 0;
-		}
-	}
-	if (flags & 8)
-	{
-		if (is_user_bot(player))
-		{
-			new imname[32];
-			get_user_name(player, imname, 31);
-			console_print(id, 432, id, 444, imname);
-			return 0;
-		}
-	}
-	return player;
-}
+
+/* ERROR! null */
+ function "cmd_target" (number 9)
 
 get_configsdir(name[], len)
 {
-	return get_localinfo(500, name, len);
+	return get_localinfo("amxx_configsdir", name, len);
 }
 
 xs_vec_add(Float:in1[], Float:in2[], Float:out[])
@@ -335,7 +281,7 @@ fm_set_user_rendering(index, fx, r, g, b, render, amount)
 fm_give_item(index, item[])
 {
 	new var1;
-	if (!equal(item, 564, 7) && !equal(item, 596, 5) && !equal(item, 620, 5) && !equal(item, 644, 10))
+	if (!equal(item, xs__ITaskId, 7) && !equal(item, "ammo_", 5) && !equal(item, "item_", 5) && !equal(item, "tf_weapon_", 10))
 	{
 		return 0;
 	}
@@ -361,14 +307,14 @@ fm_give_item(index, item[])
 
 public __fatal_ham_error(Ham:id, HamError:err, reason[])
 {
-	new func = get_func_id(688, -1);
+	new func = get_func_id("HamFilter", -1);
 	new bool:fail = 1;
 	new var1;
 	if (func != -1 && callfunc_begin_i(func, -1) == 1)
 	{
 		callfunc_push_int(id);
 		callfunc_push_int(err);
-		callfunc_push_str(reason, 0);
+		callfunc_push_str(reason, "%L");
 		if (callfunc_end() == 1)
 		{
 			fail = false;
@@ -383,53 +329,53 @@ public __fatal_ham_error(Ham:id, HamError:err, reason[])
 
 public plugin_init()
 {
-	register_plugin(6760, 728, 6828);
-	register_cvar(6852, 728, 4, 0);
-	register_dictionary(6920);
-	register_concmd(6988, 7040, 2048, 7088, -1);
-	register_concmd(7324, 7380, 2048, 7424, -1);
-	register_message(get_user_msgid(7580), 7616);
-	register_message(get_user_msgid(7660), 7708);
-	g_Ham_TakeDamage = RegisterHam(9, 7764, 7792, 0);
-	g_Ham_Killed_Player = RegisterHam(11, 7860, 7888, 0);
+	register_plugin("Aimbot Detection", Version, "bugsy");
+	register_cvar("aimbot_detection", Version, 4, "%L");
+	register_dictionary("aimbotdetect.txt");
+	register_concmd("amx_aimwatch", "WatchPlayer", 2048, "<player> <1=On 0=Off> - Add\Remove aimbot watch on player.", -1);
+	register_concmd("amx_aimstatus", "ShowStatus", 2048, "- Show aimbot detection plugin status.", -1);
+	register_message(get_user_msgid("DeathMsg"), "fwDeathMsg");
+	register_message(get_user_msgid("StatusValue"), "fwStatusValue");
+	g_Ham_TakeDamage = RegisterHam(9, "player", "fw_HamTakeDamage", "%L");
+	g_Ham_Killed_Player = RegisterHam("", "player", "fw_HamKilled", "%L");
 	DisableHamForward(g_Ham_TakeDamage);
 	DisableHamForward(g_Ham_Killed_Player);
-	g_pEnabled = register_cvar(7940, 7984, 0, 0);
-	g_pAutoWatch = register_cvar(7992, 8044, 0, 0);
-	g_pVerboseMode = register_cvar(8052, 8112, 0, 0);
-	g_pDetectMethod = register_cvar(8120, 8184, 0, 0);
-	g_pDetectsNeeded = register_cvar(8192, 8260, 0, 0);
-	g_pAimAttempts = register_cvar(8268, 8328, 0, 0);
-	g_pPunishment = register_cvar(8336, 8392, 0, 0);
-	g_pBotColor = register_cvar(8400, 8448, 0, 0);
-	g_pBanTime = register_cvar(8472, 8516, 0, 0);
-	g_pAWAdmin = register_cvar(8524, 8572, 0, 0);
-	g_pCustomMod = register_cvar(8580, 8632, 0, 0);
-	g_pCheckInterval = register_cvar(8640, 8708, 0, 0);
-	g_pAWRRoundKills = register_cvar(8732, 8804, 0, 0);
-	g_pAWRKillDeath = register_cvar(8824, 8892, 0, 0);
-	g_pAWRHitsShots = register_cvar(8908, 8976, 0, 0);
-	g_pAWRHSKill = register_cvar(8992, 9048, 0, 0);
-	g_pAWRHeadBody = register_cvar(9064, 9128, 0, 0);
-	g_pAWRChestBody = register_cvar(9148, 9216, 0, 0);
-	g_pAWPKillDeath = register_cvar(9232, 9300, 0, 0);
-	g_pAWPHitsShots = register_cvar(9308, 9376, 0, 0);
-	g_pAWPHSKill = register_cvar(9384, 9440, 0, 0);
-	g_pAWPHeadBody = register_cvar(9448, 9512, 0, 0);
-	g_pAWPChestBody = register_cvar(9520, 9588, 0, 0);
-	g_pAWPRPointsNeeded = register_cvar(9596, 9680, 0, 0);
-	g_pAWMaxAutoWatches = register_cvar(9688, 9772, 0, 0);
-	g_pAWPointsNeeded = register_cvar(9780, 9856, 0, 0);
-	g_pAimNumNeeded = register_cvar(9864, 9928, 0, 0);
-	g_pBotStayTime = register_cvar(9936, 9996, 0, 0);
-	g_pForceShoot = register_cvar(10012, 10068, 0, 0);
-	g_pHPHead = register_cvar(10076, 10120, 0, 0);
-	g_pHPMidBody = register_cvar(10128, 10184, 0, 0);
-	g_pHPLegs = register_cvar(10192, 10236, 0, 0);
-	g_pHPHitsNeeded = register_cvar(10244, 10312, 0, 0);
+	g_pEnabled = register_cvar("ad_enabled", 7984, "%L", "%L");
+	g_pAutoWatch = register_cvar("ad_autowatch", 8044, "%L", "%L");
+	g_pVerboseMode = register_cvar("ad_verbosemode", 8112, "%L", "%L");
+	g_pDetectMethod = register_cvar("ad_detectmethod", 8184, "%L", "%L");
+	g_pDetectsNeeded = register_cvar("ad_detectsneeded", 8260, "%L", "%L");
+	g_pAimAttempts = register_cvar("ad_aimattempts", 8328, "%L", "%L");
+	g_pPunishment = register_cvar("ad_punishment", 8392, "%L", "%L");
+	g_pBotColor = register_cvar("ad_botcolor", "0 0 0", "%L", "%L");
+	g_pBanTime = register_cvar("ad_bantime", 8516, "%L", "%L");
+	g_pAWAdmin = register_cvar("ad_aw_admin", 8572, "%L", "%L");
+	g_pCustomMod = register_cvar("ad_custommod", 8632, "%L", "%L");
+	g_pCheckInterval = register_cvar("ad_checkinterval", "180.0", "%L", "%L");
+	g_pAWRRoundKills = register_cvar("ad_awr_roundkills", "0.33", "%L", "%L");
+	g_pAWRKillDeath = register_cvar("ad_awr_killdeath", "3.0", "%L", "%L");
+	g_pAWRHitsShots = register_cvar("ad_awr_hitsshots", "0.4", "%L", "%L");
+	g_pAWRHSKill = register_cvar("ad_awr_hskill", "0.5", "%L", "%L");
+	g_pAWRHeadBody = register_cvar("ad_awr_headbody", "0.33", "%L", "%L");
+	g_pAWRChestBody = register_cvar("ad_awr_chestbody", "0.6", "%L", "%L");
+	g_pAWPKillDeath = register_cvar("ad_awp_killdeath", 9300, "%L", "%L");
+	g_pAWPHitsShots = register_cvar("ad_awp_hitsshots", 9376, "%L", "%L");
+	g_pAWPHSKill = register_cvar("ad_awp_hskill", 9440, "%L", "%L");
+	g_pAWPHeadBody = register_cvar("ad_awp_headbody", 9512, "%L", "%L");
+	g_pAWPChestBody = register_cvar("ad_awp_chestbody", 9588, "%L", "%L");
+	g_pAWPRPointsNeeded = register_cvar("ad_awp_rpointsneeded", 9680, "%L", "%L");
+	g_pAWMaxAutoWatches = register_cvar("ad_aw_maxautowatches", 9772, "%L", "%L");
+	g_pAWPointsNeeded = register_cvar("ad_aw_pointsneeded", 9856, "%L", "%L");
+	g_pAimNumNeeded = register_cvar("ad_aimnumneeded", 9928, "%L", "%L");
+	g_pBotStayTime = register_cvar("ad_botstaytime", "1.5", "%L", "%L");
+	g_pForceShoot = register_cvar("ad_forceshoot", 10068, "%L", "%L");
+	g_pHPHead = register_cvar("ad_hp_head", 10120, "%L", "%L");
+	g_pHPMidBody = register_cvar("ad_hp_midbody", 10184, "%L", "%L");
+	g_pHPLegs = register_cvar("ad_hp_legs", 10236, "%L", "%L");
+	g_pHPHitsNeeded = register_cvar("ad_hp_hitsneeded", 10312, "%L", "%L");
 	g_MaxClients = get_maxplayers();
-	g_msgSayText = get_user_msgid(10320);
-	g_msgTeamInfo = get_user_msgid(10352);
+	g_msgSayText = get_user_msgid("SayText");
+	g_msgTeamInfo = get_user_msgid("TeamInfo");
 	return 0;
 }
 
@@ -437,7 +383,7 @@ public plugin_cfg()
 {
 	new szConfigDir[64];
 	get_configsdir(szConfigDir, 63);
-	server_cmd(10388, szConfigDir);
+	server_cmd("exec %s/aimbotdetection.cfg", szConfigDir);
 	server_exec();
 	return 0;
 }
@@ -455,18 +401,18 @@ public client_putinserver(id)
 		g_bModSet = true;
 		if (!get_pcvar_num(g_pCustomMod))
 		{
-			register_logevent(10500, 2, 10544);
+			register_logevent("fwRoundEnd", 2, "1=Round_End");
 		}
-		set_task(get_pcvar_float(g_pCheckInterval), 10592, 0, 10644, 0, 10636, 0);
+		set_task(get_pcvar_float(g_pCheckInterval), "fwRoundEnd", "%L", 10644, "%L", 10636, "%L");
 	}
 	if (is_user_admin(id))
 	{
 		g_Admins = 1 << id & 31 | g_Admins;
-		g_bAdminNotify[id] = !!get_user_flags(id, 0) & 2048;
+		g_bAdminNotify[id] = !!get_user_flags(id, "%L") & 2048;
 		new var3;
 		if (g_PlayerToWatch && g_bAdminNotify[id] && get_pcvar_num(g_pVerboseMode) >= 2)
 		{
-			set_task(1088421888, 10648, id, 10644, 0, 10696, 0);
+			set_task(1088421888, "NotifyAdmin", id, 10644, "%L", 10696, "%L");
 		}
 	}
 	new var4;
@@ -481,7 +427,7 @@ public client_putinserver(id)
 		}
 		if (!g_FM_TraceLine)
 		{
-			g_FM_TraceLine = register_forward(30, 10848, 1);
+			g_FM_TraceLine = register_forward(30, "fw_TraceLine", 1);
 		}
 		g_NumShootsBlanks += 1;
 		g_bShootsBlanks[id] = 1;
@@ -516,7 +462,7 @@ public client_disconnect(id)
 		new var3;
 		if (!g_NumShootsBlanks && g_FM_TraceLine)
 		{
-			unregister_forward(30, g_FM_TraceLine, 0);
+			unregister_forward(30, g_FM_TraceLine, "%L");
 			g_FM_TraceLine = 0;
 		}
 	}
@@ -524,7 +470,7 @@ public client_disconnect(id)
 	{
 		if (get_pcvar_num(g_pVerboseMode) == 3)
 		{
-			get_user_name(id, 10900, 32);
+			get_user_name(id, szName, 32);
 			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_DISCONNECT", szName);
 		}
 		DisableHamForward(g_Ham_Killed_Player);
@@ -539,7 +485,7 @@ public NotifyAdmin(id)
 	if (is_user_connected(id) && is_user_connected(g_PlayerToWatch))
 	{
 		static szName[33];
-		get_user_name(g_PlayerToWatch, 11140, 32);
+		get_user_name(g_PlayerToWatch, szName, 32);
 		PrintColorMsg(id, 0, "%L", -1, "AIMBOTDETECT_NOTIFYADMIN", szName);
 	}
 	return 0;
@@ -559,8 +505,8 @@ public fwRoundEnd()
 	new iCT;
 	new iNum;
 	new iTeam;
-	get_players(iPlayers, iT, 11384, 11392);
-	get_players(iPlayers, iCT, 11432, 11440);
+	get_players(iPlayers, iT, 11384, "TERRORIST");
+	get_players(iPlayers, iCT, 11432, "CT");
 	get_players(iPlayers, iNum, 11452, 11460);
 	new i;
 	while (i < iNum)
@@ -625,15 +571,15 @@ public AddBot()
 	new szTeam[2];
 	new szName[6];
 	new szRejectReason[128];
-	formatex(szName, 5, 11584, random_num(10, 99));
+	formatex(szName, 5, "xyz%2d", random_num(10, ""));
 	g_BotID = engfunc(53, szName);
 	if (!g_BotID)
 	{
 		return 1;
 	}
-	engfunc(41, 768);
-	dllfunc(8, 768, szName, 11612, szRejectReason);
-	dllfunc(11, 768);
+	engfunc(41, g_BotID);
+	dllfunc(8, g_BotID, szName, "127.0.0.1", szRejectReason);
+	dllfunc("", g_BotID);
 	set_pev(g_BotID, 83, pev(g_BotID, 83) | 8192);
 	set_pev(g_BotID, 84, pev(g_BotID, 84) | 8192);
 	new var1;
@@ -646,18 +592,18 @@ public AddBot()
 		var1 = 1;
 	}
 	num_to_str(var1, szTeam, 1);
-	engclient_cmd(g_BotID, 11652, szTeam, 11688);
-	engclient_cmd(g_BotID, 11692, 11732, 11688);
+	engclient_cmd(g_BotID, "jointeam", szTeam, 11688);
+	engclient_cmd(g_BotID, "joinclass", 11732, 11688);
 	fm_user_spawn(g_BotID);
 	new szRGB[12];
 	new szRed[4];
 	new szGreen[4];
 	new szBlue[4];
 	new bool:bInvisible;
-	get_pcvar_string(g_pBotColor, szRGB, 11);
+	get_pcvar_string(g_pBotColor, szRGB, "");
 	trim(szRGB);
 	parse(szRGB, szRed, 3, szGreen, 3, szBlue, 3);
-	bInvisible = equal(szRGB, 11740, 0);
+	bInvisible = equal(szRGB, "0 0 0", "%L");
 	new var2;
 	if (bInvisible)
 	{
@@ -676,10 +622,10 @@ public AddBot()
 	{
 		var3 = 0;
 	}
-	fm_set_rendering(g_BotID, 0, clamp(str_to_num(szRed), 0, 255), clamp(str_to_num(szGreen), 0, 255), clamp(str_to_num(szBlue), 0, 255), var3, var2);
-	message_begin(2, g_msgTeamInfo, 11764, 0);
+	fm_set_rendering(g_BotID, 0, clamp(str_to_num(szRed), "%L", 255), clamp(str_to_num(szGreen), "%L", 255), clamp(str_to_num(szBlue), "%L", 255), var3, var2);
+	message_begin(2, g_msgTeamInfo, 11764, "%L");
 	write_byte(g_BotID);
-	write_string(11776);
+	write_string("SPECTATOR");
 	message_end();
 	EnableHamForward(g_Ham_TakeDamage);
 	return 1;
@@ -693,8 +639,8 @@ public RemoveBot()
 	}
 	new iDetectMethod = get_pcvar_num(g_pDetectMethod);
 	new Float:fTotalDetectPoints = 0.0;
-	remove_task(8581, 0);
-	remove_task(1218, 0);
+	remove_task(8581, "%L");
+	remove_task(1218, "%L");
 	new var1;
 	if (!g_HitPoints && !g_AimPoints)
 	{
@@ -731,7 +677,7 @@ public RemoveBot()
 	}
 	DisableHamForward(g_Ham_TakeDamage);
 	fm_set_user_rendering(g_BotID, 0, 255, 255, 255, 0, 16);
-	server_cmd(12032, get_user_userid(g_BotID));
+	server_cmd("kick #%d", get_user_userid(g_BotID));
 	g_BotID = 0;
 	return 1;
 }
@@ -744,7 +690,7 @@ public ShowStatus(id, level, cid)
 	}
 	if (!get_pcvar_num(g_pEnabled))
 	{
-		console_print(id, 12068, -1, 12152);
+		console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_DISABLED");
 		return 1;
 	}
 	static szMOTD[106];
@@ -752,13 +698,13 @@ public ShowStatus(id, level, cid)
 	new iPlayersNum;
 	new iPlayer;
 	new szName[33];
-	if (file_exists(12664))
+	if (file_exists("tmpStatus.txt"))
 	{
-		delete_file(12720);
+		delete_file("tmpStatus.txt");
 	}
-	write_file(12776, 12832, -1);
-	formatex(12240, 105, 13020, 13256, 13264, 13284, 13336, 13380);
-	write_file(13416, 12240, -1);
+	write_file("tmpStatus.txt", "<html><body bgcolor=#000000><font size=3><pre>", -1);
+	formatex(szMOTD, 105, "<font color=white><b>%3s %-33.33s %13s %11s %9s</b></font>", 13256, "Name", "Auto-Watches", "Detections", "Punished");
+	write_file("tmpStatus.txt", szMOTD, -1);
 	get_players(iPlayers, iPlayersNum, 13472, 11460);
 	new i;
 	while (i < iPlayersNum)
@@ -774,13 +720,13 @@ public ShowStatus(id, level, cid)
 		{
 			var1 = 13760;
 		}
-		formatex(12240, 105, 13480, i + 1, szName, g_AutoWatched[iPlayer], g_Detections[iPlayer], var1);
-		write_file(13772, 12240, -1);
+		formatex(szMOTD, 105, "<font color=#0099FF>%2d. %-33.33s %-13.13d %-11.11d %-3.3s</font>", i + 1, szName, g_AutoWatched[iPlayer], g_Detections[iPlayer], var1);
+		write_file("tmpStatus.txt", szMOTD, -1);
 		i++;
 	}
-	formatex(12240, 105, 13828);
-	write_file(13940, 12240, -1);
-	show_motd(id, 13996, 14052);
+	formatex(szMOTD, 105, "</pre></font></body></html>");
+	write_file("tmpStatus.txt", szMOTD, -1);
+	show_motd(id, "tmpStatus.txt", "Aimbot Detection Status");
 	return 1;
 }
 
@@ -792,7 +738,7 @@ public WatchPlayer(id, level, cid)
 	}
 	if (!get_pcvar_num(g_pEnabled))
 	{
-		console_print(id, 14148, -1, 14232);
+		console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_DISABLED");
 		return 1;
 	}
 	new szName[33];
@@ -802,18 +748,18 @@ public WatchPlayer(id, level, cid)
 		if (g_PlayerToWatch)
 		{
 			get_user_name(g_PlayerToWatch, szName, 32);
-			console_print(id, 14320, -1, 14404, szName);
+			console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_CURRENTWATCH", szName);
 		}
 		else
 		{
-			console_print(id, 14508, -1, 14592);
+			console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_NOPLAYERWATCH");
 		}
 		return 1;
 	}
 	new var1;
 	if (iArgs != 1 && read_argc() != 3)
 	{
-		console_print(id, 14700, -1, 14784);
+		console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_PROPERUSAGE");
 		return 1;
 	}
 	new szVal[2];
@@ -832,18 +778,18 @@ public WatchPlayer(id, level, cid)
 		{
 			if (g_PlayerToWatch == iPlayer)
 			{
-				console_print(id, 14884, -1, 14968, szName);
+				console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_ALREADYWATCHING", szName);
 				return 1;
 			}
 			new szWatchName[33];
 			get_user_name(g_PlayerToWatch, szWatchName, 32);
-			console_print(id, 15084, -1, 15168, szWatchName);
+			console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_MONITORINGSTOPPED", szWatchName);
 			if (2 <= get_pcvar_num(g_pVerboseMode))
 			{
 				PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_MONITORINGSTOPPED", szWatchName);
 			}
 		}
-		console_print(id, 15428, -1, 15512, szName);
+		console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_NOWMONITORING", szName);
 		if (2 <= get_pcvar_num(g_pVerboseMode))
 		{
 			PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_NOWMONITORING", szName);
@@ -857,15 +803,15 @@ public WatchPlayer(id, level, cid)
 		{
 			if (!g_PlayerToWatch)
 			{
-				console_print(id, 15740, -1, 15824);
+				console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_NOPLAYERWATCH");
 				return 1;
 			}
 			if (g_PlayerToWatch != iPlayer)
 			{
-				console_print(id, 15932, -1, 16016, szName);
+				console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_NOTWATCHING", szName);
 				return 1;
 			}
-			console_print(id, 16116, -1, 16200, szName);
+			console_print(id, "[Aimbot Detector] %L", -1, "AIMBOTDETECT_NOLONGERMONITOR", szName);
 			if (2 <= get_pcvar_num(g_pVerboseMode))
 			{
 				PrintColorMsg(0, 0, "%L", -1, "AIMBOTDETECT_NOLONGERMONITOR", szName);
@@ -1004,7 +950,7 @@ public fw_HamTakeDamage(victim, inflictor, attacker, Float:fDamage, bitDamage)
 {
 	new iDetectMethod = get_pcvar_num(g_pDetectMethod);
 	new var1;
-	if (!1 <= g_MaxClients >= attacker || !g_BotID || g_BotID == victim)
+	if (!1 <= attacker <= g_MaxClients || !g_BotID || g_BotID == victim)
 	{
 		return 1;
 	}
@@ -1067,7 +1013,7 @@ public fw_HamKilled(victim, killer, shouldgib)
 	{
 		return 1;
 	}
-	if (g_MaxClients == get_playersnum(0))
+	if (g_MaxClients == get_playersnum("%L"))
 	{
 		if (get_pcvar_num(g_pVerboseMode) == 3)
 		{
@@ -1136,17 +1082,17 @@ public fw_HamKilled(victim, killer, shouldgib)
 			rparam[0] = g_PlayerToWatch;
 			rparam[1] = iWeaponID;
 			rparam[2] = MaxClipAmmo[iWeaponID];
-			set_task(1036831949, 17376, 0, rparam, 3, 10696, 0);
-			set_task(floatdiv(get_pcvar_float(g_pBotStayTime), 1077936128), 17420, 8581, 10644, 0, 10696, 0);
+			set_task(1036831949, "ReloadClip", "%L", rparam, 3, 10696, "%L");
+			set_task(floatdiv(get_pcvar_float(g_pBotStayTime), 1077936128), "ForceShoot", 8581, 10644, "%L", 10696, "%L");
 			rparam[2] = iClip;
-			set_task(floatadd(1036831949, get_pcvar_float(g_pBotStayTime)), 17464, 0, rparam, 3, 10696, 0);
+			set_task(floatadd(1036831949, get_pcvar_float(g_pBotStayTime)), "ReloadClip", "%L", rparam, 3, 10696, "%L");
 		}
-		set_task(get_pcvar_float(g_pBotStayTime), 17508, 1812, 10644, 0, 10696, 0);
+		set_task(get_pcvar_float(g_pBotStayTime), "RemoveBot", 1812, 10644, "%L", 10696, "%L");
 	}
 	new var6;
 	if (iDetectMethod == 1 || iDetectMethod == 2)
 	{
-		set_task(1048576000, 17548, 1218, 10644, 0, 17596, get_pcvar_num(g_pAimNumNeeded));
+		set_task(1048576000, "CheckAiming", 1218, 10644, "%L", 17596, get_pcvar_num(g_pAimNumNeeded));
 	}
 	return 1;
 }
@@ -1161,31 +1107,31 @@ public Punish(id)
 	get_user_authid(id, szAuthID, 34);
 	get_user_ip(id, szIP, 15, 1);
 	get_mapname(szMap, 20);
-	log_to_file(17604, 17688, szName, szAuthID, szIP, szMap);
+	log_to_file("aimbotdetections.log", "An aimbot was detected on %s [%s] [%s] [%s]", szName, szAuthID, szIP, szMap);
 	g_bPunished[id] = 1;
 	switch (get_pcvar_num(g_pPunishment))
 	{
 		case 1:
 		{
-			KickPlayer(id, 17864, 17936, 18092);
+			KickPlayer(id, "[Aimbot Detector]", "An aimbot was detected on your system.", "You have been kicked");
 		}
 		case 2:
 		{
-			server_cmd(18176, get_user_userid(id), get_pcvar_num(g_pBanTime));
+			server_cmd("amx_ban #%d %d \"Aimbot Detected\"", get_user_userid(id), get_pcvar_num(g_pBanTime));
 		}
 		case 3:
 		{
-			server_cmd(18308, get_user_userid(id), get_pcvar_num(g_pBanTime));
+			server_cmd("amx_banip #%d %d \"Aimbot Detected\"", get_user_userid(id), get_pcvar_num(g_pBanTime));
 		}
 		case 4:
 		{
-			server_cmd(18448, get_pcvar_num(g_pBanTime), get_user_userid(id));
+			server_cmd("amx_ban %d #%d \"Aimbot Detected\"", get_pcvar_num(g_pBanTime), get_user_userid(id));
 		}
 		case 5, 6:
 		{
 			if (!g_FM_TraceLine)
 			{
-				g_FM_TraceLine = register_forward(30, 18580, 1);
+				g_FM_TraceLine = register_forward(30, "fw_TraceLine", 1);
 			}
 			g_NumShootsBlanks += 1;
 			g_bShootsBlanks[id] = 1;
@@ -1240,7 +1186,7 @@ public ForceShoot()
 	new var1;
 	if (g_BotID && g_PlayerToWatch && is_user_connected(g_PlayerToWatch))
 	{
-		client_cmd(g_PlayerToWatch, 18756);
+		client_cmd(g_PlayerToWatch, "+attack;wait;wait;wait;-attack;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;wait;+attack;wait;wait;wait;-attack");
 	}
 	return 0;
 }
@@ -1257,7 +1203,7 @@ public ReloadClip(param[3])
 		return 1;
 	}
 	get_weaponname(iWeaponID, szWeapon, 31);
-	while ((iWeaponIdx = engfunc(12, iWeaponIdx, 19484, szWeapon)))
+	while ((iWeaponIdx = engfunc("NO_ACC_COM", iWeaponIdx, "classname", szWeapon)))
 	{
 		if (pev(iWeaponIdx, 18) == id)
 		{
@@ -1302,7 +1248,7 @@ public fwStatusValue()
 	if (g_BotID == get_msg_arg_int(2) && get_msg_arg_int(1) == 2)
 	{
 		set_msg_arg_int(1, get_msg_argtype(1), 1);
-		set_msg_arg_int(2, get_msg_argtype(2), 0);
+		set_msg_arg_int(2, get_msg_argtype(2), "%L");
 	}
 	return 0;
 }
@@ -1355,9 +1301,9 @@ public Float:GetAngleOrigins(Float:fOrigin1[3], Float:fOrigin2[3])
 public KickPlayer(target, szReason[], szLine2[], szLine3[])
 {
 	static msg_content[80];
-	formatex(19524, 79, 19844, szReason, szLine2, szLine3);
+	formatex(msg_content, 79, "%s\n%s\n%s", szReason, szLine2, szLine3);
 	message_begin(8, 2, 11764, target);
-	write_string(19524);
+	write_string(msg_content);
 	message_end();
 	return 0;
 }
@@ -1375,13 +1321,13 @@ public PrintColorMsg(id, iColor, szMsg[])
 	{
 		var1 = 20944;
 	}
-	iLen = formatex(19880, 255, var1, 21020);
+	iLen = formatex(szMessage, 255, var1, "Aimbot Detector");
 	vformat(szMessage[iLen], 255 - iLen, szMsg, 4);
 	if (id)
 	{
 		emessage_begin(8, g_msgSayText, 21084, id);
 		ewrite_byte(id);
-		ewrite_string(19880);
+		ewrite_string(szMessage);
 		emessage_end();
 	}
 	else
@@ -1389,7 +1335,7 @@ public PrintColorMsg(id, iColor, szMsg[])
 		static iPlayer;
 		static iPlayersNum;
 		static iPlayers[32];
-		get_players(21096, 21224, 21232, 11460);
+		get_players(iPlayers, iPlayersNum, 21232, 11460);
 		new i;
 		while (i < iPlayersNum)
 		{
@@ -1398,7 +1344,7 @@ public PrintColorMsg(id, iColor, szMsg[])
 			{
 				emessage_begin(8, g_msgSayText, 21084, iPlayer);
 				ewrite_byte(iPlayer);
-				ewrite_string(19880);
+				ewrite_string(szMessage);
 				emessage_end();
 			}
 			i++;
@@ -1428,7 +1374,7 @@ public ShootsBlanks(id)
 		{
 		}
 	}
-	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, 21240);
+	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, "/aim_shootblanks.txt");
 	iItems = file_size(szBlanksFile, 1);
 	if (iItems != -1)
 	{
@@ -1472,7 +1418,7 @@ public AddShootBlanks(id)
 		{
 		}
 	}
-	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, 21324);
+	copy(szBlanksFile[get_configsdir(szBlanksFile, 63)], 63, "/aim_shootblanks.txt");
 	write_file(szBlanksFile, szAuthID, -1);
 	return 0;
 }
@@ -1482,7 +1428,7 @@ public fm_is_aiming_at_player(index, index2)
 	new Float:start[3] = 0.0;
 	new Float:view_ofs[3] = 0.0;
 	pev(index, 118, start);
-	pev(index, 135, view_ofs);
+	pev(index, "", view_ofs);
 	xs_vec_add(start, view_ofs, start);
 	new Float:dest[3] = 0.0;
 	pev(index, 126, dest);
@@ -1491,18 +1437,18 @@ public fm_is_aiming_at_player(index, index2)
 	xs_vec_mul_scalar(dest, 9999.0, dest);
 	xs_vec_add(start, dest, dest);
 	engfunc(29, start, dest, 0, index, 0);
-	return index2 == get_tr2(0, 8);
+	return index2 == get_tr2("%L", 8);
 }
 
 public fw_TraceLine(Float:v1[3], Float:v2[3], NoMonsters, shooter, ptr)
 {
-	if (!1 <= g_MaxClients >= shooter)
+	if (!1 <= shooter <= g_MaxClients)
 	{
 		return 1;
 	}
 	static iPlayerHit;
 	iPlayerHit = get_tr2(ptr, 8);
-	if (!1 <= g_MaxClients >= iPlayerHit)
+	if (!1 <= iPlayerHit <= g_MaxClients)
 	{
 		return 1;
 	}
@@ -1578,7 +1524,7 @@ public fm_user_spawn(id)
 {
 	set_pev(id, 80, 3);
 	dllfunc(1, id);
-	set_pev(id, 100, 0);
+	set_pev(id, "USAGE", 0);
 	return 0;
 }
 

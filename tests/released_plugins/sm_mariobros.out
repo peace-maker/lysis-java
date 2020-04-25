@@ -1,3 +1,9 @@
+
+/* ERROR PREPROCESSING! null */
+ function "SpawnFixedPowerUps" (number 72)
+
+/* ERROR PREPROCESSING! null */
+ function "t_ShufflePowers" (number 76)
 public PlVers:__version =
 {
 	version = 5,
@@ -1240,13 +1246,15 @@ public Action:Command_AddSpawn(client, args)
 {
 	new Float:pos[3] = 0.0;
 	new ent;
-	new String:Power[4] = "x";
+	decl String:Power[4];
+	Power[0] = "x";
 	if (args >= 1)
 	{
 		GetCmdArg(1, Power, 4);
 		new var1;
 		if (StringToInt(Power, 10) < 1 || StringToInt(Power, 10) > 15)
 		{
+			Power = "x";
 		}
 	}
 	GetClientAbsOrigin(client, pos);
@@ -3107,6 +3115,7 @@ public OnEntityCreated(entity, String:classname[])
 		new i;
 		new PowerUp;
 		decl String:ns[4];
+		ns[0] = "x";
 		new String:ModelName[256];
 		GetEntPropString(entity, PropType:1, "m_iName", EntName, 64, 0);
 		if (StrContains(EntName, "mb_powerspawn", false) > -1)
@@ -3150,158 +3159,16 @@ public OnEntityCreated(entity, String:classname[])
 	return 0;
 }
 
-public SpawnFixedPowerUps()
-{
-	new index = -1;
-	new String:EntName[64];
-	new String:PowerName[64];
-	new Float:pos[3] = 0.0;
-	new String:ns[16] = "x";
-	new i;
-	new String:path[256];
-	while ((index = FindEntityByClassname(index, "info_target")) != -1)
-	{
-		GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
-		if (StrContains(EntName, "mb_powerspawn", false) > -1)
-		{
-			new entity = CreateEntityByName("item_ammopack_small", -1);
-			if (entity != -1)
-			{
-				i = 15;
-				while (0 < i)
-				{
-					IntToString(i, ns, 16);
-					if (StrContains(EntName, ns, false) > -1)
-					{
-						GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
-						Format(PowerName, 64, "mb_powerup %s", ns);
-						if (StrEqual(ns, "x", true))
-						{
-							Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
-							DispatchKeyValue(entity, "powerup_model", path);
-						}
-						else
-						{
-							new var1;
-							if (StringToInt(ns, 10) > 0 && StringToInt(ns, 10) <= 15)
-							{
-								Format(path, 255, "%s.mdl", PowModels[StringToInt(ns, 10) + -1]);
-								DispatchKeyValue(entity, "powerup_model", path);
-							}
-						}
-						DispatchKeyValue(entity, "targetname", PowerName);
-						DispatchSpawn(entity);
-						TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
-						SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
-					}
-					i--;
-				}
-				GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
-				Format(PowerName, 64, "mb_powerup %s", ns);
-				if (StrEqual(ns, "x", true))
-				{
-					Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
-					DispatchKeyValue(entity, "powerup_model", path);
-				}
-				else
-				{
-					new var1;
-					if (StringToInt(ns, 10) > 0 && StringToInt(ns, 10) <= 15)
-					{
-						Format(path, 255, "%s.mdl", PowModels[StringToInt(ns, 10) + -1]);
-						DispatchKeyValue(entity, "powerup_model", path);
-					}
-				}
-				DispatchKeyValue(entity, "targetname", PowerName);
-				DispatchSpawn(entity);
-				TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
-				SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
-			}
-		}
-		new var2;
-		if (StrContains(EntName, "mb_coinspawn", false) > -1 && GetConVarInt(mb_GameMode) == 2)
-		{
-			new entity = CreateEntityByName("item_ammopack_small", -1);
-			if (entity != -1)
-			{
-				GetEntPropVector(index, PropType:1, "m_vecOrigin", pos, 0);
-				Format(path, 255, "models/%s.mdl", "mariobros/goldcoin");
-				DispatchKeyValue(entity, "powerup_model", path);
-				DispatchKeyValue(entity, "targetname", "mb_coin");
-				DispatchKeyValue(entity, "max_health", "1");
-				DispatchSpawn(entity);
-				TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
-				SetEntPropVector(entity, PropType:1, "m_vecOrigin", pos, 0);
-			}
-		}
-	}
-	while ((index = FindEntityByClassname(index, "item_ammopack_small")) != -1)
-	{
-		GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
-		new var3;
-		if (StrContains(EntName, "mb_powerup", false) == -1 && StrContains(EntName, "mb_coin", false) == -1)
-		{
-			new R = GetRandomInt(1, 100);
-			if (R <= 100)
-			{
-				Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
-			}
-			if (R <= 35)
-			{
-				Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
-			}
-			if (R <= 10)
-			{
-				Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
-			}
-			DispatchKeyValue(index, "powerup_model", path);
-			DispatchSpawn(index);
-		}
-	}
-	while ((index = FindEntityByClassname(index, "item_ammopack_medium")) != -1)
-	{
-		new R = GetRandomInt(1, 100);
-		if (R <= 100)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
-		}
-		if (R <= 50)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
-		}
-		if (R <= 15)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
-		}
-		DispatchKeyValue(index, "powerup_model", path);
-		DispatchSpawn(index);
-	}
-	while ((index = FindEntityByClassname(index, "item_ammopack_full")) != -1)
-	{
-		new R = GetRandomInt(1, 100);
-		if (R <= 100)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Common[GetRandomInt(0, 4)][0]]);
-		}
-		if (R <= 65)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Uncommon[GetRandomInt(0, 4)][0]]);
-		}
-		if (R <= 20)
-		{
-			Format(path, 255, "%s.mdl", PowModels[Rare[GetRandomInt(0, 4)][0]]);
-		}
-		DispatchKeyValue(index, "powerup_model", path);
-		DispatchSpawn(index);
-	}
-	return 0;
-}
+
+/* ERROR! null */
+ function "SpawnFixedPowerUps" (number 72)
 
 public bool:FixedPowerUpCheck(entity, other)
 {
 	new String:entclass[128];
 	new String:powername[128];
-	new String:ns[16] = "x";
+	new String:ns[16];
+	ns[0] = "x";
 	GetEntityClassname(other, entclass, 128);
 	if (StrEqual(entclass, "item_ammopack_small", true))
 	{
@@ -3351,6 +3218,7 @@ public bool:FixedPowerUpCheck(entity, other)
 							return true;
 						}
 					}
+					ns = "x";
 					i--;
 				}
 				if (StrEqual(ns, "x", true))
@@ -3447,47 +3315,9 @@ ToggleCaps(bool:newstate)
 	return 0;
 }
 
-public Action:t_ShufflePowers(Handle:timer)
-{
-	if (timer)
-	{
-		new index = -1;
-		new String:ns[4] = "x";
-		new String:path[256];
-		new i;
-		while ((index = FindEntityByClassname(index, "item_ammopack_small")) != -1)
-		{
-			new String:EntName[64];
-			GetEntPropString(index, PropType:1, "m_iName", EntName, 64, 0);
-			if (StrContains(EntName, "mb_powerup", false) > -1)
-			{
-				i = 15;
-				while (0 < i)
-				{
-					IntToString(i, ns, 4);
-					if (StrContains(EntName, ns, false) > -1)
-					{
-						if (StrEqual(ns, "x", true))
-						{
-							Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
-							DispatchKeyValue(index, "powerup_model", path);
-							DispatchSpawn(index);
-						}
-					}
-					i--;
-				}
-				if (StrEqual(ns, "x", true))
-				{
-					Format(path, 255, "%s.mdl", PowModels[GetRandomInt(0, 14)]);
-					DispatchKeyValue(index, "powerup_model", path);
-					DispatchSpawn(index);
-				}
-			}
-		}
-		return Action:0;
-	}
-	return Action:4;
-}
+
+/* ERROR! null */
+ function "t_ShufflePowers" (number 76)
 
 public Action:t_SprintSet(Handle:timer, any:client)
 {

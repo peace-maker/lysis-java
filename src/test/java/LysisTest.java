@@ -38,7 +38,7 @@ public class LysisTest {
 
 			@Override
 			public boolean accept(File file) {
-				if (file.isDirectory())
+				if (file.isDirectory() && !file.getName().equals("disabled"))
 					return true;
 
 				return file.getName().endsWith(".smx") || file.getName().endsWith(".amxx");
@@ -82,7 +82,13 @@ public class LysisTest {
 		// Parse methods for calls and globals which don't have debug info attached.
 		for (int i = 0; i < file.functions().length; i++) {
 			Function fun = file.functions()[i];
-			Lysis.PreprocessMethod(file, fun);
+			try {
+				Lysis.PreprocessMethod(file, fun);
+			} catch (Throwable e) {
+				out.println("");
+				out.println("/* ERROR PREPROCESSING! " + e.getMessage() + " */");
+				out.println(" function \"" + fun.name() + "\" (number " + i + ")");
+			}
 			// System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
 		}
 
@@ -93,7 +99,13 @@ public class LysisTest {
 		// Go through all functions and try to print them.
 		for (int i = 0; i < file.functions().length; i++) {
 			Function fun = file.functions()[i];
-			Lysis.DumpMethod(file, source, fun);
+			try {
+				Lysis.DumpMethod(file, source, fun);
+			} catch (Throwable e) {
+				out.println("");
+				out.println("/* ERROR! " + e.getMessage() + " */");
+				out.println(" function \"" + fun.name() + "\" (number " + i + ")");
+			}
 			// System.out.println(" function \"" + fun.name() + "\" (number " + i + ")");
 			out.println("");
 		}

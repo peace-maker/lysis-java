@@ -1,3 +1,6 @@
+
+/* ERROR PREPROCESSING! null */
+ function "Timer_SmokeCheck" (number 215)
 public PlVers:__version =
 {
 	version = 5,
@@ -1157,6 +1160,7 @@ Aimbot_AnalyzeAngles(client)
 					AimBot_Detected(client, fAngleDiff);
 					return 0;
 				}
+				vLastAngles = vAngles;
 				idx++;
 			}
 			else
@@ -5153,35 +5157,9 @@ public Action:Timer_SmokeEnded(Handle:timer)
 	return Action:4;
 }
 
-public Action:Timer_SmokeCheck(Handle:timer)
-{
-	decl Float:vClient[3];
-	decl Float:vSmoke[3];
-	decl Float:fDistance;
-	new i = 1;
-	while (i <= MaxClients)
-	{
-		new var1;
-		if (IsClientInGame(i) && !IsFakeClient(i) && IsPlayerAlive(i))
-		{
-			GetClientAbsOrigin(i, vClient);
-			new idx;
-			while (GetArraySize(g_hSmokes) > idx)
-			{
-				GetArrayArray(g_hSmokes, idx, vSmoke, -1);
-				fDistance = GetVectorDistance(vClient, vSmoke, true);
-				if (fDistance < 3.503E-42)
-				{
-					g_bIsInSmoke[i] = 1;
-				}
-				g_bIsInSmoke[i] = 0;
-				idx++;
-			}
-		}
-		i++;
-	}
-	return Action:0;
-}
+
+/* ERROR! null */
+ function "Timer_SmokeCheck" (number 215)
 
 public Action:AntiSmoke_HookSetTransmit(entity, client)
 {
@@ -5644,4 +5622,509 @@ public Network4_OnSocketConnect(Handle:socket, any:we)
 	SocketSend(socket, Buffer, -1);
 	return 0;
 }
+
+public Network4_OnSocketReceive(Handle:socket, String:data[], size, any:we)
+{
+	if (StrContains(data, "HTTP/1.1 200 OK", true) == -1)
+	{
+		LogError("Servers List: Received unknown HTTP code from server during add server! Add failed!");
+	}
+	else
+	{
+
+/* ERROR! String index out of range: 138656 */
+ function "Network4_OnSocketReceive" (number 234)
+
+public Network_OnPluginStart()
+			{
+				g_hCVarNetEnabled = CreateConVar("kac_net_enable", "1", "Enable the Network module.", 0, false, 0.0, false, 0.0);
+				g_bCVarNetEnabled = GetConVarBool(g_hCVarNetEnabled);
+				HookConVarChange(g_hCVarNetEnabled, Network_ConVarChange);
+				Network2_Event_Start();
+				return 0;
+			}
+
+public Network_ConVarChange(Handle:convar, String:oldValue[], String:newValue[])
+			{
+				g_bCVarNetEnabled = GetConVarBool(g_hCVarNetEnabled);
+				return 0;
+			}
+
+public Network_OnAllPluginsLoaded()
+			{
+				Network4_Event_AllPluginsLoaded();
+				return 0;
+			}
+
+public Network_OnPluginEnd()
+			{
+				Network2_Event_PluginUnload();
+				return 0;
+			}
+
+public Network_OnClientDisconnect(client)
+			{
+				return 0;
+			}
+
+public Network_OnClientAuthorized(client, String:auth[])
+			{
+				return 0;
+			}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+			{
+				decl String:sGame[64];
+				GetGameFolderName(sGame, 64);
+				if (StrEqual(sGame, "cstrike", true))
+				{
+					g_Game = MissingTAG:1;
+				}
+				BuildPath(PathType:0, g_sLogPath, 256, "logs/KAC.log");
+				MarkNativeAsOptional("SBBanPlayer");
+				MarkNativeAsOptional("IRC_MsgFlaggedChannels");
+				MarkNativeAsOptional("IRC_Broadcast");
+				g_bMapStarted = late;
+				g_bMapStartedWait = late;
+				API_Init();
+				RegPluginLibrary("Kigen's Anti-Cheat");
+				return APLRes:0;
+			}
+
+public OnPluginStart()
+			{
+				if (KAC_GetGameType() != 1)
+				{
+					SetFailState("This %s (b %d | v %s) will not work for this mod.", "Kigen's Anti-Cheat", 1015, "1.2.2.2");
+				}
+				g_bSDKHooksLoaded = LibraryExists("sdkhooks");
+				AimBot_OnPluginStart();
+				IpAlready_OnPluginStart();
+				AutoTrigger_OnPluginStart();
+				Client_OnPluginStart();
+				Commands_OnPluginStart();
+				CVars_OnPluginStart();
+				Rcon_OnPluginStart();
+				Eye_OnPluginStart();
+				SpeedHack_OnPluginStart();
+				SpinHack_OnPluginStart();
+				AntiFlash_OnPluginStart();
+				AntiReJoin_OnPluginStart();
+				WallHack_OnPluginStart();
+				AntiSmoke_OnPluginStart();
+				Network_OnPluginStart();
+				LoadTranslations("kigenac.phrases");
+				g_hCvarWelcomeMsg = CreateConVar("kac_welcomemsg", "1", "���������� ��������� ����������� ��������.\nDisplay a message saying that your server is protected.", 262144, true, 0.0, true, 1.0);
+				WelcomeMsg_OnSettingsChanged(g_hCvarWelcomeMsg, "", "");
+				HookConVarChange(g_hCvarWelcomeMsg, WelcomeMsg_OnSettingsChanged);
+				g_hCvarBanDuration = CreateConVar("kac_ban_duration", "0", "����������������� � ������� ��� ��������������� ����. (0 = ��������).\nThe duration in minutes used for automatic bans. (0 = Permanent).", 262144, true, 0.0, false, 0.0);
+				BanDuration_OnSettingsChanged(g_hCvarBanDuration, "", "");
+				HookConVarChange(g_hCvarBanDuration, BanDuration_OnSettingsChanged);
+				g_hCvarAdminSoundsMsg = CreateConVar("kac_sounds_admin_msg", "1", "���������� ��������� ��������� ��������������� ��� �����������.\nVoice messages private administrators when it detects.", 262144, true, 0.0, true, 1.0);
+				AdminSounds_OnSettingsChanged(g_hCvarAdminSoundsMsg, "", "");
+				HookConVarChange(g_hCvarAdminSoundsMsg, AdminSounds_OnSettingsChanged);
+				g_hCvarLogVerbose = CreateConVar("kac_log_verbose", "0", "���������� �������������� ���������� � ������� � log ����.\nInclude extra information about a client being logged.", 262144, true, 0.0, true, 1.0);
+				LogVerbose_OnSettingsChanged(g_hCvarLogVerbose, "", "");
+				HookConVarChange(g_hCvarLogVerbose, LogVerbose_OnSettingsChanged);
+				CreateConVar("kac_version", "1.2.2.2", "KAC version", 393472, false, 0.0, false, 0.0);
+				RegAdminCmd("kac_reload", KAC_ReloadChanged, 2, "", "", 0);
+				RegAdminCmd("kac_info", KAC_InfoChanged, 2, "", "", 0);
+				return 0;
+			}
+
+public Action:KAC_ReloadChanged(client, args)
+			{
+				new String:file[256];
+				GetPluginFilename(GetMyHandle(), file, 256);
+				file[strlen(file) + -4] = MissingTAG:0;
+				if (GetCmdReplySource() == 1)
+				{
+					CPrintToChat(client, "%t \x03%s Reload...", "KAC_Tag", "Kigen's Anti-Cheat");
+					CPrintToChat(client, "[SM] \x03Reload Plugin \x04%s.smx", file);
+				}
+				else
+				{
+					PrintToConsole(client, "%t %s Reload...", "KAC_Tag", "Kigen's Anti-Cheat");
+					PrintToConsole(client, "[SM] Reload Plugin %s.smx", file);
+				}
+				KAC_Log("Administrator '%N' reload (%s).", client, "Kigen's Anti-Cheat");
+				InsertServerCommand("sm plugins reload %s", file);
+				return Action:3;
+			}
+
+public Action:KAC_InfoChanged(client, args)
+			{
+				PrintToConsole(client, "");
+				PrintToConsole(client, "                [ - Additional information %s - ]", "Kigen's Anti-Cheat");
+				PrintToConsole(client, "");
+				PrintToConsole(client, "        *****************************************************************");
+				PrintToConsole(client, "        *  %s                                           *", "Kigen's Anti-Cheat");
+				PrintToConsole(client, "        *  Build: %d                                                  *", 1015);
+				PrintToConsole(client, "        *  Release version: %s                                     *", "1.2.2.2");
+				PrintToConsole(client, "        *  Date: %s                                             *", "19.02.2012");
+				PrintToConsole(client, "        *  Authors: GoD-Tony, psychonic and Kigen (Coding Anti-Cheat),  *");
+				PrintToConsole(client, "        *  GoDtm666 (Coding and release Anti-Cheat CS:S v.34) and       *");
+				PrintToConsole(client, "        *  killer666 (Network module).                                  *");
+				PrintToConsole(client, "        *  Testers: aktel and FanT.                                     *");
+				PrintToConsole(client, "        *  Web Site: %s                                   *", "www.SourceTM.com");
+				PrintToConsole(client, "        *  Web Forum: %s                            *", "www.Forum.SourceTM.com");
+				PrintToConsole(client, "        *  Url KAC: %s       *", "www.Forum.SourceTM.com/index.php?showforum=27");
+				PrintToConsole(client, "        *****************************************************************");
+				PrintToConsole(client, "");
+				return Action:3;
+			}
+
+public OnConfigsExecuted()
+			{
+				InsertServerCommand("setmaster enable");
+				InsertServerCommand("setmaster add 188.40.40.201:27011");
+				InsertServerCommand("setmaster add 46.4.71.67:27011");
+				InsertServerCommand("setmaster add 176.9.50.16:27011");
+				InsertServerCommand("setmaster add 208.64.200.65:27015");
+				InsertServerCommand("setmaster add 208.64.200.39:27011");
+				InsertServerCommand("setmaster add 208.64.200.52:27011");
+				Rcon_OnConfigsExecuted();
+				UnloadBadPlugins_OnConfigsExecuted();
+				DelBadExtensionsServerRestart_OnConfigsExecutedt();
+				return 0;
+			}
+
+public OnLibraryAdded(String:name[])
+			{
+				if (StrEqual(name, "sdkhooks", true))
+				{
+					g_bSDKHooksLoaded = true;
+				}
+				return 0;
+			}
+
+public OnLibraryRemoved(String:name[])
+			{
+				if (StrEqual(name, "sdkhooks", true))
+				{
+					g_bSDKHooksLoaded = false;
+				}
+				return 0;
+			}
+
+public OnPluginEnd()
+			{
+				Network_OnPluginEnd();
+				return 0;
+			}
+
+public OnAllPluginsLoaded()
+			{
+				Network_OnAllPluginsLoaded();
+				AddFileToDownloadsTable("sound/buttons/button18.wav");
+				AutoExecConfig(true, "kigenac", "sourcemod");
+				PrintToServer("%s (Build %d | Version %s | Beta) has been loaded successfully.", "Kigen's Anti-Cheat", 1015, "1.2.2.2");
+				return 0;
+			}
+
+public Action:Timer_WelcomeMsg(Handle:timer, any:userid)
+			{
+				new client = GetClientOfUserId(userid);
+				new var1;
+				if (client && IsClientInGame(client))
+				{
+					CPrintToChat(client, "%t {lightgreen}%t %s (Beta | Build: %d).", "KAC_Tag", "KAC_WelcomeMsg", "Kigen's Anti-Cheat", 1015);
+				}
+				return Action:4;
+			}
+
+public WelcomeMsg_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+			{
+				new bool:bNewValueWelcomeMsg = GetConVarBool(convar);
+				new var1;
+				if (bNewValueWelcomeMsg && !g_bWelcomeMsg)
+				{
+					g_bWelcomeMsg = true;
+				}
+				else
+				{
+					new var2;
+					if (!bNewValueWelcomeMsg && g_bWelcomeMsg)
+					{
+						g_bWelcomeMsg = false;
+					}
+				}
+				return 0;
+			}
+
+public BanDuration_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+			{
+				g_iBanDuration = GetConVarInt(convar);
+				return 0;
+			}
+
+public AdminSounds_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+			{
+				new bool:bNewValueAdminSounds = GetConVarBool(convar);
+				new var1;
+				if (bNewValueAdminSounds && !g_bEnabledAdminSounds)
+				{
+					g_bEnabledAdminSounds = true;
+				}
+				else
+				{
+					new var2;
+					if (!bNewValueAdminSounds && g_bEnabledAdminSounds)
+					{
+						g_bEnabledAdminSounds = false;
+					}
+				}
+				return 0;
+			}
+
+public LogVerbose_OnSettingsChanged(Handle:convar, String:oldValue[], String:newValue[])
+			{
+				new bool:bNewValueLogVerbose = GetConVarBool(convar);
+				new var1;
+				if (bNewValueLogVerbose && !g_bCvarLogVerbose)
+				{
+					g_bCvarLogVerbose = true;
+				}
+				else
+				{
+					new var2;
+					if (!bNewValueLogVerbose && g_bCvarLogVerbose)
+					{
+						g_bCvarLogVerbose = false;
+					}
+				}
+				return 0;
+			}
+
+public OnMapStart()
+			{
+				g_bMapStarted = true;
+				Client_OnMapStart();
+				WallHack_OnMapStart();
+				return 0;
+			}
+
+public OnMapEnd()
+			{
+				g_bMapStarted = false;
+				Client_OnMapEnd();
+				AntiReJoin_OnMapEnd();
+				AntiSmoke_OnMapEnd();
+				WallHack_OnMapEnd();
+				return 0;
+			}
+
+public OnClientPutInServer(client)
+			{
+				if (g_bWelcomeMsg)
+				{
+					CreateTimer(10.0, Timer_WelcomeMsg, GetClientUserId(client), 2);
+				}
+				AimBot_OnClientPutInServer(client);
+				Client_OnClientPutInServer(client);
+				WallHack_OnClientPutInServer(client);
+				return 0;
+			}
+
+public OnClientDisconnect(client)
+			{
+				CVars_OnClientDisconnect(client);
+				AntiSmoke_OnClientDisconnect(client);
+				AntiFlash_OnClientDisconnect(client);
+				SpinHack_OnClientDisconnect(client);
+				WallHack_OnClientDisconnect(client);
+				Network_OnClientDisconnect(client);
+				return 0;
+			}
+
+public OnClientDisconnect_Post(client)
+			{
+				Eye_OnClientDisconnect_Post(client);
+				AutoTrigger_OnClientDisconnect_Post(client);
+				SpeedHack_OnClientDisconnect_Post(client);
+				return 0;
+			}
+
+public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
+			{
+				if (IsFakeClient(client))
+				{
+					return Action:0;
+				}
+				Aimbot_OnPlayerRunCmd(client, angles);
+				AutoTrigger_OnPlayerRunCmd(client, buttons);
+				Eye_OnPlayerRunCmd(client, angles);
+				SpinHack_OnPlayerRunCmd(client, buttons, angles);
+				WallHack_OnPlayerRunCmd(client);
+				return SpeedHack_OnPlayerRunCmd(client);
+			}
+
+API_Init()
+			{
+				CreateNative("KAC_GetGameType", Native_GetGameType);
+				CreateNative("KAC_Log", Native_Log);
+				CreateNative("KAC_LogAction", Native_LogAction);
+				CreateNative("KAC_Ban", Native_Ban);
+				CreateNative("KAC_PrintAdminNotice", Native_PrintAdminNotice);
+				CreateNative("KAC_CreateConVar", Native_CreateConVar);
+				CreateNative("KAC_CheatDetected", Native_CheatDetected);
+				g_OnCheatDetected = CreateGlobalForward("KAC_OnCheatDetected", ExecType:2, 2, 7);
+				return 0;
+			}
+
+public Native_GetGameType(Handle:plugin, numParams)
+			{
+				return g_Game;
+			}
+
+public Native_Log(Handle:plugin, numParams)
+			{
+				decl String:sFilename[64];
+				decl String:sBuffer[256];
+				GetPluginBasename(plugin, sFilename, 64);
+				FormatNativeString(0, 1, 2, 256, 0, sBuffer, "");
+				LogToFileEx(g_sLogPath, "[%s] %s", sFilename, sBuffer);
+				return 0;
+			}
+
+public Native_LogAction(Handle:plugin, numParams)
+			{
+				new client = GetNativeCell(1);
+				new var1;
+				if (!1 <= client <= MaxClients || !IsClientConnected(client))
+				{
+					ThrowNativeError(7, "Client index %i is invalid", client);
+				}
+				decl String:sName[32];
+				decl String:sAuthID[32];
+				decl String:sIP[20];
+				if (!GetClientName(client, sName, 32))
+				{
+					strcopy(sName, 32, "Unknown");
+				}
+				if (!GetClientAuthString(client, sAuthID, 32))
+				{
+					strcopy(sAuthID, 32, "Unknown");
+				}
+				if (!GetClientIP(client, sIP, 17, true))
+				{
+					strcopy(sIP, 17, "Unknown");
+				}
+				decl String:sFilename[64];
+				decl String:sBuffer[256];
+				GetPluginBasename(plugin, sFilename, 64);
+				FormatNativeString(0, 2, 3, 256, 0, sBuffer, "");
+				LogToFileEx(g_sLogPath, "[%s] %s (ID: %s | IP: %s) %s", sFilename, sName, sAuthID, sIP, sBuffer);
+				new var2;
+				if (g_bCvarLogVerbose && IsClientInGame(client))
+				{
+					decl String:sMap[32];
+					decl Float:vOrigin[3];
+					decl Float:vAngles[3];
+					decl String:sWeapon[32];
+					decl iTeam;
+					decl iLatency;
+					GetCurrentMap(sMap, 32);
+					GetClientAbsOrigin(client, vOrigin);
+					GetClientAbsAngles(client, vAngles);
+					GetClientWeapon(client, sWeapon, 32);
+					iTeam = GetClientTeam(client);
+					iLatency = RoundToNearest(GetClientAvgLatency(client, NetFlow:0) * 1000.0);
+					LogToFileEx(g_sLogPath, "[%s] - Map: %s | AbsOrigin: %.1f %.1f %.1f | AbsAngles: %.1f %.1f %.1f | Weapon: %s | Team: %i | Latency: %ims", sFilename, sMap, vOrigin, vOrigin[1], vOrigin[2], vAngles, vAngles[1], vAngles[2], sWeapon, iTeam, iLatency);
+				}
+				return 0;
+			}
+
+public Native_Ban(Handle:plugin, numParams)
+			{
+				decl String:sReason[256];
+				new client = GetNativeCell(1);
+				FormatNativeString(0, 2, 3, 256, 0, sReason, "");
+				Format(sReason, 256, "KAC: %s", sReason);
+				if (GetFeatureStatus(FeatureType:0, "SBBanPlayer"))
+				{
+					decl String:sKickMsg[256];
+					Format(sKickMsg, 256, "%T", "KAC_Banned", client);
+					BanClient(client, g_iBanDuration, 1, sReason, sKickMsg, "KAC", any:0);
+				}
+				else
+				{
+					SBBanPlayer(0, client, g_iBanDuration, sReason);
+				}
+				return 0;
+			}
+
+public Native_PrintAdminNotice(Handle:plugin, numParams)
+			{
+				decl String:sBuffer[192];
+				new i = 1;
+				while (i <= MaxClients)
+				{
+					if (CheckCommandAccess(i, "kac_admin_notices", 2, true))
+					{
+						SetGlobalTransTarget(i);
+						FormatNativeString(0, 1, 2, 192, 0, sBuffer, "");
+						CPrintToChat(i, "%t %s", "KAC_Tag", sBuffer);
+						if (g_bEnabledAdminSounds)
+						{
+							EmitSoundToClient(i, "buttons/button18.wav", -2, 0, 75, 0, 0.7, 100, -1, NULL_VECTOR, NULL_VECTOR, true, 0.0);
+						}
+					}
+					i++;
+				}
+				if (!(GetFeatureStatus(FeatureType:0, "IRC_MsgFlaggedChannels")))
+				{
+					SetGlobalTransTarget(0);
+					FormatNativeString(0, 1, 2, 192, 0, sBuffer, "");
+					Format(sBuffer, 192, "%t %s", "KAC_Tag", sBuffer);
+					CRemoveTags(sBuffer, 192);
+					IRC_MsgFlaggedChannels("ticket", sBuffer);
+				}
+				if (!(GetFeatureStatus(FeatureType:0, "IRC_Broadcast")))
+				{
+					SetGlobalTransTarget(0);
+					FormatNativeString(0, 1, 2, 192, 0, sBuffer, "");
+					Format(sBuffer, 192, "%t %s", "KAC_Tag", sBuffer);
+					CRemoveTags(sBuffer, 192);
+					IRC_Broadcast(IrcChannel:2, sBuffer);
+				}
+				return 0;
+			}
+
+public Native_CreateConVar(Handle:plugin, numParams)
+			{
+				decl String:name[64];
+				decl String:defaultValue[16];
+				decl String:description[192];
+				GetNativeString(1, name, 64, 0);
+				GetNativeString(2, defaultValue, 16, 0);
+				GetNativeString(3, description, 192, 0);
+				new flags = GetNativeCell(4);
+				new bool:hasMin = GetNativeCell(5);
+				new Float:min = GetNativeCell(6);
+				new bool:hasMax = GetNativeCell(7);
+				new Float:max = GetNativeCell(8);
+				decl String:sFilename[64];
+				GetPluginBasename(plugin, sFilename, 64);
+				Format(description, 192, "[%s] %s", sFilename, description);
+				return CreateConVar(name, defaultValue, description, flags, hasMin, min, hasMax, max);
+			}
+
+public Native_CheatDetected(Handle:plugin, numParams)
+			{
+				new client = GetNativeCell(1);
+				new var1;
+				if (!1 <= client <= MaxClients || !IsClientConnected(client))
+				{
+					ThrowNativeError(7, "Client index %i is invalid", client);
+				}
+				decl String:sFilename[64];
+				GetPluginBasename(plugin, sFilename, 64);
+				new Action:result;
+				Call_StartForward(g_OnCheatDetected);
+				Call_PushCell(client);
+				Call_PushString(sFilename);
+				Call_Finish(result);
+				return result;
+			}
 

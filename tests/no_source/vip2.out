@@ -1,3 +1,6 @@
+
+/* ERROR PREPROCESSING! null */
+ function "ParsFile" (number 93)
 public PlVers:__version =
 {
 	version = 5,
@@ -3057,91 +3060,9 @@ public MenuHandler_SpawnCashSettings(Handle:menu, MenuAction:action, client, par
 	return 0;
 }
 
-ParsFile(String:file[], Handle:Trie, option)
-{
-	new String:sLine[256];
-	new String:sBuffer[256];
-	new Handle:hFile = OpenFile(file, "r");
-	if (hFile)
-	{
-		while (!IsEndOfFile(hFile))
-		{
-			if (ReadFileLine(hFile, sLine, 256))
-			{
-				new iPos = StrContains(sLine, "//", true);
-				if (iPos != -1)
-				{
-					sLine[iPos] = MissingTAG:0;
-				}
-				iPos = StrContains(sLine, "#", true);
-				if (iPos != -1)
-				{
-					sLine[iPos] = MissingTAG:0;
-				}
-				iPos = StrContains(sLine, ";", true);
-				if (iPos != -1)
-				{
-					sLine[iPos] = MissingTAG:0;
-				}
-				TrimString(sLine);
-				if (sLine[0])
-				{
-					if (option == 1)
-					{
-						SetTrieValue(Trie, sLine, any:1, true);
-					}
-					else
-					{
-						if (option == 2)
-						{
-							if (FileExists(sLine, false))
-							{
-								AddFileToDownloadsTable(sLine);
-							}
-							else
-							{
-								if (DirExists(sLine))
-								{
-									new Handle:hDir = OpenDirectory(sLine);
-									while (ReadDirEntry(hDir, sBuffer, 256, 0))
-									{
-										new var1;
-										if (!(StrEqual(sBuffer, ".", false) || StrEqual(sBuffer, "..", false) || StrContains(sLine, ".ztmp", true) == -1))
-										{
-											Format(sBuffer, 256, "%s/%s", sLine, sBuffer);
-											if (FileExists(sBuffer, false))
-											{
-												AddFileToDownloadsTable(sBuffer);
-											}
-											else
-											{
-												Vip_Log("File '%s' not found!", sBuffer);
-											}
-										}
-									}
-									CloseHandle(hDir);
-								}
-							}
-						}
-						new var2;
-						if (option == 3 && StrEqual(g_sMap, sLine, false))
-						{
-							g_bMapsNoGiveWeapons = true;
-							CloseHandle(hFile);
-						}
-					}
-				}
-			}
-		}
-		CloseHandle(hFile);
-	}
-	else
-	{
-		g_bBetaTest = false;
-		Vip_Log("%s not parsed... file doesn't exist!", file);
-	}
-	return 0;
-}
+
+/* ERROR! null */
+ function "ParsFile" (number 93)
 
 public Action:Timer_TeamKill(Handle:timer, any:client)
 {
