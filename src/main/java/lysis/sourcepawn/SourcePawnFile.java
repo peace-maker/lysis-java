@@ -30,7 +30,6 @@ import lysis.lstructure.Variable;
 import lysis.lstructure.VariableType;
 import lysis.types.rtti.RttiType;
 import lysis.types.rtti.TypeBuilder;
-import lysis.types.rtti.TypeFlag;
 
 public class SourcePawnFile extends PawnFile {
 
@@ -142,9 +141,8 @@ public class SourcePawnFile extends PawnFile {
 	private HashMap<String, Section> sections_;
 	private HashSet<AddressRange> stringRanges_ = new HashSet<>();
 	private byte[] binary_ = null;
-	
+
 	// RTTI data
-	private ByteArrayInputStream rttiData_ = null;
 	private String[] enums_ = null;
 
 	// Detect and match (Float) operators in the .publics and .dbg.symbols tables.
@@ -152,8 +150,13 @@ public class SourcePawnFile extends PawnFile {
 	private Pattern symbolsOperator = Pattern.compile("^operator(.)\\(([^:]+):,([^:]+):\\)$");
 
 	private static final String[] KNOWN_SECTIONS = new String[] { ".code", ".data", ".publics", ".pubvars", ".natives",
-			".tags", ".names", ".dbg.natives", ".dbg.files", ".dbg.lines", ".dbg.symbols", ".dbg.info", ".dbg.strings",
-			"rtti.data", "rtti.enums", "rtti.methods", "rtti.natives" };
+			".names", ".dbg.files", ".dbg.lines", ".dbg.info" };
+
+	private static final String[] KNOWN_SECTIONS_LEGACY = new String[] { ".tags", ".dbg.natives", ".dbg.strings",
+			".dbg.symbols" };
+	private static final String[] KNOWN_SECTIONS_RTTI = new String[] { "rtti.data", "rtti.classdefs", "rtti.enums",
+			"rtti.enumstructs", "rtti.enumstruct_fields", "rtti.fields", "rtti.methods", "rtti.natives",
+			"rtti.typedefs", "rtti.typesets", ".dbg.locals", ".dbg.methods", ".dbg.globals" };
 
 	public SourcePawnFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
@@ -173,6 +176,8 @@ public class SourcePawnFile extends PawnFile {
 		sections_ = new HashMap<String, Section>();
 
 		Set<String> knownSections = new HashSet<String>(Arrays.asList(KNOWN_SECTIONS));
+		knownSections.addAll(Arrays.asList(KNOWN_SECTIONS_LEGACY));
+		knownSections.addAll(Arrays.asList(KNOWN_SECTIONS_RTTI));
 
 		int firstData = 0;
 		Section previousSection = null;
@@ -254,9 +259,16 @@ public class SourcePawnFile extends PawnFile {
 		}
 		reader.close();
 
+		// Is this a legacy or rtti file?
+		if (sections_.containsKey("rtti.data"))
+			knownSections.removeAll(Arrays.asList(KNOWN_SECTIONS_LEGACY));
+		else
+			knownSections.removeAll(Arrays.asList(KNOWN_SECTIONS_RTTI));
+
 		for (String sectionName : knownSections) {
 			// There was no dbg.natives section in SM 1.0. Don't require it.
-			if (header_.version != 0x0101 || !sectionName.equals(".dbg.natives"))
+			// rtti.* sections are only included if they aren't empty.
+			if ((header_.version != 0x0101 || !sectionName.equals(".dbg.natives")) && !sectionName.startsWith("rtti."))
 				System.err.printf("// Missing section \"%s\".%n", sectionName);
 		}
 
@@ -714,7 +726,7 @@ public class SourcePawnFile extends PawnFile {
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
 			RttiListTable rt = new RttiListTable(br);
-			
+
 			enums_ = new String[(int) rt.rowcount];
 			for (int i = 0; i < rt.rowcount; i++) {
 				long nameoffs = br.ReadUInt32();
@@ -722,7 +734,7 @@ public class SourcePawnFile extends PawnFile {
 				enums_[i] = ReadString(binary, namesOffset + nameoffs);
 			}
 		}
-		
+
 		if (sections_.containsKey("rtti.methods")) {
 			Section sc = sections_.get("rtti.methods");
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
@@ -740,7 +752,7 @@ public class SourcePawnFile extends PawnFile {
 				String name = ReadString(binary, namesOffset + nameoffs);
 				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
 				RttiType type = tb.decodeFunction();
-				
+
 				// Been in .publics as well?
 				Function func = new Function(pcodeStart, pcodeStart, pcodeEnd, name, type);
 				try {
@@ -749,7 +761,7 @@ public class SourcePawnFile extends PawnFile {
 					System.err.println(e.getMessage());
 					continue;
 				}
-				
+
 				// Build argument type list right away.
 				LinkedList<Argument> args = new LinkedList<>();
 				for (int j = 0; j < type.getArguments().size(); j++) {
@@ -762,8 +774,7 @@ public class SourcePawnFile extends PawnFile {
 						arrayType = arrayType.getInnerType();
 					}
 					Variable var = insertArgumentVar(func, j, arg, dims);
-					args.add(new Argument(var.type(), var.name(), arg,
-							var.dims()));
+					args.add(new Argument(var.type(), var.name(), arg, var.dims()));
 				}
 
 				func.setArguments(args);
@@ -774,7 +785,7 @@ public class SourcePawnFile extends PawnFile {
 
 			br.close();
 		}
-		
+
 		if (sections_.containsKey("rtti.natives")) {
 			Section sc = sections_.get("rtti.natives");
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
@@ -787,7 +798,7 @@ public class SourcePawnFile extends PawnFile {
 				String name = ReadString(binary, namesOffset + nameoffs);
 				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
 				RttiType type = tb.decodeFunction();
-				
+
 				// Build argument type list right away.
 				Argument[] args = new Argument[type.getArguments().size()];
 				for (int j = 0; j < type.getArguments().size(); j++) {
@@ -799,23 +810,23 @@ public class SourcePawnFile extends PawnFile {
 						dims.add(0, new Dimension((int) arrayType.getData()));
 						arrayType = arrayType.getInnerType();
 					}
-					args[j] = new Argument(arg.toVariableType(), "_arg" + j, arg,
-							dims.toArray(new Dimension[0]));
+					args[j] = new Argument(arg.toVariableType(), "_arg" + j, arg, dims.toArray(new Dimension[0]));
 				}
 
 				if (name != null && !name.equals(natives_[i].name()))
 					System.err.printf(
 							"// Error reading rtti.natives section. Native %d has different names. (\"%s\" != \"%s\")\n",
 							i, natives_[i].name(), name);
-				
+
 				natives_[i].setDebugInfo(type, args);
 			}
 
 			br.close();
 		}
 	}
-	
-	private void findDuplicateFunction(String name, Function newFunction, LinkedList<Function> functions) throws Exception {
+
+	private void findDuplicateFunction(String name, Function newFunction, LinkedList<Function> functions)
+			throws Exception {
 		// Been in .publics as well?
 		Function existingFunction = null;
 		for (Function func : functions) {
@@ -852,8 +863,10 @@ public class SourcePawnFile extends PawnFile {
 
 		// This function came up already.
 		if (existingFunction != null) {
-			if (existingFunction.address() != newFunction.address() || existingFunction.codeStart() != newFunction.codeStart()) {
-				throw new Exception(String.format("// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
+			if (existingFunction.address() != newFunction.address()
+					|| existingFunction.codeStart() != newFunction.codeStart()) {
+				throw new Exception(String.format(
+						"// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
 						name, newFunction.address(), existingFunction.address()));
 			}
 			// Remove the old one from the list as this might have more info.
@@ -865,7 +878,7 @@ public class SourcePawnFile extends PawnFile {
 		Section sc = sections_.get("rtti.data");
 		return new ByteArrayInputStream(binary_, sc.dataoffs, sc.size);
 	}
-	
+
 	public String getEnumName(int index) {
 		return enums_[index];
 	}
