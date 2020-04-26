@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:20"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_topmenus =
 {
 	name = "TopMenus",
@@ -21,13 +28,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:20"
-};
 public Plugin:myinfo =
 {
 	name = "Basic Ban Commands",
@@ -36,24 +36,29 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var119c;
-new g_varc70;
+new TopMenu:hTopMenu;
+new <enumstruct0>:playerinfo[66] =
+{
+	264, 276, 288, 300, 312, 324, 336, 348, 360, 372, 384, 396, 408, 420, 432, 444, 456, 468, 480, 492, 504, 516, 528, 540, 552, 564, 576, 588, 600, 612, 624, 636, 648, 660, 672, 684, 696, 708, 720, 732, 744, 756, 768, 780, 792, 804, 816, 828, 840, 852, 864, 876, 888, 900, 912, 924, 936, 948, 960, 972, 984, 996, 1008, 1020, 1032, 1044
+};
+new KeyValues:g_hKvBanReasons;
+new String:g_BanReasonsPath[1024];
 void:LoadBanReasons()
 {
-	CloseHandle(g_var119c);
-	g_var119c = 0;
-	g_var119c = KeyValues.KeyValues("banreasons", "", "");
-	if (KeyValues.ImportFromFile(g_var119c, ""))
+	CloseHandle(g_hKvBanReasons);
+	g_hKvBanReasons = 0;
+	g_hKvBanReasons = KeyValues.KeyValues("banreasons", "", "");
+	if (KeyValues.ImportFromFile(g_hKvBanReasons, g_BanReasonsPath))
 	{
 		new var1 = 0;
-		if (KeyValues.GetSectionName(g_var119c, var1, 255))
+		if (KeyValues.GetSectionName(g_hKvBanReasons, var1, 255))
 		{
 			if (strcmp(var1, "banreasons", true))
 			{
 				SetFailState("Error in %s: Couldn't find 'banreasons'", 4512);
 				return 0;
 			}
-			KeyValues.Rewind(g_var119c);
+			KeyValues.Rewind(g_hKvBanReasons);
 			return 0;
 		}
 		SetFailState("Error in %s: File corrupt or in the wrong format", 4512);
@@ -131,7 +136,7 @@ FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
 void:PrepareBan(_arg0, _arg1, _arg2, String:_arg3[])
 {
 	new var1;
-	var1 = GetClientOfUserId(3188[_arg0][1]);
+	var1 = GetClientOfUserId(playerinfo[_arg0][1]);
 	if (_arg1 != var1)
 	{
 		if (_arg0)
@@ -195,7 +200,7 @@ void:DisplayBanTimeMenu(_arg0)
 	new var1;
 	var1 = Menu.Menu(33, 28);
 	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Ban player", _arg0, 3188[_arg0]);
+	Format(var2, 100, "%T: %N", "Ban player", _arg0, playerinfo[_arg0]);
 	Menu.SetTitle(var1, var2);
 	Menu.ExitBackButton.set(var1, true);
 	Menu.AddItem(var1, "0", "Permanent", 0);
@@ -214,26 +219,26 @@ void:DisplayBanReasonMenu(_arg0)
 	new var1;
 	var1 = Menu.Menu(31, 28);
 	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Ban reason", _arg0, 3188[_arg0]);
+	Format(var2, 100, "%T: %N", "Ban reason", _arg0, playerinfo[_arg0]);
 	Menu.SetTitle(var1, var2);
 	Menu.ExitBackButton.set(var1, true);
 	Menu.AddItem(var1, "", "Custom reason (type in chat)", 0);
 	new var3 = 0;
 	new var4 = 0;
-	KeyValues.GotoFirstSubKey(g_var119c, false);
+	KeyValues.GotoFirstSubKey(g_hKvBanReasons, false);
 	do {
-		KeyValues.GetSectionName(g_var119c, var3, 100);
-		KeyValues.GetString(g_var119c, NULL_STRING, var4, 255, "");
+		KeyValues.GetSectionName(g_hKvBanReasons, var3, 100);
+		KeyValues.GetString(g_hKvBanReasons, NULL_STRING, var4, 255, "");
 		Menu.AddItem(var1, var4, var3, 0);
-	} while (KeyValues.GotoNextKey(g_var119c, false));
-	KeyValues.Rewind(g_var119c);
+	} while (KeyValues.GotoNextKey(g_hKvBanReasons, false));
+	KeyValues.Rewind(g_hKvBanReasons);
 	Menu.Display(var1, _arg0, 0);
 	return 0;
 }
 
 public void:AdminMenu_Ban(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
 {
-	3188[_arg3][3] = 0;
+	playerinfo[_arg3][3] = 0;
 	if (_arg1)
 	{
 		if (_arg1 == 2)
@@ -252,9 +257,9 @@ public Action:Command_AbortBan(_arg0, _arg1)
 {
 	if (CheckCommandAccess(_arg0, "sm_ban", 8, false))
 	{
-		if (3188[_arg0][3])
+		if (playerinfo[_arg0][3])
 		{
-			3188[_arg0][3] = 0;
+			playerinfo[_arg0][3] = 0;
 			ReplyToCommand(_arg0, "[SM] %t", 6568);
 		}
 		else
@@ -366,7 +371,7 @@ public Action:Command_Ban(_arg0, _arg1)
 		var2 = 0;
 		var4 = 0;
 	}
-	3188[_arg0][1] = GetClientUserId(var6);
+	playerinfo[_arg0][1] = GetClientUserId(var6);
 	new var8;
 	var8 = StringToInt(var7, 10);
 	PrepareBan(_arg0, var6, var8, var2 + var4);
@@ -444,9 +449,9 @@ public MenuHandler_BanPlayerList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc70)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc70, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -470,9 +475,9 @@ public MenuHandler_BanReasonList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc70)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc70, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -481,9 +486,9 @@ public MenuHandler_BanReasonList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			{
 				new var2 = 0;
 				Menu.GetItem(_arg0, _arg3, var2, 64, 0, "", 0);
-				PrepareBan(_arg2, 3188[_arg2], 3188[_arg2][2], var2);
+				PrepareBan(_arg2, playerinfo[_arg2], playerinfo[_arg2][2], var2);
 			}
-			3188[_arg2][3] = 1;
+			playerinfo[_arg2][3] = 1;
 			PrintToChat(_arg2, "[SM] %t", "Custom ban reason explanation", "sm_abortban");
 		}
 	}
@@ -502,16 +507,16 @@ public MenuHandler_BanTimeList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc70)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc70, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
 		{
 			new var2 = 0;
 			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			3188[_arg2][2] = StringToInt(var2, 10);
+			playerinfo[_arg2][2] = StringToInt(var2, 10);
 			DisplayBanReasonMenu(_arg2);
 		}
 	}
@@ -522,32 +527,32 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_varc70 == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_varc70 = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_varc70, "PlayerCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_varc70, "sm_ban", 17, var2, "sm_ban", 8, "");
+		TopMenu.AddItem(hTopMenu, "sm_ban", 17, var2, "sm_ban", 8, "");
 	}
 	return 0;
 }
 
 public void:OnClientDisconnect(_arg0)
 {
-	3188[_arg0][3] = 0;
+	playerinfo[_arg0][3] = 0;
 	return 0;
 }
 
 public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
 {
-	if (3188[_arg0][3])
+	if (playerinfo[_arg0][3])
 	{
-		3188[_arg0][3] = 0;
-		PrepareBan(_arg0, 3188[_arg0], 3188[_arg0][2], _arg2[0]);
+		playerinfo[_arg0][3] = 0;
+		PrepareBan(_arg0, playerinfo[_arg0], playerinfo[_arg0][2], _arg2[0]);
 		return 4;
 	}
 	return 0;
@@ -561,7 +566,7 @@ public void:OnConfigsExecuted()
 
 public void:OnPluginStart()
 {
-	BuildPath(0, "", 256, "configs/banreasons.txt");
+	BuildPath(0, g_BanReasonsPath, 256, "configs/banreasons.txt");
 	LoadBanReasons();
 	LoadTranslations("common.phrases");
 	LoadTranslations("basebans.phrases");

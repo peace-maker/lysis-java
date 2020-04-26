@@ -1,7 +1,9 @@
 package lysis.types.rtti;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import lysis.ExtendedDataInputStream;
 import lysis.sourcepawn.SourcePawnFile;
@@ -11,12 +13,43 @@ public class TypeBuilder {
 	private ExtendedDataInputStream dataInput;
 	private boolean isConst;
 	
-	public TypeBuilder(SourcePawnFile file, int offset) throws IOException {
-		this.bufferedInput = new BufferedInputStream(file.getRTTIDataBytes());
+	private final static int TYPEID_INLINE = 0;
+	private final static int TYPEID_COMPLEX = 1;
+	
+	public static RttiType TypeFromTypeId(SourcePawnFile file, int typeid) throws IOException {
+		int kind = typeid & 0xf;
+		int payload = (typeid >> 4) & 0xfffffff;
+		if (kind == TYPEID_INLINE) {
+			byte[] array = new byte[4];
+			array[0] = (byte) (payload & 0xff);
+			array[1] = (byte) ((payload >> 8) & 0xff);
+			array[2] = (byte) ((payload >> 16) & 0xff);
+			array[3] = (byte) ((payload >> 24) & 0xff);
+			ByteArrayInputStream bIn = new ByteArrayInputStream(array);
+			return new TypeBuilder(file, bIn, 0).decodeNew();
+		}
+		else if (kind == TYPEID_COMPLEX) {
+			return new TypeBuilder(file, file.getRTTIDataBytes(), payload).decodeNew();
+		}
+		else {
+			throw new IOException("Unknown type id kind: " + kind);
+		}
+	}
+	
+	public static RttiType FunctionFromOffset(SourcePawnFile file, int offset) throws IOException {
+		return new TypeBuilder(file, file.getRTTIDataBytes(), offset).decodeFunction();
+	}
+	
+	public static RttiType TypesetFromOffset(SourcePawnFile file, int offset) throws IOException {
+		return new TypeBuilder(file, file.getRTTIDataBytes(), offset).decodeTypeset();
+	}
+	
+	public TypeBuilder(SourcePawnFile file, InputStream input, int offset) throws IOException {
+		this.bufferedInput = new BufferedInputStream(input);
 		this.dataInput = new ExtendedDataInputStream(this.bufferedInput);
 		this.dataInput.skipBytes(offset);
 	}
-
+	
 	// Decode a type, but reset the |is_const| indicator for non-
 	// dependent type.
 	public RttiType decodeNew() throws IOException {

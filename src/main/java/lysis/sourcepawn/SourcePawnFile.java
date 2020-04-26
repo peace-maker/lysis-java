@@ -750,8 +750,7 @@ public class SourcePawnFile extends PawnFile {
 				long pcodeEnd = br.ReadUInt32();
 				long signatureOffs = br.ReadUInt32();
 				String name = ReadString(binary, namesOffset + nameoffs);
-				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
-				RttiType type = tb.decodeFunction();
+				RttiType type = TypeBuilder.FunctionFromOffset(this, (int) signatureOffs);
 
 				// Been in .publics as well?
 				Function func = new Function(pcodeStart, pcodeStart, pcodeEnd, name, type);
@@ -796,8 +795,7 @@ public class SourcePawnFile extends PawnFile {
 				long nameoffs = br.ReadUInt32();
 				long signatureOffs = br.ReadUInt32();
 				String name = ReadString(binary, namesOffset + nameoffs);
-				TypeBuilder tb = new TypeBuilder(this, (int) signatureOffs);
-				RttiType type = tb.decodeFunction();
+				RttiType type = TypeBuilder.FunctionFromOffset(this, (int) signatureOffs);
 
 				// Build argument type list right away.
 				Argument[] args = new Argument[type.getArguments().size()];
@@ -822,6 +820,75 @@ public class SourcePawnFile extends PawnFile {
 			}
 
 			br.close();
+		}
+		
+		if (sections_.containsKey(".dbg.globals")) {
+			Section sc = sections_.get(".dbg.globals");
+			ExtendedDataInputStream br = new ExtendedDataInputStream(
+					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+			RttiListTable rt = new RttiListTable(br);
+			
+			// Merge the list with the .pubvars one
+			LinkedList<Variable> globals = new LinkedList<Variable>();
+			if (globals_ != null)
+				globals.addAll(Arrays.asList(globals_));
+
+			for (int i = 0; i < rt.rowcount; i++) {
+				int address = br.ReadInt32();
+				byte scope = br.readByte();
+				long nameoffs = br.ReadUInt32();
+				long codestart = br.ReadUInt32();
+				long codeend = br.ReadUInt32();
+				long typeid = br.ReadUInt32();
+				String name = ReadString(binary, namesOffset + nameoffs);
+				
+				// Scope of variables in the .dbg.globals list has to .. Global.
+				assert(scope == 0);
+				
+				RttiType type = TypeBuilder.TypeFromTypeId(this, (int) typeid);
+				LinkedList<Dimension> dims = new LinkedList<>();
+				RttiType arrayType = type;
+				while (arrayType.isArrayType()) {
+					// non FixedArrays have a size of 0.
+					dims.add(0, new Dimension((int) arrayType.getData()));
+					arrayType = arrayType.getInnerType();
+				}
+				
+				Variable var = new Variable(address, codestart, codeend, type.toVariableType(), Scope.Global, name, dims.toArray(new Dimension[0]), type);
+				// Been in .publics as well?
+				Variable existingGlobal = null;
+				for (Variable glob : globals) {
+					if (name.equals(glob.name())) {
+						existingGlobal = glob;
+						break;
+					}
+				}
+
+				// This function came up already.
+				if (existingGlobal != null) {
+					if (existingGlobal.address() != address) {
+						System.err.printf(
+								"// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n",
+								name, existingGlobal.address());
+						continue;
+					}
+					// Remove the old one from the list as this might have more info.
+					globals.remove(existingGlobal);
+				}
+				globals.add(var);
+			}
+			
+			br.close();
+			
+			Collections.sort(globals, new Comparator<Variable>() {
+
+				@Override
+				public int compare(Variable var1, Variable var2) {
+					return (int) (var1.address() - var2.address());
+				}
+
+			});
+			globals_ = globals.toArray(new Variable[0]);
 		}
 	}
 

@@ -1,9 +1,15 @@
 
 /* ERROR PREPROCESSING! null */
  function "BuildDynamicMenu" (number 6)
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:20"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -11,19 +17,13 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_topmenus =
 {
 	name = "TopMenus",
 	file = "topmenus.ext",
 	autoload = 1,
 	required = 1,
-};
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:20"
 };
 public Plugin:myinfo =
 {
@@ -33,15 +33,21 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var50d4;
-new g_var98c;
-new g_var9a8;
-new g_var990;
-new g_var994;
-new g_var998;
-new g_var9a4;
-new g_var988;
-new g_var984;
+new GlobalForward:hOnAdminMenuReady;
+new GlobalForward:hOnAdminMenuCreated;
+new TopMenu:hAdminMenu;
+new TopMenuObject:obj_playercmds;
+new TopMenuObject:obj_servercmds;
+new TopMenuObject:obj_votingcmds;
+new <enumstruct3>:g_groupList;
+new g_groupCount;
+new SMCParser:g_configParser;
+new String:g_command[256][264];
+new <enumstruct2>:g_currentPlace[66] =
+{
+	264, 272, 280, 288, 296, 304, 312, 320, 328, 336, 344, 352, 360, 368, 376, 384, 392, 400, 408, 416, 424, 432, 440, 448, 456, 464, 472, 480, 488, 496, 504, 512, 520, 528, 536, 544, 552, 560, 568, 576, 584, 592, 600, 608, 616, 624, 632, 640, 648, 656, 664, 672, 680, 688, 696, 704, 712, 720, 728, 736, 744, 752, 760, 768, 776, 784
+};
+new ArrayList:g_DataArray;
 bool:QuoteString(String:_arg0[], String:_arg1[], _arg2, String:_arg3[])
 {
 	new var2 = 0;
@@ -204,46 +210,47 @@ FindCharInString(String:_arg0[], String:_arg1, bool:_arg2)
 
 void:ParseConfigs()
 {
-	if (!g_var9a8)
+	if (!g_configParser)
 	{
-		g_var9a8 = SMCParser.SMCParser();
+		g_configParser = SMCParser.SMCParser();
 	}
-	SMCParser.OnEnterSection.set(g_var9a8, 33);
-	SMCParser.OnKeyValue.set(g_var9a8, 29);
-	SMCParser.OnLeaveSection.set(g_var9a8, 27);
-	CloseHandle(2460/* ERROR unknown load Constant */);
-	2460/* ERROR unknown load Constant */ = 0;
-	new var1 = 2460 + 4;
+	SMCParser.OnEnterSection.set(g_configParser, 33);
+	SMCParser.OnKeyValue.set(g_configParser, 29);
+	SMCParser.OnLeaveSection.set(g_configParser, 27);
+	new var1 = g_groupList;
 	CloseHandle(var1);
 	var1 = 0;
-	2460/* ERROR unknown load Constant */ = ArrayList.ArrayList(32, 0);
-	2460 + 4/* ERROR unknown load Binary */ = ArrayList.ArrayList(32, 0);
-	new var2 = 0;
-	BuildPath(0, var2, 256, "configs/dynamicmenu/adminmenu_grouping.txt");
-	if (FileExists(var2, false, "GAME"))
+	new var2 = g_groupList + 4;
+	CloseHandle(var2);
+	var2 = 0;
+	g_groupList = ArrayList.ArrayList(32, 0);
+	g_groupList + 4/* ERROR unknown load Binary */ = ArrayList.ArrayList(32, 0);
+	new var3 = 0;
+	BuildPath(0, var3, 256, "configs/dynamicmenu/adminmenu_grouping.txt");
+	if (FileExists(var3, false, "GAME"))
 	{
 		LogError("Warning! configs/dynamicmenu/adminmenu_grouping.txt is now configs/adminmenu_grouping.txt.");
 		LogError("Read the 1.0.2 release notes, as the dynamicmenu folder has been removed.");
 	}
 	else
 	{
-		BuildPath(0, var2, 256, "configs/adminmenu_grouping.txt");
+		BuildPath(0, var3, 256, "configs/adminmenu_grouping.txt");
 	}
-	if (FileExists(var2, false, "GAME"))
+	if (FileExists(var3, false, "GAME"))
 	{
-		new var3 = 0;
-		new var4;
-		var4 = SMCParser.ParseFile(g_var9a8, var2, var3, 0);
-		if (var4)
+		new var4 = 0;
+		new var5;
+		var5 = SMCParser.ParseFile(g_configParser, var3, var4, 0);
+		if (var5)
 		{
-			new var5 = 0;
-			SMC_GetErrorString(var4, var5, 256);
-			LogError("Could not parse file (line %d, file \"%s\"):", var3, var2);
-			LogError("Parser encountered error: %s", var5);
+			new var6 = 0;
+			SMC_GetErrorString(var5, var6, 256);
+			LogError("Could not parse file (line %d, file \"%s\"):", var4, var3);
+			LogError("Parser encountered error: %s", var6);
 		}
 		return 0;
 	}
-	LogError("Unable to locate admin menu groups file: %s", var2);
+	LogError("Unable to locate admin menu groups file: %s", var3);
 	return 0;
 }
 
@@ -260,7 +267,7 @@ public Action:Command_DisplayMenu(_arg0, _arg1)
 {
 	if (_arg0)
 	{
-		TopMenu.Display(g_var98c, _arg0, 0);
+		TopMenu.Display(hAdminMenu, _arg0, 0);
 		return 3;
 	}
 	ReplyToCommand(_arg0, "[SM] %t", 22136);
@@ -273,15 +280,15 @@ public void:DefaultCategoryHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuOb
 	{
 		if (_arg2)
 		{
-			if (g_var990 == _arg2)
+			if (obj_playercmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T:", "Player Commands", _arg3);
 			}
-			if (g_var994 == _arg2)
+			if (obj_servercmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T:", "Server Commands", _arg3);
 			}
-			if (g_var998 == _arg2)
+			if (obj_votingcmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T:", "Voting Commands", _arg3);
 			}
@@ -295,15 +302,15 @@ public void:DefaultCategoryHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuOb
 	{
 		if (!_arg1)
 		{
-			if (g_var990 == _arg2)
+			if (obj_playercmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T", "Player Commands", _arg3);
 			}
-			if (g_var994 == _arg2)
+			if (obj_servercmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T", "Server Commands", _arg3);
 			}
-			if (g_var998 == _arg2)
+			if (obj_votingcmds == _arg2)
 			{
 				Format(_arg4[0], _arg5, "%T", "Voting Commands", _arg3);
 			}
@@ -333,10 +340,10 @@ public void:DynamicMenuItemHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuOb
 			new var2;
 			var2 = StringToInt(var1, 10);
 			new var3 = 0;
-			ArrayList.GetArray(g_var50d4, var2, var3, -1);
-			strcopy(2476[_arg3], 255, var3);
-			19636[_arg3][1] = var2;
-			19636[_arg3][2] = 1;
+			ArrayList.GetArray(g_DataArray, var2, var3, -1);
+			strcopy(g_command[_arg3], 255, var3);
+			g_currentPlace[_arg3][1] = var2;
+			g_currentPlace[_arg3][2] = 1;
 			ParamCheck(_arg3);
 		}
 	}
@@ -349,14 +356,14 @@ public void:DynamicMenuItemHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuOb
 
 public SMCResult:EndSection(SMCParser:_arg0)
 {
-	g_var9a4 = ArrayList.Length.get(2460/* ERROR unknown load Constant */);
+	g_groupCount = ArrayList.Length.get(g_groupList);
 	return 0;
 }
 
 public SMCResult:KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
 {
-	ArrayList.PushString(2460/* ERROR unknown load Constant */, _arg1[0]);
-	ArrayList.PushString(2460 + 4/* ERROR unknown load Binary */, _arg2[0]);
+	ArrayList.PushString(g_groupList, _arg1[0]);
+	ArrayList.PushString(g_groupList + 4/* ERROR unknown load Binary */, _arg2[0]);
 	return 0;
 }
 
@@ -379,11 +386,11 @@ public Menu_Selection(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var5 = 0;
 			new var6 = 0;
 			Format(var6, 66, "\"%s\"", var4);
-			Format(var5, 5, "#%i", 19636[_arg2][2]);
-			ReplaceString(2476[_arg2], 255, var5, var6, true);
-			Format(var5, 5, "@%i", 19636[_arg2][2]);
-			ReplaceString(2476[_arg2], 255, var5, var4, true);
-			19636[_arg2][2]++;
+			Format(var5, 5, "#%i", g_currentPlace[_arg2][2]);
+			ReplaceString(g_command[_arg2], 255, var5, var6, true);
+			Format(var5, 5, "@%i", g_currentPlace[_arg2][2]);
+			ReplaceString(g_command[_arg2], 255, var5, var4, true);
+			g_currentPlace[_arg2][2]++;
 			ParamCheck(_arg2);
 		}
 		return 0;
@@ -391,7 +398,7 @@ public Menu_Selection(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	new var1;
 	if (_arg1 == 8 && _arg3 == -6)
 	{
-		TopMenu.Display(g_var98c, _arg2, 3);
+		TopMenu.Display(hAdminMenu, _arg2, 3);
 	}
 	return 0;
 }
@@ -403,16 +410,16 @@ public SMCResult:NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
 
 public void:OnAllPluginsLoaded()
 {
-	g_var98c = TopMenu.TopMenu(21);
-	g_var990 = TopMenu.AddCategory(g_var98c, "PlayerCommands", 21, "", 0, "");
-	g_var994 = TopMenu.AddCategory(g_var98c, "ServerCommands", 21, "", 0, "");
-	g_var998 = TopMenu.AddCategory(g_var98c, "VotingCommands", 21, "", 0, "");
+	hAdminMenu = TopMenu.TopMenu(21);
+	obj_playercmds = TopMenu.AddCategory(hAdminMenu, "PlayerCommands", 21, "", 0, "");
+	obj_servercmds = TopMenu.AddCategory(hAdminMenu, "ServerCommands", 21, "", 0, "");
+	obj_votingcmds = TopMenu.AddCategory(hAdminMenu, "VotingCommands", 21, "", 0, "");
 	BuildDynamicMenu();
-	Call_StartForward(g_var988);
-	Call_PushCell(g_var98c);
+	Call_StartForward(hOnAdminMenuCreated);
+	Call_PushCell(hAdminMenu);
 	Call_Finish(0);
-	Call_StartForward(g_var984);
-	Call_PushCell(g_var98c);
+	Call_StartForward(hOnAdminMenuReady);
+	Call_PushCell(hAdminMenu);
 	Call_Finish(0);
 	return 0;
 }
@@ -422,7 +429,7 @@ public void:OnConfigsExecuted()
 	new var1 = 0;
 	new var2 = 0;
 	BuildPath(0, var1, 256, "configs/adminmenu_sorting.txt");
-	if (TopMenu.LoadConfig(g_var98c, var1, var2, 256))
+	if (TopMenu.LoadConfig(hAdminMenu, var1, var2, 256))
 	{
 		return 0;
 	}
@@ -440,8 +447,8 @@ public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("adminmenu.phrases");
-	g_var988 = GlobalForward.GlobalForward("OnAdminMenuCreated", 0, 2);
-	g_var984 = GlobalForward.GlobalForward("OnAdminMenuReady", 0, 2);
+	hOnAdminMenuCreated = GlobalForward.GlobalForward("OnAdminMenuCreated", 0, 2);
+	hOnAdminMenuReady = GlobalForward.GlobalForward("OnAdminMenuReady", 0, 2);
 	RegAdminCmd("sm_admin", 19, 2, "Displays the admin menu", "", 0);
 	return 0;
 }
@@ -452,17 +459,17 @@ public void:ParamCheck(_arg0)
 	new var6 = 0;
 	new var7 = 0;
 	new var8 = 0;
-	ArrayList.GetArray(g_var50d4, 19636[_arg0][1], var7, -1);
-	if (19636[_arg0][2] < 1)
+	ArrayList.GetArray(g_DataArray, g_currentPlace[_arg0][1], var7, -1);
+	if (g_currentPlace[_arg0][2] < 1)
 	{
-		19636[_arg0][2] = 1;
+		g_currentPlace[_arg0][2] = 1;
 	}
-	Format(var5, 5, "#%i", 19636[_arg0][2]);
-	Format(var6, 5, "@%i", 19636[_arg0][2]);
+	Format(var5, 5, "#%i", g_currentPlace[_arg0][2]);
+	Format(var6, 5, "@%i", g_currentPlace[_arg0][2]);
 	new var1;
-	if (StrContains(2476[_arg0], var5, true) == -1 && StrContains(2476[_arg0], var6, true) == -1)
+	if (StrContains(g_command[_arg0], var5, true) == -1 && StrContains(g_command[_arg0], var6, true) == -1)
 	{
-		ArrayList.GetArray(var7 + 260/* ERROR unknown load Binary */, 19636[_arg0][2][0], var8, -1);
+		ArrayList.GetArray(var7 + 260/* ERROR unknown load Binary */, g_currentPlace[_arg0][2][0], var8, -1);
 		new var9;
 		var9 = Menu.Menu(31, 28);
 		Menu.ExitBackButton.set(var9, true);
@@ -474,10 +481,10 @@ public void:ParamCheck(_arg0)
 			new var12 = var13;
 			new var13 = "1.10.0.6484";
 			new var14 = 0;
-			while (var14 < g_var9a4)
+			while (var14 < g_groupCount)
 			{
-				ArrayList.GetString(2460/* ERROR unknown load Constant */, var14, var10, 32);
-				ArrayList.GetString(2460 + 4/* ERROR unknown load Binary */, var14, var12, 32);
+				ArrayList.GetString(g_groupList, var14, var10, 32);
+				ArrayList.GetString(g_groupList + 4/* ERROR unknown load Binary */, var14, var12, 32);
 				Menu.AddItem(var9, var12, var10, 0);
 				var14++;
 			}
@@ -591,9 +598,9 @@ public void:ParamCheck(_arg0)
 	}
 	else
 	{
-		TopMenu.Display(g_var98c, _arg0, 3);
+		TopMenu.Display(hAdminMenu, _arg0, 3);
 		new var33 = 0;
-		UnQuoteString(2476[_arg0], var33, 255, "#@");
+		UnQuoteString(g_command[_arg0], var33, 255, "#@");
 		if (var7 + 256/* ERROR unknown load Binary */)
 		{
 			InsertServerCommand(var33);
@@ -603,8 +610,8 @@ public void:ParamCheck(_arg0)
 		{
 			FakeClientCommand(_arg0, var33);
 		}
-		2476[_arg0] = 0;
-		19636[_arg0][2] = 1;
+		g_command[_arg0][0] = '\x00';
+		g_currentPlace[_arg0][2] = 1;
 	}
 	return 0;
 }
@@ -626,7 +633,7 @@ public __AddTargetsToMenu2(Handle:_arg0, _arg1)
 
 public any:__GetAdminTopMenu(Handle:_arg0, _arg1)
 {
-	return g_var98c;
+	return hAdminMenu;
 }
 
 public void:__ext_core_SetNTVOptional()

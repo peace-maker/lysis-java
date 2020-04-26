@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:15"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_topmenus =
 {
 	name = "TopMenus",
@@ -21,13 +28,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:15"
-};
 public Plugin:myinfo =
 {
 	name = "Basic Commands",
@@ -36,30 +36,32 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var1144;
-new g_var1214;
-new g_var1158;
-new g_varc74;
-new g_varc70;
-new g_varc6c;
+new TopMenu:hTopMenu;
+new Menu:g_MapList;
+new StringMap:g_ProtectedVars;
+new Handle:g_map_array;
+new g_map_serial = -1;
+new Menu:g_ConfigMenu;
+new SMCParser:config_parser;
+new String:g_FlagNames[20][56];
 LoadMapList(Menu:_arg0)
 {
 	new var1 = 0;
-	if ((var1 = ReadMapList(g_var1144, 4424, "sm_map menu", 3)))
+	if ((var1 = ReadMapList(g_map_array, g_map_serial, "sm_map menu", 3)))
 	{
-		g_var1144 = var1;
+		g_map_array = var1;
 	}
-	if (g_var1144)
+	if (g_map_array)
 	{
 		Menu.RemoveAllItems(_arg0);
 		new var2 = 0;
 		new var3;
-		var3 = GetArraySize(g_var1144);
+		var3 = GetArraySize(g_map_array);
 		new var4 = 0;
 		while (var4 < var3)
 		{
 			new var5 = 0;
-			GetArrayString(g_var1144, var4, var2, 256);
+			GetArrayString(g_map_array, var4, var2, 256);
 			GetMapDisplayName(var2, var5, 256);
 			Menu.AddItem(_arg0, var2, var5, 0);
 			var4++;
@@ -84,28 +86,28 @@ void:PerformExec(_arg0, String:_arg1[])
 
 void:ParseConfigs()
 {
-	if (!g_var1214)
+	if (!config_parser)
 	{
-		g_var1214 = SMCParser.SMCParser();
+		config_parser = SMCParser.SMCParser();
 	}
-	SMCParser.OnEnterSection.set(g_var1214, 85);
-	SMCParser.OnLeaveSection.set(g_var1214, 73);
-	SMCParser.OnKeyValue.set(g_var1214, 75);
-	if (g_var1158)
+	SMCParser.OnEnterSection.set(config_parser, 85);
+	SMCParser.OnLeaveSection.set(config_parser, 73);
+	SMCParser.OnKeyValue.set(config_parser, 75);
+	if (g_ConfigMenu)
 	{
-		CloseHandle(g_var1158);
-		g_var1158 = 0;
+		CloseHandle(g_ConfigMenu);
+		g_ConfigMenu = 0;
 	}
-	g_var1158 = Menu.Menu(79, 2);
-	Menu.SetTitle(g_var1158, "%T", "Choose Config", 0);
-	Menu.ExitBackButton.set(g_var1158, true);
+	g_ConfigMenu = Menu.Menu(79, 2);
+	Menu.SetTitle(g_ConfigMenu, "%T", "Choose Config", 0);
+	Menu.ExitBackButton.set(g_ConfigMenu, true);
 	new var1 = 0;
 	BuildPath(0, var1, 256, "configs/adminmenu_cfgs.txt");
 	if (FileExists(var1, false, "GAME"))
 	{
 		new var2 = 0;
 		new var3;
-		var3 = SMCParser.ParseFile(g_var1214, var1, var2, 0);
+		var3 = SMCParser.ParseFile(config_parser, var1, var2, 0);
 		if (var3)
 		{
 			new var4 = 0;
@@ -121,7 +123,7 @@ void:ParseConfigs()
 
 void:ProtectVar(String:_arg0[])
 {
-	StringMap.SetValue(g_varc74, _arg0[0], 1, true);
+	StringMap.SetValue(g_ProtectedVars, _arg0[0], 1, true);
 	return 0;
 }
 
@@ -197,7 +199,7 @@ void:FlagsToString(String:_arg0[], _arg1, _arg2)
 		if (1 << var3 & _arg2)
 		{
 			var2++;
-			strcopy(var1[var2], 32, 5500[var3]);
+			strcopy(var1[var2], 32, g_FlagNames[var3]);
 		}
 		var3++;
 	}
@@ -471,7 +473,7 @@ public void:AdminMenu_ExecCFG(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:
 	{
 		if (_arg1 == 2)
 		{
-			Menu.Display(g_var1158, _arg3, 0);
+			Menu.Display(g_ConfigMenu, _arg3, 0);
 		}
 	}
 	else
@@ -503,7 +505,7 @@ public void:AdminMenu_Map(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg
 	{
 		if (_arg1 == 2)
 		{
-			Menu.Display(g_varc70, _arg3, 0);
+			Menu.Display(g_MapList, _arg3, 0);
 		}
 	}
 	else
@@ -723,8 +725,8 @@ public Action:Command_Map(_arg0, _arg1)
 		new var1;
 		if (GetCmdReplySource() == 1 && _arg0)
 		{
-			Menu.SetTitle(g_varc70, "%T", "Choose Map", _arg0);
-			Menu.Display(g_varc70, _arg0, 0);
+			Menu.SetTitle(g_MapList, "%T", "Choose Map", _arg0);
+			Menu.Display(g_MapList, _arg0, 0);
 		}
 		else
 		{
@@ -934,7 +936,7 @@ public SMCResult:EndSection(SMCParser:_arg0)
 
 public SMCResult:KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
 {
-	Menu.AddItem(g_var1158, _arg1[0], _arg2[0], 0);
+	Menu.AddItem(g_ConfigMenu, _arg1[0], _arg2[0], 0);
 	return 0;
 }
 
@@ -943,9 +945,9 @@ public MenuHandler_ChangeMap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	if (_arg1 == 8)
 	{
 		new var1;
-		if (_arg3 == -6 && g_varc6c)
+		if (_arg3 == -6 && hTopMenu)
 		{
-			TopMenu.Display(g_varc6c, _arg2, 3);
+			TopMenu.Display(hTopMenu, _arg2, 3);
 		}
 	}
 	else
@@ -977,9 +979,9 @@ public MenuHandler_ExecCFG(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	if (_arg1 == 8)
 	{
 		new var1;
-		if (_arg3 == -6 && g_varc6c)
+		if (_arg3 == -6 && hTopMenu)
 		{
-			TopMenu.Display(g_varc6c, _arg2, 3);
+			TopMenu.Display(hTopMenu, _arg2, 3);
 		}
 	}
 	else
@@ -1014,9 +1016,9 @@ public MenuHandler_Kick(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc6c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc6c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1063,9 +1065,9 @@ public MenuHandler_Who(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc6c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc6c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1110,38 +1112,38 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_varc6c == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_varc6c = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_varc6c, "PlayerCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_varc6c, "sm_kick", 45, var2, "sm_kick", 4, "");
-		TopMenu.AddItem(g_varc6c, "sm_who", 51, var2, "sm_who", 2, "");
+		TopMenu.AddItem(hTopMenu, "sm_kick", 45, var2, "sm_kick", 4, "");
+		TopMenu.AddItem(hTopMenu, "sm_who", 51, var2, "sm_who", 2, "");
 	}
 	new var3;
-	var3 = TopMenu.FindCategory(g_varc6c, "ServerCommands");
+	var3 = TopMenu.FindCategory(hTopMenu, "ServerCommands");
 	if (var3)
 	{
-		TopMenu.AddItem(g_varc6c, "sm_reloadadmins", 49, var3, "sm_reloadadmins", 8, "");
-		TopMenu.AddItem(g_varc6c, "sm_map", 47, var3, "sm_map", 64, "");
-		TopMenu.AddItem(g_varc6c, "sm_execcfg", 43, var3, "sm_execcfg", 256, "");
+		TopMenu.AddItem(hTopMenu, "sm_reloadadmins", 49, var3, "sm_reloadadmins", 8, "");
+		TopMenu.AddItem(hTopMenu, "sm_map", 47, var3, "sm_map", 64, "");
+		TopMenu.AddItem(hTopMenu, "sm_execcfg", 43, var3, "sm_execcfg", 256, "");
 	}
 	new var4;
-	var4 = TopMenu.FindCategory(g_varc6c, "VotingCommands");
+	var4 = TopMenu.FindCategory(hTopMenu, "VotingCommands");
 	if (var4)
 	{
-		TopMenu.AddItem(g_varc6c, "sm_cancelvote", 41, var4, "sm_cancelvote", 1024, "");
+		TopMenu.AddItem(hTopMenu, "sm_cancelvote", 41, var4, "sm_cancelvote", 1024, "");
 	}
 	return 0;
 }
 
 public void:OnConfigsExecuted()
 {
-	LoadMapList(g_varc70);
+	LoadMapList(g_MapList);
 	return 0;
 }
 
@@ -1149,7 +1151,7 @@ public void:OnLibraryRemoved(String:_arg0[])
 {
 	if (!(strcmp(_arg0[0], "adminmenu", true)))
 	{
-		g_varc6c = 0;
+		hTopMenu = 0;
 	}
 	return 0;
 }
@@ -1180,13 +1182,13 @@ public void:OnPluginStart()
 	{
 		OnAdminMenuReady(var2);
 	}
-	g_varc70 = Menu.Menu(77, 2);
-	Menu.SetTitle(g_varc70, "%T", "Please select a map", 0);
-	Menu.ExitBackButton.set(g_varc70, true);
+	g_MapList = Menu.Menu(77, 2);
+	Menu.SetTitle(g_MapList, "%T", "Please select a map", 0);
+	Menu.ExitBackButton.set(g_MapList, true);
 	new var3 = 0;
 	BuildPath(0, var3, 256, "configs/adminmenu_maplist.ini");
 	SetMapListCompatBind("sm_map menu", var3);
-	g_varc74 = StringMap.StringMap();
+	g_ProtectedVars = StringMap.StringMap();
 	ProtectVar("rcon_password");
 	ProtectVar("sm_show_activity");
 	ProtectVar("sm_immunity_mode");

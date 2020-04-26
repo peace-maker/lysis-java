@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:18"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,18 +14,12 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public SharedPlugin:__pl_mapchooser =
 {
 	name = "mapchooser",
 	file = "mapchooser.smx",
 	required = 1,
-};
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:18"
 };
 public Plugin:myinfo =
 {
@@ -29,13 +29,13 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_vara58;
-new g_vara68;
-new g_vara5c;
-new g_vara50;
-new g_vara54;
-new g_vara60;
-new g_vara64 = -1;
+new ConVar:g_Cvar_ExcludeOld;
+new ConVar:g_Cvar_ExcludeCurrent;
+new ConVar:g_Cvar_MaxMatches;
+new Menu:g_MapMenu;
+new ArrayList:g_MapList;
+new g_mapFileSerial = -1;
+new StringMap:g_mapTrie;
 bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
 {
 	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
@@ -76,7 +76,7 @@ FindMatchingMaps(ArrayList:_arg0, ArrayList:_arg1, String:_arg2[])
 		new var3 = 0;
 		new var4 = 0;
 		new var5;
-		var5 = ConVar.IntValue.get(g_vara58);
+		var5 = ConVar.IntValue.get(g_Cvar_MaxMatches);
 		new var6 = 0;
 		while (var6 < var2)
 		{
@@ -109,7 +109,7 @@ void:AttemptNominate(_arg0, String:_arg1[], _arg2)
 	new var2 = 0;
 	GetMapDisplayName(var1, var2, 256);
 	new var3 = 0;
-	if (StringMap.GetValue(g_vara68, var1, var3))
+	if (StringMap.GetValue(g_mapTrie, var1, var3))
 	{
 		if (var3 & 2 == 2)
 		{
@@ -141,7 +141,7 @@ void:AttemptNominate(_arg0, String:_arg1[], _arg2)
 			}
 			return 0;
 		}
-		StringMap.SetValue(g_vara68, var1, 18, true);
+		StringMap.SetValue(g_mapTrie, var1, 18, true);
 		new var5 = 0;
 		GetClientName(_arg0, var5, 128);
 		PrintToChatAll("[SM] %t", "Map Nominated", var5, var2);
@@ -153,38 +153,38 @@ void:AttemptNominate(_arg0, String:_arg1[], _arg2)
 
 void:OpenNominationMenu(_arg0)
 {
-	Menu.SetTitle(g_vara5c, "%T", "Nominate Title", _arg0);
-	Menu.Display(g_vara5c, _arg0, 0);
+	Menu.SetTitle(g_MapMenu, "%T", "Nominate Title", _arg0);
+	Menu.Display(g_MapMenu, _arg0, 0);
 	return 0;
 }
 
 void:BuildMapMenu()
 {
-	CloseHandle(g_vara5c);
-	g_vara5c = 0;
-	StringMap.Clear(g_vara68);
-	g_vara5c = Menu.Menu(19, 796);
+	CloseHandle(g_MapMenu);
+	g_MapMenu = 0;
+	StringMap.Clear(g_mapTrie);
+	g_MapMenu = Menu.Menu(19, 796);
 	new var2 = 0;
 	new var3 = 0;
 	new var4 = 0;
-	if (ConVar.BoolValue.get(g_vara50))
+	if (ConVar.BoolValue.get(g_Cvar_ExcludeOld))
 	{
 		var3 = ArrayList.ArrayList(ByteCountToCells(256), 0);
 		GetExcludeMapList(var3);
 	}
-	if (ConVar.BoolValue.get(g_vara54))
+	if (ConVar.BoolValue.get(g_Cvar_ExcludeCurrent))
 	{
 		GetCurrentMap(var4, 256);
 	}
 	new var5 = 0;
-	while (ArrayList.Length.get(g_vara60) > var5)
+	while (ArrayList.Length.get(g_MapList) > var5)
 	{
 		new var6 = 1;
-		ArrayList.GetString(g_vara60, var5, var2, 256);
+		ArrayList.GetString(g_MapList, var5, var2, 256);
 		FindMap(var2, var2, 256);
 		new var7 = 0;
 		GetMapDisplayName(var2, var7, 256);
-		if (ConVar.BoolValue.get(g_vara54))
+		if (ConVar.BoolValue.get(g_Cvar_ExcludeCurrent))
 		{
 			if (StrEqual(var2, var4, true))
 			{
@@ -192,18 +192,18 @@ void:BuildMapMenu()
 			}
 		}
 		new var1;
-		if (ConVar.BoolValue.get(g_vara50) && var6 == 1)
+		if (ConVar.BoolValue.get(g_Cvar_ExcludeOld) && var6 == 1)
 		{
 			if (ArrayList.FindString(var3, var2) != -1)
 			{
 				var6 = 10;
 			}
 		}
-		Menu.AddItem(g_vara5c, var2, var7, 0);
-		StringMap.SetValue(g_vara68, var2, var6, true);
+		Menu.AddItem(g_MapMenu, var2, var7, 0);
+		StringMap.SetValue(g_mapTrie, var2, var6, true);
 		var5++;
 	}
-	Menu.ExitButton.set(g_vara5c, true);
+	Menu.ExitButton.set(g_MapMenu, true);
 	CloseHandle(var3);
 	var3 = 0;
 	return 0;
@@ -243,7 +243,7 @@ public Action:Command_Nominate(_arg0, _arg1)
 			new var3;
 			var3 = ArrayList.ArrayList(1, 0);
 			new var4;
-			var4 = FindMatchingMaps(g_vara60, var3, var2);
+			var4 = FindMatchingMaps(g_MapList, var3, var2);
 			new var5 = 0;
 			if (0 >= var4)
 			{
@@ -253,7 +253,7 @@ public Action:Command_Nominate(_arg0, _arg1)
 			{
 				if (var4 == 1)
 				{
-					ArrayList.GetString(g_vara60, ArrayList.Get(var3, 0, 0, false), var5, 256);
+					ArrayList.GetString(g_MapList, ArrayList.Get(var3, 0, 0, false), var5, 256);
 					AttemptNominate(_arg0, var5, 256);
 				}
 				if (var4 > 1)
@@ -266,7 +266,7 @@ public Action:Command_Nominate(_arg0, _arg1)
 						new var7 = 0;
 						while (ArrayList.Length.get(var3) > var7)
 						{
-							ArrayList.GetString(g_vara60, ArrayList.Get(var3, var7, 0, false), var5, 256);
+							ArrayList.GetString(g_MapList, ArrayList.Get(var3, var7, 0, false), var5, 256);
 							Menu.AddItem(var6, var5, var5, 0);
 							var7++;
 						}
@@ -307,7 +307,7 @@ public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		}
 		case 16:
 		{
-			if (g_vara5c != _arg0)
+			if (g_MapMenu != _arg0)
 			{
 				CloseHandle(_arg0);
 				_arg0 = 0;
@@ -318,7 +318,7 @@ public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var3 = 0;
 			Menu.GetItem(_arg0, _arg3, var3, 256, 0, "", 0);
 			new var4 = 0;
-			if (StringMap.GetValue(g_vara68, var3, var4))
+			if (StringMap.GetValue(g_mapTrie, var3, var4))
 			{
 				if (var4 & 2 == 2)
 				{
@@ -334,7 +334,7 @@ public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var1 = 0;
 			Menu.GetItem(_arg0, _arg3, var1, 256, 0, "", 0);
 			new var2 = 0;
-			if (StringMap.GetValue(g_vara68, var1, var2))
+			if (StringMap.GetValue(g_mapTrie, var1, var2))
 			{
 				if (var2 & 2 == 2)
 				{
@@ -384,9 +384,9 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 
 public void:OnConfigsExecuted()
 {
-	if (!(ReadMapList(g_vara60, g_vara64, "nominations", 3)))
+	if (!(ReadMapList(g_MapList, g_mapFileSerial, "nominations", 3)))
 	{
-		if (g_vara64 == -1)
+		if (g_mapFileSerial == -1)
 		{
 			SetFailState("Unable to create a valid map list.");
 		}
@@ -400,13 +400,13 @@ public void:OnNominationRemoved(String:_arg0[], _arg1)
 	new var1 = 0;
 	new var2 = 0;
 	FindMap(_arg0[0], var2, 256);
-	if (StringMap.GetValue(g_vara68, var2, var1))
+	if (StringMap.GetValue(g_mapTrie, var2, var1))
 	{
 		if (var1 & 16 != 16)
 		{
 			return 0;
 		}
-		StringMap.SetValue(g_vara68, var2, 1, true);
+		StringMap.SetValue(g_mapTrie, var2, 1, true);
 		return 0;
 	}
 	return 0;
@@ -418,13 +418,13 @@ public void:OnPluginStart()
 	LoadTranslations("nominations.phrases");
 	new var1;
 	var1 = ByteCountToCells(256);
-	g_vara60 = ArrayList.ArrayList(var1, 0);
-	g_vara50 = CreateConVar("sm_nominate_excludeold", "1", "Specifies if the MapChooser excluded maps should also be excluded from Nominations", 0, true, 0.0, true, 1.0);
-	g_vara54 = CreateConVar("sm_nominate_excludecurrent", "1", "Specifies if the current map should be excluded from the Nominations list", 0, true, 0.0, true, 1.0);
-	g_vara58 = CreateConVar("sm_nominate_maxfound", "0", "Maximum number of nomination matches to add to the menu. 0 = infinite.", 0, true, 0.0, false, 0.0);
+	g_MapList = ArrayList.ArrayList(var1, 0);
+	g_Cvar_ExcludeOld = CreateConVar("sm_nominate_excludeold", "1", "Specifies if the MapChooser excluded maps should also be excluded from Nominations", 0, true, 0.0, true, 1.0);
+	g_Cvar_ExcludeCurrent = CreateConVar("sm_nominate_excludecurrent", "1", "Specifies if the current map should be excluded from the Nominations list", 0, true, 0.0, true, 1.0);
+	g_Cvar_MaxMatches = CreateConVar("sm_nominate_maxfound", "0", "Maximum number of nomination matches to add to the menu. 0 = infinite.", 0, true, 0.0, false, 0.0);
 	RegConsoleCmd("sm_nominate", 17, "", 0);
 	RegAdminCmd("sm_nominate_addmap", 15, 64, "sm_nominate_addmap <mapname> - Forces a map to be on the next mapvote.", "", 0);
-	g_vara68 = StringMap.StringMap();
+	g_mapTrie = StringMap.StringMap();
 	return 0;
 }
 

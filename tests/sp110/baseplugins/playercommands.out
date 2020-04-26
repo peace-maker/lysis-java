@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:16"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_sdktools =
 {
 	name = "SDKTools",
@@ -28,13 +35,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:16"
-};
 public Plugin:myinfo =
 {
 	name = "Player Commands",
@@ -43,7 +43,9 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_varc98;
+new TopMenu:hTopMenu;
+new g_SlapDamage[66];
+new String:g_NewName[128][264];
 void:DisplayRenameTargetMenu(_arg0)
 {
 	new var1;
@@ -63,14 +65,14 @@ void:RandomizeName(_arg0)
 	GetClientName(_arg0, var1, 128);
 	new var2;
 	var2 = strlen(var1);
-	4176[_arg0] = 0;
+	g_NewName[_arg0][0] = '\x00';
 	new var3 = 0;
 	while (var3 < var2)
 	{
-		4176[_arg0][var3] = var1[GetRandomInt(0, var2 + -1)];
+		g_NewName[_arg0][var3] = var1[GetRandomInt(0, var2 + -1)];
 		var3++;
 	}
-	4176[_arg0][var2] = 0;
+	g_NewName[_arg0][var2] = '\x00';
 	return 0;
 }
 
@@ -168,7 +170,7 @@ void:DisplaySlapTargetMenu(_arg0)
 	new var1;
 	var1 = Menu.Menu(33, 28);
 	new var2 = 0;
-	Format(var2, 100, "%T: %d damage", "Slap player", _arg0, 3508[_arg0]);
+	Format(var2, 100, "%T: %d damage", "Slap player", _arg0, g_SlapDamage[_arg0]);
 	Menu.SetTitle(var1, var2);
 	Menu.ExitBackButton.set(var1, true);
 	AddTargetsToMenu(var1, _arg0, true, true);
@@ -178,9 +180,9 @@ void:DisplaySlapTargetMenu(_arg0)
 
 void:PerformRename(_arg0, _arg1)
 {
-	LogAction(_arg0, _arg1, "\"%L\" renamed \"%L\" (to \"%s\")", _arg0, _arg1, 4176[_arg1]);
-	SetClientName(_arg1, 4176[_arg1]);
-	4176[_arg1] = 0;
+	LogAction(_arg0, _arg1, "\"%L\" renamed \"%L\" (to \"%s\")", _arg0, _arg1, g_NewName[_arg1]);
+	SetClientName(_arg1, g_NewName[_arg1]);
+	g_NewName[_arg1][0] = '\x00';
 	return 0;
 }
 
@@ -276,9 +278,9 @@ public Action:Command_Rename(_arg0, _arg1)
 			{
 				if (var6 > 1)
 				{
-					Format(4176[var5[var8]], 128, "%s %i", var2, var8 + 1);
+					Format(g_NewName[var5[var8]], 128, "%s %i", var2, var8 + 1);
 				}
-				Format(4176[var5[var8]], 128, "%s", var2);
+				Format(g_NewName[var5[var8]], 128, "%s", var2);
 			}
 			PerformRename(_arg0, var5[var8]);
 			var8++;
@@ -385,9 +387,9 @@ public MenuHandler_Rename(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc98)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -432,7 +434,7 @@ public MenuHandler_Slap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		{
 			if (_arg3 == -6)
 			{
-				TopMenu.Display(g_varc98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -450,7 +452,7 @@ public MenuHandler_Slap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 					{
 						new var4 = 0;
 						GetClientName(var3, var4, 128);
-						PerformSlap(_arg2, var3, 3508[_arg2]);
+						PerformSlap(_arg2, var3, g_SlapDamage[_arg2]);
 						ShowActivity2(_arg2, "[SM] ", "%t", "Slapped target", "_s", var4);
 					}
 					ReplyToCommand(_arg2, "[SM] %t", 3992);
@@ -479,16 +481,16 @@ public MenuHandler_SlapDamage(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc98)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
 		{
 			new var2 = 0;
 			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			3508[_arg2] = StringToInt(var2, 10);
+			g_SlapDamage[_arg2] = StringToInt(var2, 10);
 			DisplaySlapTargetMenu(_arg2);
 		}
 	}
@@ -507,9 +509,9 @@ public MenuHandler_Slay(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_varc98)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_varc98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -548,18 +550,18 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_varc98 == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_varc98 = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_varc98, "PlayerCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_varc98, "sm_slay", 23, var2, "sm_slay", 32, "");
-		TopMenu.AddItem(g_varc98, "sm_slap", 21, var2, "sm_slap", 32, "");
-		TopMenu.AddItem(g_varc98, "sm_rename", 19, var2, "sm_rename", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_slay", 23, var2, "sm_slay", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_slap", 21, var2, "sm_slap", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_rename", 19, var2, "sm_rename", 32, "");
 	}
 	return 0;
 }

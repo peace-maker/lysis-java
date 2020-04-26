@@ -35,9 +35,9 @@ public class Variable {
 		this(addr, tag_id, tag, codeStart, codeEnd, type, scope, name, null);
 	}
 
-	public Variable(long addr, int tag_id, Tag tag, long codeStart, long codeEnd, VariableType type, Scope scope,
+	public Variable(long addr, long codeStart, long codeEnd, VariableType type, Scope scope,
 			String name, Dimension[] dims, RttiType rttiType) {
-		this(addr, tag_id, tag, codeStart, codeEnd, type, scope, name, dims);
+		this(addr, -1, null, codeStart, codeEnd, type, scope, name, dims);
 		rtti_type_ = rttiType;
 	}
 

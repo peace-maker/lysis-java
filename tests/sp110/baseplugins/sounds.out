@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:16"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "Sound Commands",

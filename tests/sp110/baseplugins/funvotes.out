@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:17"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_sdktools =
 {
 	name = "SDKTools",
@@ -28,13 +35,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:17"
-};
 public Plugin:myinfo =
 {
 	name = "Fun Votes",
@@ -43,13 +43,15 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_varcb8;
-new g_varc94;
-new g_varcb0;
-new g_varcb4;
-new g_varcbc;
-new g_varcac;
-new g_vard98;
+new Menu:g_hVoteMenu;
+new ConVar:g_Cvar_Limits[5];
+new ConVar:g_Cvar_Gravity;
+new ConVar:g_Cvar_Alltalk;
+new ConVar:g_Cvar_FF;
+new voteType:g_voteType;
+new g_voteTarget;
+new String:g_voteInfo[68][12];
+new TopMenu:hTopMenu;
 void:DisplaySlayTargetMenu(_arg0)
 {
 	new var1;
@@ -74,21 +76,22 @@ void:DisplayVoteAllTalkMenu(_arg0)
 	{
 		LogAction(_arg0, -1, "\"%L\" initiated an alltalk vote.", _arg0);
 		ShowActivity2(_arg0, "[SM] ", "%t", 4584);
-		g_varcb8 = 3;
-		3264/* ERROR unknown load Constant */ + 3264/* ERROR unknown load Binary */ = 0;
-		g_varc94 = Menu.Menu(53, -1);
-		if (ConVar.BoolValue.get(g_varcb0))
+		g_voteType = 3;
+		new var1 = g_voteInfo;
+		var1[0][var1] = '\x00';
+		g_hVoteMenu = Menu.Menu(53, -1);
+		if (ConVar.BoolValue.get(g_Cvar_Alltalk))
 		{
-			Menu.SetTitle(g_varc94, "Votealltalk Off");
+			Menu.SetTitle(g_hVoteMenu, "Votealltalk Off");
 		}
 		else
 		{
-			Menu.SetTitle(g_varc94, "Votealltalk On");
+			Menu.SetTitle(g_hVoteMenu, "Votealltalk On");
 		}
-		Menu.AddItem(g_varc94, "###yes###", "Yes", 0);
-		Menu.AddItem(g_varc94, "###no###", "No", 0);
-		Menu.ExitButton.set(g_varc94, false);
-		Menu.DisplayVoteToAll(g_varc94, 20, 0);
+		Menu.AddItem(g_hVoteMenu, "###yes###", "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
+		Menu.ExitButton.set(g_hVoteMenu, false);
+		Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
 		return 0;
 	}
 	return 0;
@@ -105,21 +108,22 @@ void:DisplayVoteFFMenu(_arg0)
 	{
 		LogAction(_arg0, -1, "\"%L\" initiated a friendly fire vote.", _arg0);
 		ShowActivity2(_arg0, "[SM] ", "%t", 4800);
-		g_varcb8 = 4;
-		3264/* ERROR unknown load Constant */ + 3264/* ERROR unknown load Binary */ = 0;
-		g_varc94 = Menu.Menu(53, -1);
-		if (ConVar.BoolValue.get(g_varcb4))
+		g_voteType = 4;
+		new var1 = g_voteInfo;
+		var1[0][var1] = '\x00';
+		g_hVoteMenu = Menu.Menu(53, -1);
+		if (ConVar.BoolValue.get(g_Cvar_FF))
 		{
-			Menu.SetTitle(g_varc94, "Voteff Off");
+			Menu.SetTitle(g_hVoteMenu, "Voteff Off");
 		}
 		else
 		{
-			Menu.SetTitle(g_varc94, "Voteff On");
+			Menu.SetTitle(g_hVoteMenu, "Voteff On");
 		}
-		Menu.AddItem(g_varc94, "###yes###", "Yes", 0);
-		Menu.AddItem(g_varc94, "###no###", "No", 0);
-		Menu.ExitButton.set(g_varc94, false);
-		Menu.DisplayVoteToAll(g_varc94, 20, 0);
+		Menu.AddItem(g_hVoteMenu, "###yes###", "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
+		Menu.ExitButton.set(g_hVoteMenu, false);
+		Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
 		return 0;
 	}
 	return 0;
@@ -127,8 +131,8 @@ void:DisplayVoteFFMenu(_arg0)
 
 void:VoteMenuClose()
 {
-	CloseHandle(g_varc94);
-	g_varc94 = 0;
+	CloseHandle(g_hVoteMenu);
+	g_hVoteMenu = 0;
 	return 0;
 }
 
@@ -264,28 +268,30 @@ void:DisplayVoteGravityMenu(_arg0, _arg1, String:_arg2[][])
 {
 	LogAction(_arg0, -1, "\"%L\" initiated a gravity vote.", _arg0);
 	ShowActivity2(_arg0, "[SM] ", "%t", 3528);
-	g_varcb8 = 0;
-	g_varc94 = Menu.Menu(53, -1);
+	g_voteType = 0;
+	g_hVoteMenu = Menu.Menu(53, -1);
 	if (_arg1 == 1)
 	{
-		strcopy(3264/* ERROR unknown load Constant */ + 3264, 65, _arg2[0][0]);
-		Menu.SetTitle(g_varc94, "Change Gravity To");
-		Menu.AddItem(g_varc94, _arg2[0][0], "Yes", 0);
-		Menu.AddItem(g_varc94, "###no###", "No", 0);
+		new var1 = g_voteInfo;
+		strcopy(var1[0][var1], 65, _arg2[0][0]);
+		Menu.SetTitle(g_hVoteMenu, "Change Gravity To");
+		Menu.AddItem(g_hVoteMenu, _arg2[0][0], "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
 	}
 	else
 	{
-		3264/* ERROR unknown load Constant */ + 3264/* ERROR unknown load Binary */ = 0;
-		Menu.SetTitle(g_varc94, "Gravity Vote");
-		new var1 = 0;
-		while (var1 < _arg1)
+		new var2 = g_voteInfo;
+		var2[0][var2] = '\x00';
+		Menu.SetTitle(g_hVoteMenu, "Gravity Vote");
+		new var3 = 0;
+		while (var3 < _arg1)
 		{
-			Menu.AddItem(g_varc94, _arg2[0][var1], _arg2[0][var1], 0);
-			var1++;
+			Menu.AddItem(g_hVoteMenu, _arg2[0][var3], _arg2[0][var3], 0);
+			var3++;
 		}
 	}
-	Menu.ExitButton.set(g_varc94, false);
-	Menu.DisplayVoteToAll(g_varc94, 20, 0);
+	Menu.ExitButton.set(g_hVoteMenu, false);
+	Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
 	return 0;
 }
 
@@ -293,17 +299,19 @@ void:DisplayVoteBurnMenu(_arg0, _arg1, String:_arg2[])
 {
 	if (IsPlayerAlive(_arg1))
 	{
-		g_varcbc = GetClientUserId(_arg1);
-		GetClientName(_arg1, 3264/* ERROR unknown load Constant */ + 3264, 65);
+		g_voteTarget = GetClientUserId(_arg1);
+		new var1 = g_voteInfo;
+		GetClientName(_arg1, var1[0][var1], 65);
 		LogAction(_arg0, _arg1, "\"%L\" initiated a burn vote against \"%L\"", _arg0, _arg1);
-		ShowActivity2(_arg0, "[SM] ", "%t", "Initiated Vote Burn", 3264/* ERROR unknown load Constant */ + 3264);
-		g_varcb8 = 1;
-		g_varc94 = Menu.Menu(53, -1);
-		Menu.SetTitle(g_varc94, "Voteburn player");
-		Menu.AddItem(g_varc94, "###yes###", "Yes", 0);
-		Menu.AddItem(g_varc94, "###no###", "No", 0);
-		Menu.ExitButton.set(g_varc94, false);
-		Menu.DisplayVoteToAll(g_varc94, 20, 0);
+		new var2 = g_voteInfo;
+		ShowActivity2(_arg0, "[SM] ", "%t", "Initiated Vote Burn", var2[0][var2]);
+		g_voteType = 1;
+		g_hVoteMenu = Menu.Menu(53, -1);
+		Menu.SetTitle(g_hVoteMenu, "Voteburn player");
+		Menu.AddItem(g_hVoteMenu, "###yes###", "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
+		Menu.ExitButton.set(g_hVoteMenu, false);
+		Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
 		return 0;
 	}
 	ReplyToCommand(_arg0, "[SM] %t", "Cannot be performed on dead", _arg2[0]);
@@ -327,17 +335,19 @@ void:DisplayVoteSlayMenu(_arg0, _arg1, String:_arg2[])
 {
 	if (IsPlayerAlive(_arg1))
 	{
-		g_varcbc = GetClientUserId(_arg1);
-		GetClientName(_arg1, 3264/* ERROR unknown load Constant */ + 3264, 65);
+		g_voteTarget = GetClientUserId(_arg1);
+		new var1 = g_voteInfo;
+		GetClientName(_arg1, var1[0][var1], 65);
 		LogAction(_arg0, _arg1, "\"%L\" initiated a slay vote against \"%L\"", _arg0, _arg1);
-		ShowActivity2(_arg0, "[SM] ", "%t", "Initiated Vote Slay", 3264/* ERROR unknown load Constant */ + 3264);
-		g_varcb8 = 2;
-		g_varc94 = Menu.Menu(53, -1);
-		Menu.SetTitle(g_varc94, "Voteslay Player");
-		Menu.AddItem(g_varc94, "###yes###", "Yes", 0);
-		Menu.AddItem(g_varc94, "###no###", "No", 0);
-		Menu.ExitButton.set(g_varc94, false);
-		Menu.DisplayVoteToAll(g_varc94, 20, 0);
+		new var2 = g_voteInfo;
+		ShowActivity2(_arg0, "[SM] ", "%t", "Initiated Vote Slay", var2[0][var2]);
+		g_voteType = 2;
+		g_hVoteMenu = Menu.Menu(53, -1);
+		Menu.SetTitle(g_hVoteMenu, "Voteslay Player");
+		Menu.AddItem(g_hVoteMenu, "###yes###", "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
+		Menu.ExitButton.set(g_hVoteMenu, false);
+		Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
 		return 0;
 	}
 	ReplyToCommand(_arg0, "[SM] %t", "Cannot be performed on dead", _arg2[0]);
@@ -600,21 +610,22 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var11 = 0;
 			Menu.GetTitle(_arg0, var11, 64);
 			new var12 = 0;
-			Format(var12, 255, "%T", var11, _arg2, 3264/* ERROR unknown load Constant */ + 3264);
-			new var13;
-			var13 = _arg3;
-			Panel.SetTitle(var13, var12, false);
+			new var13 = g_voteInfo;
+			Format(var12, 255, "%T", var11, _arg2, var13[0][var13]);
+			new var14;
+			var14 = _arg3;
+			Panel.SetTitle(var14, var12, false);
 		}
 		if (_arg1 == 512)
 		{
-			new var14 = 0;
-			Menu.GetItem(_arg0, _arg3, "", 0, 0, var14, 64);
+			new var15 = 0;
+			Menu.GetItem(_arg0, _arg3, "", 0, 0, var15, 64);
 			new var1;
-			if (strcmp(var14, "###no###", true) && strcmp(var14, "###yes###", true))
+			if (strcmp(var15, "###no###", true) && strcmp(var15, "###yes###", true))
 			{
-				new var15 = 0;
-				Format(var15, 255, "%T", var14, _arg2);
-				return RedrawMenuItem(var15);
+				new var16 = 0;
+				Format(var16, 255, "%T", var15, _arg2);
+				return RedrawMenuItem(var16);
 			}
 		}
 		new var2;
@@ -624,70 +635,74 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		}
 		if (_arg1 == 32)
 		{
-			new var16 = 0;
 			new var17 = 0;
 			new var18 = 0;
 			new var19 = 0;
 			new var20 = 0;
-			GetMenuVoteInfo(_arg3, var19, var20);
-			Menu.GetItem(_arg0, _arg2, var16, 64, 0, "", 0);
+			new var21 = 0;
+			GetMenuVoteInfo(_arg3, var20, var21);
+			Menu.GetItem(_arg0, _arg2, var17, 64, 0, "", 0);
 			new var3;
-			if (strcmp(var16, "###no###", true) && _arg2 == 1)
+			if (strcmp(var17, "###no###", true) && _arg2 == 1)
 			{
-				var19 = var20 - var19;
+				var20 = var21 - var20;
 			}
-			var17 = GetVotePercent(var19, var20);
-			var18 = ConVar.FloatValue.get(3224[g_varcb8]);
+			var18 = GetVotePercent(var20, var21);
+			var19 = ConVar.FloatValue.get(g_Cvar_Limits[g_voteType]);
 			new var4;
-			if ((strcmp(var16, "###yes###", true) && FloatCompare(var17, var18) < 0 && _arg2) || (strcmp(var16, "###no###", true) && _arg2 == 1))
+			if ((strcmp(var17, "###yes###", true) && FloatCompare(var18, var19) < 0 && _arg2) || (strcmp(var17, "###no###", true) && _arg2 == 1))
 			{
 				LogAction(-1, -1, "Vote failed.");
-				PrintToChatAll("[SM] %t", "Vote Failed", RoundToNearest(var18 * 100.0), RoundToNearest(var17 * 100.0), var20);
+				PrintToChatAll("[SM] %t", "Vote Failed", RoundToNearest(var19 * 100.0), RoundToNearest(var18 * 100.0), var21);
 			}
 			else
 			{
-				PrintToChatAll("[SM] %t", "Vote Successful", RoundToNearest(var17 * 100.0), var20);
-				switch (g_varcb8)
+				PrintToChatAll("[SM] %t", "Vote Successful", RoundToNearest(var18 * 100.0), var21);
+				switch (g_voteType)
 				{
 					case 0:
 					{
-						PrintToChatAll("[SM] %t", "Cvar changed", "sv_gravity", var16);
-						LogAction(-1, -1, "Changing gravity to %s due to vote.", var16);
-						ConVar.IntValue.set(g_varcac, StringToInt(var16, 10));
+						PrintToChatAll("[SM] %t", "Cvar changed", "sv_gravity", var17);
+						LogAction(-1, -1, "Changing gravity to %s due to vote.", var17);
+						ConVar.IntValue.set(g_Cvar_Gravity, StringToInt(var17, 10));
 					}
 					case 1:
 					{
-						new var22 = 0;
-						if ((var22 = GetClientOfUserId(g_varcbc)))
+						new var25 = 0;
+						if ((var25 = GetClientOfUserId(g_voteTarget)))
 						{
-							PrintToChatAll("[SM] %t", "Set target on fire", "_s", 3264/* ERROR unknown load Constant */ + 3264);
-							LogAction(-1, var22, "Vote burn successful, igniting \"%L\"", var22);
-							IgniteEntity(var22, 19.8, false, 0.0, false);
+							new var27 = g_voteInfo;
+							PrintToChatAll("[SM] %t", "Set target on fire", "_s", var27[0][var27]);
+							LogAction(-1, var25, "Vote burn successful, igniting \"%L\"", var25);
+							IgniteEntity(var25, 19.8, false, 0.0, false);
 						}
 						else
 						{
-							LogAction(-1, -1, "Vote burn failed, unable to burn \"%s\" (reason \"%s\")", 3264/* ERROR unknown load Constant */ + 3264, "Player no longer available");
+							new var26 = g_voteInfo;
+							LogAction(-1, -1, "Vote burn failed, unable to burn \"%s\" (reason \"%s\")", var26[0][var26], "Player no longer available");
 						}
 					}
 					case 2:
 					{
-						new var21 = 0;
-						if ((var21 = GetClientOfUserId(g_varcbc)))
+						new var22 = 0;
+						if ((var22 = GetClientOfUserId(g_voteTarget)))
 						{
-							PrintToChatAll("[SM] %t", "Slayed player", 3264/* ERROR unknown load Constant */ + 3264);
-							LogAction(-1, var21, "Vote slay successful, slaying \"%L\"", var21);
-							ExtinguishEntity(var21);
-							ForcePlayerSuicide(var21);
+							new var24 = g_voteInfo;
+							PrintToChatAll("[SM] %t", "Slayed player", var24[0][var24]);
+							LogAction(-1, var22, "Vote slay successful, slaying \"%L\"", var22);
+							ExtinguishEntity(var22);
+							ForcePlayerSuicide(var22);
 						}
 						else
 						{
-							LogAction(-1, -1, "Vote slay failed, unable to slay \"%s\" (reason \"%s\")", 3264/* ERROR unknown load Constant */ + 3264, "Player no longer available");
+							new var23 = g_voteInfo;
+							LogAction(-1, -1, "Vote slay failed, unable to slay \"%s\" (reason \"%s\")", var23[0][var23], "Player no longer available");
 						}
 					}
 					case 3:
 					{
 						new var9;
-						if (ConVar.BoolValue.get(g_varcb0))
+						if (ConVar.BoolValue.get(g_Cvar_Alltalk))
 						{
 							var9 = 6412;
 						}
@@ -697,7 +712,7 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 						}
 						PrintToChatAll("[SM] %t", "Cvar changed", "sv_alltalk", var9);
 						new var10;
-						if (ConVar.BoolValue.get(g_varcb0))
+						if (ConVar.BoolValue.get(g_Cvar_Alltalk))
 						{
 							var10 = 6456;
 						}
@@ -706,12 +721,12 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 							var10 = 6460;
 						}
 						LogAction(-1, -1, "Changing alltalk to %s due to vote.", var10);
-						ConVar.BoolValue.set(g_varcb0, !ConVar.BoolValue.get(g_varcb0));
+						ConVar.BoolValue.set(g_Cvar_Alltalk, !ConVar.BoolValue.get(g_Cvar_Alltalk));
 					}
 					case 4:
 					{
 						new var7;
-						if (ConVar.BoolValue.get(g_varcb4))
+						if (ConVar.BoolValue.get(g_Cvar_FF))
 						{
 							var7 = 6504;
 						}
@@ -721,7 +736,7 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 						}
 						PrintToChatAll("[SM] %t", "Cvar changed", "mp_friendlyfire", var7);
 						new var8;
-						if (ConVar.BoolValue.get(g_varcb4))
+						if (ConVar.BoolValue.get(g_Cvar_FF))
 						{
 							var8 = 6556;
 						}
@@ -730,7 +745,7 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 							var8 = 6560;
 						}
 						LogAction(-1, -1, "Changing friendly fire to %s due to vote.", var8);
-						ConVar.BoolValue.set(g_varcb4, !ConVar.BoolValue.get(g_varcb4));
+						ConVar.BoolValue.set(g_Cvar_FF, !ConVar.BoolValue.get(g_Cvar_FF));
 					}
 					default:
 					{
@@ -754,9 +769,9 @@ public MenuHandler_Burn(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_vard98)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_vard98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -800,9 +815,9 @@ public MenuHandler_Slay(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_vard98)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_vard98, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -838,20 +853,20 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_vard98 == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_vard98 = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_vard98, "VotingCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "VotingCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_vard98, "sm_votegravity", 39, var2, "sm_votegravity", 1024, "");
-		TopMenu.AddItem(g_vard98, "sm_voteburn", 35, var2, "sm_voteburn", 1056, "");
-		TopMenu.AddItem(g_vard98, "sm_voteslay", 41, var2, "sm_voteslay", 1056, "");
-		TopMenu.AddItem(g_vard98, "sm_votealltalk", 33, var2, "sm_votealltalk", 1024, "");
-		TopMenu.AddItem(g_vard98, "sm_voteff", 37, var2, "sm_voteff", 1024, "");
+		TopMenu.AddItem(hTopMenu, "sm_votegravity", 39, var2, "sm_votegravity", 1024, "");
+		TopMenu.AddItem(hTopMenu, "sm_voteburn", 35, var2, "sm_voteburn", 1056, "");
+		TopMenu.AddItem(hTopMenu, "sm_voteslay", 41, var2, "sm_voteslay", 1056, "");
+		TopMenu.AddItem(hTopMenu, "sm_votealltalk", 33, var2, "sm_votealltalk", 1024, "");
+		TopMenu.AddItem(hTopMenu, "sm_voteff", 37, var2, "sm_voteff", 1024, "");
 	}
 	return 0;
 }
@@ -871,14 +886,14 @@ public void:OnPluginStart()
 	RegAdminCmd("sm_voteslay", 51, 1056, "sm_voteslay <player>", "", 0);
 	RegAdminCmd("sm_votealltalk", 43, 1024, "sm_votealltalk", "", 0);
 	RegAdminCmd("sm_voteff", 47, 1024, "sm_voteff", "", 0);
-	3224/* ERROR unknown load Constant */ = CreateConVar("sm_vote_gravity", "0.60", "percent required for successful gravity vote.", 0, true, 0.05, true, 1.0);
-	3224 + 4/* ERROR unknown load Binary */ = CreateConVar("sm_vote_burn", "0.60", "percent required for successful burn vote.", 0, true, 0.05, true, 1.0);
-	3224 + 8/* ERROR unknown load Binary */ = CreateConVar("sm_vote_slay", "0.60", "percent required for successful slay vote.", 0, true, 0.05, true, 1.0);
-	3224 + 12/* ERROR unknown load Binary */ = CreateConVar("sm_vote_alltalk", "0.60", "percent required for successful alltalk vote.", 0, true, 0.05, true, 1.0);
-	3224 + 16/* ERROR unknown load Binary */ = CreateConVar("sm_vote_ff", "0.60", "percent required for successful friendly fire vote.", 0, true, 0.05, true, 1.0);
-	g_varcac = FindConVar("sv_gravity");
-	g_varcb0 = FindConVar("sv_alltalk");
-	g_varcb4 = FindConVar("mp_friendlyfire");
+	g_Cvar_Limits[0] = CreateConVar("sm_vote_gravity", "0.60", "percent required for successful gravity vote.", 0, true, 0.05, true, 1.0);
+	g_Cvar_Limits[1] = CreateConVar("sm_vote_burn", "0.60", "percent required for successful burn vote.", 0, true, 0.05, true, 1.0);
+	g_Cvar_Limits[2] = CreateConVar("sm_vote_slay", "0.60", "percent required for successful slay vote.", 0, true, 0.05, true, 1.0);
+	g_Cvar_Limits[3] = CreateConVar("sm_vote_alltalk", "0.60", "percent required for successful alltalk vote.", 0, true, 0.05, true, 1.0);
+	g_Cvar_Limits[4] = CreateConVar("sm_vote_ff", "0.60", "percent required for successful friendly fire vote.", 0, true, 0.05, true, 1.0);
+	g_Cvar_Gravity = FindConVar("sv_gravity");
+	g_Cvar_Alltalk = FindConVar("sv_alltalk");
+	g_Cvar_FF = FindConVar("mp_friendlyfire");
 	AutoExecConfig(true, "funvotes", "sourcemod");
 	new var2 = 0;
 	new var1;

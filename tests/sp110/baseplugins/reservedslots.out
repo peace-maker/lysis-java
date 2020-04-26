@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:14"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "Reserved Slots",
@@ -23,18 +23,19 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_vara78;
-new g_vara74;
-new g_vara7c;
-new g_vara88;
-new g_var968;
-new g_vara80;
-new g_vara84;
+new g_adminCount;
+new bool:g_isAdmin[66];
+new ConVar:sm_reserved_slots;
+new ConVar:sm_hide_slots;
+new ConVar:sv_visiblemaxplayers;
+new ConVar:sm_reserve_type;
+new ConVar:sm_reserve_maxadmins;
+new ConVar:sm_reserve_kicktype;
 void:CheckHiddenSlots()
 {
-	if (ConVar.BoolValue.get(g_vara78))
+	if (ConVar.BoolValue.get(sm_hide_slots))
 	{
-		SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - ConVar.IntValue.get(g_vara74));
+		SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - ConVar.IntValue.get(sm_reserved_slots));
 	}
 	return 0;
 }
@@ -54,20 +55,20 @@ void:SetVisibleMaxSlots(_arg0, _arg1)
 			var1 = _arg1;
 		}
 	}
-	ConVar.IntValue.set(g_vara7c, var1);
+	ConVar.IntValue.set(sv_visiblemaxplayers, var1);
 	return 0;
 }
 
 void:ResetVisibleMax()
 {
-	ConVar.IntValue.set(g_vara7c, -1);
+	ConVar.IntValue.set(sv_visiblemaxplayers, -1);
 	return 0;
 }
 
 SelectKickClient()
 {
 	new var2;
-	var2 = ConVar.IntValue.get(g_vara88);
+	var2 = ConVar.IntValue.get(sm_reserve_kicktype);
 	new var3 = 0;
 	new var4 = 0;
 	new var5 = 0;
@@ -128,10 +129,10 @@ SelectKickClient()
 public void:OnClientDisconnect_Post(_arg0)
 {
 	CheckHiddenSlots();
-	if (2412[_arg0])
+	if (g_isAdmin[_arg0])
 	{
-		g_var968 -= 1;
-		2412[_arg0] = 0;
+		g_adminCount -= 1;
+		g_isAdmin[_arg0] = 0;
 	}
 	return 0;
 }
@@ -139,7 +140,7 @@ public void:OnClientDisconnect_Post(_arg0)
 public void:OnClientPostAdminCheck(_arg0)
 {
 	new var5;
-	var5 = ConVar.IntValue.get(g_vara74);
+	var5 = ConVar.IntValue.get(sm_reserved_slots);
 	if (0 < var5)
 	{
 		new var6;
@@ -149,7 +150,7 @@ public void:OnClientPostAdminCheck(_arg0)
 		new var8;
 		var8 = GetUserFlagBits(_arg0);
 		new var9;
-		var9 = ConVar.IntValue.get(g_vara80);
+		var9 = ConVar.IntValue.get(sm_reserve_type);
 		if (var9)
 		{
 			if (var9 == 1)
@@ -174,13 +175,13 @@ public void:OnClientPostAdminCheck(_arg0)
 				new var3;
 				if (var8 & 16384 || var8 & 1)
 				{
-					g_var968 += 1;
-					2412[_arg0] = 1;
+					g_adminCount += 1;
+					g_isAdmin[_arg0] = 1;
 				}
 				new var4;
-				if (var6 > var7 && g_var968 < ConVar.IntValue.get(g_vara84))
+				if (var6 > var7 && g_adminCount < ConVar.IntValue.get(sm_reserve_maxadmins))
 				{
-					if (2412[_arg0])
+					if (g_isAdmin[_arg0])
 					{
 						new var11;
 						var11 = SelectKickClient();
@@ -198,7 +199,7 @@ public void:OnClientPostAdminCheck(_arg0)
 			new var1;
 			if (var6 <= var7 || IsFakeClient(_arg0) || var8 & 16384 || var8 & 1)
 			{
-				if (ConVar.BoolValue.get(g_vara78))
+				if (ConVar.BoolValue.get(sm_hide_slots))
 				{
 					SetVisibleMaxSlots(var6, var7);
 				}
@@ -231,14 +232,14 @@ public void:OnPluginEnd()
 public void:OnPluginStart()
 {
 	LoadTranslations("reservedslots.phrases");
-	g_vara74 = CreateConVar("sm_reserved_slots", "0", "Number of reserved player slots", 0, true, 0.0, false, 0.0);
-	g_vara78 = CreateConVar("sm_hide_slots", "0", "If set to 1, reserved slots will hidden (subtracted from the max slot count)", 0, true, 0.0, true, 1.0);
-	g_vara7c = FindConVar("sv_visiblemaxplayers");
-	g_vara80 = CreateConVar("sm_reserve_type", "0", "Method of reserving slots", 0, true, 0.0, true, 2.0);
-	g_vara84 = CreateConVar("sm_reserve_maxadmins", "1", "Maximum amount of admins to let in the server with reserve type 2", 0, true, 0.0, false, 0.0);
-	g_vara88 = CreateConVar("sm_reserve_kicktype", "0", "How to select a client to kick (if appropriate)", 0, true, 0.0, true, 2.0);
-	ConVar.AddChangeHook(g_vara74, 23);
-	ConVar.AddChangeHook(g_vara78, 25);
+	sm_reserved_slots = CreateConVar("sm_reserved_slots", "0", "Number of reserved player slots", 0, true, 0.0, false, 0.0);
+	sm_hide_slots = CreateConVar("sm_hide_slots", "0", "If set to 1, reserved slots will hidden (subtracted from the max slot count)", 0, true, 0.0, true, 1.0);
+	sv_visiblemaxplayers = FindConVar("sv_visiblemaxplayers");
+	sm_reserve_type = CreateConVar("sm_reserve_type", "0", "Method of reserving slots", 0, true, 0.0, true, 2.0);
+	sm_reserve_maxadmins = CreateConVar("sm_reserve_maxadmins", "1", "Maximum amount of admins to let in the server with reserve type 2", 0, true, 0.0, false, 0.0);
+	sm_reserve_kicktype = CreateConVar("sm_reserve_kicktype", "0", "How to select a client to kick (if appropriate)", 0, true, 0.0, true, 2.0);
+	ConVar.AddChangeHook(sm_reserved_slots, 23);
+	ConVar.AddChangeHook(sm_hide_slots, 25);
 	return 0;
 }
 
@@ -260,7 +261,7 @@ public void:SlotCountChanged(ConVar:_arg0, String:_arg1[], String:_arg2[])
 	var1 = ConVar.IntValue.get(_arg0);
 	if (var1)
 	{
-		if (ConVar.BoolValue.get(g_vara78))
+		if (ConVar.BoolValue.get(sm_hide_slots))
 		{
 			SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - var1);
 		}
@@ -276,7 +277,7 @@ public void:SlotHideChanged(ConVar:_arg0, String:_arg1[], String:_arg2[])
 {
 	if (ConVar.BoolValue.get(_arg0))
 	{
-		SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - ConVar.IntValue.get(g_vara74));
+		SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - ConVar.IntValue.get(sm_reserved_slots));
 	}
 	else
 	{

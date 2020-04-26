@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:17"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "Basic Chat",
@@ -23,15 +23,42 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_varbfc;
-new g_varbf8;
+new String:g_ColorNames[12][52] =
+{
+	"White",
+	"Red",
+	"Green",
+	"Blue",
+	"Yellow",
+	"Purple",
+	"Cyan",
+	"Orange",
+	"Pink",
+	"Olive",
+	"Lime",
+	"Violet"
+};
+new g_Colors[3][13] =
+{
+	{
+		255, 255, 255, 255, 0, 0, 0, 255, 0, 0, 0, 255, 255
+	},
+	{
+		255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 0, 255
+	},
+	{
+		0, 255, 0, 0, 0, 255, 255, 255, 0, 255, 0, 255, 0
+	}
+};
+new ConVar:g_Cvar_Chatmode;
+new EngineVersion:g_GameEngine;
 void:SendDialogToOne(_arg0, _arg1, String:_arg2[], any:_arg3)
 {
 	new var1 = 0;
 	VFormat(var1, 100, _arg2[0], 4);
 	new var2;
 	var2 = KeyValues.KeyValues("Stuff", "title", var1);
-	KeyValues.SetColor(var2, "color", 2856[_arg1], 2856[_arg1][1], 2856[_arg1][2], 255);
+	KeyValues.SetColor(var2, "color", g_Colors[_arg1][0], g_Colors[_arg1][1], g_Colors[_arg1][2], 255);
 	KeyValues.SetNum(var2, "level", 1);
 	KeyValues.SetNum(var2, "time", 10);
 	CreateDialog(_arg0, var2, 0);
@@ -46,7 +73,7 @@ void:SendPrivateChat(_arg0, _arg1, String:_arg2[])
 	{
 		if (_arg0 != _arg1)
 		{
-			if (g_varbfc == 12)
+			if (g_GameEngine == 12)
 			{
 				PrintToChat(_arg0, " \x01\x0B\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
 			}
@@ -57,7 +84,7 @@ void:SendPrivateChat(_arg0, _arg1, String:_arg2[])
 	{
 		PrintToServer("(Private to %N) %N: %s", _arg1, _arg0, _arg2[0]);
 	}
-	if (g_varbfc == 12)
+	if (g_GameEngine == 12)
 	{
 		PrintToChat(_arg1, " \x01\x0B\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
 	}
@@ -162,7 +189,7 @@ FindColor(String:_arg0[])
 	new var1 = 0;
 	while (var1 < 13)
 	{
-		if (!(strcmp(_arg0[0], 2648[var1], false)))
+		if (!(strcmp(_arg0[0], g_ColorNames[var1], false)))
 		{
 			return var1;
 		}
@@ -184,7 +211,7 @@ void:SendChatToAll(_arg0, String:_arg1[])
 		else
 		{
 			FormatActivitySource(_arg0, var3, var2, 128);
-			if (g_varbfc == 12)
+			if (g_GameEngine == 12)
 			{
 				PrintToChat(var3, " \x01\x0B\x04%t: \x01%s", "Say all", var2, _arg1[0]);
 			}
@@ -228,7 +255,7 @@ void:SendChatToAdmins(_arg0, String:_arg1[])
 		new var2;
 		if (IsClientInGame(var6) && (var6 != _arg0 && CheckCommandAccess(var6, "sm_chat", 512, false)))
 		{
-			if (g_varbfc == 12)
+			if (g_GameEngine == 12)
 			{
 				new var3;
 				if (var5)
@@ -422,7 +449,7 @@ public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
 		if (strcmp(_arg1[0], "say_team", false) && strcmp(_arg1[0], "say_squad", false))
 		{
 			new var3;
-			if (CheckCommandAccess(_arg0, "sm_chat", 512, false) && ConVar.BoolValue.get(g_varbf8))
+			if (CheckCommandAccess(_arg0, "sm_chat", 512, false) && ConVar.BoolValue.get(g_Cvar_Chatmode))
 			{
 				return 0;
 			}
@@ -475,11 +502,11 @@ public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
 public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
-	g_varbfc = GetEngineVersion();
-	g_varbf8 = CreateConVar("sm_chat_mode", "1", "Allows player's to send messages to admin chat.", 0, true, 0.0, true, 1.0);
+	g_GameEngine = GetEngineVersion();
+	g_Cvar_Chatmode = CreateConVar("sm_chat_mode", "1", "Allows player's to send messages to admin chat.", 0, true, 0.0, true, 1.0);
 	RegAdminCmd("sm_say", 29, 512, "sm_say <message> - sends message to all players", "", 0);
 	RegAdminCmd("sm_csay", 21, 512, "sm_csay <message> - sends centered message to all players", "", 0);
-	if (g_varbfc != 5)
+	if (g_GameEngine != 5)
 	{
 		RegAdminCmd("sm_hsay", 23, 512, "sm_hsay <message> - sends hint message to all players", "", 0);
 	}

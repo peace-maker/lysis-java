@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:15"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "SQL Admins (Threaded)",
@@ -23,22 +23,27 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var978;
-new g_var97c;
-new g_var974;
+new Database:hDatabase;
+new g_sequence;
+new ConnectLock;
+new RebuildCachePart[3];
+new <enumstruct0>:playerinfo[66] =
+{
+	264, 268, 272, 276, 280, 284, 288, 292, 296, 300, 304, 308, 312, 316, 320, 324, 328, 332, 336, 340, 344, 348, 352, 356, 360, 364, 368, 372, 376, 380, 384, 388, 392, 396, 400, 404, 408, 412, 416, 420, 424, 428, 432, 436, 440, 444, 448, 452, 456, 460, 464, 468, 472, 476, 480, 484, 488, 492, 496, 500, 504, 508, 512, 516, 520, 524
+};
 void:FetchUsersWeCan(Database:_arg0)
 {
 	new var2 = 1;
 	while (var2 <= MaxClients)
 	{
 		new var1;
-		if (2444[var2][1] && GetUserAdmin(var2) == -1)
+		if (playerinfo[var2][1] && GetUserAdmin(var2) == -1)
 		{
 			FetchUser(_arg0, var2);
 		}
 		var2++;
 	}
-	2432 + 8/* ERROR unknown load Binary */ = 0;
+	RebuildCachePart[2] = 0;
 	return 0;
 }
 
@@ -73,15 +78,15 @@ bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
 
 void:RequestDatabaseConnection()
 {
-	g_var978 += 1;
-	g_var97c = g_var978;
+	g_sequence += 1;
+	ConnectLock = g_sequence;
 	if (SQL_CheckConfig("admins"))
 	{
-		Database.Connect(19, "admins", g_var97c);
+		Database.Connect(19, "admins", ConnectLock);
 	}
 	else
 	{
-		Database.Connect(19, "default", g_var97c);
+		Database.Connect(19, "default", ConnectLock);
 	}
 	return 0;
 }
@@ -126,12 +131,12 @@ void:FetchUser(Database:_arg0, _arg1)
 		var8 = Format(var8 + var7, 512 - var8, " OR (a.authtype = 'steam' AND (a.identity = '%s' OR a.identity = '%s'))", var4, var5) + var8;
 	}
 	var8 = Format(var8 + var7, 512 - var8, " GROUP BY a.id") + var8;
-	g_var978 += 1;
-	2444[_arg1] = g_var978;
+	g_sequence += 1;
+	playerinfo[_arg1] = g_sequence;
 	new var9;
 	var9 = DataPack.DataPack();
 	DataPack.WriteCell(var9, _arg1, false);
-	DataPack.WriteCell(var9, 2444[_arg1], false);
+	DataPack.WriteCell(var9, playerinfo[_arg1], false);
 	DataPack.WriteString(var9, var7, false);
 	Database.Query(_arg0, 33, var7, var9, 0);
 	return 0;
@@ -139,24 +144,24 @@ void:FetchUser(Database:_arg0, _arg1)
 
 public bool:OnClientConnect(_arg0, String:_arg1[], _arg2)
 {
-	2444[_arg0] = 0;
-	2444[_arg0][1] = 0;
+	playerinfo[_arg0] = 0;
+	playerinfo[_arg0][1] = 0;
 	return 1;
 }
 
 public void:OnClientDisconnect(_arg0)
 {
-	2444[_arg0] = 0;
-	2444[_arg0][1] = 0;
+	playerinfo[_arg0] = 0;
+	playerinfo[_arg0][1] = 0;
 	return 0;
 }
 
 public Action:OnClientPreAdminCheck(_arg0)
 {
-	2444[_arg0][1] = 1;
-	if (g_var974)
+	playerinfo[_arg0][1] = 1;
+	if (hDatabase)
 	{
-		if (2432 + 8/* ERROR unknown load Binary */)
+		if (RebuildCachePart[2])
 		{
 			return 0;
 		}
@@ -164,7 +169,7 @@ public Action:OnClientPreAdminCheck(_arg0)
 		{
 			return 0;
 		}
-		FetchUser(g_var974, _arg0);
+		FetchUser(hDatabase, _arg0);
 		return 3;
 	}
 	return 0;
@@ -173,28 +178,28 @@ public Action:OnClientPreAdminCheck(_arg0)
 public void:OnDatabaseConnect(Database:_arg0, String:_arg1[], any:_arg2)
 {
 	new var1;
-	if (g_var97c == _arg2 && g_var974)
+	if (ConnectLock == _arg2 && hDatabase)
 	{
 		CloseHandle(_arg0);
 		_arg0 = 0;
 		return 0;
 	}
-	g_var97c = 0;
-	g_var974 = _arg0;
-	if (g_var974)
+	ConnectLock = 0;
+	hDatabase = _arg0;
+	if (hDatabase)
 	{
 		new var2 = 0;
-		if ((var2 = 2432/* ERROR unknown load Constant */))
+		if ((var2 = RebuildCachePart[0]))
 		{
-			FetchOverrides(g_var974, var2);
+			FetchOverrides(hDatabase, var2);
 		}
-		if ((var2 = 2432 + 4/* ERROR unknown load Binary */))
+		if ((var2 = RebuildCachePart[1]))
 		{
-			FetchGroups(g_var974, var2);
+			FetchGroups(hDatabase, var2);
 		}
-		if ((var2 = 2432 + 8/* ERROR unknown load Binary */))
+		if ((var2 = RebuildCachePart[2]))
 		{
-			FetchUsersWeCan(g_var974);
+			FetchUsersWeCan(hDatabase);
 		}
 		return 0;
 	}
@@ -204,37 +209,37 @@ public void:OnDatabaseConnect(Database:_arg0, String:_arg1[], any:_arg2)
 
 public void:OnMapEnd()
 {
-	CloseHandle(g_var974);
-	g_var974 = 0;
+	CloseHandle(hDatabase);
+	hDatabase = 0;
 	return 0;
 }
 
 public void:OnRebuildAdminCache(AdminCachePart:_arg0)
 {
 	new var1;
-	g_var978 += 1;
-	var1 = g_var978;
-	2432[_arg0] = var1;
-	if (g_var974)
+	g_sequence += 1;
+	var1 = g_sequence;
+	RebuildCachePart[_arg0] = var1;
+	if (hDatabase)
 	{
 		if (_arg0)
 		{
 			if (_arg0 == 1)
 			{
-				FetchGroups(g_var974, var1);
+				FetchGroups(hDatabase, var1);
 			}
 			if (_arg0 == 2)
 			{
-				FetchUsersWeCan(g_var974);
+				FetchUsersWeCan(hDatabase);
 			}
 		}
 		else
 		{
-			FetchOverrides(g_var974, var1);
+			FetchOverrides(hDatabase, var1);
 		}
 		return 0;
 	}
-	if (!g_var97c)
+	if (!ConnectLock)
 	{
 		RequestDatabaseConnection();
 	}
@@ -248,7 +253,7 @@ public void:OnReceiveGroupImmunity(Database:_arg0, DBResultSet:_arg1, String:_ar
 	DataPack.Reset(var2, false);
 	new var3;
 	var3 = DataPack.ReadCell(var2);
-	if (var3 != 2432 + 4/* ERROR unknown load Binary */)
+	if (var3 != RebuildCachePart[1])
 	{
 		CloseHandle(var2);
 		var2 = 0;
@@ -272,7 +277,7 @@ public void:OnReceiveGroupImmunity(Database:_arg0, DBResultSet:_arg1, String:_ar
 				GroupId.AddGroupImmunity(var7, var8);
 			}
 		}
-		2432 + 4/* ERROR unknown load Binary */ = 0;
+		RebuildCachePart[1] = 0;
 		return 0;
 	}
 	new var4 = 0;
@@ -291,7 +296,7 @@ public void:OnReceiveGroupOverrides(Database:_arg0, DBResultSet:_arg1, String:_a
 	DataPack.Reset(var1, false);
 	new var2;
 	var2 = DataPack.ReadCell(var1);
-	if (var2 != 2432 + 4/* ERROR unknown load Binary */)
+	if (var2 != RebuildCachePart[1])
 	{
 		CloseHandle(var1);
 		var1 = 0;
@@ -352,7 +357,7 @@ public void:OnReceiveGroups(Database:_arg0, DBResultSet:_arg1, String:_arg2[], a
 	DataPack.Reset(var1, false);
 	new var2;
 	var2 = DataPack.ReadCell(var1);
-	if (var2 != 2432 + 4/* ERROR unknown load Binary */)
+	if (var2 != RebuildCachePart[1])
 	{
 		CloseHandle(var1);
 		var1 = 0;
@@ -411,7 +416,7 @@ public void:OnReceiveOverrides(Database:_arg0, DBResultSet:_arg1, String:_arg2[]
 	DataPack.Reset(var1, false);
 	new var2;
 	var2 = DataPack.ReadCell(var1);
-	if (var2 != 2432/* ERROR unknown load Constant */)
+	if (var2 != RebuildCachePart[0])
 	{
 		CloseHandle(var1);
 		var1 = 0;
@@ -443,7 +448,7 @@ public void:OnReceiveOverrides(Database:_arg0, DBResultSet:_arg1, String:_arg2[]
 				}
 			}
 		}
-		2432/* ERROR unknown load Constant */ = 0;
+		RebuildCachePart[0] = 0;
 		return 0;
 	}
 	new var3 = 0;
@@ -464,7 +469,7 @@ public void:OnReceiveUser(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any
 	var3 = DataPack.ReadCell(var2);
 	new var4;
 	var4 = DataPack.ReadCell(var2);
-	if (var4 != 2444[var3])
+	if (var4 != playerinfo[var3])
 	{
 		CloseHandle(var2);
 		var2 = 0;
@@ -497,7 +502,7 @@ public void:OnReceiveUserGroups(Database:_arg0, DBResultSet:_arg1, String:_arg2[
 	var2 = DataPack.ReadCell(var1);
 	new var3;
 	var3 = DataPack.ReadCell(var1);
-	if (var3 != 2444[var2])
+	if (var3 != playerinfo[var2])
 	{
 		CloseHandle(var1);
 		var1 = 0;

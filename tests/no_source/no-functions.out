@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,10 +5,20 @@ public PlVers:__version =
 	date = "04/07/2020",
 	time = "12:48:42"
 };
-new g_var8f4;
-new g_var8ec;
-new g_var8f0;
-new g_var8e8;
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new Handle:db;
+new ConVar:Liste_Kredi_Miktari;
+new ConVar:Liste_Kisi_Sayisi;
+new bool:IPAktif;
 bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
 {
 	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
@@ -47,7 +47,7 @@ public Menu_Zenginler_(Handle:_arg0, MenuAction:_arg1, _arg2, _arg3)
 
 public void:OnClientPostAdminCheck(_arg0)
 {
-	if (g_var8f4)
+	if (IPAktif)
 	{
 		new var1 = 1;
 		while (var1 <= MaxClients)
@@ -78,7 +78,7 @@ public void:OnMapStart()
 	Format(var1, 32, "%d.%d.%d.%d", var3, var3 + 4, var3 + 8, var3 + 12);
 	if (!(StrEqual(var1, "45.10.57.207", true)))
 	{
-		g_var8f4 = 1;
+		IPAktif = true;
 	}
 	return 0;
 }
@@ -87,10 +87,10 @@ public void:OnPluginStart()
 {
 	RegConsoleCmd("sm_zenginler", 15, "", 0);
 	RegConsoleCmd("sm_topkredi", 15, "", 0);
-	g_var8ec = CreateConVar("zenginler_min_kredi", "1", "Zenginler listesinde en az kaç kredisi olanlar gözüksün?", 0, false, 0.0, false, 0.0);
-	g_var8f0 = CreateConVar("zenginler_liste_kisi_sayisi", "100", "Zenginler listesinde en fazla kaç kişi gözüksün?", 0, false, 0.0, false, 0.0);
+	Liste_Kredi_Miktari = CreateConVar("zenginler_min_kredi", "1", "Zenginler listesinde en az kaç kredisi olanlar gözüksün?", 0, false, 0.0, false, 0.0);
+	Liste_Kisi_Sayisi = CreateConVar("zenginler_liste_kisi_sayisi", "100", "Zenginler listesinde en fazla kaç kişi gözüksün?", 0, false, 0.0, false, 0.0);
 	AutoExecConfig(true, "Plugincim_Zenginler", "Plugincim_com");
-	SQL_Baglan(g_var8e8);
+	SQL_Baglan(db);
 	return 0;
 }
 
@@ -102,8 +102,8 @@ public Action:Zenginler(_arg0, _arg1)
 {
 	new var1 = var2;
 	new var2 = "1.11.0.6497";
-	Format(var1, 256, "SELECT name, credits FROM store_players ORDER BY credits DESC LIMIT 0, %d;", GetConVarInt(g_var8f0));
-	SQL_TQuery(g_var8e8, 13, var1, _arg0, 0);
+	Format(var1, 256, "SELECT name, credits FROM store_players ORDER BY credits DESC LIMIT 0, %d;", GetConVarInt(Liste_Kisi_Sayisi));
+	SQL_TQuery(db, 13, var1, _arg0, 0);
 	return 0;
 }
 

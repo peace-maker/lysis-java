@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:16"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_sdktools =
 {
 	name = "SDKTools",
@@ -28,13 +35,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:16"
-};
 public Plugin:myinfo =
 {
 	name = "Basic Comm Control",
@@ -43,12 +43,16 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
+new <enumstruct0>:playerstate[66] =
+{
+	264, 272, 280, 288, 296, 304, 312, 320, 328, 336, 344, 352, 360, 368, 376, 384, 392, 400, 408, 416, 424, 432, 440, 448, 456, 464, 472, 480, 488, 496, 504, 512, 520, 528, 536, 544, 552, 560, 568, 576, 584, 592, 600, 608, 616, 624, 632, 640, 648, 656, 664, 672, 680, 688, 696, 704, 712, 720, 728, 736, 744, 752, 760, 768, 776, 784
+};
+new ConVar:g_Cvar_Deadtalk;
+new ConVar:g_Cvar_Alltalk;
+new bool:g_Hooked;
+new TopMenu:hTopMenu;
 new g_var1618;
 new g_var1634;
-new g_var10d4;
-new g_var10d8;
-new g_var10dc;
-new g_var10e0;
 void:FireOnClientMute(_arg0, bool:_arg1)
 {
 	if (!g_var1618)
@@ -123,12 +127,12 @@ void:DisplayGagTypesMenu(_arg0)
 	new var2;
 	var2 = Menu.Menu(51, 28);
 	new var3;
-	var3 = 3252[_arg0][2];
+	var3 = playerstate[_arg0][2];
 	new var4 = 0;
 	Format(var4, 100, "%T: %N", "Choose Type", _arg0, var3);
 	Menu.SetTitle(var2, var4);
 	Menu.ExitBackButton.set(var2, true);
-	if (3252[var3])
+	if (playerstate[var3])
 	{
 		AddTranslatedMenuItem(var2, "1", "UnMute Player", _arg0);
 	}
@@ -136,7 +140,7 @@ void:DisplayGagTypesMenu(_arg0)
 	{
 		AddTranslatedMenuItem(var2, "0", "Mute Player", _arg0);
 	}
-	if (3252[var3][1])
+	if (playerstate[var3][1])
 	{
 		AddTranslatedMenuItem(var2, "3", "UnGag Player", _arg0);
 	}
@@ -145,7 +149,7 @@ void:DisplayGagTypesMenu(_arg0)
 		AddTranslatedMenuItem(var2, "2", "Gag Player", _arg0);
 	}
 	new var1;
-	if (3252[var3] && 3252[var3][1])
+	if (playerstate[var3] && playerstate[var3][1])
 	{
 		AddTranslatedMenuItem(var2, "4", "Silence Player", _arg0);
 	}
@@ -180,7 +184,7 @@ void:DisplayGagPlayerMenu(_arg0)
 
 void:PerformMute(_arg0, _arg1, bool:_arg2)
 {
-	3252[_arg1] = 1;
+	playerstate[_arg1] = 1;
 	SetClientListeningFlags(_arg1, 1);
 	FireOnClientMute(_arg1, true);
 	if (!_arg2)
@@ -192,16 +196,16 @@ void:PerformMute(_arg0, _arg1, bool:_arg2)
 
 void:PerformUnMute(_arg0, _arg1, bool:_arg2)
 {
-	3252[_arg1] = 0;
+	playerstate[_arg1] = 0;
 	new var1;
-	if (ConVar.IntValue.get(g_var10d4) == 1 && IsPlayerAlive(_arg1))
+	if (ConVar.IntValue.get(g_Cvar_Deadtalk) == 1 && IsPlayerAlive(_arg1))
 	{
 		SetClientListeningFlags(_arg1, 4);
 	}
 	else
 	{
 		new var2;
-		if (ConVar.IntValue.get(g_var10d4) == 2 && IsPlayerAlive(_arg1))
+		if (ConVar.IntValue.get(g_Cvar_Deadtalk) == 2 && IsPlayerAlive(_arg1))
 		{
 			SetClientListeningFlags(_arg1, 8);
 		}
@@ -217,7 +221,7 @@ void:PerformUnMute(_arg0, _arg1, bool:_arg2)
 
 void:PerformGag(_arg0, _arg1, bool:_arg2)
 {
-	3252[_arg1][1] = 1;
+	playerstate[_arg1][1] = 1;
 	FireOnClientGag(_arg1, true);
 	if (!_arg2)
 	{
@@ -228,7 +232,7 @@ void:PerformGag(_arg0, _arg1, bool:_arg2)
 
 void:PerformUnGag(_arg0, _arg1, bool:_arg2)
 {
-	3252[_arg1][1] = 0;
+	playerstate[_arg1][1] = 0;
 	FireOnClientGag(_arg1, false);
 	if (!_arg2)
 	{
@@ -239,14 +243,14 @@ void:PerformUnGag(_arg0, _arg1, bool:_arg2)
 
 void:PerformSilence(_arg0, _arg1)
 {
-	if (!3252[_arg1][1])
+	if (!playerstate[_arg1][1])
 	{
-		3252[_arg1][1] = 1;
+		playerstate[_arg1][1] = 1;
 		FireOnClientGag(_arg1, true);
 	}
-	if (!3252[_arg1])
+	if (!playerstate[_arg1])
 	{
-		3252[_arg1] = 1;
+		playerstate[_arg1] = 1;
 		SetClientListeningFlags(_arg1, 1);
 		FireOnClientMute(_arg1, true);
 	}
@@ -256,23 +260,23 @@ void:PerformSilence(_arg0, _arg1)
 
 void:PerformUnSilence(_arg0, _arg1)
 {
-	if (3252[_arg1][1])
+	if (playerstate[_arg1][1])
 	{
-		3252[_arg1][1] = 0;
+		playerstate[_arg1][1] = 0;
 		FireOnClientGag(_arg1, false);
 	}
-	if (3252[_arg1])
+	if (playerstate[_arg1])
 	{
-		3252[_arg1] = 0;
+		playerstate[_arg1] = 0;
 		new var1;
-		if (ConVar.IntValue.get(g_var10d4) == 1 && IsPlayerAlive(_arg1))
+		if (ConVar.IntValue.get(g_Cvar_Deadtalk) == 1 && IsPlayerAlive(_arg1))
 		{
 			SetClientListeningFlags(_arg1, 4);
 		}
 		else
 		{
 			new var2;
-			if (ConVar.IntValue.get(g_var10d4) == 2 && IsPlayerAlive(_arg1))
+			if (ConVar.IntValue.get(g_Cvar_Deadtalk) == 2 && IsPlayerAlive(_arg1))
 			{
 				SetClientListeningFlags(_arg1, 8);
 			}
@@ -481,7 +485,7 @@ public Action:Command_Unmute(_arg0, _arg1)
 	{
 		new var7;
 		var7 = var3[var6];
-		if (3252[var7])
+		if (playerstate[var7])
 		{
 			PerformUnMute(_arg0, var7, false);
 		}
@@ -538,19 +542,19 @@ public Action:Command_Unsilence(_arg0, _arg1)
 public void:ConVarChange_Alltalk(ConVar:_arg0, String:_arg1[], String:_arg2[])
 {
 	new var1;
-	var1 = ConVar.IntValue.get(g_var10d4);
+	var1 = ConVar.IntValue.get(g_Cvar_Deadtalk);
 	new var2 = 1;
 	while (var2 <= MaxClients)
 	{
 		if (IsClientInGame(var2))
 		{
-			if (3252[var2])
+			if (playerstate[var2])
 			{
 				SetClientListeningFlags(var2, 1);
 			}
 			else
 			{
-				if (ConVar.BoolValue.get(g_var10d8))
+				if (ConVar.BoolValue.get(g_Cvar_Alltalk))
 				{
 					SetClientListeningFlags(var2, 0);
 				}
@@ -574,19 +578,19 @@ public void:ConVarChange_Alltalk(ConVar:_arg0, String:_arg1[], String:_arg2[])
 
 public void:ConVarChange_Deadtalk(ConVar:_arg0, String:_arg1[], String:_arg2[])
 {
-	if (ConVar.IntValue.get(g_var10d4))
+	if (ConVar.IntValue.get(g_Cvar_Deadtalk))
 	{
 		HookEvent("player_spawn", 47, 1);
 		HookEvent("player_death", 45, 1);
-		g_var10dc = 1;
+		g_Hooked = true;
 	}
 	else
 	{
-		if (g_var10dc)
+		if (g_Hooked)
 		{
 			UnhookEvent("player_spawn", 47, 1);
 			UnhookEvent("player_death", 45, 1);
-			g_var10dc = 0;
+			g_Hooked = false;
 		}
 	}
 	return 0;
@@ -598,18 +602,18 @@ public void:Event_PlayerDeath(Event:_arg0, String:_arg1[], bool:_arg2)
 	var1 = GetClientOfUserId(Event.GetInt(_arg0, "userid", 0));
 	if (var1)
 	{
-		if (3252[var1])
+		if (playerstate[var1])
 		{
 			SetClientListeningFlags(var1, 1);
 			return 0;
 		}
-		if (ConVar.BoolValue.get(g_var10d8))
+		if (ConVar.BoolValue.get(g_Cvar_Alltalk))
 		{
 			SetClientListeningFlags(var1, 0);
 			return 0;
 		}
 		new var2;
-		var2 = ConVar.IntValue.get(g_var10d4);
+		var2 = ConVar.IntValue.get(g_Cvar_Deadtalk);
 		if (var2 == 1)
 		{
 			SetClientListeningFlags(var1, 4);
@@ -632,7 +636,7 @@ public void:Event_PlayerSpawn(Event:_arg0, String:_arg1[], bool:_arg2)
 	var1 = GetClientOfUserId(Event.GetInt(_arg0, "userid", 0));
 	if (var1)
 	{
-		if (3252[var1])
+		if (playerstate[var1])
 		{
 			SetClientListeningFlags(var1, 1);
 		}
@@ -657,9 +661,9 @@ public MenuHandler_GagPlayer(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var10e0)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var10e0, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -673,7 +677,7 @@ public MenuHandler_GagPlayer(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			{
 				if (CanUserTarget(_arg2, var4))
 				{
-					3252[_arg2][2] = GetClientOfUserId(var3);
+					playerstate[_arg2][2] = GetClientOfUserId(var3);
 					DisplayGagTypesMenu(_arg2);
 				}
 				PrintToChat(_arg2, "[SM] %t", 4552);
@@ -699,9 +703,9 @@ public MenuHandler_GagTypes(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var10e0)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var10e0, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -711,7 +715,7 @@ public MenuHandler_GagTypes(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
 			var3 = StringToInt(var2, 10);
 			new var4;
-			var4 = 3252[_arg2][2];
+			var4 = playerstate[_arg2][2];
 			new var5 = 0;
 			GetClientName(var4, var5, 128);
 			switch (var3)
@@ -766,7 +770,7 @@ public Native_IsClientGagged(Handle:_arg0, _arg1)
 	}
 	if (IsClientInGame(var2))
 	{
-		return 3252[var2][1];
+		return playerstate[var2][1];
 	}
 	return ThrowNativeError(23, "Client %d is not in game", var2);
 }
@@ -782,7 +786,7 @@ public Native_IsClientMuted(Handle:_arg0, _arg1)
 	}
 	if (IsClientInGame(var2))
 	{
-		return 3252[var2];
+		return playerstate[var2];
 	}
 	return ThrowNativeError(23, "Client %d is not in game", var2);
 }
@@ -802,7 +806,7 @@ public Native_SetClientGag(Handle:_arg0, _arg1)
 		var3 = GetNativeCell(2);
 		if (var3)
 		{
-			if (3252[var2][1])
+			if (playerstate[var2][1])
 			{
 				return 0;
 			}
@@ -810,7 +814,7 @@ public Native_SetClientGag(Handle:_arg0, _arg1)
 		}
 		else
 		{
-			if (3252[var2][1])
+			if (playerstate[var2][1])
 			{
 				PerformUnGag(-1, var2, true);
 			}
@@ -836,7 +840,7 @@ public Native_SetClientMute(Handle:_arg0, _arg1)
 		var3 = GetNativeCell(2);
 		if (var3)
 		{
-			if (3252[var2])
+			if (playerstate[var2])
 			{
 				return 0;
 			}
@@ -844,7 +848,7 @@ public Native_SetClientMute(Handle:_arg0, _arg1)
 		}
 		else
 		{
-			if (3252[var2])
+			if (playerstate[var2])
 			{
 				PerformUnMute(-1, var2, true);
 			}
@@ -859,31 +863,31 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_var10e0 == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_var10e0 = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_var10e0, "PlayerCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_var10e0, "sm_gag", 25, var2, "sm_gag", 512, "");
+		TopMenu.AddItem(hTopMenu, "sm_gag", 25, var2, "sm_gag", 512, "");
 	}
 	return 0;
 }
 
 public bool:OnClientConnect(_arg0, String:_arg1[], _arg2)
 {
-	3252[_arg0][1] = 0;
-	3252[_arg0] = 0;
+	playerstate[_arg0][1] = 0;
+	playerstate[_arg0] = 0;
 	return 1;
 }
 
 public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
 {
 	new var1;
-	if (_arg0 && 3252[_arg0][1])
+	if (_arg0 && playerstate[_arg0][1])
 	{
 		return 4;
 	}
@@ -894,16 +898,16 @@ public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("basecomm.phrases");
-	g_var10d4 = CreateConVar("sm_deadtalk", "0", "Controls how dead communicate. 0 - Off. 1 - Dead players ignore teams. 2 - Dead players talk to living teammates.", 0, true, 0.0, true, 2.0);
-	g_var10d8 = FindConVar("sv_alltalk");
+	g_Cvar_Deadtalk = CreateConVar("sm_deadtalk", "0", "Controls how dead communicate. 0 - Off. 1 - Dead players ignore teams. 2 - Dead players talk to living teammates.", 0, true, 0.0, true, 2.0);
+	g_Cvar_Alltalk = FindConVar("sv_alltalk");
 	RegAdminCmd("sm_mute", 31, 512, "sm_mute <player> - Removes a player's ability to use voice.", "", 0);
 	RegAdminCmd("sm_gag", 29, 512, "sm_gag <player> - Removes a player's ability to use chat.", "", 0);
 	RegAdminCmd("sm_silence", 33, 512, "sm_silence <player> - Removes a player's ability to use voice or chat.", "", 0);
 	RegAdminCmd("sm_unmute", 37, 512, "sm_unmute <player> - Restores a player's ability to use voice.", "", 0);
 	RegAdminCmd("sm_ungag", 35, 512, "sm_ungag <player> - Restores a player's ability to use chat.", "", 0);
 	RegAdminCmd("sm_unsilence", 39, 512, "sm_unsilence <player> - Restores a player's ability to use voice and chat.", "", 0);
-	ConVar.AddChangeHook(g_var10d4, 43);
-	ConVar.AddChangeHook(g_var10d8, 41);
+	ConVar.AddChangeHook(g_Cvar_Deadtalk, 43);
+	ConVar.AddChangeHook(g_Cvar_Alltalk, 41);
 	new var2 = 0;
 	new var1;
 	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))

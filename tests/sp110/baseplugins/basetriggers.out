@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:19"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,18 +14,12 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public SharedPlugin:__pl_mapchooser =
 {
 	name = "mapchooser",
 	file = "mapchooser.smx",
 	required = 0,
-};
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:19"
 };
 public Plugin:myinfo =
 {
@@ -29,21 +29,21 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_vara94;
-new g_vara8c;
-new g_vara9c;
-new g_varaa0;
-new g_varaa4;
-new g_varaac;
-new g_varaa8;
-new g_vara98;
-new g_vara90;
+new ConVar:g_Cvar_TriggerShow;
+new ConVar:g_Cvar_TimeleftInterval;
+new ConVar:g_Cvar_FriendlyFire;
+new Handle:g_Timer_TimeShow;
+new ConVar:g_Cvar_WinLimit;
+new ConVar:g_Cvar_FragLimit;
+new ConVar:g_Cvar_MaxRounds;
+new bool:mapchooser;
+new g_TotalRounds;
 void:ShowFriendlyFire(_arg0)
 {
-	if (g_vara94)
+	if (g_Cvar_FriendlyFire)
 	{
 		new var1 = 0;
-		if (ConVar.BoolValue.get(g_vara94))
+		if (ConVar.BoolValue.get(g_Cvar_FriendlyFire))
 		{
 			strcopy(var1, 24, "Friendly Fire On");
 		}
@@ -51,7 +51,7 @@ void:ShowFriendlyFire(_arg0)
 		{
 			strcopy(var1, 24, "Friendly Fire Off");
 		}
-		if (ConVar.IntValue.get(g_vara8c))
+		if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 		{
 			PrintToChatAll("[SM] %t", var1);
 		}
@@ -107,7 +107,7 @@ void:ShowTimeLeft(_arg0, _arg1)
 	new var10 = 0;
 	new var11 = 0;
 	new var2;
-	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_vara8c)))
+	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
 	{
 		_arg0 = 0;
 	}
@@ -136,10 +136,10 @@ void:ShowTimeLeft(_arg0, _arg1)
 	}
 	if (!var8)
 	{
-		if (g_vara9c)
+		if (g_Cvar_WinLimit)
 		{
 			new var16;
-			var16 = ConVar.IntValue.get(g_vara9c);
+			var16 = ConVar.IntValue.get(g_Cvar_WinLimit);
 			if (0 < var16)
 			{
 				if (var9)
@@ -166,10 +166,10 @@ void:ShowTimeLeft(_arg0, _arg1)
 				var9 = 1;
 			}
 		}
-		if (g_varaa0)
+		if (g_Cvar_FragLimit)
 		{
 			new var18;
-			var18 = ConVar.IntValue.get(g_varaa0);
+			var18 = ConVar.IntValue.get(g_Cvar_FragLimit);
 			if (0 < var18)
 			{
 				if (var9)
@@ -196,14 +196,14 @@ void:ShowTimeLeft(_arg0, _arg1)
 				var9 = 1;
 			}
 		}
-		if (g_varaa4)
+		if (g_Cvar_MaxRounds)
 		{
 			new var20;
-			var20 = ConVar.IntValue.get(g_varaa4);
+			var20 = ConVar.IntValue.get(g_Cvar_MaxRounds);
 			if (0 < var20)
 			{
 				new var21;
-				var21 = var20 - g_varaac;
+				var21 = var20 - g_TotalRounds;
 				if (var9)
 				{
 					new var22;
@@ -245,7 +245,7 @@ void:ShowTimeLeft(_arg0, _arg1)
 		}
 	}
 	new var6;
-	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_vara8c)))
+	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
 	{
 		PrintToChatAll("[SM] %s", var11);
 	}
@@ -304,7 +304,7 @@ public Action:Command_Nextmap(_arg0, _arg1)
 	new var3 = 0;
 	GetNextMap(var3, 256);
 	new var2;
-	if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+	if (mapchooser && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 	{
 		ReplyToCommand(_arg0, "[SM] %t", 3240);
 	}
@@ -328,39 +328,39 @@ public void:ConVarChange_TimeleftInterval(ConVar:_arg0, String:_arg1[], String:_
 	var1 = StringToFloat(_arg2[0]);
 	if (var1 < 1.0)
 	{
-		if (g_vara98)
+		if (g_Timer_TimeShow)
 		{
-			KillTimer(g_vara98, false);
+			KillTimer(g_Timer_TimeShow, false);
 		}
 		return 0;
 	}
-	if (g_vara98)
+	if (g_Timer_TimeShow)
 	{
-		KillTimer(g_vara98, false);
-		g_vara98 = CreateTimer(var1, 39, 0, 1);
+		KillTimer(g_Timer_TimeShow, false);
+		g_Timer_TimeShow = CreateTimer(var1, 39, 0, 1);
 	}
 	else
 	{
-		g_vara98 = CreateTimer(var1, 39, 0, 1);
+		g_Timer_TimeShow = CreateTimer(var1, 39, 0, 1);
 	}
 	return 0;
 }
 
 public void:Event_GameStart(Event:_arg0, String:_arg1[], bool:_arg2)
 {
-	g_varaac = 0;
+	g_TotalRounds = 0;
 	return 0;
 }
 
 public void:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
 {
-	g_varaac += 1;
+	g_TotalRounds += 1;
 	return 0;
 }
 
 public void:Event_TFRestartRound(Event:_arg0, String:_arg1[], bool:_arg2)
 {
-	g_varaac = 0;
+	g_TotalRounds = 0;
 	return 0;
 }
 
@@ -369,7 +369,7 @@ public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
 	new var1;
 	if (Event.GetInt(_arg0, "round_complete", 0) == 1 || StrEqual(_arg1[0], "arena_win_panel", true))
 	{
-		g_varaac += 1;
+		g_TotalRounds += 1;
 	}
 	return 0;
 }
@@ -396,10 +396,10 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 						new var5 = 0;
 						GetNextMap(var5, 256);
 						GetMapDisplayName(var5, var5, 256);
-						if (ConVar.IntValue.get(g_vara8c))
+						if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 						{
 							new var1;
-							if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+							if (mapchooser && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 							{
 								PrintToChatAll("[SM] %t", 3492);
 							}
@@ -411,7 +411,7 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 						else
 						{
 							new var2;
-							if (g_varaa8 && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
+							if (mapchooser && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 							{
 								PrintToChat(_arg0, "[SM] %t", 3536);
 							}
@@ -420,7 +420,7 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 					}
 					new var4 = 0;
 					GetCurrentMap(var4, 64);
-					if (ConVar.IntValue.get(g_vara8c))
+					if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 					{
 						PrintToChatAll("[SM] %t", "Current Map", var4);
 					}
@@ -433,7 +433,7 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 			}
 			new var3 = 0;
 			FormatTime(var3, 64, NULL_STRING, -1);
-			if (ConVar.IntValue.get(g_vara8c))
+			if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 			{
 				PrintToChatAll("[SM] %t", "Thetime", var3);
 			}
@@ -451,7 +451,7 @@ public void:OnLibraryAdded(String:_arg0[])
 {
 	if (StrEqual(_arg0[0], "mapchooser", true))
 	{
-		g_varaa8 = 1;
+		mapchooser = true;
 	}
 	return 0;
 }
@@ -460,14 +460,14 @@ public void:OnLibraryRemoved(String:_arg0[])
 {
 	if (StrEqual(_arg0[0], "mapchooser", true))
 	{
-		g_varaa8 = 0;
+		mapchooser = false;
 	}
 	return 0;
 }
 
 public void:OnMapStart()
 {
-	g_varaac = 0;
+	g_TotalRounds = 0;
 	return 0;
 }
 
@@ -475,14 +475,14 @@ public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("basetriggers.phrases");
-	g_vara8c = CreateConVar("sm_trigger_show", "0", "Display triggers message to all players? (0 off, 1 on, def. 0)", 0, true, 0.0, true, 1.0);
-	g_vara90 = CreateConVar("sm_timeleft_interval", "0.0", "Display timeleft every x seconds. Default 0.", 0, true, 0.0, true, 1800.0);
-	g_vara94 = FindConVar("mp_friendlyfire");
+	g_Cvar_TriggerShow = CreateConVar("sm_trigger_show", "0", "Display triggers message to all players? (0 off, 1 on, def. 0)", 0, true, 0.0, true, 1.0);
+	g_Cvar_TimeleftInterval = CreateConVar("sm_timeleft_interval", "0.0", "Display timeleft every x seconds. Default 0.", 0, true, 0.0, true, 1800.0);
+	g_Cvar_FriendlyFire = FindConVar("mp_friendlyfire");
 	RegConsoleCmd("timeleft", 17, "", 0);
 	RegConsoleCmd("nextmap", 15, "", 0);
 	RegConsoleCmd("motd", 13, "", 0);
 	RegConsoleCmd("ff", 11, "", 0);
-	ConVar.AddChangeHook(g_vara90, 19);
+	ConVar.AddChangeHook(g_Cvar_TimeleftInterval, 19);
 	new var1 = 0;
 	GetGameFolderName(var1, 64);
 	if (strcmp(var1, "insurgency", true))
@@ -504,10 +504,10 @@ public void:OnPluginStart()
 	HookEventEx("teamplay_win_panel", 27, 1);
 	HookEventEx("teamplay_restart_round", 25, 1);
 	HookEventEx("arena_win_panel", 27, 1);
-	g_vara9c = FindConVar("mp_winlimit");
-	g_varaa0 = FindConVar("mp_fraglimit");
-	g_varaa4 = FindConVar("mp_maxrounds");
-	g_varaa8 = LibraryExists("mapchooser");
+	g_Cvar_WinLimit = FindConVar("mp_winlimit");
+	g_Cvar_FragLimit = FindConVar("mp_fraglimit");
+	g_Cvar_MaxRounds = FindConVar("mp_maxrounds");
+	mapchooser = LibraryExists("mapchooser");
 	return 0;
 }
 

@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:19"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,6 +14,7 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
+new MaxClients;
 public Extension:__ext_sdktools =
 {
 	name = "SDKTools",
@@ -28,13 +35,6 @@ public SharedPlugin:__pl_adminmenu =
 	file = "adminmenu.smx",
 	required = 0,
 };
-public PlVers:__version =
-{
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:19"
-};
 public Plugin:myinfo =
 {
 	name = "Fun Commands",
@@ -43,31 +43,76 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var15e8;
-new g_var1a5c;
-new g_var1de8;
-new g_var24a8;
-new g_var15e4;
+new TopMenu:hTopMenu;
+new String:g_BlipSound[1024];
+new String:g_BeepSound[1024];
+new String:g_FinalSound[1024];
+new String:g_BoomSound[1024];
+new String:g_FreezeSound[1024];
+new g_BeamSprite = -1;
+new g_BeamSprite2 = -1;
+new g_HaloSprite = -1;
+new g_GlowSprite = -1;
+new g_ExplosionSprite = -1;
+new redColor[4] =
+{
+	255, 75, 75, 255
+};
+new orangeColor[4] =
+{
+	255, 128, 0, 255
+};
+new greenColor[4] =
+{
+	75, 255, 75, 255
+};
+new blueColor[4] =
+{
+	75, 75, 255, 255
+};
+new whiteColor[4] =
+{
+	255, ...
+};
+new greyColor[4] =
+{
+	128, 128, 128, 255
+};
+new UserMsg:g_FadeUserMsgId;
+new g_Serial_Gen;
+new EngineVersion:g_GameEngine;
+new g_BeaconSerial[66];
+new ConVar:g_Cvar_BeaconRadius;
+new g_TimeBombSerial[66];
+new g_TimeBombTime[66];
+new ConVar:g_Cvar_TimeBombTicks;
+new ConVar:g_Cvar_TimeBombRadius;
+new ConVar:g_Cvar_TimeBombMode;
+new g_FireBombSerial[66];
+new g_FireBombTime[66];
+new ConVar:g_Cvar_BurnDuration;
+new ConVar:g_Cvar_FireBombTicks;
+new ConVar:g_Cvar_FireBombRadius;
+new ConVar:g_Cvar_FireBombMode;
+new g_FreezeSerial[66];
+new g_FreezeBombSerial[66];
+new g_FreezeTime[66];
+new g_FreezeBombTime[66];
+new ConVar:g_Cvar_FreezeDuration;
+new ConVar:g_Cvar_FreezeBombTicks;
+new ConVar:g_Cvar_FreezeBombRadius;
+new ConVar:g_Cvar_FreezeBombMode;
+new g_GravityTarget[66];
+new g_BlindTarget[66];
+new Handle:g_DrugTimers[66];
+new Float:g_DrugAngles[20] =
+{
+	0, 1084227584, 1092616192, 1097859072, 1101004800, 1103626240, 1101004800, 1097859072, 1092616192, 1084227584, 0, -1063256064, -1054867456, -1049624576, -1046478848, -1043857408, -1046478848, -1049624576, -1054867456, -1063256064
+};
 new g_var9e0;
 new g_vara28;
 new g_vara70;
-new g_var16f8;
-new g_var1a60;
-new g_var1a64;
-new g_var1de4;
-new g_var1dec;
-new g_var1df0;
-new g_var24a4;
-new g_var24ac;
-new g_var24b0;
 new g_varae8;
-new g_var106c;
-new g_var1570 = -1;
-new g_var1574 = -1;
-new g_var1580 = -1;
-new g_var157c = -1;
-new g_var1578 = -1;
-new g_var15ec;
 void:DisplayBeaconMenu(_arg0)
 {
 	new var1;
@@ -83,16 +128,16 @@ void:DisplayBeaconMenu(_arg0)
 
 void:CreateTimeBomb(_arg0)
 {
-	g_var15e8 += 1;
-	6220[_arg0] = g_var15e8;
-	CreateTimer(1.0, 207, g_var15e8 << 7 | _arg0, 3);
-	6484[_arg0] = ConVar.IntValue.get(g_var1a5c);
+	g_Serial_Gen += 1;
+	g_TimeBombSerial[_arg0] = g_Serial_Gen;
+	CreateTimer(1.0, 207, g_Serial_Gen << 7 | _arg0, 3);
+	g_TimeBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_TimeBombTicks);
 	return 0;
 }
 
 void:KillTimeBomb(_arg0)
 {
-	6220[_arg0] = 0;
+	g_TimeBombSerial[_arg0] = 0;
 	if (IsClientInGame(_arg0))
 	{
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -113,7 +158,7 @@ void:KillAllTimeBombs()
 
 void:PerformTimeBomb(_arg0, _arg1)
 {
-	if (6220[_arg1])
+	if (g_TimeBombSerial[_arg1])
 	{
 		KillTimeBomb(_arg1);
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -142,16 +187,16 @@ void:DisplayTimeBombMenu(_arg0)
 
 void:CreateFireBomb(_arg0)
 {
-	g_var15e8 += 1;
-	7124[_arg0] = g_var15e8;
-	CreateTimer(1.0, 201, g_var15e8 << 7 | _arg0, 3);
-	7388[_arg0] = ConVar.IntValue.get(g_var1de8);
+	g_Serial_Gen += 1;
+	g_FireBombSerial[_arg0] = g_Serial_Gen;
+	CreateTimer(1.0, 201, g_Serial_Gen << 7 | _arg0, 3);
+	g_FireBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_FireBombTicks);
 	return 0;
 }
 
 void:KillFireBomb(_arg0)
 {
-	7124[_arg0] = 0;
+	g_FireBombSerial[_arg0] = 0;
 	if (IsClientInGame(_arg0))
 	{
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -179,7 +224,7 @@ void:PerformBurn(_arg0, _arg1, Float:_arg2)
 
 void:PerformFireBomb(_arg0, _arg1)
 {
-	if (7124[_arg0])
+	if (g_FireBombSerial[_arg0])
 	{
 		KillFireBomb(_arg1);
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -221,40 +266,40 @@ void:DisplayFireBombMenu(_arg0)
 
 void:FreezeClient(_arg0, _arg1)
 {
-	if (8324[_arg0])
+	if (g_FreezeSerial[_arg0])
 	{
 		UnfreezeClient(_arg0);
 		return 0;
 	}
 	SetEntityMoveType(_arg0, 0);
 	SetEntityRenderColor(_arg0, 0, 128, 255, 192);
-	if (5232/* ERROR unknown load Constant */)
+	if (g_FreezeSound[0])
 	{
 		new var1 = 0;
 		GetClientEyePosition(_arg0, var1);
-		EmitAmbientSound("", var1, _arg0, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_FreezeSound, var1, _arg0, 130, 0, 1.0, 100, 0.0);
 	}
-	8852[_arg0] = _arg1;
-	g_var15e8 += 1;
-	8324[_arg0] = g_var15e8;
-	CreateTimer(1.0, 203, g_var15e8 << 7 | _arg0, 3);
+	g_FreezeTime[_arg0] = _arg1;
+	g_Serial_Gen += 1;
+	g_FreezeSerial[_arg0] = g_Serial_Gen;
+	CreateTimer(1.0, 203, g_Serial_Gen << 7 | _arg0, 3);
 	return 0;
 }
 
 void:UnfreezeClient(_arg0)
 {
-	8324[_arg0] = 0;
-	8852[_arg0] = 0;
+	g_FreezeSerial[_arg0] = 0;
+	g_FreezeTime[_arg0] = 0;
 	if (IsClientInGame(_arg0))
 	{
-		if (5232/* ERROR unknown load Constant */)
+		if (g_FreezeSound[0])
 		{
 			new var1 = 0;
 			GetClientAbsOrigin(_arg0, var1);
 			new var2 = var1 + 8;
 			var2 = 5+0(var2, 10);
 			GetClientEyePosition(_arg0, var1);
-			EmitAmbientSound("", var1, _arg0, 130, 0, 1.0, 100, 0.0);
+			EmitAmbientSound(g_FreezeSound, var1, _arg0, 130, 0, 1.0, 100, 0.0);
 		}
 		SetEntityMoveType(_arg0, 2);
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -264,22 +309,22 @@ void:UnfreezeClient(_arg0)
 
 void:CreateFreezeBomb(_arg0)
 {
-	if (8588[_arg0])
+	if (g_FreezeBombSerial[_arg0])
 	{
 		KillFreezeBomb(_arg0);
 		return 0;
 	}
-	9116[_arg0] = ConVar.IntValue.get(g_var24a8);
-	g_var15e8 += 1;
-	8588[_arg0] = g_var15e8;
-	CreateTimer(1.0, 205, g_var15e8 << 7 | _arg0, 3);
+	g_FreezeBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_FreezeBombTicks);
+	g_Serial_Gen += 1;
+	g_FreezeBombSerial[_arg0] = g_Serial_Gen;
+	CreateTimer(1.0, 205, g_Serial_Gen << 7 | _arg0, 3);
 	return 0;
 }
 
 void:KillFreezeBomb(_arg0)
 {
-	8588[_arg0] = 0;
-	9116[_arg0] = 0;
+	g_FreezeBombSerial[_arg0] = 0;
+	g_FreezeBombTime[_arg0] = 0;
 	if (IsClientInGame(_arg0))
 	{
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -292,11 +337,11 @@ void:KillAllFreezes()
 	new var1 = 1;
 	while (var1 <= MaxClients)
 	{
-		if (8324[var1])
+		if (g_FreezeSerial[var1])
 		{
 			UnfreezeClient(var1);
 		}
-		if (8588[var1])
+		if (g_FreezeBombSerial[var1])
 		{
 			KillFreezeBomb(var1);
 		}
@@ -314,7 +359,7 @@ void:PerformFreeze(_arg0, _arg1, _arg2)
 
 void:PerformFreezeBomb(_arg0, _arg1)
 {
-	if (8588[_arg1])
+	if (g_FreezeBombSerial[_arg1])
 	{
 		KillFreezeBomb(_arg1);
 		LogAction(_arg0, _arg1, "\"%L\" removed a FreezeBomb on \"%L\"", _arg0, _arg1);
@@ -466,7 +511,7 @@ void:DisplayGravityAmountMenu(_arg0)
 	new var1;
 	var1 = Menu.Menu(183, 28);
 	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Gravity amount", _arg0, GetClientOfUserId(10148[_arg0]));
+	Format(var2, 100, "%T: %N", "Gravity amount", _arg0, GetClientOfUserId(g_GravityTarget[_arg0]));
 	Menu.SetTitle(var1, var2);
 	Menu.ExitBackButton.set(var1, true);
 	AddTranslatedMenuItem(var1, "4.0", "Gravity Very High", _arg0);
@@ -516,7 +561,7 @@ void:PerformBlind(_arg0, _arg1, _arg2)
 	new var5 = 0;
 	var5 + 12/* ERROR unknown load Binary */ = _arg2;
 	new var6;
-	var6 = StartMessageEx(g_var15e4, var1, 1, 0);
+	var6 = StartMessageEx(g_FadeUserMsgId, var1, 1, 0);
 	if (GetUserMessageType() == 1)
 	{
 		new var7;
@@ -578,7 +623,7 @@ void:DisplayAmountMenu(_arg0)
 	new var1;
 	var1 = Menu.Menu(165, 28);
 	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Blind amount", _arg0, GetClientOfUserId(10936[_arg0]));
+	Format(var2, 100, "%T: %N", "Blind amount", _arg0, GetClientOfUserId(g_BlindTarget[_arg0]));
 	Menu.SetTitle(var1, var2);
 	Menu.ExitBackButton.set(var1, true);
 	AddTranslatedMenuItem(var1, "255", "Fully blind", _arg0);
@@ -658,7 +703,7 @@ void:SetEntityMoveType(_arg0, MoveType:_arg1)
 
 void:CreateDrug(_arg0)
 {
-	11992[_arg0] = CreateTimer(1.0, 199, _arg0, 1);
+	g_DrugTimers[_arg0] = CreateTimer(1.0, 199, _arg0, 1);
 	return 0;
 }
 
@@ -676,7 +721,7 @@ void:KillDrug(_arg0)
 	new var5 = 17;
 	new var6 = 0;
 	new var7;
-	var7 = StartMessageEx(g_var15e4, var2, 1, 0);
+	var7 = StartMessageEx(g_FadeUserMsgId, var2, 1, 0);
 	if (GetUserMessageType() == 1)
 	{
 		new var8;
@@ -704,8 +749,8 @@ void:KillDrug(_arg0)
 
 void:KillDrugTimer(_arg0)
 {
-	KillTimer(11992[_arg0], false);
-	11992[_arg0] = 0;
+	KillTimer(g_DrugTimers[_arg0], false);
+	g_DrugTimers[_arg0] = 0;
 	return 0;
 }
 
@@ -714,7 +759,7 @@ void:KillAllDrugs()
 	new var1 = 1;
 	while (var1 <= MaxClients)
 	{
-		if (11992[var1])
+		if (g_DrugTimers[var1])
 		{
 			if (IsClientInGame(var1))
 			{
@@ -733,7 +778,7 @@ void:PerformDrug(_arg0, _arg1, _arg2)
 	{
 		case 0:
 		{
-			if (11992[_arg1])
+			if (g_DrugTimers[_arg1])
 			{
 				KillDrug(_arg1);
 				LogAction(_arg0, _arg1, "\"%L\" undrugged \"%L\"", _arg0, _arg1);
@@ -741,7 +786,7 @@ void:PerformDrug(_arg0, _arg1, _arg2)
 		}
 		case 1:
 		{
-			if (11992[_arg1])
+			if (g_DrugTimers[_arg1])
 			{
 			}
 			else
@@ -752,7 +797,7 @@ void:PerformDrug(_arg0, _arg1, _arg2)
 		}
 		case 2:
 		{
-			if (11992[_arg1])
+			if (g_DrugTimers[_arg1])
 			{
 				KillDrug(_arg1);
 				LogAction(_arg0, _arg1, "\"%L\" undrugged \"%L\"", _arg0, _arg1);
@@ -814,18 +859,18 @@ void:DisplayDrugMenu(_arg0)
 
 void:RegisterCvars()
 {
-	g_var16f8 = CreateConVar("sm_beacon_radius", "375", "Sets the radius for beacon's light rings.", 0, true, 50.0, true, 1500.0);
-	g_var1a5c = CreateConVar("sm_timebomb_ticks", "10.0", "Sets how long the timebomb fuse is.", 0, true, 5.0, true, 120.0);
-	g_var1a60 = CreateConVar("sm_timebomb_radius", "600", "Sets the bomb blast radius.", 0, true, 50.0, true, 3000.0);
-	g_var1a64 = CreateConVar("sm_timebomb_mode", "0", "Who is killed by the timebomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
-	g_var1de4 = CreateConVar("sm_burn_duration", "20.0", "Sets the default duration of sm_burn and firebomb victims.", 0, true, 0.5, true, 20.0);
-	g_var1de8 = CreateConVar("sm_firebomb_ticks", "10.0", "Sets how long the FireBomb fuse is.", 0, true, 5.0, true, 120.0);
-	g_var1dec = CreateConVar("sm_firebomb_radius", "600", "Sets the bomb blast radius.", 0, true, 50.0, true, 3000.0);
-	g_var1df0 = CreateConVar("sm_firebomb_mode", "0", "Who is targetted by the FireBomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
-	g_var24a4 = CreateConVar("sm_freeze_duration", "10.0", "Sets the default duration for sm_freeze and freezebomb victims", 0, true, 1.0, true, 120.0);
-	g_var24a8 = CreateConVar("sm_freezebomb_ticks", "10.0", "Sets how long the freezebomb fuse is.", 0, true, 5.0, true, 120.0);
-	g_var24ac = CreateConVar("sm_freezebomb_radius", "600", "Sets the freezebomb blast radius.", 0, true, 50.0, true, 3000.0);
-	g_var24b0 = CreateConVar("sm_freezebomb_mode", "0", "Who is targetted by the freezebomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
+	g_Cvar_BeaconRadius = CreateConVar("sm_beacon_radius", "375", "Sets the radius for beacon's light rings.", 0, true, 50.0, true, 1500.0);
+	g_Cvar_TimeBombTicks = CreateConVar("sm_timebomb_ticks", "10.0", "Sets how long the timebomb fuse is.", 0, true, 5.0, true, 120.0);
+	g_Cvar_TimeBombRadius = CreateConVar("sm_timebomb_radius", "600", "Sets the bomb blast radius.", 0, true, 50.0, true, 3000.0);
+	g_Cvar_TimeBombMode = CreateConVar("sm_timebomb_mode", "0", "Who is killed by the timebomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
+	g_Cvar_BurnDuration = CreateConVar("sm_burn_duration", "20.0", "Sets the default duration of sm_burn and firebomb victims.", 0, true, 0.5, true, 20.0);
+	g_Cvar_FireBombTicks = CreateConVar("sm_firebomb_ticks", "10.0", "Sets how long the FireBomb fuse is.", 0, true, 5.0, true, 120.0);
+	g_Cvar_FireBombRadius = CreateConVar("sm_firebomb_radius", "600", "Sets the bomb blast radius.", 0, true, 50.0, true, 3000.0);
+	g_Cvar_FireBombMode = CreateConVar("sm_firebomb_mode", "0", "Who is targetted by the FireBomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
+	g_Cvar_FreezeDuration = CreateConVar("sm_freeze_duration", "10.0", "Sets the default duration for sm_freeze and freezebomb victims", 0, true, 1.0, true, 120.0);
+	g_Cvar_FreezeBombTicks = CreateConVar("sm_freezebomb_ticks", "10.0", "Sets how long the freezebomb fuse is.", 0, true, 5.0, true, 120.0);
+	g_Cvar_FreezeBombRadius = CreateConVar("sm_freezebomb_radius", "600", "Sets the freezebomb blast radius.", 0, true, 50.0, true, 3000.0);
+	g_Cvar_FreezeBombMode = CreateConVar("sm_freezebomb_mode", "0", "Who is targetted by the freezebomb? 0 = Target only, 1 = Target's team, 2 = Everyone", 0, true, 0.0, true, 2.0);
 	AutoExecConfig(true, "funcommands", "sourcemod");
 	return 0;
 }
@@ -975,15 +1020,15 @@ void:TE_SetupBeamPoints(Float:_arg0[3], Float:_arg1[3], _arg2, _arg3, _arg4, _ar
 
 void:CreateBeacon(_arg0)
 {
-	g_var15e8 += 1;
-	5616[_arg0] = g_var15e8;
-	CreateTimer(1.0, 197, g_var15e8 << 7 | _arg0, 3);
+	g_Serial_Gen += 1;
+	g_BeaconSerial[_arg0] = g_Serial_Gen;
+	CreateTimer(1.0, 197, g_Serial_Gen << 7 | _arg0, 3);
 	return 0;
 }
 
 void:KillBeacon(_arg0)
 {
-	5616[_arg0] = 0;
+	g_BeaconSerial[_arg0] = 0;
 	if (IsClientInGame(_arg0))
 	{
 		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
@@ -1004,7 +1049,7 @@ void:KillAllBeacons()
 
 void:PerformBeacon(_arg0, _arg1)
 {
-	if (5616[_arg1])
+	if (g_BeaconSerial[_arg1])
 	{
 		KillBeacon(_arg1);
 		LogAction(_arg0, _arg1, "\"%L\" removed a beacon on \"%L\"", _arg0, _arg1);
@@ -1044,7 +1089,7 @@ public void:AdminMenu_Blind(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_a
 		if (_arg1 == 3)
 		{
 			new var1;
-			if (g_var15e4 == -1)
+			if (g_FadeUserMsgId == -1)
 			{
 				var1 = 6;
 			}
@@ -1289,7 +1334,7 @@ public Action:Command_Burn(_arg0, _arg1)
 	new var1 = 0;
 	GetCmdArg(1, var1, 65);
 	new var2;
-	var2 = ConVar.FloatValue.get(g_var1de4);
+	var2 = ConVar.FloatValue.get(g_Cvar_BurnDuration);
 	if (_arg1 > 1)
 	{
 		new var3 = 0;
@@ -1420,7 +1465,7 @@ public Action:Command_Freeze(_arg0, _arg1)
 	new var1 = 0;
 	GetCmdArg(1, var1, 65);
 	new var2;
-	var2 = ConVar.IntValue.get(g_var24a4);
+	var2 = ConVar.IntValue.get(g_Cvar_FreezeDuration);
 	if (_arg1 > 1)
 	{
 		new var3 = 0;
@@ -1634,9 +1679,9 @@ public MenuHandler_Amount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1646,7 +1691,7 @@ public MenuHandler_Amount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var5 = 0;
 			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
 			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(10936[_arg2])))
+			if ((var5 = GetClientOfUserId(g_BlindTarget[_arg2])))
 			{
 				if (CanUserTarget(_arg2, var5))
 				{
@@ -1683,9 +1728,9 @@ public MenuHandler_Beacon(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1732,9 +1777,9 @@ public MenuHandler_Blind(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1748,7 +1793,7 @@ public MenuHandler_Blind(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			{
 				if (CanUserTarget(_arg2, var5))
 				{
-					10936[_arg2] = var4;
+					g_BlindTarget[_arg2] = var4;
 					DisplayAmountMenu(_arg2);
 					return 0;
 				}
@@ -1780,9 +1825,9 @@ public MenuHandler_Burn(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1829,9 +1874,9 @@ public MenuHandler_Drug(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1878,9 +1923,9 @@ public MenuHandler_FireBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1927,9 +1972,9 @@ public MenuHandler_Freeze(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -1945,7 +1990,7 @@ public MenuHandler_Freeze(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 				{
 					new var6 = 0;
 					GetClientName(var5, var6, 128);
-					PerformFreeze(_arg2, var5, ConVar.IntValue.get(g_var24a4));
+					PerformFreeze(_arg2, var5, ConVar.IntValue.get(g_Cvar_FreezeDuration));
 					ShowActivity2(_arg2, "[SM] ", "%t", "Froze target", "_s", var6);
 				}
 				PrintToChat(_arg2, "[SM] %t", 9720);
@@ -1976,9 +2021,9 @@ public MenuHandler_FreezeBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -2025,9 +2070,9 @@ public MenuHandler_Gravity(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -2041,7 +2086,7 @@ public MenuHandler_Gravity(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			{
 				if (CanUserTarget(_arg2, var5))
 				{
-					10148[_arg2] = var4;
+					g_GravityTarget[_arg2] = var4;
 					DisplayGravityAmountMenu(_arg2);
 					return 0;
 				}
@@ -2073,9 +2118,9 @@ public MenuHandler_GravityAmount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -2085,7 +2130,7 @@ public MenuHandler_GravityAmount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 			new var5 = 0;
 			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
 			var4 = StringToFloat(var3);
-			if ((var5 = GetClientOfUserId(10148[_arg2])))
+			if ((var5 = GetClientOfUserId(g_GravityTarget[_arg2])))
 			{
 				if (CanUserTarget(_arg2, var5))
 				{
@@ -2122,9 +2167,9 @@ public MenuHandler_NoClip(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -2171,9 +2216,9 @@ public MenuHandler_TimeBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		if (_arg1 == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && g_var106c)
+			if (_arg3 == -6 && hTopMenu)
 			{
-				TopMenu.Display(g_var106c, _arg2, 3);
+				TopMenu.Display(hTopMenu, _arg2, 3);
 			}
 		}
 		if (_arg1 == 4)
@@ -2212,25 +2257,25 @@ public void:OnAdminMenuReady(Handle:_arg0)
 {
 	new var1;
 	var1 = TopMenu.FromHandle(_arg0);
-	if (g_var106c == var1)
+	if (hTopMenu == var1)
 	{
 		return 0;
 	}
-	g_var106c = var1;
+	hTopMenu = var1;
 	new var2;
-	var2 = TopMenu.FindCategory(g_var106c, "PlayerCommands");
+	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
 	if (var2)
 	{
-		TopMenu.AddItem(g_var106c, "sm_beacon", 123, var2, "sm_beacon", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_timebomb", 141, var2, "sm_timebomb", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_burn", 127, var2, "sm_burn", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_firebomb", 131, var2, "sm_firebomb", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_freeze", 133, var2, "sm_freeze", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_freezebomb", 135, var2, "sm_freezebomb", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_gravity", 137, var2, "sm_gravity", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_blind", 125, var2, "sm_blind", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_noclip", 139, var2, "sm_noclip", 32, "");
-		TopMenu.AddItem(g_var106c, "sm_drug", 129, var2, "sm_drug", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_beacon", 123, var2, "sm_beacon", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_timebomb", 141, var2, "sm_timebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_burn", 127, var2, "sm_burn", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_firebomb", 131, var2, "sm_firebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_freeze", 133, var2, "sm_freeze", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_freezebomb", 135, var2, "sm_freezebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_gravity", 137, var2, "sm_gravity", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_blind", 125, var2, "sm_blind", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_noclip", 139, var2, "sm_noclip", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_drug", 129, var2, "sm_drug", 32, "");
 	}
 	return 0;
 }
@@ -2252,55 +2297,55 @@ public void:OnMapStart()
 	if (var11)
 	{
 		new var1;
-		if (GameData.GetKeyValue(var11, "SoundBlip", "", 256) && 4208/* ERROR unknown load Constant */)
+		if (GameData.GetKeyValue(var11, "SoundBlip", g_BlipSound, 256) && g_BlipSound[0])
 		{
-			PrecacheSound("", true);
+			PrecacheSound(g_BlipSound, true);
 		}
 		new var2;
-		if (GameData.GetKeyValue(var11, "SoundBeep", "", 256) && 4464/* ERROR unknown load Constant */)
+		if (GameData.GetKeyValue(var11, "SoundBeep", g_BeepSound, 256) && g_BeepSound[0])
 		{
-			PrecacheSound("", true);
+			PrecacheSound(g_BeepSound, true);
 		}
 		new var3;
-		if (GameData.GetKeyValue(var11, "SoundFinal", "", 256) && 4720/* ERROR unknown load Constant */)
+		if (GameData.GetKeyValue(var11, "SoundFinal", g_FinalSound, 256) && g_FinalSound[0])
 		{
-			PrecacheSound("", true);
+			PrecacheSound(g_FinalSound, true);
 		}
 		new var4;
-		if (GameData.GetKeyValue(var11, "SoundBoom", "", 256) && 4976/* ERROR unknown load Constant */)
+		if (GameData.GetKeyValue(var11, "SoundBoom", g_BoomSound, 256) && g_BoomSound[0])
 		{
-			PrecacheSound("", true);
+			PrecacheSound(g_BoomSound, true);
 		}
 		new var5;
-		if (GameData.GetKeyValue(var11, "SoundFreeze", "", 256) && 5232/* ERROR unknown load Constant */)
+		if (GameData.GetKeyValue(var11, "SoundFreeze", g_FreezeSound, 256) && g_FreezeSound[0])
 		{
-			PrecacheSound("", true);
+			PrecacheSound(g_FreezeSound, true);
 		}
 		new var12 = 0;
 		new var6;
 		if (GameData.GetKeyValue(var11, "SpriteBeam", var12, 256) && var12)
 		{
-			g_var1570 = PrecacheModel(var12, false);
+			g_BeamSprite = PrecacheModel(var12, false);
 		}
 		new var7;
 		if (GameData.GetKeyValue(var11, "SpriteBeam2", var12, 256) && var12)
 		{
-			g_var1574 = PrecacheModel(var12, false);
+			g_BeamSprite2 = PrecacheModel(var12, false);
 		}
 		new var8;
 		if (GameData.GetKeyValue(var11, "SpriteExplosion", var12, 256) && var12)
 		{
-			g_var1580 = PrecacheModel(var12, false);
+			g_ExplosionSprite = PrecacheModel(var12, false);
 		}
 		new var9;
 		if (GameData.GetKeyValue(var11, "SpriteGlow", var12, 256) && var12)
 		{
-			g_var157c = PrecacheModel(var12, false);
+			g_GlowSprite = PrecacheModel(var12, false);
 		}
 		new var10;
 		if (GameData.GetKeyValue(var11, "SpriteHalo", var12, 256) && var12)
 		{
-			g_var1578 = PrecacheModel(var12, false);
+			g_HaloSprite = PrecacheModel(var12, false);
 		}
 		CloseHandle(var11);
 		var11 = 0;
@@ -2318,8 +2363,8 @@ public void:OnPluginStart()
 	}
 	LoadTranslations("common.phrases");
 	LoadTranslations("funcommands.phrases");
-	g_var15ec = GetEngineVersion();
-	g_var15e4 = GetUserMessageId("Fade");
+	g_GameEngine = GetEngineVersion();
+	g_FadeUserMsgId = GetUserMessageId("Fade");
 	RegisterCvars();
 	RegisterCmds();
 	HookEvents();
@@ -2339,7 +2384,7 @@ public Action:Timer_Beacon(Handle:_arg0, any:_arg1)
 	new var4;
 	var4 = _arg1 >>> 7;
 	new var1;
-	if (IsClientInGame(var3) && IsPlayerAlive(var3) && var4 == 5616[var3])
+	if (IsClientInGame(var3) && IsPlayerAlive(var3) && var4 == g_BeaconSerial[var3])
 	{
 		KillBeacon(var3);
 		return 4;
@@ -2351,28 +2396,28 @@ public Action:Timer_Beacon(Handle:_arg0, any:_arg1)
 	new var7 = var6 + 8;
 	var7 = 5+0(var7, 10);
 	new var2;
-	if (g_var1570 > -1 && g_var1578 > -1)
+	if (g_BeamSprite > -1 && g_HaloSprite > -1)
 	{
-		TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_var16f8), g_var1570, g_var1578, 0, 15, 0.5, 5.0, 0.0, 5588, 10, 0);
+		TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 		TE_SendToAll(0.0);
 		if (var5 == 2)
 		{
-			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_var16f8), g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5508, 10, 0);
+			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, redColor, 10, 0);
 		}
 		else
 		{
 			if (var5 == 3)
 			{
-				TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_var16f8), g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5556, 10, 0);
+				TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, blueColor, 10, 0);
 			}
-			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_var16f8), g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5540, 10, 0);
+			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, greenColor, 10, 0);
 		}
 		TE_SendToAll(0.0);
 	}
-	if (4208/* ERROR unknown load Constant */)
+	if (g_BlipSound[0])
 	{
 		GetClientEyePosition(var3, var6);
-		EmitAmbientSound("", var6, var3, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BlipSound, var6, var3, 130, 0, 1.0, 100, 0.0);
 	}
 	return 0;
 }
@@ -2385,7 +2430,7 @@ public Action:Timer_Drug(Handle:_arg0, any:_arg1)
 		{
 			new var1 = 0;
 			GetClientEyeAngles(_arg1, var1);
-			var1 + 8/* ERROR unknown load Binary */ = 12256[GetRandomInt(0, 100) % 20];
+			var1 + 8/* ERROR unknown load Binary */ = g_DrugAngles[GetRandomInt(0, 100) % 20];
 			TeleportEntity(_arg1, NULL_VECTOR, var1, NULL_VECTOR);
 			new var2 = 0;
 			var2 = _arg1;
@@ -2397,7 +2442,7 @@ public Action:Timer_Drug(Handle:_arg0, any:_arg1)
 			var6 + 4/* ERROR unknown load Binary */ = GetRandomInt(0, 255);
 			var6 + 8/* ERROR unknown load Binary */ = GetRandomInt(0, 255);
 			new var7;
-			var7 = StartMessageEx(g_var15e4, var2, 1, 0);
+			var7 = StartMessageEx(g_FadeUserMsgId, var2, 1, 0);
 			if (GetUserMessageType() == 1)
 			{
 				new var8;
@@ -2434,88 +2479,88 @@ public Action:Timer_FireBomb(Handle:_arg0, any:_arg1)
 	new var8;
 	var8 = _arg1 >>> 7;
 	new var1;
-	if (IsClientInGame(var7) && IsPlayerAlive(var7) && var8 == 7124[var7])
+	if (IsClientInGame(var7) && IsPlayerAlive(var7) && var8 == g_FireBombSerial[var7])
 	{
 		KillFireBomb(var7);
 		return 4;
 	}
-	7388[var7]--;
+	g_FireBombTime[var7]--;
 	new var9 = 0;
 	GetClientEyePosition(var7, var9);
-	if (0 < 7388[var7])
+	if (0 < g_FireBombTime[var7])
 	{
 		new var10 = 0;
-		if (7388[var7] > 1)
+		if (g_FireBombTime[var7] > 1)
 		{
-			var10 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_var1de8), 7388[var7]));
-			if (4464/* ERROR unknown load Constant */)
+			var10 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FireBombTicks), g_FireBombTime[var7]));
+			if (g_BeepSound[0])
 			{
-				EmitAmbientSound("", var9, var7, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, var9, var7, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
 			var10 = 0;
-			if (4720/* ERROR unknown load Constant */)
+			if (g_FinalSound[0])
 			{
-				EmitAmbientSound("", var9, var7, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, var9, var7, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		SetEntityRenderColor(var7, 255, var10, var10, 255);
 		new var11 = 0;
 		GetClientName(var7, var11, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var11, 7388[var7]);
+		PrintCenterTextAll("%t", "Till Explodes", var11, g_FireBombTime[var7]);
 		new var2;
-		if (g_var1570 > -1 && g_var1578 > -1)
+		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
 			GetClientAbsOrigin(var7, var9);
 			new var12 = var9 + 8;
 			var12 = 5+0(var12, 10);
-			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_var1dec) / 3.0, g_var1570, g_var1578, 0, 15, 0.5, 5.0, 0.0, 5588, 10, 0);
+			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_var1dec) / 3.0, g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5572, 10, 0);
+			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
-	if (g_var1580 > -1)
+	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var9, g_var1580, 0.1, 1, 0, ConVar.IntValue.get(g_var1dec), 5000, 6840, 67);
+		TE_SetupExplosion(var9, g_ExplosionSprite, 0.1, 1, 0, ConVar.IntValue.get(g_Cvar_FireBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
 	new var3;
-	if (g_var1570 > -1 && g_var1578 > -1)
+	if (g_BeamSprite > -1 && g_HaloSprite > -1)
 	{
 		GetClientAbsOrigin(var7, var9);
 		new var13 = var9 + 8;
 		var13 = 5+0(var13, 10);
-		TE_SetupBeamRingPoint(var9, 50.0, ConVar.FloatValue.get(g_var1dec), g_var1570, g_var1578, 0, 10, 0.5, 30.0, 1.5, 5524, 5, 0);
+		TE_SetupBeamRingPoint(var9, 50.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.5, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
 		new var14 = var9 + 8;
 		var14 = 5+0(var14, 15);
-		TE_SetupBeamRingPoint(var9, 40.0, ConVar.FloatValue.get(g_var1dec), g_var1570, g_var1578, 0, 10, 0.6, 30.0, 1.5, 5524, 5, 0);
+		TE_SetupBeamRingPoint(var9, 40.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
 		new var15 = var9 + 8;
 		var15 = 5+0(var15, 15);
-		TE_SetupBeamRingPoint(var9, 30.0, ConVar.FloatValue.get(g_var1dec), g_var1570, g_var1578, 0, 10, 0.7, 30.0, 1.5, 5524, 5, 0);
+		TE_SetupBeamRingPoint(var9, 30.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.7, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
 		new var16 = var9 + 8;
 		var16 = 5+0(var16, 15);
-		TE_SetupBeamRingPoint(var9, 20.0, ConVar.FloatValue.get(g_var1dec), g_var1570, g_var1578, 0, 10, 0.8, 30.0, 1.5, 5524, 5, 0);
+		TE_SetupBeamRingPoint(var9, 20.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.8, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
 	}
-	if (4976/* ERROR unknown load Constant */)
+	if (g_BoomSound[0])
 	{
-		EmitAmbientSound("", var9, var7, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, var9, var7, 130, 0, 1.0, 100, 0.0);
 	}
-	IgniteEntity(var7, ConVar.FloatValue.get(g_var1de4), false, 0.0, false);
+	IgniteEntity(var7, ConVar.FloatValue.get(g_Cvar_BurnDuration), false, 0.0, false);
 	KillFireBomb(var7);
 	SetEntityRenderColor(var7, 255, 255, 255, 255);
-	if (0 < ConVar.IntValue.get(g_var1df0))
+	if (0 < ConVar.IntValue.get(g_Cvar_FireBombMode))
 	{
 		new var17;
 		new var4;
-		if (ConVar.IntValue.get(g_var1df0) == 1)
+		if (ConVar.IntValue.get(g_Cvar_FireBombMode) == 1)
 		{
 			var4 = 1;
 		}
@@ -2540,11 +2585,11 @@ public Action:Timer_FireBomb(Handle:_arg0, any:_arg1)
 					GetClientAbsOrigin(var18, var19);
 					new var20;
 					var20 = GetVectorDistance(var9, var19, false);
-					if (!(var20 > ConVar.FloatValue.get(g_var1dec)))
+					if (!(var20 > ConVar.FloatValue.get(g_Cvar_FireBombRadius)))
 					{
 						new var21;
-						var21 = ConVar.FloatValue.get(g_var1de4);
-						var21 *= ConVar.FloatValue.get(g_var1dec) - var20 / ConVar.FloatValue.get(g_var1dec);
+						var21 = ConVar.FloatValue.get(g_Cvar_BurnDuration);
+						var21 *= ConVar.FloatValue.get(g_Cvar_FireBombRadius) - var20 / ConVar.FloatValue.get(g_Cvar_FireBombRadius);
 						IgniteEntity(var18, var21, false, 0.0, false);
 					}
 				}
@@ -2562,45 +2607,45 @@ public Action:Timer_Freeze(Handle:_arg0, any:_arg1)
 	new var3;
 	var3 = _arg1 >>> 7;
 	new var1;
-	if (IsClientInGame(var2) && IsPlayerAlive(var2) && var3 == 8324[var2])
+	if (IsClientInGame(var2) && IsPlayerAlive(var2) && var3 == g_FreezeSerial[var2])
 	{
 		UnfreezeClient(var2);
 		return 4;
 	}
-	if (8852[var2])
+	if (g_FreezeTime[var2])
 	{
-		if (g_var15ec != 5)
+		if (g_GameEngine != 5)
 		{
-			PrintHintText(var2, "%t", "You will be unfrozen", 8852[var2]);
+			PrintHintText(var2, "%t", "You will be unfrozen", g_FreezeTime[var2]);
 		}
 		else
 		{
-			PrintCenterText(var2, "%t", "You will be unfrozen", 8852[var2]);
+			PrintCenterText(var2, "%t", "You will be unfrozen", g_FreezeTime[var2]);
 		}
-		8852[var2]--;
+		g_FreezeTime[var2]--;
 		SetEntityMoveType(var2, 0);
 		SetEntityRenderColor(var2, 0, 128, 255, 135);
 		new var4 = 0;
 		GetClientAbsOrigin(var2, var4);
 		new var5 = var4 + 8;
 		var5 = 5+0(var5, 10);
-		if (g_var157c > -1)
+		if (g_GlowSprite > -1)
 		{
-			TE_SetupGlowSprite(var4, g_var157c, 0.95, 1.5, 50);
+			TE_SetupGlowSprite(var4, g_GlowSprite, 0.95, 1.5, 50);
 			TE_SendToAll(0.0);
 		}
 		else
 		{
-			if (g_var1578 > -1)
+			if (g_HaloSprite > -1)
 			{
-				TE_SetupGlowSprite(var4, g_var1578, 0.95, 1.5, 50);
+				TE_SetupGlowSprite(var4, g_HaloSprite, 0.95, 1.5, 50);
 				TE_SendToAll(0.0);
 			}
 		}
 		return 0;
 	}
 	UnfreezeClient(var2);
-	if (g_var15ec != 5)
+	if (g_GameEngine != 5)
 	{
 		PrintHintText(var2, "%t", 9484);
 	}
@@ -2618,66 +2663,66 @@ public Action:Timer_FreezeBomb(Handle:_arg0, any:_arg1)
 	new var7;
 	var7 = _arg1 >>> 7;
 	new var1;
-	if (IsClientInGame(var6) && IsPlayerAlive(var6) && var7 == 8588[var6])
+	if (IsClientInGame(var6) && IsPlayerAlive(var6) && var7 == g_FreezeBombSerial[var6])
 	{
 		KillFreezeBomb(var6);
 		return 4;
 	}
 	new var8 = 0;
 	GetClientEyePosition(var6, var8);
-	9116[var6]--;
-	if (0 < 9116[var6])
+	g_FreezeBombTime[var6]--;
+	if (0 < g_FreezeBombTime[var6])
 	{
 		new var9 = 0;
-		if (9116[var6] > 1)
+		if (g_FreezeBombTime[var6] > 1)
 		{
-			var9 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_var24a8), 9116[var6]));
-			if (4464/* ERROR unknown load Constant */)
+			var9 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FreezeBombTicks), g_FreezeBombTime[var6]));
+			if (g_BeepSound[0])
 			{
-				EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
 			var9 = 0;
-			if (4720/* ERROR unknown load Constant */)
+			if (g_FinalSound[0])
 			{
-				EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		SetEntityRenderColor(var6, var9, var9, 255, 255);
 		new var10 = 0;
 		GetClientName(var6, var10, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var10, 9116[var6]);
+		PrintCenterTextAll("%t", "Till Explodes", var10, g_FreezeBombTime[var6]);
 		new var2;
-		if (g_var1570 > -1 && g_var1578 > -1)
+		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
 			GetClientAbsOrigin(var6, var8);
 			new var11 = var8 + 8;
 			var11 = 5+0(var11, 10);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_var24ac) / 3.0, g_var1570, g_var1578, 0, 15, 0.5, 5.0, 0.0, 5588, 10, 0);
+			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_var24ac) / 3.0, g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5572, 10, 0);
+			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
-	if (g_var1580 > -1)
+	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var8, g_var1580, 5.0, 1, 0, ConVar.IntValue.get(g_var24ac), 5000, 6840, 67);
+		TE_SetupExplosion(var8, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_FreezeBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
-	if (4976/* ERROR unknown load Constant */)
+	if (g_BoomSound[0])
 	{
-		EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 	}
 	KillFreezeBomb(var6);
-	FreezeClient(var6, ConVar.IntValue.get(g_var24a4));
-	if (0 < ConVar.IntValue.get(g_var24b0))
+	FreezeClient(var6, ConVar.IntValue.get(g_Cvar_FreezeDuration));
+	if (0 < ConVar.IntValue.get(g_Cvar_FreezeBombMode))
 	{
 		new var12;
 		new var3;
-		if (ConVar.IntValue.get(g_var24b0) == 1)
+		if (ConVar.IntValue.get(g_Cvar_FreezeBombMode) == 1)
 		{
 			var3 = 1;
 		}
@@ -2702,22 +2747,22 @@ public Action:Timer_FreezeBomb(Handle:_arg0, any:_arg1)
 					GetClientEyePosition(var13, var14);
 					new var15;
 					var15 = GetVectorDistance(var8, var14, false);
-					if (!(var15 > ConVar.FloatValue.get(g_var24ac)))
+					if (!(var15 > ConVar.FloatValue.get(g_Cvar_FreezeBombRadius)))
 					{
-						if (g_var1578 > -1)
+						if (g_HaloSprite > -1)
 						{
-							if (g_var1574 > -1)
+							if (g_BeamSprite2 > -1)
 							{
-								TE_SetupBeamPoints(var8, var14, g_var1574, g_var1578, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, 5556, 10);
+								TE_SetupBeamPoints(var8, var14, g_BeamSprite2, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
 								TE_SendToAll(0.0);
 							}
-							if (g_var1570 > -1)
+							if (g_BeamSprite > -1)
 							{
-								TE_SetupBeamPoints(var8, var14, g_var1570, g_var1578, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, 5556, 10);
+								TE_SetupBeamPoints(var8, var14, g_BeamSprite, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
 								TE_SendToAll(0.0);
 							}
 						}
-						FreezeClient(var13, ConVar.IntValue.get(g_var24a4));
+						FreezeClient(var13, ConVar.IntValue.get(g_Cvar_FreezeDuration));
 					}
 				}
 			}
@@ -2734,67 +2779,67 @@ public Action:Timer_TimeBomb(Handle:_arg0, any:_arg1)
 	new var7;
 	var7 = _arg1 >>> 7;
 	new var1;
-	if (IsClientInGame(var6) && IsPlayerAlive(var6) && 6220[var6] == var7)
+	if (IsClientInGame(var6) && IsPlayerAlive(var6) && g_TimeBombSerial[var6] == var7)
 	{
 		KillTimeBomb(var6);
 		return 4;
 	}
-	6484[var6]--;
+	g_TimeBombTime[var6]--;
 	new var8 = 0;
 	GetClientEyePosition(var6, var8);
-	if (0 < 6484[var6])
+	if (0 < g_TimeBombTime[var6])
 	{
 		new var9 = 0;
-		if (6484[var6] > 1)
+		if (g_TimeBombTime[var6] > 1)
 		{
-			var9 = RoundToFloor(5*0(128.0 / ConVar.FloatValue.get(g_var1a5c), 6484[var6]));
-			if (4464/* ERROR unknown load Constant */)
+			var9 = RoundToFloor(5*0(128.0 / ConVar.FloatValue.get(g_Cvar_TimeBombTicks), g_TimeBombTime[var6]));
+			if (g_BeepSound[0])
 			{
-				EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
 			var9 = 0;
-			if (4720/* ERROR unknown load Constant */)
+			if (g_FinalSound[0])
 			{
-				EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		SetEntityRenderColor(var6, 255, 128, var9, 255);
 		new var10 = 0;
 		GetClientName(var6, var10, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var10, 6484[var6]);
+		PrintCenterTextAll("%t", "Till Explodes", var10, g_TimeBombTime[var6]);
 		new var2;
-		if (g_var1570 > -1 && g_var1578 > -1)
+		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
 			GetClientAbsOrigin(var6, var8);
 			new var11 = var8 + 8;
 			var11 = 5+0(var11, 10);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_var1a60) / 3.0, g_var1570, g_var1578, 0, 15, 0.5, 5.0, 0.0, 5588, 10, 0);
+			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_var1a60) / 3.0, g_var1570, g_var1578, 0, 10, 0.6, 10.0, 0.5, 5572, 10, 0);
+			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
-	if (g_var1580 > -1)
+	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var8, g_var1580, 5.0, 1, 0, ConVar.IntValue.get(g_var1a60), 5000, 6840, 67);
+		TE_SetupExplosion(var8, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_TimeBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
-	if (4976/* ERROR unknown load Constant */)
+	if (g_BoomSound[0])
 	{
-		EmitAmbientSound("", var8, var6, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, var8, var6, 130, 0, 1.0, 100, 0.0);
 	}
 	ForcePlayerSuicide(var6);
 	KillTimeBomb(var6);
 	SetEntityRenderColor(var6, 255, 255, 255, 255);
-	if (0 < ConVar.IntValue.get(g_var1a64))
+	if (0 < ConVar.IntValue.get(g_Cvar_TimeBombMode))
 	{
 		new var12;
 		new var3;
-		if (ConVar.IntValue.get(g_var1a64) == 1)
+		if (ConVar.IntValue.get(g_Cvar_TimeBombMode) == 1)
 		{
 			var3 = 1;
 		}
@@ -2819,14 +2864,14 @@ public Action:Timer_TimeBomb(Handle:_arg0, any:_arg1)
 					GetClientEyePosition(var13, var14);
 					new var15;
 					var15 = GetVectorDistance(var8, var14, false);
-					if (!(var15 > ConVar.FloatValue.get(g_var1a60)))
+					if (!(var15 > ConVar.FloatValue.get(g_Cvar_TimeBombRadius)))
 					{
 						new var16 = 220;
-						var16 = RoundToFloor(5*0(ConVar.FloatValue.get(g_var1a60) - var15 / ConVar.FloatValue.get(g_var1a60), var16));
+						var16 = RoundToFloor(5*0(ConVar.FloatValue.get(g_Cvar_TimeBombRadius) - var15 / ConVar.FloatValue.get(g_Cvar_TimeBombRadius), var16));
 						SlapPlayer(var13, var16, false);
-						if (g_var1580 > -1)
+						if (g_ExplosionSprite > -1)
 						{
-							TE_SetupExplosion(var14, g_var1580, 0.05, 1, 0, 1, 1, 6840, 67);
+							TE_SetupExplosion(var14, g_ExplosionSprite, 0.05, 1, 0, 1, 1, 6840, 67);
 							TE_SendToAll(0.0);
 						}
 					}

@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:14"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "RandomCycle",
@@ -23,10 +23,10 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var968;
-new g_var970 = -1;
-new g_var96c;
-new g_var964;
+new ConVar:g_Cvar_ExcludeMaps;
+new ArrayList:g_MapList;
+new ArrayList:g_OldMapList;
+new g_mapListSerial = -1;
 ByteCountToCells(_arg0)
 {
 	if (_arg0)
@@ -38,9 +38,9 @@ ByteCountToCells(_arg0)
 
 public void:OnConfigsExecuted()
 {
-	if (!(ReadMapList(g_var968, g_var970, "randomcycle", 3)))
+	if (!(ReadMapList(g_MapList, g_mapListSerial, "randomcycle", 3)))
 	{
-		if (g_var970 == -1)
+		if (g_mapListSerial == -1)
 		{
 			LogError("Unable to create a valid map list.");
 		}
@@ -53,9 +53,9 @@ public void:OnPluginStart()
 {
 	new var1;
 	var1 = ByteCountToCells(256);
-	g_var968 = ArrayList.ArrayList(var1, 0);
-	g_var96c = ArrayList.ArrayList(var1, 0);
-	g_var964 = CreateConVar("sm_randomcycle_exclude", "5", "Specifies how many past maps to exclude from the vote.", 0, true, 0.0, false, 0.0);
+	g_MapList = ArrayList.ArrayList(var1, 0);
+	g_OldMapList = ArrayList.ArrayList(var1, 0);
+	g_Cvar_ExcludeMaps = CreateConVar("sm_randomcycle_exclude", "5", "Specifies how many past maps to exclude from the vote.", 0, true, 0.0, false, 0.0);
 	AutoExecConfig(true, "randomcycle", "sourcemod");
 	return 0;
 }
@@ -66,18 +66,18 @@ public Action:Timer_RandomizeNextmap(Handle:_arg0)
 	new var4 = 0;
 	new var5 = 0;
 	new var1;
-	if (ConVar.IntValue.get(g_var964) && ArrayList.Length.get(g_var968) > ConVar.IntValue.get(g_var964))
+	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) && ArrayList.Length.get(g_MapList) > ConVar.IntValue.get(g_Cvar_ExcludeMaps))
 	{
 		var5 = 1;
 	}
-	while (var5 && ArrayList.FindString(g_var96c, var4) != -1)
+	while (var5 && ArrayList.FindString(g_OldMapList, var4) != -1)
 	{
 	}
-	ArrayList.PushString(g_var96c, var4);
+	ArrayList.PushString(g_OldMapList, var4);
 	SetNextMap(var3);
-	if (ConVar.IntValue.get(g_var964) < ArrayList.Length.get(g_var96c))
+	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) < ArrayList.Length.get(g_OldMapList))
 	{
-		ArrayList.Erase(g_var96c, 0);
+		ArrayList.Erase(g_OldMapList, 0);
 	}
 	LogAction(-1, -1, "RandomCycle has chosen %s for the nextmap.", var3);
 	return 4;

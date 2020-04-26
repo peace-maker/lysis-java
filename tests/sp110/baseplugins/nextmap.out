@@ -1,13 +1,3 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
-public Extension:__ext_core =
-{
-	name = "Core",
-	file = "core",
-	autoload = 0,
-	required = 0,
-};
 public PlVers:__version =
 {
 	version = 5,
@@ -15,6 +5,16 @@ public PlVers:__version =
 	date = "04/21/2020",
 	time = "18:15:15"
 };
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
 public Plugin:myinfo =
 {
 	name = "Nextmap",
@@ -23,10 +23,10 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-new g_var964;
-new g_var968 = -1;
-new g_var960 = -1;
-new g_var96c;
+new g_MapPos = -1;
+new ArrayList:g_MapList;
+new g_MapListSerial = -1;
+new g_CurrentMapStartTime;
 bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
 {
 	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
@@ -43,47 +43,47 @@ ByteCountToCells(_arg0)
 
 void:FindAndSetNextMap()
 {
-	if (!(ReadMapList(g_var964, g_var968, "mapcyclefile", 6)))
+	if (!(ReadMapList(g_MapList, g_MapListSerial, "mapcyclefile", 6)))
 	{
-		if (g_var968 == -1)
+		if (g_MapListSerial == -1)
 		{
 			LogError("FATAL: Cannot load map cycle. Nextmap not loaded.");
 			SetFailState("Mapcycle Not Found");
 		}
 	}
 	new var2;
-	var2 = ArrayList.Length.get(g_var964);
+	var2 = ArrayList.Length.get(g_MapList);
 	new var3 = 0;
-	if (g_var960 == -1)
+	if (g_MapPos == -1)
 	{
 		new var4 = 0;
 		GetCurrentMap(var4, 256);
 		new var5 = 0;
 		while (var5 < var2)
 		{
-			ArrayList.GetString(g_var964, var5, var3, 256);
+			ArrayList.GetString(g_MapList, var5, var3, 256);
 			new var1;
 			if (FindMap(var3, var3, 256) != 1 && strcmp(var4, var3, false))
 			{
-				g_var960 = var5;
-				if (g_var960 == -1)
+				g_MapPos = var5;
+				if (g_MapPos == -1)
 				{
-					g_var960 = 0;
+					g_MapPos = 0;
 				}
 			}
 			var5++;
 		}
-		if (g_var960 == -1)
+		if (g_MapPos == -1)
 		{
-			g_var960 = 0;
+			g_MapPos = 0;
 		}
 	}
-	g_var960 += 1;
-	if (g_var960 >= var2)
+	g_MapPos += 1;
+	if (g_MapPos >= var2)
 	{
-		g_var960 = 0;
+		g_MapPos = 0;
 	}
-	ArrayList.GetString(g_var964, g_var960, var3, 256);
+	ArrayList.GetString(g_MapList, g_MapPos, var3, 256);
 	SetNextMap(var3);
 	return 0;
 }
@@ -159,12 +159,12 @@ public Action:Command_List(_arg0, _arg1)
 {
 	PrintToConsole(_arg0, "Map Cycle:");
 	new var1;
-	var1 = ArrayList.Length.get(g_var964);
+	var1 = ArrayList.Length.get(g_MapList);
 	new var2 = 0;
 	new var3 = 0;
 	while (var3 < var1)
 	{
-		ArrayList.GetString(g_var964, var3, var2, 256);
+		ArrayList.GetString(g_MapList, var3, var2, 256);
 		PrintToConsole(_arg0, "%s", var2);
 		var3++;
 	}
@@ -181,7 +181,7 @@ public Action:Command_MapHistory(_arg0, _arg1)
 	new var5 = 0;
 	new var6 = 0;
 	new var7;
-	var7 = g_var96c;
+	var7 = g_CurrentMapStartTime;
 	PrintToConsole(_arg0, "Map History:\n");
 	PrintToConsole(_arg0, "Map : Started : Played Time : Reason for ending");
 	GetCurrentMap(var2, 256);
@@ -214,7 +214,7 @@ public void:OnConfigsExecuted()
 
 public void:OnMapStart()
 {
-	g_var96c = GetTime({0,0});
+	g_CurrentMapStartTime = GetTime({0,0});
 	return 0;
 }
 
@@ -224,7 +224,7 @@ public void:OnPluginStart()
 	LoadTranslations("nextmap.phrases");
 	new var1;
 	var1 = ByteCountToCells(256);
-	g_var964 = ArrayList.ArrayList(var1, 0);
+	g_MapList = ArrayList.ArrayList(var1, 0);
 	RegAdminCmd("sm_maphistory", 13, 64, "Shows the most recent maps played", "", 0);
 	RegConsoleCmd("listmaps", 11, "", 0);
 	new var2 = 0;

@@ -1,6 +1,12 @@
-new MaxClients;
-new NULL_STRING;
-new NULL_VECTOR;
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6484",
+	date = "04/21/2020",
+	time = "18:15:20"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[16];
 public Extension:__ext_core =
 {
 	name = "Core",
@@ -8,12 +14,10 @@ public Extension:__ext_core =
 	autoload = 0,
 	required = 0,
 };
-public PlVers:__version =
+new MaxClients;
+new current_version[4] =
 {
-	version = 5,
-	filevers = "1.10.0.6484",
-	date = "04/21/2020",
-	time = "18:15:20"
+	1, 0, 0, 1409
 };
 public Plugin:myinfo =
 {
@@ -179,12 +183,12 @@ bool:GetUpdateVersion(_arg0, Database:_arg1, _arg2[4])
 		}
 		CloseHandle(var2);
 		var2 = 0;
-		if (_arg2[0] + 12/* ERROR unknown load Binary */ > 2280 + 12/* ERROR unknown load Binary */)
+		if (_arg2[0] + 12/* ERROR unknown load Binary */ > current_version[3])
 		{
 			ReplyToCommand(_arg0, "[SM] The database is newer than the expected version.");
 			return 0;
 		}
-		if (_arg2[0] + 12/* ERROR unknown load Binary */ == 2280 + 12/* ERROR unknown load Binary */)
+		if (_arg2[0] + 12/* ERROR unknown load Binary */ == current_version[3])
 		{
 			ReplyToCommand(_arg0, "[SM] Your tables are already up to date.");
 			return 0;

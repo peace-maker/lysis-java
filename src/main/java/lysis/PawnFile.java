@@ -237,7 +237,7 @@ public abstract class PawnFile {
 		Dimension[] dimarray = null;
 		if (!dims.isEmpty())
 			dimarray = dims.toArray(new Dimension[0]);
-		Variable var = new Variable(varAddr, 0, null, func.codeStart(), func.codeEnd(),
+		Variable var = new Variable(varAddr, func.codeStart(), func.codeEnd(),
 				type.toVariableType(), Scope.Local, "_arg" + argNum, dimarray, type);
 		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
 		variables_[variables_.length - 1] = var;
