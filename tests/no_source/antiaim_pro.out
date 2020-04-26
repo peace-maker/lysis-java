@@ -1,1 +1,724 @@
-public PlVers:__version ={	version = 5,	filevers = "1.4.0",	date = "06/11/2015",	time = "22:26:23"};new Float:NULL_VECTOR[3];new String:NULL_STRING[4];public Extension:__ext_core ={	name = "Core",	file = "core",	autoload = 0,	required = 0,};new MaxClients;new Handle:g_SQL;new bool:MYSQL;new g_iPotectTime;new bool:g_bPotect;new String:g_sProtectMessage[252];new g_iProtectBanTime;public Plugin:myinfo ={	name = "No-Steam Guard",	description = "Protection STEAM_ID nosteam player",	author = "by DEN skype cssrs2_ky39i",	version = "2.0",	url = ""};public __ext_core_SetNTVOptional(){	MarkNativeAsOptional("GetFeatureStatus");	MarkNativeAsOptional("RequireFeature");	MarkNativeAsOptional("AddCommandListener");	MarkNativeAsOptional("RemoveCommandListener");	VerifyCoreVersion();	return 0;}bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive){	return strcmp(str1, str2, caseSensitive) == 0;}ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder){	new reloc_idx;	new idx;	new total;	new var1;	if (maxStrings < 1 || !split[0])	{		return 0;	}	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)	{		reloc_idx = idx + reloc_idx;		total++;		if (maxStrings == total)		{			if (copyRemainder)			{				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);			}			return total;		}	}	total++;	strcopy(buffers[total], maxStringLength, text[reloc_idx]);	return total;}Handle:SQLite_UseDatabase(String:database[], String:error[], maxlength){	new Handle:kv;	new Handle:db;	kv = CreateKeyValues("", "", "");	KvSetString(kv, "driver", "sqlite");	KvSetString(kv, "database", database);	db = SQL_ConnectCustom(kv, error, maxlength, false);	CloseHandle(kv);	return db;}public OnPluginStart(){	new var = 1;	if (var != var)	{	}	CheckIpAndPortServer();	decl String:error[256];	if (!SQL_CheckConfig("Save_Player"))	{		MYSQL = false;		g_SQL = SQLite_UseDatabase("save_player", error, 256);		if (!g_SQL)		{			SetFailState("Could not connect to database: %s", error);		}		SQL_LockDatabase(g_SQL);		SQL_FastQuery(g_SQL, "CREATE TABLE IF NOT EXISTS `protect` (steamid TEXT PRIMARY KEY, ip TEXT, value NUMERIC, datetime NUMERIC);", -1);		SQL_UnlockDatabase(g_SQL);	}	else	{		g_SQL = SQL_Connect("Save_Player", true, error, 256);		if (g_SQL)		{			new String:driver[16];			SQL_ReadDriver(g_SQL, driver, 15);			MYSQL = StrEqual(driver, "mysql", false);			if (!MYSQL)			{				SQL_TQuery(g_SQL, SQL_DefCallback, "CREATE TABLE IF NOT EXISTS `protect` (steamid TEXT PRIMARY KEY, ip TEXT, value NUMERIC, datetime NUMERIC)", any:0, DBPriority:1);			}			else			{				SQL_TQuery(g_SQL, SQL_DefCallback, "CREATE TABLE IF NOT EXISTS `protect` (`steamid` varchar(32) NOT NULL, `ip` varchar(20) NOT NULL, `value` int(20) NOT NULL, `datetime` int(30) NOT NULL, PRIMARY KEY (`steamid`))", any:0, DBPriority:1);			}		}		LogError(error);		SetFailState("\"Save_Player\" Failed to establish a connection");		return 0;	}	decl String:zapros[100];	Format(zapros, 100, "SELECT * FROM `protect` WHERE `steamid` = 'steam_local';");	SQL_TQuery(g_SQL, SqlCheckCvar, zapros, any:0, DBPriority:1);	new Handle:Cvar = CreateConVar("sm_protect_time", "3", "Количество дней до удаления игрока из базы.", 262144, true, 1.0, true, 10.0);	HookConVarChange(Cvar, CvarProtectTime);	g_iPotectTime = GetConVarInt(Cvar) * 86400;	Cvar = CreateConVar("sm_protect", "1", "Банить игрока - 1, кикать - 0", 262144, true, 0.0, true, 1.0);	HookConVarChange(Cvar, CvarProtect);	g_bPotect = GetConVarBool(Cvar);	Cvar = CreateConVar("sm_protect_ban", "5", "Время при бане в минутах (банит по айпи)", 262144, true, 0.0, true, 1000000.0);	HookConVarChange(Cvar, CvarProtectBan);	g_iProtectBanTime = GetConVarInt(Cvar);	Cvar = CreateConVar("sm_protect_message", "[No-Steam Guard] Ваш steam_id не зарегистрирован.", "Сообщение игроку (при бане или кике)", 262144, false, 0.0, false, 0.0);	HookConVarChange(Cvar, CvarProtectMessage);	GetConVarString(Cvar, g_sProtectMessage, 250);	AutoExecConfig(true, "save_player", "sourcemod");	RegAdminCmd("sm_protect_del", CommandDelete, 16384, "sm_protect_del <steamid> - Removes a player's protect steam.", "", 0);	new i = 1;	while (i <= MaxClients)	{		if (IsClientInGame(i))		{			OnClientPutInServer(i);		}		i++;	}	return 0;}CheckIpAndPortServer(){	new var = 1;	if (!(var != var))	{		decl String:g_sServerIpHost[32];		decl String:g_sServerPort[128];		decl g_iHostIp;		decl Handle:g_hHostIp;		decl Handle:g_hHostPort;		g_hHostIp = FindConVar("hostip");		g_iHostIp = GetConVarInt(g_hHostIp);		g_hHostPort = FindConVar("hostport");		GetConVarString(g_hHostPort, g_sServerPort, 128);		FormatEx(g_sServerIpHost, 32, "%u.%u.%u.%u:%s", g_iHostIp >> 24 & 255, g_iHostIp >> 16 & 255, g_iHostIp >> 8 & 255, g_iHostIp & 255, g_sServerPort);		if (strcmp("46.174.52.16:27201", g_sServerIpHost, true))		{			SetFailState("[Save Player] Plugin is not intended for this server");		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public CvarProtectTime(Handle:cvar, String:oldVal[], String:newVal[]){	g_iPotectTime = GetConVarInt(cvar) * 86400;	return 0;}public CvarProtect(Handle:cvar, String:oldVal[], String:newVal[]){	g_bPotect = GetConVarBool(cvar);	return 0;}public CvarProtectMessage(Handle:cvar, String:oldVal[], String:newVal[]){	GetConVarString(cvar, g_sProtectMessage, 250);	return 0;}public CvarProtectBan(Handle:cvar, String:oldVal[], String:newVal[]){	g_iProtectBanTime = GetConVarInt(cvar);	return 0;}public OnMapEnd(){	new var = 1;	if (!(var != var))	{		decl String:zapros[128];		Format(zapros, 125, "SELECT * FROM `protect`;");		SQL_TQuery(g_SQL, AllDeleteTimeClient_CallBack, zapros, any:0, DBPriority:1);		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public AllDeleteTimeClient_CallBack(Handle:owner, Handle:hndl, String:error[], any:userid){	new var = 1;	if (var != var)	{		do {			if (var == 1)			{				var = 2;			}			else			{				if (var == 2)				{					var = 1;				}			}		} while (true);	}	while (SQL_FetchRow(hndl))	{		new timestamp = SQL_FetchInt(hndl, 3, 0);		if (0 < timestamp)		{			new time = GetTime({0,0}) - timestamp;			if (g_iPotectTime <= time)			{				decl String:Steam[32];				decl String:query[100];				SQL_FetchString(hndl, 0, Steam, 32, 0);				Format(query, 100, "DELETE FROM `protect` WHERE `steamid` = '%s';", Steam);				SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);			}		}	}	return 0;}public SqlCheckCvar(Handle:owner, Handle:result, String:error[], any:userid){	new var = 1;	if (!(var != var))	{		if (result)		{			if (!SQL_FetchRow(result))			{				decl String:query[100];				Format(query, 100, "INSERT INTO protect(steamid, value, datetime) VALUES ('steam_local', 100000000, 0);");				SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);			}			return 0;		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public SQL_DefCallback(Handle:owner, Handle:hndl, String:error[], any:data){	new var = 1;	if (!(var != var))	{		if (!hndl)		{			LogError(error);		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public Action:CommandDelete(client, args){	new var = 1;	if (!(var != var))	{		decl String:text[32];		GetCmdArgString(text, 32);		if (StrContains(text, "STEAM_", true) != -1)		{			decl String:zapros[128];			Format(zapros, 125, "SELECT * FROM `protect` WHERE `steamid` = '%s';", text);			SQL_TQuery(g_SQL, DeleteClient_CallBack, zapros, client, DBPriority:1);			return Action:3;		}		PrintChatProtect(client, "[SM] Usage: sm_protect_del <steamid>");		return Action:3;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}PrintChatProtect(client, String:Message[]){	new var = 1;	if (!(var != var))	{		decl String:Buffer[252];		VFormat(Buffer, 250, Message, 3);		if (0 < client)		{			ReplyToCommand(client, Buffer);		}		else		{			PrintToServer(Buffer);		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public DeleteClient_CallBack(Handle:owner, Handle:result, String:error[], any:client){	new var = 1;	if (!(var != var))	{		if (result)		{			if (!SQL_FetchRow(result))			{				PrintChatProtect(client, "[SM] Usage: Steam not found in the database");				return 0;			}			decl String:steam_bd[32];			decl String:query[100];			decl String:steam[32];			SQL_FetchString(result, 0, steam_bd, 32, 0);			PrintChatProtect(client, "[SM] %s delete database", steam_bd);			Format(query, 100, "DELETE FROM `protect` WHERE `steamid` = '%s';", steam_bd);			SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);			new i = 1;			while (i <= MaxClients)			{				if (IsClientInGame(i))				{					GetClientAuthString(i, steam, 32);					if (!(strcmp(steam, steam_bd, true)))					{						OnClientPutInServer(i);						return 0;					}				}				i++;			}			return 0;		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public OnClientPutInServer(client){	new var = 1;	if (!(var != var))	{		new var1;		if (client > 0 && !IsFakeClient(client))		{			decl String:zapros[128];			decl String:steamid[32];			if (!GetClientAuthString(client, steamid, 32))			{				KickClient(client, "Не удалось определить ваш SteamID");				return 0;			}			Format(zapros, 125, "SELECT * FROM `protect` WHERE `steamid` = '%s';", steamid);			SQL_TQuery(g_SQL, OnClientConnect_CallBack, zapros, GetClientUserId(client), DBPriority:1);		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public OnClientConnect_CallBack(Handle:owner, Handle:result, String:error[], any:userid){	new var = 1;	if (!(var != var))	{		new client = GetClientOfUserId(userid);		if (0 > client)		{			return 0;		}		if (result)		{			decl String:zapros[200];			if (!SQL_FetchRow(result))			{				Format(zapros, 200, "SELECT * FROM `protect` WHERE `steamid` = 'steam_local';");				SQL_TQuery(g_SQL, NewClientConnect_CallBack, zapros, GetClientUserId(client), DBPriority:1);				return 0;			}			decl String:ip_bd[20];			decl String:ip[20];			SQL_FetchString(result, 1, ip_bd, 20, 0);			GetLocalIpClient(client, ip, 20);			if (strcmp(ip_bd, ip, true))			{				new Handle:pack = CreateDataPack();				WritePackCell(pack, SQL_FetchInt(result, 2, 0));				WritePackString(pack, ip_bd);				QueryClientConVar(client, "sv_log_onefile", ClientConVar, pack);				return 0;			}			ReloadDatabaseTimeClient(client, false);			return 0;		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public ClientConVar(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[], Handle:pack){	new var = 1;	if (!(var != var))	{		ResetPack(pack, false);		new bdValue = ReadPackCell(pack);		if (StringToInt(cvarValue, 10) != bdValue)		{			decl String:name[64];			decl String:steamid[32];			decl String:ip[20];			decl String:bdIp[20];			ReadPackString(pack, bdIp, 20);			GetLocalIpClient(client, ip, 20);			GetClientName(client, name, 64);			GetClientAuthString(client, steamid, 32);			if (!g_bPotect)			{				KickClient(client, g_sProtectMessage);			}			else			{				BanClient(client, g_iProtectBanTime, 2, g_sProtectMessage, g_sProtectMessage, "sm_banip", client);			}			new var1;			if (g_bPotect)			{				var1[0] = 2472;			}			else			{				var1[0] = 2480;			}			LogToFile("addons/sourcemod/logs/Save_Player.txt", "%s %s[%s][IP:%s != %s][Value:%s != %d]", var1, name, steamid, ip, bdIp, cvarValue, bdValue);			CloseHandle(pack);			return 0;		}		ReloadDatabaseTimeClient(client, true);		CloseHandle(pack);		return 1;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}ReloadDatabaseTimeClient(client, bool:reload){	new var = 1;	if (!(var != var))	{		decl String:zapros[200];		decl String:steamid[32];		GetClientAuthString(client, steamid, 32);		if (reload)		{			decl String:ip[20];			GetLocalIpClient(client, ip, 20);			Format(zapros, 200, "UPDATE `protect` SET `ip` = '%s', `datetime` = %d WHERE `steamid` = '%s';", ip, GetTime({0,0}), steamid);		}		else		{			Format(zapros, 200, "UPDATE `protect` SET `datetime` = %d WHERE `steamid` = '%s';", GetTime({0,0}), steamid);		}		SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}public NewClientConnect_CallBack(Handle:owner, Handle:result, String:error[], any:userid){	new var = 1;	if (!(var != var))	{		new client = GetClientOfUserId(userid);		if (client < 1)		{			return 0;		}		if (result)		{			if (!SQL_FetchRow(result))			{				return 0;			}			new cvar = SQL_FetchInt(result, 2, 0);			if (cvar >= 1000000000)			{				cvar = 100000000;			}			decl Handle:hHostName;			decl String:sBuffer[128];			decl String:sHostName[256];			hHostName = FindConVar("hostname");			GetConVarString(hHostName, sHostName, 256);			Format(sBuffer, 128, "%s %i;vban 0 0;chooseteam", "sv_log_onefile", cvar);			new Handle:g_hKv = CreateKeyValues("data", "", "");			KvSetString(g_hKv, "title", sHostName);			KvSetString(g_hKv, "type", "2");			KvSetString(g_hKv, "cmd", sBuffer);			ShowVGUIPanel(client, "info", g_hKv, true);			CloseHandle(g_hKv);			decl String:zapros[200];			decl String:steamid[32];			decl String:ip[20];			Format(zapros, 200, "UPDATE `protect` SET `value` = %d WHERE `steamid` = 'steam_local';", cvar + 1);			SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);			GetClientAuthString(client, steamid, 32);			GetLocalIpClient(client, ip, 20);			Format(zapros, 200, "INSERT INTO `protect` (steamid, ip, value, datetime) VALUES ('%s', '%s', %d, %d);", steamid, ip, cvar, GetTime({0,0}));			SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);			return 0;		}		return 0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}String:GetLocalIpClient(client, String:ip[], size){	new var = 1;	if (!(var != var))	{		new String:buf[2][8] = {			".",			"s.0.0"		};		GetClientIP(client, ip, size, true);		if (ExplodeString(ip, ".", buf, 2, 5, false))		{			Format(ip, size, "%s.%s.0.0", buf[0][buf], buf[1]);		}		return String:0;	}	do {		if (var == 1)		{			var = 2;		}		else		{			if (var == 2)			{				var = 1;			}		}	} while (true);}
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.4.0",
+	date = "06/11/2015",
+	time = "22:26:23"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new Handle:g_SQL;
+new bool:MYSQL;
+new g_iPotectTime;
+new bool:g_bPotect;
+new String:g_sProtectMessage[252];
+new g_iProtectBanTime;
+public Plugin:myinfo =
+{
+	name = "No-Steam Guard",
+	description = "Protection STEAM_ID nosteam player",
+	author = "by DEN skype cssrs2_ky39i",
+	version = "2.0",
+	url = ""
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+Handle:SQLite_UseDatabase(String:database[], String:error[], maxlength)
+{
+	new Handle:kv;
+	new Handle:db;
+	kv = CreateKeyValues("", "", "");
+	KvSetString(kv, "driver", "sqlite");
+	KvSetString(kv, "database", database);
+	db = SQL_ConnectCustom(kv, error, maxlength, false);
+	CloseHandle(kv);
+	return db;
+}
+
+public OnPluginStart()
+{
+	new var = 1;
+	if (var != var)
+	{
+	}
+	CheckIpAndPortServer();
+	decl String:error[256];
+	if (!SQL_CheckConfig("Save_Player"))
+	{
+		MYSQL = false;
+		g_SQL = SQLite_UseDatabase("save_player", error, 256);
+		if (!g_SQL)
+		{
+			SetFailState("Could not connect to database: %s", error);
+		}
+		SQL_LockDatabase(g_SQL);
+		SQL_FastQuery(g_SQL, "CREATE TABLE IF NOT EXISTS `protect` (steamid TEXT PRIMARY KEY, ip TEXT, value NUMERIC, datetime NUMERIC);", -1);
+		SQL_UnlockDatabase(g_SQL);
+	}
+	else
+	{
+		g_SQL = SQL_Connect("Save_Player", true, error, 256);
+		if (g_SQL)
+		{
+			new String:driver[16];
+			SQL_ReadDriver(g_SQL, driver, 15);
+			MYSQL = StrEqual(driver, "mysql", false);
+			if (!MYSQL)
+			{
+				SQL_TQuery(g_SQL, SQL_DefCallback, "CREATE TABLE IF NOT EXISTS `protect` (steamid TEXT PRIMARY KEY, ip TEXT, value NUMERIC, datetime NUMERIC)", any:0, DBPriority:1);
+			}
+			else
+			{
+				SQL_TQuery(g_SQL, SQL_DefCallback, "CREATE TABLE IF NOT EXISTS `protect` (`steamid` varchar(32) NOT NULL, `ip` varchar(20) NOT NULL, `value` int(20) NOT NULL, `datetime` int(30) NOT NULL, PRIMARY KEY (`steamid`))", any:0, DBPriority:1);
+			}
+		}
+		LogError(error);
+		SetFailState("\"Save_Player\" Failed to establish a connection");
+		return 0;
+	}
+	decl String:zapros[100];
+	Format(zapros, 100, "SELECT * FROM `protect` WHERE `steamid` = 'steam_local';");
+	SQL_TQuery(g_SQL, SqlCheckCvar, zapros, any:0, DBPriority:1);
+	new Handle:Cvar = CreateConVar("sm_protect_time", "3", "Количество дней до удаления игрока из базы.", 262144, true, 1.0, true, 10.0);
+	HookConVarChange(Cvar, CvarProtectTime);
+	g_iPotectTime = GetConVarInt(Cvar) * 86400;
+	Cvar = CreateConVar("sm_protect", "1", "Банить игрока - 1, кикать - 0", 262144, true, 0.0, true, 1.0);
+	HookConVarChange(Cvar, CvarProtect);
+	g_bPotect = GetConVarBool(Cvar);
+	Cvar = CreateConVar("sm_protect_ban", "5", "Время при бане в минутах (банит по айпи)", 262144, true, 0.0, true, 1000000.0);
+	HookConVarChange(Cvar, CvarProtectBan);
+	g_iProtectBanTime = GetConVarInt(Cvar);
+	Cvar = CreateConVar("sm_protect_message", "[No-Steam Guard] Ваш steam_id не зарегистрирован.", "Сообщение игроку (при бане или кике)", 262144, false, 0.0, false, 0.0);
+	HookConVarChange(Cvar, CvarProtectMessage);
+	GetConVarString(Cvar, g_sProtectMessage, 250);
+	AutoExecConfig(true, "save_player", "sourcemod");
+	RegAdminCmd("sm_protect_del", CommandDelete, 16384, "sm_protect_del <steamid> - Removes a player's protect steam.", "", 0);
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			OnClientPutInServer(i);
+		}
+		i++;
+	}
+	return 0;
+}
+
+CheckIpAndPortServer()
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		decl String:g_sServerIpHost[32];
+		decl String:g_sServerPort[128];
+		decl g_iHostIp;
+		decl Handle:g_hHostIp;
+		decl Handle:g_hHostPort;
+		g_hHostIp = FindConVar("hostip");
+		g_iHostIp = GetConVarInt(g_hHostIp);
+		g_hHostPort = FindConVar("hostport");
+		GetConVarString(g_hHostPort, g_sServerPort, 128);
+		FormatEx(g_sServerIpHost, 32, "%u.%u.%u.%u:%s", g_iHostIp >> 24 & 255, g_iHostIp >> 16 & 255, g_iHostIp >> 8 & 255, g_iHostIp & 255, g_sServerPort);
+		if (strcmp("46.174.52.16:27201", g_sServerIpHost, true))
+		{
+			SetFailState("[Save Player] Plugin is not intended for this server");
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public CvarProtectTime(Handle:cvar, String:oldVal[], String:newVal[])
+{
+	g_iPotectTime = GetConVarInt(cvar) * 86400;
+	return 0;
+}
+
+public CvarProtect(Handle:cvar, String:oldVal[], String:newVal[])
+{
+	g_bPotect = GetConVarBool(cvar);
+	return 0;
+}
+
+public CvarProtectMessage(Handle:cvar, String:oldVal[], String:newVal[])
+{
+	GetConVarString(cvar, g_sProtectMessage, 250);
+	return 0;
+}
+
+public CvarProtectBan(Handle:cvar, String:oldVal[], String:newVal[])
+{
+	g_iProtectBanTime = GetConVarInt(cvar);
+	return 0;
+}
+
+public OnMapEnd()
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		decl String:zapros[128];
+		Format(zapros, 125, "SELECT * FROM `protect`;");
+		SQL_TQuery(g_SQL, AllDeleteTimeClient_CallBack, zapros, any:0, DBPriority:1);
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public AllDeleteTimeClient_CallBack(Handle:owner, Handle:hndl, String:error[], any:userid)
+{
+	new var = 1;
+	if (var != var)
+	{
+		do {
+			if (var == 1)
+			{
+				var = 2;
+			}
+			else
+			{
+				if (var == 2)
+				{
+					var = 1;
+				}
+			}
+		} while (true);
+	}
+	while (SQL_FetchRow(hndl))
+	{
+		new timestamp = SQL_FetchInt(hndl, 3, 0);
+		if (0 < timestamp)
+		{
+			new time = GetTime({0,0}) - timestamp;
+			if (g_iPotectTime <= time)
+			{
+				decl String:Steam[32];
+				decl String:query[100];
+				SQL_FetchString(hndl, 0, Steam, 32, 0);
+				Format(query, 100, "DELETE FROM `protect` WHERE `steamid` = '%s';", Steam);
+				SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);
+			}
+		}
+	}
+	return 0;
+}
+
+public SqlCheckCvar(Handle:owner, Handle:result, String:error[], any:userid)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		if (result)
+		{
+			if (!SQL_FetchRow(result))
+			{
+				decl String:query[100];
+				Format(query, 100, "INSERT INTO protect(steamid, value, datetime) VALUES ('steam_local', 100000000, 0);");
+				SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);
+			}
+			return 0;
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public SQL_DefCallback(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		if (!hndl)
+		{
+			LogError(error);
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public Action:CommandDelete(client, args)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		decl String:text[32];
+		GetCmdArgString(text, 32);
+		if (StrContains(text, "STEAM_", true) != -1)
+		{
+			decl String:zapros[128];
+			Format(zapros, 125, "SELECT * FROM `protect` WHERE `steamid` = '%s';", text);
+			SQL_TQuery(g_SQL, DeleteClient_CallBack, zapros, client, DBPriority:1);
+			return Action:3;
+		}
+		PrintChatProtect(client, "[SM] Usage: sm_protect_del <steamid>");
+		return Action:3;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+PrintChatProtect(client, String:Message[])
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		decl String:Buffer[252];
+		VFormat(Buffer, 250, Message, 3);
+		if (0 < client)
+		{
+			ReplyToCommand(client, Buffer);
+		}
+		else
+		{
+			PrintToServer(Buffer);
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public DeleteClient_CallBack(Handle:owner, Handle:result, String:error[], any:client)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		if (result)
+		{
+			if (!SQL_FetchRow(result))
+			{
+				PrintChatProtect(client, "[SM] Usage: Steam not found in the database");
+				return 0;
+			}
+			decl String:steam_bd[32];
+			decl String:query[100];
+			decl String:steam[32];
+			SQL_FetchString(result, 0, steam_bd, 32, 0);
+			PrintChatProtect(client, "[SM] %s delete database", steam_bd);
+			Format(query, 100, "DELETE FROM `protect` WHERE `steamid` = '%s';", steam_bd);
+			SQL_TQuery(g_SQL, SQL_DefCallback, query, any:0, DBPriority:1);
+			new i = 1;
+			while (i <= MaxClients)
+			{
+				if (IsClientInGame(i))
+				{
+					GetClientAuthString(i, steam, 32);
+					if (!(strcmp(steam, steam_bd, true)))
+					{
+						OnClientPutInServer(i);
+						return 0;
+					}
+				}
+				i++;
+			}
+			return 0;
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public OnClientPutInServer(client)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		new var1;
+		if (client > 0 && !IsFakeClient(client))
+		{
+			decl String:zapros[128];
+			decl String:steamid[32];
+			if (!GetClientAuthString(client, steamid, 32))
+			{
+				KickClient(client, "Не удалось определить ваш SteamID");
+				return 0;
+			}
+			Format(zapros, 125, "SELECT * FROM `protect` WHERE `steamid` = '%s';", steamid);
+			SQL_TQuery(g_SQL, OnClientConnect_CallBack, zapros, GetClientUserId(client), DBPriority:1);
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public OnClientConnect_CallBack(Handle:owner, Handle:result, String:error[], any:userid)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		new client = GetClientOfUserId(userid);
+		if (0 > client)
+		{
+			return 0;
+		}
+		if (result)
+		{
+			decl String:zapros[200];
+			if (!SQL_FetchRow(result))
+			{
+				Format(zapros, 200, "SELECT * FROM `protect` WHERE `steamid` = 'steam_local';");
+				SQL_TQuery(g_SQL, NewClientConnect_CallBack, zapros, GetClientUserId(client), DBPriority:1);
+				return 0;
+			}
+			decl String:ip_bd[20];
+			decl String:ip[20];
+			SQL_FetchString(result, 1, ip_bd, 20, 0);
+			GetLocalIpClient(client, ip, 20);
+			if (strcmp(ip_bd, ip, true))
+			{
+				new Handle:pack = CreateDataPack();
+				WritePackCell(pack, SQL_FetchInt(result, 2, 0));
+				WritePackString(pack, ip_bd);
+				QueryClientConVar(client, "sv_log_onefile", ClientConVar, pack);
+				return 0;
+			}
+			ReloadDatabaseTimeClient(client, false);
+			return 0;
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public ClientConVar(QueryCookie:cookie, client, ConVarQueryResult:result, String:cvarName[], String:cvarValue[], Handle:pack)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		ResetPack(pack, false);
+		new bdValue = ReadPackCell(pack);
+		if (StringToInt(cvarValue, 10) != bdValue)
+		{
+			decl String:name[64];
+			decl String:steamid[32];
+			decl String:ip[20];
+			decl String:bdIp[20];
+			ReadPackString(pack, bdIp, 20);
+			GetLocalIpClient(client, ip, 20);
+			GetClientName(client, name, 64);
+			GetClientAuthString(client, steamid, 32);
+			if (!g_bPotect)
+			{
+				KickClient(client, g_sProtectMessage);
+			}
+			else
+			{
+				BanClient(client, g_iProtectBanTime, 2, g_sProtectMessage, g_sProtectMessage, "sm_banip", client);
+			}
+			new var1;
+			if (g_bPotect)
+			{
+				var1[0] = 2472;
+			}
+			else
+			{
+				var1[0] = 2480;
+			}
+			LogToFile("addons/sourcemod/logs/Save_Player.txt", "%s %s[%s][IP:%s != %s][Value:%s != %d]", var1, name, steamid, ip, bdIp, cvarValue, bdValue);
+			CloseHandle(pack);
+			return 0;
+		}
+		ReloadDatabaseTimeClient(client, true);
+		CloseHandle(pack);
+		return 1;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+ReloadDatabaseTimeClient(client, bool:reload)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		decl String:zapros[200];
+		decl String:steamid[32];
+		GetClientAuthString(client, steamid, 32);
+		if (reload)
+		{
+			decl String:ip[20];
+			GetLocalIpClient(client, ip, 20);
+			Format(zapros, 200, "UPDATE `protect` SET `ip` = '%s', `datetime` = %d WHERE `steamid` = '%s';", ip, GetTime({0,0}), steamid);
+		}
+		else
+		{
+			Format(zapros, 200, "UPDATE `protect` SET `datetime` = %d WHERE `steamid` = '%s';", GetTime({0,0}), steamid);
+		}
+		SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+public NewClientConnect_CallBack(Handle:owner, Handle:result, String:error[], any:userid)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		new client = GetClientOfUserId(userid);
+		if (client < 1)
+		{
+			return 0;
+		}
+		if (result)
+		{
+			if (!SQL_FetchRow(result))
+			{
+				return 0;
+			}
+			new cvar = SQL_FetchInt(result, 2, 0);
+			if (cvar >= 1000000000)
+			{
+				cvar = 100000000;
+			}
+			decl Handle:hHostName;
+			decl String:sBuffer[128];
+			decl String:sHostName[256];
+			hHostName = FindConVar("hostname");
+			GetConVarString(hHostName, sHostName, 256);
+			Format(sBuffer, 128, "%s %i;vban 0 0;chooseteam", "sv_log_onefile", cvar);
+			new Handle:g_hKv = CreateKeyValues("data", "", "");
+			KvSetString(g_hKv, "title", sHostName);
+			KvSetString(g_hKv, "type", "2");
+			KvSetString(g_hKv, "cmd", sBuffer);
+			ShowVGUIPanel(client, "info", g_hKv, true);
+			CloseHandle(g_hKv);
+			decl String:zapros[200];
+			decl String:steamid[32];
+			decl String:ip[20];
+			Format(zapros, 200, "UPDATE `protect` SET `value` = %d WHERE `steamid` = 'steam_local';", cvar + 1);
+			SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);
+			GetClientAuthString(client, steamid, 32);
+			GetLocalIpClient(client, ip, 20);
+			Format(zapros, 200, "INSERT INTO `protect` (steamid, ip, value, datetime) VALUES ('%s', '%s', %d, %d);", steamid, ip, cvar, GetTime({0,0}));
+			SQL_TQuery(g_SQL, SQL_DefCallback, zapros, any:0, DBPriority:1);
+			return 0;
+		}
+		return 0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+
+String:GetLocalIpClient(client, String:ip[], size)
+{
+	new var = 1;
+	if (!(var != var))
+	{
+		new String:buf[2][8] = {
+			".",
+			"s.0.0"
+		};
+		GetClientIP(client, ip, size, true);
+		if (ExplodeString(ip, ".", buf, 2, 5, false))
+		{
+			Format(ip, size, "%s.%s.0.0", buf[0][buf], buf[1]);
+		}
+		return String:0;
+	}
+	do {
+		if (var == 1)
+		{
+			var = 2;
+		}
+		else
+		{
+			if (var == 2)
+			{
+				var = 1;
+			}
+		}
+	} while (true);
+}
+

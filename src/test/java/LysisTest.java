@@ -4,10 +4,12 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -27,6 +29,7 @@ import lysis.lstructure.Function;
 public class LysisTest {
 
 	public static final String TEST_FOLDER = "./tests";
+	public static final boolean UPDATE_OUTPUT_FILES = false;
 
 	@Parameter(0)
 	public String path;
@@ -70,7 +73,9 @@ public class LysisTest {
 		System.out.println("Running test file: " + path);
 		// Get the matching file containing the expected output.
 		File outFile = new File(path.replaceFirst("\\.(smx|amxx)$", ".out"));
-		assertTrue("Out-file missing.", outFile.exists() || outFile.canRead());
+		if (!UPDATE_OUTPUT_FILES) {
+			assertTrue("Out-file missing.", outFile.exists() || outFile.canRead());
+		}
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		PrintStream out = new PrintStream(new BufferedOutputStream(bout), true, "UTF-8");
@@ -111,17 +116,24 @@ public class LysisTest {
 			out.println("");
 		}
 
-		// Get the expected result from the .out file.
-		StringBuilder expectedResult = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new FileReader(outFile.getAbsolutePath()))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				expectedResult.append(line + System.lineSeparator());
+		String result = new String(bout.toByteArray(), "UTF-8");
+
+		if (!UPDATE_OUTPUT_FILES) {
+			// Get the expected result from the .out file.
+			StringBuilder expectedResult = new StringBuilder();
+			try (BufferedReader br = new BufferedReader(new FileReader(outFile.getAbsolutePath()))) {
+				String line;
+				while ((line = br.readLine()) != null) {
+					expectedResult.append(line + System.lineSeparator());
+				}
+			}
+
+			// Make sure we produce the same result still.
+			assertEquals("Mismatching decompilation output", expectedResult.toString(), result);
+		} else {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile.getAbsolutePath()))) {
+				bw.append(result);
 			}
 		}
-
-		// Make sure we produce the same result still.
-		String result = new String(bout.toByteArray(), "UTF-8");
-		assertEquals("Mismatching decompilation output", expectedResult.toString(), result);
 	}
 }
