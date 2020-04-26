@@ -27,16 +27,16 @@ new g_MapPos = -1;
 new ArrayList:g_MapList;
 new g_MapListSerial = -1;
 new g_CurrentMapStartTime;
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-ByteCountToCells(_arg0)
+ByteCountToCells(size)
 {
-	if (_arg0)
+	if (size)
 	{
-		return _arg0 + 3 / 4;
+		return size + 3 / 4;
 	}
 	return 1;
 }
@@ -51,27 +51,26 @@ void:FindAndSetNextMap()
 			SetFailState("Mapcycle Not Found");
 		}
 	}
-	new var2;
-	var2 = ArrayList.Length.get(g_MapList);
-	new var3 = 0;
+	new mapCount = ArrayList.Length.get(g_MapList);
+	new String:mapName[1024];
 	if (g_MapPos == -1)
 	{
-		new var4 = 0;
-		GetCurrentMap(var4, 256);
-		new var5 = 0;
-		while (var5 < var2)
+		new String:current[1024];
+		GetCurrentMap(current, 256);
+		new i;
+		while (i < mapCount)
 		{
-			ArrayList.GetString(g_MapList, var5, var3, 256);
+			ArrayList.GetString(g_MapList, i, mapName, 256);
 			new var1;
-			if (FindMap(var3, var3, 256) != 1 && strcmp(var4, var3, false))
+			if (FindMap(mapName, mapName, 256) != 1 && strcmp(current, mapName, false))
 			{
-				g_MapPos = var5;
+				g_MapPos = i;
 				if (g_MapPos == -1)
 				{
 					g_MapPos = 0;
 				}
 			}
-			var5++;
+			i++;
 		}
 		if (g_MapPos == -1)
 		{
@@ -79,133 +78,125 @@ void:FindAndSetNextMap()
 		}
 	}
 	g_MapPos += 1;
-	if (g_MapPos >= var2)
+	if (g_MapPos >= mapCount)
 	{
 		g_MapPos = 0;
 	}
-	ArrayList.GetString(g_MapList, g_MapPos, var3, 256);
-	SetNextMap(var3);
+	ArrayList.GetString(g_MapList, g_MapPos, mapName, 256);
+	SetNextMap(mapName);
 	return 0;
 }
 
-FormatTimeDuration(String:_arg0[], _arg1, _arg2)
+FormatTimeDuration(String:buffer[], maxlen, time)
 {
-	new var4;
-	var4 = _arg2 / 86400;
-	new var5;
-	var5 = _arg2 / 3600 % 24;
-	new var6;
-	var6 = _arg2 / 60 % 60;
-	new var7;
-	var7 = _arg2 % 60;
-	if (0 < var4)
+	new days = time / 86400;
+	new hours = time / 3600 % 24;
+	new minutes = time / 60 % 60;
+	new seconds = time % 60;
+	if (0 < days)
 	{
 		new var1;
-		if (var7 >= 30)
+		if (seconds >= 30)
 		{
-			var1 = var6 + 1;
+			var1 = minutes + 1;
 		}
 		else
 		{
-			var1 = var6;
+			var1 = minutes;
 		}
-		return Format(_arg0[0], _arg1, "%id %ih %im", var4, var5, var1);
+		return Format(buffer[0], maxlen, "%id %ih %im", days, hours, var1);
 	}
-	if (0 < var5)
+	if (0 < hours)
 	{
 		new var2;
-		if (var7 >= 30)
+		if (seconds >= 30)
 		{
-			var2 = var6 + 1;
+			var2 = minutes + 1;
 		}
 		else
 		{
-			var2 = var6;
+			var2 = minutes;
 		}
-		return Format(_arg0[0], _arg1, "%ih %im", var5, var2);
+		return Format(buffer[0], maxlen, "%ih %im", hours, var2);
 	}
-	if (0 < var6)
+	if (0 < minutes)
 	{
 		new var3;
-		if (var7 >= 30)
+		if (seconds >= 30)
 		{
-			var3 = var6 + 1;
+			var3 = minutes + 1;
 		}
 		else
 		{
-			var3 = var6;
+			var3 = minutes;
 		}
-		return Format(_arg0[0], _arg1, "%im", var3);
+		return Format(buffer[0], maxlen, "%im", var3);
 	}
-	return Format(_arg0[0], _arg1, "%is", var7);
+	return Format(buffer[0], maxlen, "%is", seconds);
 }
 
-public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
-	new var2 = 0;
-	GetGameFolderName(var2, 128);
-	new var3;
-	var3 = GetEngineVersion();
+	new String:game[512];
+	GetGameFolderName(game, 128);
+	new EngineVersion:engine = GetEngineVersion();
 	new var1;
-	if (StrEqual(var2, "left4dead", false) || StrEqual(var2, "dystopia", false) || StrEqual(var2, "synergy", false) || StrEqual(var2, "left4dead2", false) || StrEqual(var2, "garrysmod", false) || StrEqual(var2, "swarm", false) || StrEqual(var2, "bms", false) || StrEqual(var2, "reactivedrop", false) || var3 == 21 || var3 == 24)
+	if (StrEqual(game, "left4dead", false) || StrEqual(game, "dystopia", false) || StrEqual(game, "synergy", false) || StrEqual(game, "left4dead2", false) || StrEqual(game, "garrysmod", false) || StrEqual(game, "swarm", false) || StrEqual(game, "bms", false) || StrEqual(game, "reactivedrop", false) || engine == 21 || engine == 24)
 	{
-		strcopy(_arg2[0], _arg3, "Nextmap is incompatible with this game");
+		strcopy(error[0], err_max, "Nextmap is incompatible with this game");
 		return 2;
 	}
 	return 0;
 }
 
-public Action:Command_List(_arg0, _arg1)
+public Action:Command_List(client, args)
 {
-	PrintToConsole(_arg0, "Map Cycle:");
-	new var1;
-	var1 = ArrayList.Length.get(g_MapList);
-	new var2 = 0;
-	new var3 = 0;
-	while (var3 < var1)
+	PrintToConsole(client, "Map Cycle:");
+	new mapCount = ArrayList.Length.get(g_MapList);
+	new String:mapName[1024];
+	new i;
+	while (i < mapCount)
 	{
-		ArrayList.GetString(g_MapList, var3, var2, 256);
-		PrintToConsole(_arg0, "%s", var2);
-		var3++;
+		ArrayList.GetString(g_MapList, i, mapName, 256);
+		PrintToConsole(client, "%s", mapName);
+		i++;
 	}
 	return 3;
 }
 
-public Action:Command_MapHistory(_arg0, _arg1)
+public Action:Command_MapHistory(client, args)
 {
-	new var1;
-	var1 = GetMapHistorySize();
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7;
-	var7 = g_CurrentMapStartTime;
-	PrintToConsole(_arg0, "Map History:\n");
-	PrintToConsole(_arg0, "Map : Started : Played Time : Reason for ending");
-	GetCurrentMap(var2, 256);
-	PrintToConsole(_arg0, "%02i. %s (Current Map)", 0, var2);
-	new var8 = 0;
-	while (var8 < var1)
+	new mapCount = GetMapHistorySize();
+	new String:mapName[1024];
+	new String:changeReason[400];
+	new String:timeString[400];
+	new String:playedTime[400];
+	new startTime;
+	new lastMapStartTime = g_CurrentMapStartTime;
+	PrintToConsole(client, "Map History:\n");
+	PrintToConsole(client, "Map : Started : Played Time : Reason for ending");
+	GetCurrentMap(mapName, 256);
+	PrintToConsole(client, "%02i. %s (Current Map)", 0, mapName);
+	new i;
+	while (i < mapCount)
 	{
-		GetMapHistory(var8, var2, 256, var3, 100, var6);
-		FormatTimeDuration(var4, 100, GetTime({0,0}) - var6);
-		FormatTimeDuration(var5, 100, var7 - var6);
-		PrintToConsole(_arg0, "%02i. %s : %s ago : %s : %s", var8 + 1, var2, var4, var5, var3);
-		var7 = var6;
-		var8++;
+		GetMapHistory(i, mapName, 256, changeReason, 100, startTime);
+		FormatTimeDuration(timeString, 100, GetTime({0,0}) - startTime);
+		FormatTimeDuration(playedTime, 100, lastMapStartTime - startTime);
+		PrintToConsole(client, "%02i. %s : %s ago : %s : %s", i + 1, mapName, timeString, playedTime, changeReason);
+		lastMapStartTime = startTime;
+		i++;
 	}
 	return 3;
 }
 
 public void:OnConfigsExecuted()
 {
-	new var1 = 0;
-	new var2 = 0;
-	GetNextMap(var1, 256);
-	GetCurrentMap(var2, 256);
-	if (!(strcmp(var1, var2, true)))
+	new String:lastMap[1024];
+	new String:currentMap[1024];
+	GetNextMap(lastMap, 256);
+	GetCurrentMap(currentMap, 256);
+	if (!(strcmp(lastMap, currentMap, true)))
 	{
 		FindAndSetNextMap();
 	}
@@ -222,14 +213,13 @@ public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("nextmap.phrases");
-	new var1;
-	var1 = ByteCountToCells(256);
-	g_MapList = ArrayList.ArrayList(var1, 0);
+	new size = ByteCountToCells(256);
+	g_MapList = ArrayList.ArrayList(size, 0);
 	RegAdminCmd("sm_maphistory", 13, 64, "Shows the most recent maps played", "", 0);
 	RegConsoleCmd("listmaps", 11, "", 0);
-	new var2 = 0;
-	GetCurrentMap(var2, 256);
-	SetNextMap(var2);
+	new String:currentMap[1024];
+	GetCurrentMap(currentMap, 256);
+	SetNextMap(currentMap);
 	return 0;
 }
 

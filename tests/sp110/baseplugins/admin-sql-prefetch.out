@@ -23,286 +23,282 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-void:FetchUsers(Database:_arg0)
+void:FetchUsers(Database:db)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 0;
-	Format(var1, 255, "SELECT id, authtype, identity, password, flags, name, immunity FROM sm_admins");
-	if ((var3 = SQL_Query(_arg0, var1, -1)))
+	new String:query[1024];
+	new String:error[1024];
+	new DBResultSet:rs;
+	Format(query, 255, "SELECT id, authtype, identity, password, flags, name, immunity FROM sm_admins");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		new var7 = 0;
-		new var8 = 0;
-		new var9 = 0;
-		new var10 = 0;
-		new var11 = 0;
-		new var12 = 0;
-		new var13;
-		var13 = StringMap.StringMap();
-		new var14 = 0;
-		while (DBResultSet.FetchRow(var3))
+		new String:authtype[64];
+		new String:identity[320];
+		new String:password[320];
+		new String:flags[128];
+		new String:name[320];
+		new immunity;
+		new AdminId:adm;
+		new GroupId:grp;
+		new id;
+		new StringMap:htAdmins = StringMap.StringMap();
+		new String:key[64];
+		while (DBResultSet.FetchRow(rs))
 		{
-			var12 = DBResultSet.FetchInt(var3, 0, 0);
-			IntToString(var12, var14, 16);
-			DBResultSet.FetchString(var3, 1, var4, 16, 0);
-			DBResultSet.FetchString(var3, 2, var5, 80, 0);
-			DBResultSet.FetchString(var3, 3, var6, 80, 0);
-			DBResultSet.FetchString(var3, 4, var7, 32, 0);
-			DBResultSet.FetchString(var3, 5, var8, 80, 0);
-			var9 = DBResultSet.FetchInt(var3, 6, 0);
-			if ((var10 = FindAdminByIdentity(var4, var5)) == -1)
+			id = DBResultSet.FetchInt(rs, 0, 0);
+			IntToString(id, key, 16);
+			DBResultSet.FetchString(rs, 1, authtype, 16, 0);
+			DBResultSet.FetchString(rs, 2, identity, 80, 0);
+			DBResultSet.FetchString(rs, 3, password, 80, 0);
+			DBResultSet.FetchString(rs, 4, flags, 32, 0);
+			DBResultSet.FetchString(rs, 5, name, 80, 0);
+			immunity = DBResultSet.FetchInt(rs, 6, 0);
+			if ((adm = FindAdminByIdentity(authtype, identity)) == -1)
 			{
-				var10 = CreateAdmin(var8);
-				if (!(AdminId.BindIdentity(var10, var4, var5)))
+				adm = CreateAdmin(name);
+				if (!(AdminId.BindIdentity(adm, authtype, identity)))
 				{
-					LogError("Could not bind prefetched SQL admin (authtype \"%s\") (identity \"%s\")", var4, var5);
+					LogError("Could not bind prefetched SQL admin (authtype \"%s\") (identity \"%s\")", authtype, identity);
 				}
 			}
-			StringMap.SetValue(var13, var14, var10, true);
-			if (var6)
+			StringMap.SetValue(htAdmins, key, adm, true);
+			if (password[0])
 			{
-				AdminId.SetPassword(var10, var6);
+				AdminId.SetPassword(adm, password);
 			}
-			new var15;
-			var15 = strlen(var7);
-			new var16 = 0;
-			new var17 = 0;
-			while (var17 < var15)
+			new len = strlen(flags);
+			new AdminFlag:flag;
+			new i;
+			while (i < len)
 			{
-				if (FindFlagByChar(var7[var17], var16))
+				if (FindFlagByChar(flags[i], flag))
 				{
-					AdminId.SetFlag(var10, var16, true);
+					AdminId.SetFlag(adm, flag, true);
 				}
-				var17++;
+				i++;
 			}
-			AdminId.ImmunityLevel.set(var10, var9);
+			AdminId.ImmunityLevel.set(adm, immunity);
 		}
-		CloseHandle(var3);
-		var3 = 0;
-		Format(var1, 255, "SELECT ag.admin_id AS id, g.name FROM sm_admins_groups ag JOIN sm_groups g ON ag.group_id = g.id  ORDER BY id, inherit_order ASC");
-		if ((var3 = SQL_Query(_arg0, var1, -1)))
+		CloseHandle(rs);
+		rs = 0;
+		Format(query, 255, "SELECT ag.admin_id AS id, g.name FROM sm_admins_groups ag JOIN sm_groups g ON ag.group_id = g.id  ORDER BY id, inherit_order ASC");
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			new var18 = 0;
-			while (DBResultSet.FetchRow(var3))
+			new String:group[320];
+			while (DBResultSet.FetchRow(rs))
 			{
-				IntToString(DBResultSet.FetchInt(var3, 0, 0), var14, 16);
-				DBResultSet.FetchString(var3, 1, var18, 80, 0);
-				if (StringMap.GetValue(var13, var14, var10))
+				IntToString(DBResultSet.FetchInt(rs, 0, 0), key, 16);
+				DBResultSet.FetchString(rs, 1, group, 80, 0);
+				if (StringMap.GetValue(htAdmins, key, adm))
 				{
-					if (!((var11 = FindAdmGroup(var18)) == -1))
+					if (!((grp = FindAdmGroup(group)) == -1))
 					{
-						AdminId.InheritGroup(var10, var11);
+						AdminId.InheritGroup(adm, grp);
 					}
 				}
 			}
-			CloseHandle(var3);
-			var3 = 0;
-			CloseHandle(var13);
-			var13 = 0;
+			CloseHandle(rs);
+			rs = 0;
+			CloseHandle(htAdmins);
+			htAdmins = 0;
 			return 0;
 		}
-		SQL_GetError(_arg0, var2, 255);
-		LogError("FetchUsers() query failed: %s", var1);
-		LogError("Query error: %s", var2);
+		SQL_GetError(db, error, 255);
+		LogError("FetchUsers() query failed: %s", query);
+		LogError("Query error: %s", error);
 		return 0;
 	}
-	SQL_GetError(_arg0, var2, 255);
-	LogError("FetchUsers() query failed: %s", var1);
-	LogError("Query error: %s", var2);
+	SQL_GetError(db, error, 255);
+	LogError("FetchUsers() query failed: %s", query);
+	LogError("Query error: %s", error);
 	return 0;
 }
 
-void:FetchGroups(Database:_arg0)
+void:FetchGroups(Database:db)
 {
-	new var2 = 0;
-	new var3 = 0;
-	Format(var2, 255, "SELECT flags, name, immunity_level FROM sm_groups");
-	if ((var3 = SQL_Query(_arg0, var2, -1)))
+	new String:query[1024];
+	new DBResultSet:rs;
+	Format(query, 255, "SELECT flags, name, immunity_level FROM sm_groups");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		new var5 = 0;
-		new var6 = 0;
-		new var7 = 0;
-		while (DBResultSet.FetchRow(var3))
+		new String:flags[128];
+		new String:name[512];
+		new immunity;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(var3, 0, var5, 32, 0);
-			DBResultSet.FetchString(var3, 1, var6, 128, 0);
-			var7 = DBResultSet.FetchInt(var3, 2, 0);
-			new var8 = 0;
-			if ((var8 = FindAdmGroup(var6)) == -1)
+			DBResultSet.FetchString(rs, 0, flags, 32, 0);
+			DBResultSet.FetchString(rs, 1, name, 128, 0);
+			immunity = DBResultSet.FetchInt(rs, 2, 0);
+			new GroupId:grp;
+			if ((grp = FindAdmGroup(name)) == -1)
 			{
-				var8 = CreateAdmGroup(var6);
+				grp = CreateAdmGroup(name);
 			}
-			new var9;
-			var9 = strlen(var5);
-			new var10 = 0;
-			while (var10 < var9)
+			new num_flag_chars = strlen(flags);
+			new i;
+			while (i < num_flag_chars)
 			{
-				new var11 = 0;
-				if (FindFlagByChar(var5[var10], var11))
+				new AdminFlag:flag;
+				if (FindFlagByChar(flags[i], flag))
 				{
-					GroupId.SetFlag(var8, var11, true);
+					GroupId.SetFlag(grp, flag, true);
 				}
-				var10++;
+				i++;
 			}
-			GroupId.ImmunityLevel.set(var8, var7);
+			GroupId.ImmunityLevel.set(grp, immunity);
 		}
-		CloseHandle(var3);
-		var3 = 0;
-		new var12 = 0;
-		var12 = Format(var12 + var2, 255 - var12, "SELECT g1.name, g2.name FROM sm_group_immunity gi") + var12;
-		var12 = Format(var12 + var2, 255 - var12, " LEFT JOIN sm_groups g1 ON g1.id = gi.group_id ") + var12;
-		var12 = Format(var12 + var2, 255 - var12, " LEFT JOIN sm_groups g2 ON g2.id = gi.other_id") + var12;
-		if (!((var3 = SQL_Query(_arg0, var2, -1))))
+		CloseHandle(rs);
+		rs = 0;
+		new len = Format(query[len], 255 - len, "SELECT g1.name, g2.name FROM sm_group_immunity gi") + len;
+		len = Format(query[len], 255 - len, " LEFT JOIN sm_groups g1 ON g1.id = gi.group_id ") + len;
+		len = Format(query[len], 255 - len, " LEFT JOIN sm_groups g2 ON g2.id = gi.other_id") + len;
+		if (!((rs = SQL_Query(db, query, -1))))
 		{
-			new var13 = 0;
-			SQL_GetError(_arg0, var13, 255);
-			LogError("FetchGroups() query failed: %s", var2);
-			LogError("Query error: %s", var13);
+			new String:error[1024];
+			SQL_GetError(db, error, 255);
+			LogError("FetchGroups() query failed: %s", query);
+			LogError("Query error: %s", error);
 			return 0;
 		}
-		while (DBResultSet.FetchRow(var3))
+		while (DBResultSet.FetchRow(rs))
 		{
-			new var14 = 0;
-			new var15 = 0;
-			new var16 = 0;
-			new var17 = 0;
-			DBResultSet.FetchString(var3, 0, var14, 80, 0);
-			DBResultSet.FetchString(var3, 1, var15, 80, 0);
+			new String:group1[320];
+			new String:group2[320];
+			new GroupId:grp;
+			new GroupId:other;
+			DBResultSet.FetchString(rs, 0, group1, 80, 0);
+			DBResultSet.FetchString(rs, 1, group2, 80, 0);
 			new var1;
-			if (!((var16 = FindAdmGroup(var14)) == -1 || (var17 = FindAdmGroup(var15)) == -1))
+			if (!((grp = FindAdmGroup(group1)) == -1 || (other = FindAdmGroup(group2)) == -1))
 			{
-				GroupId.AddGroupImmunity(var16, var17);
+				GroupId.AddGroupImmunity(grp, other);
 			}
 		}
-		CloseHandle(var3);
-		var3 = 0;
-		Format(var2, 255, "SELECT g.name, go.type, go.name, go.access FROM sm_group_overrides go LEFT JOIN sm_groups g ON go.group_id = g.id");
-		if ((var3 = SQL_Query(_arg0, var2, -1)))
+		CloseHandle(rs);
+		rs = 0;
+		Format(query, 255, "SELECT g.name, go.type, go.name, go.access FROM sm_group_overrides go LEFT JOIN sm_groups g ON go.group_id = g.id");
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			new var19 = 0;
-			new var20 = 0;
-			new var21 = 0;
-			while (DBResultSet.FetchRow(var3))
+			new String:type[64];
+			new String:cmd[256];
+			new String:access[64];
+			while (DBResultSet.FetchRow(rs))
 			{
-				DBResultSet.FetchString(var3, 0, var6, 128, 0);
-				DBResultSet.FetchString(var3, 1, var19, 16, 0);
-				DBResultSet.FetchString(var3, 2, var20, 64, 0);
-				DBResultSet.FetchString(var3, 3, var21, 16, 0);
-				new var22 = 0;
-				if (!((var22 = FindAdmGroup(var6)) == -1))
+				DBResultSet.FetchString(rs, 0, name, 128, 0);
+				DBResultSet.FetchString(rs, 1, type, 16, 0);
+				DBResultSet.FetchString(rs, 2, cmd, 64, 0);
+				DBResultSet.FetchString(rs, 3, access, 16, 0);
+				new GroupId:grp;
+				if (!((grp = FindAdmGroup(name)) == -1))
 				{
-					new var23 = 1;
-					if (StrEqual(var19, "group", true))
+					new OverrideType:o_type = 1;
+					if (StrEqual(type, "group", true))
 					{
-						var23 = 2;
+						o_type = 2;
 					}
-					new var24 = 0;
-					if (StrEqual(var21, "allow", true))
+					new OverrideRule:o_rule;
+					if (StrEqual(access, "allow", true))
 					{
-						var24 = 1;
+						o_rule = 1;
 					}
-					GroupId.AddCommandOverride(var22, var20, var23, var24);
+					GroupId.AddCommandOverride(grp, cmd, o_type, o_rule);
 				}
 			}
-			CloseHandle(var3);
-			var3 = 0;
+			CloseHandle(rs);
+			rs = 0;
 			return 0;
 		}
-		new var18 = 0;
-		SQL_GetError(_arg0, var18, 255);
-		LogError("FetchGroups() query failed: %s", var2);
-		LogError("Query error: %s", var18);
+		new String:error[1024];
+		SQL_GetError(db, error, 255);
+		LogError("FetchGroups() query failed: %s", query);
+		LogError("Query error: %s", error);
 		return 0;
 	}
-	new var4 = 0;
-	SQL_GetError(_arg0, var4, 255);
-	LogError("FetchGroups() query failed: %s", var2);
-	LogError("Query error: %s", var4);
+	new String:error[1024];
+	SQL_GetError(db, error, 255);
+	LogError("FetchGroups() query failed: %s", query);
+	LogError("Query error: %s", error);
 	return 0;
 }
 
-void:FetchOverrides(Database:_arg0)
+void:FetchOverrides(Database:db)
 {
-	new var1 = 0;
-	new var2 = 0;
-	Format(var1, 255, "SELECT type, name, flags FROM sm_overrides");
-	if ((var2 = SQL_Query(_arg0, var1, -1)))
+	new String:query[1024];
+	new DBResultSet:rs;
+	Format(query, 255, "SELECT type, name, flags FROM sm_overrides");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		new var7 = 0;
-		while (DBResultSet.FetchRow(var2))
+		new String:type[256];
+		new String:name[256];
+		new String:flags[128];
+		new flag_bits;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(var2, 0, var4, 64, 0);
-			DBResultSet.FetchString(var2, 1, var5, 64, 0);
-			DBResultSet.FetchString(var2, 2, var6, 32, 0);
-			var7 = ReadFlagString(var6, 0);
-			if (StrEqual(var4, "command", true))
+			DBResultSet.FetchString(rs, 0, type, 64, 0);
+			DBResultSet.FetchString(rs, 1, name, 64, 0);
+			DBResultSet.FetchString(rs, 2, flags, 32, 0);
+			flag_bits = ReadFlagString(flags, 0);
+			if (StrEqual(type, "command", true))
 			{
-				AddCommandOverride(var5, 1, var7);
+				AddCommandOverride(name, 1, flag_bits);
 			}
 			else
 			{
-				if (StrEqual(var4, "group", true))
+				if (StrEqual(type, "group", true))
 				{
-					AddCommandOverride(var5, 2, var7);
+					AddCommandOverride(name, 2, flag_bits);
 				}
 			}
 		}
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(rs);
+		rs = 0;
 		return 0;
 	}
-	new var3 = 0;
-	SQL_GetError(_arg0, var3, 255);
-	LogError("FetchOverrides() query failed: %s", var1);
-	LogError("Query error: %s", var3);
+	new String:error[1024];
+	SQL_GetError(db, error, 255);
+	LogError("FetchOverrides() query failed: %s", query);
+	LogError("Query error: %s", error);
 	return 0;
 }
 
-public void:OnRebuildAdminCache(AdminCachePart:_arg0)
+public void:OnRebuildAdminCache(AdminCachePart:part)
 {
-	new var1 = 0;
-	new var2 = 0;
+	new String:error[1024];
+	new Database:db;
 	if (SQL_CheckConfig("admins"))
 	{
-		var2 = SQL_Connect("admins", true, var1, 255);
+		db = SQL_Connect("admins", true, error, 255);
 	}
 	else
 	{
-		var2 = SQL_Connect("default", true, var1, 255);
+		db = SQL_Connect("default", true, error, 255);
 	}
-	if (var2)
+	if (db)
 	{
-		if (_arg0)
+		if (part)
 		{
-			if (_arg0 == 1)
+			if (part == 1)
 			{
-				FetchGroups(var2);
+				FetchGroups(db);
 			}
-			if (_arg0 == 2)
+			if (part == 2)
 			{
-				FetchUsers(var2);
+				FetchUsers(db);
 			}
 		}
 		else
 		{
-			FetchOverrides(var2);
+			FetchOverrides(db);
 		}
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(db);
+		db = 0;
 		return 0;
 	}
-	LogError("Could not connect to database \"default\": %s", var1);
+	LogError("Could not connect to database \"default\": %s", error);
 	return 0;
 }
 

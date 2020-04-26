@@ -166,24 +166,24 @@ public class SourceBuilder {
 		if (var.tag() == null && var.rttiType() == null)
 			return "";
 		
+		String prefix = var.type() == VariableType.Reference ? "&" : "";
 		if (var.tag() != null) {
-			String prefix = var.type() == VariableType.Reference ? "&" : "";
 			return prefix + buildType(var.tag());
 		}
 		
-		return buildType(var.rttiType());
+		return prefix + buildType(var.rttiType());
 	}
 
 	private String buildType(Argument arg) {
 		if (arg.tag() == null && arg.rttiType() == null)
 			return "";
 		
+		String prefix = arg.type() == VariableType.Reference ? "&" : "";
 		if (arg.tag() != null) {
-			String prefix = arg.type() == VariableType.Reference ? "&" : "";
 			return prefix + buildType(arg.tag());
 		}
 		
-		return buildType(arg.rttiType());
+		return prefix + buildType(arg.rttiType());
 	}
 	
 	private String buildType(Tag tag) {

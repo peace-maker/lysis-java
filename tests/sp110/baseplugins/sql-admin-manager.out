@@ -27,757 +27,720 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-bool:DoQuery(_arg0, Database:_arg1, String:_arg2[])
+bool:DoQuery(client, Database:db, String:query[])
 {
-	if (SQL_FastQuery(_arg1, _arg2[0], -1))
+	if (SQL_FastQuery(db, query[0], -1))
 	{
 		return 1;
 	}
-	new var1 = 0;
-	SQL_GetError(_arg1, var1, 255);
-	LogError("Query failed: %s", var1);
-	LogError("Query dump: %s", _arg2[0]);
-	ReplyToCommand(_arg0, "[SM] %t", 10552);
+	new String:error[1024];
+	SQL_GetError(db, error, 255);
+	LogError("Query failed: %s", error);
+	LogError("Query dump: %s", query[0]);
+	ReplyToCommand(client, "[SM] %t", 10552);
 	return 0;
 }
 
-Action:DoError(_arg0, Database:_arg1, String:_arg2[], String:_arg3[])
+Action:DoError(client, Database:db, String:query[], String:msg[])
 {
-	new var1 = 0;
-	SQL_GetError(_arg1, var1, 255);
-	LogError("%s: %s", _arg3[0], var1);
-	LogError("Query dump: %s", _arg2[0]);
-	CloseHandle(_arg1);
-	_arg1 = 0;
-	ReplyToCommand(_arg0, "[SM] %t", 10612);
+	new String:error[1024];
+	SQL_GetError(db, error, 255);
+	LogError("%s: %s", msg[0], error);
+	LogError("Query dump: %s", query[0]);
+	CloseHandle(db);
+	db = 0;
+	ReplyToCommand(client, "[SM] %t", 10612);
 	return 3;
 }
 
-Action:DoStmtError(_arg0, Database:_arg1, String:_arg2[], String:_arg3[], String:_arg4[])
+Action:DoStmtError(client, Database:db, String:query[], String:error[], String:msg[])
 {
-	LogError("%s: %s", _arg4[0], _arg3[0]);
-	LogError("Query dump: %s", _arg2[0]);
-	CloseHandle(_arg1);
-	_arg1 = 0;
-	ReplyToCommand(_arg0, "[SM] %t", 10672);
+	LogError("%s: %s", msg[0], error[0]);
+	LogError("Query dump: %s", query[0]);
+	CloseHandle(db);
+	db = 0;
+	ReplyToCommand(client, "[SM] %t", 10672);
 	return 3;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-ExplodeString(String:_arg0[], String:_arg1[], String:_arg2[][], _arg3, _arg4, bool:_arg5)
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
 {
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
+	new reloc_idx;
+	new idx;
+	new total;
 	new var1;
-	if (_arg3 < 1 || _arg1[0])
+	if (maxStrings < 1 || split[0])
 	{
 		return 0;
 	}
-	while ((var3 = SplitString(var2 + _arg0[0], _arg1[0], _arg2[0][var4], _arg4)) != -1)
+	while ((idx = SplitString(reloc_idx + text[0], split[0], buffers[0][total], maxStringLength)) != -1)
 	{
-		var2 = var3 + var2;
-		var4++;
-		if (_arg3 == var4)
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
 		{
-			if (_arg5)
+			if (copyRemainder)
 			{
-				strcopy(_arg2[0][var4 + -1], _arg4, var2 - var3 + _arg0[0]);
+				strcopy(buffers[0][total + -1], maxStringLength, reloc_idx - idx + text[0]);
 			}
-			return var4;
+			return total;
 		}
 	}
-	var4++;
-	strcopy(_arg2[0][var4], _arg4, var2 + _arg0[0]);
-	return var4;
+	total++;
+	strcopy(buffers[0][total], maxStringLength, reloc_idx + text[0]);
+	return total;
 }
 
 Database:Connect()
 {
-	new var1 = 0;
-	new var2 = 0;
+	new String:error[1024];
+	new Database:db;
 	if (SQL_CheckConfig("admins"))
 	{
-		var2 = SQL_Connect("admins", true, var1, 255);
+		db = SQL_Connect("admins", true, error, 255);
 	}
 	else
 	{
-		var2 = SQL_Connect("default", true, var1, 255);
+		db = SQL_Connect("default", true, error, 255);
 	}
-	if (!var2)
+	if (!db)
 	{
-		LogError("Could not connect to database: %s", var1);
+		LogError("Could not connect to database: %s", error);
 	}
-	return var2;
+	return db;
 }
 
-void:CreateMySQL(_arg0, Database:_arg1)
+void:CreateMySQL(client, Database:db)
 {
-	new var1;
-	new var2 = 0;
-	while (var2 < 7)
+	new String:queries[][28] = {
+	};
+	new i;
+	while (i < 7)
 	{
-		if (!(DoQuery(_arg0, _arg1, var1[var2])))
+		if (!(DoQuery(client, db, queries[i])))
 		{
 			return 0;
 		}
-		var2++;
+		i++;
 	}
-	new var3 = 0;
-	Format(var3, 256, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d') ON DUPLICATE KEY UPDATE cfg_value = '1.0.0.%d'", 1409, 1409);
-	if (DoQuery(_arg0, _arg1, var3))
+	new String:query[1024];
+	Format(query, 256, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d') ON DUPLICATE KEY UPDATE cfg_value = '1.0.0.%d'", 1409, 1409);
+	if (DoQuery(client, db, query))
 	{
-		ReplyToCommand(_arg0, "[SM] Admin tables have been created.");
+		ReplyToCommand(client, "[SM] Admin tables have been created.");
 		return 0;
 	}
 	return 0;
 }
 
-void:CreateSQLite(_arg0, Database:_arg1)
+void:CreateSQLite(client, Database:db)
 {
-	new var1;
-	new var2 = 0;
-	while (var2 < 7)
+	new String:queries[][28] = {
+	};
+	new i;
+	while (i < 7)
 	{
-		if (!(DoQuery(_arg0, _arg1, var1[var2])))
+		if (!(DoQuery(client, db, queries[i])))
 		{
 			return 0;
 		}
-		var2++;
+		i++;
 	}
-	new var3 = 0;
-	Format(var3, 256, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
-	if (DoQuery(_arg0, _arg1, var3))
+	new String:query[1024];
+	Format(query, 256, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
+	if (DoQuery(client, db, query))
 	{
-		ReplyToCommand(_arg0, "[SM] Admin tables have been created.");
+		ReplyToCommand(client, "[SM] Admin tables have been created.");
 		return 0;
 	}
 	return 0;
 }
 
-bool:GetUpdateVersion(_arg0, Database:_arg1, _arg2[4])
+bool:GetUpdateVersion(client, Database:db, versions[4])
 {
-	new var1 = 0;
-	new var2 = 0;
-	Format(var1, 256, "SELECT cfg_value FROM sm_config WHERE cfg_key = 'admin_version'");
-	if ((var2 = SQL_Query(_arg1, var1, -1)))
+	new String:query[1024];
+	new DBResultSet:rs;
+	Format(query, 256, "SELECT cfg_value FROM sm_config WHERE cfg_key = 'admin_version'");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		if (DBResultSet.FetchRow(var2))
+		if (DBResultSet.FetchRow(rs))
 		{
-			new var3 = 0;
-			DBResultSet.FetchString(var2, 0, var3, 255, 0);
-			new var4 = 0;
-			if (ExplodeString(var3, ".", var4, 4, 12, false) == 4)
-			{
-				new var5 = 0;
-				while (var5 < 4)
-				{
-					_arg2[0][var5] = StringToInt(var4[var5], 10);
-					var5++;
-				}
-			}
-		}
-		CloseHandle(var2);
-		var2 = 0;
-		if (_arg2[0] + 12/* ERROR unknown load Binary */ > current_version[3])
-		{
-			ReplyToCommand(_arg0, "[SM] The database is newer than the expected version.");
-			return 0;
-		}
-		if (_arg2[0] + 12/* ERROR unknown load Binary */ == current_version[3])
-		{
-			ReplyToCommand(_arg0, "[SM] Your tables are already up to date.");
-			return 0;
-		}
-		return 1;
-	}
-	DoError(_arg0, _arg1, var1, "Version lookup query failed");
-	return 0;
-}
+			new String:version_string[1024];
+			DBResultSet.FetchString(rs, 0, version_string, 255, 0);
 
-void:UpdateSQLite(_arg0, Database:_arg1)
+/* ERROR! null */
+ function "GetUpdateVersion" (number 8)
+
+void:UpdateSQLite(client, Database:db)
 {
-	new var1 = 0;
-	new var2 = 0;
-	Format(var1, 512, "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sm_config'");
-	if ((var2 = SQL_Query(_arg1, var1, -1)))
+	new String:query[2048];
+	new DBResultSet:rs;
+	Format(query, 512, "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'sm_config'");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		new var3;
-		var3 = DBResultSet.FetchRow(var2);
-		CloseHandle(var2);
-		var2 = 0;
-		new var4 = 0;
-		if (var3)
+		new bool:found = DBResultSet.FetchRow(rs);
+		CloseHandle(rs);
+		rs = 0;
+		new versions[4];
+		if (found)
 		{
-			if (!(GetUpdateVersion(_arg0, _arg1, var4)))
+			if (!(GetUpdateVersion(client, db, versions)))
 			{
 				return 0;
 			}
 		}
-		if (var4 + 12/* ERROR unknown load Binary */ < 1409)
+		if (versions[3] < 1409)
 		{
-			new var5;
-			new var6 = 0;
-			while (var6 < 8)
+			new String:queries[][32] = {
+			};
+			new i;
+			while (i < 8)
 			{
-				if (!(DoQuery(_arg0, _arg1, var5[var6])))
+				if (!(DoQuery(client, db, queries[i])))
 				{
 					return 0;
 				}
-				var6++;
+				i++;
 			}
-			Format(var1, 512, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
-			if (DoQuery(_arg0, _arg1, var1))
+			Format(query, 512, "REPLACE INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '1.0.0.%d')", 1409);
+			if (DoQuery(client, db, query))
 			{
-				var4 + 12/* ERROR unknown load Binary */ = 1409;
+				versions[3] = 1409;
 			}
 			return 0;
 		}
-		ReplyToCommand(_arg0, "[SM] Your tables are now up to date.");
+		ReplyToCommand(client, "[SM] Your tables are now up to date.");
 		return 0;
 	}
-	DoError(_arg0, _arg1, var1, "Table lookup query failed");
+	DoError(client, db, query, "Table lookup query failed");
 	return 0;
 }
 
-void:UpdateMySQL(_arg0, Database:_arg1)
+void:UpdateMySQL(client, Database:db)
 {
-	new var2 = 0;
-	new var3 = 0;
-	Format(var2, 512, "SHOW TABLES");
-	if ((var3 = SQL_Query(_arg1, var2, -1)))
+	new String:query[2048];
+	new DBResultSet:rs;
+	Format(query, 512, "SHOW TABLES");
+	if ((rs = SQL_Query(db, query, -1)))
 	{
-		new var4 = 0;
-		new var5 = 0;
-		while (DBResultSet.FetchRow(var3))
+		new String:table[256];
+		new bool:found;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(var3, 0, var4, 64, 0);
-			if (strcmp(var4, "sm_config", true))
+			DBResultSet.FetchString(rs, 0, table, 64, 0);
+			if (strcmp(table, "sm_config", true))
 			{
 			}
 			else
 			{
-				var5 = 1;
+				found = true;
 			}
 		}
-		CloseHandle(var3);
-		var3 = 0;
-		new var6 = 0;
+		CloseHandle(rs);
+		rs = 0;
+		new versions[4];
 		new var1;
-		if (var5 && GetUpdateVersion(_arg0, _arg1, var6))
+		if (found && GetUpdateVersion(client, db, versions))
 		{
 			return 0;
 		}
-		if (var6 + 12/* ERROR unknown load Binary */ < 1409)
+		if (versions[3] < 1409)
 		{
-			new var7;
-			new var8 = 0;
-			while (var8 < 6)
+			new String:queries[][24] = {
+			};
+			new i;
+			while (i < 6)
 			{
-				if (!(DoQuery(_arg0, _arg1, var7[var8])))
+				if (!(DoQuery(client, db, queries[i])))
 				{
 					return 0;
 				}
-				var8++;
+				i++;
 			}
-			new var9 = 0;
-			Format(var9, 48, "1.0.0.%d", 1409);
-			Format(var2, 512, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '%s') ON DUPLICATE KEY UPDATE cfg_value = '%s'", var9, var9);
-			if (DoQuery(_arg0, _arg1, var2))
+			new String:upgr[192];
+			Format(upgr, 48, "1.0.0.%d", 1409);
+			Format(query, 512, "INSERT INTO sm_config (cfg_key, cfg_value) VALUES ('admin_version', '%s') ON DUPLICATE KEY UPDATE cfg_value = '%s'", upgr, upgr);
+			if (DoQuery(client, db, query))
 			{
-				var6 + 12/* ERROR unknown load Binary */ = 1409;
+				versions[3] = 1409;
 			}
 			return 0;
 		}
-		ReplyToCommand(_arg0, "[SM] Your tables are now up to date.");
+		ReplyToCommand(client, "[SM] Your tables are now up to date.");
 		return 0;
 	}
-	DoError(_arg0, _arg1, var2, "Table lookup query failed");
+	DoError(client, db, query, "Table lookup query failed");
 	return 0;
 }
 
-public Action:Command_AddAdmin(_arg0, _arg1)
+public Action:Command_AddAdmin(client, args)
 {
-	if (_arg1 < 4)
+	if (args < 4)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_addadmin <alias> <authtype> <identity> <flags> [immunity] [password]");
-		ReplyToCommand(_arg0, "[SM] %t", 10024);
+		ReplyToCommand(client, "[SM] Usage: sm_sql_addadmin <alias> <authtype> <identity> <flags> [immunity] [password]");
+		ReplyToCommand(client, "[SM] %t", 10024);
 		return 3;
 	}
-	new var2 = 0;
-	GetCmdArg(2, var2, 16);
+	new String:authtype[64];
+	GetCmdArg(2, authtype, 16);
 	new var1;
-	if (StrEqual(var2, "steam", true) && StrEqual(var2, "ip", true) && StrEqual(var2, "name", true))
+	if (StrEqual(authtype, "steam", true) && StrEqual(authtype, "ip", true) && StrEqual(authtype, "name", true))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 10072);
+		ReplyToCommand(client, "[SM] %t", 10072);
 		return 3;
 	}
-	new var3 = 0;
-	if (_arg1 >= 5)
+	new immunity;
+	if (args >= 5)
 	{
-		new var4 = 0;
-		GetCmdArg(5, var4, 32);
-		if (!(StringToIntEx(var4, var3, 10)))
+		new String:arg5[128];
+		GetCmdArg(5, arg5, 32);
+		if (!(StringToIntEx(arg5, immunity, 10)))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 10100);
+			ReplyToCommand(client, "[SM] %t", 10100);
 			return 3;
 		}
 	}
-	new var5 = 0;
-	new var6 = 0;
-	GetCmdArg(3, var5, 65);
-	new var7 = 0;
-	new var8;
-	var8 = Connect();
-	if (var8)
+	new String:identity[272];
+	new String:safe_identity[560];
+	GetCmdArg(3, identity, 65);
+	new String:query[1024];
+	new Database:db = Connect();
+	if (db)
 	{
-		Database.Escape(var8, var5, var6, 140, 0);
-		new var9 = 0;
-		Format(var7, 256, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var2, var5);
-		if ((var9 = SQL_Query(var8, var7, -1)))
+		Database.Escape(db, identity, safe_identity, 140, 0);
+		new DBResultSet:rs;
+		Format(query, 256, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", authtype, identity);
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			if (0 < DBResultSet.RowCount.get(var9))
+			if (0 < DBResultSet.RowCount.get(rs))
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 10268);
-				CloseHandle(var9);
-				var9 = 0;
-				CloseHandle(var8);
-				var8 = 0;
+				ReplyToCommand(client, "[SM] %t", 10268);
+				CloseHandle(rs);
+				rs = 0;
+				CloseHandle(db);
+				db = 0;
 				return 3;
 			}
-			CloseHandle(var9);
-			var9 = 0;
-			new var10 = 0;
-			new var11 = 0;
-			GetCmdArg(1, var10, 64);
-			Database.Escape(var8, var10, var11, 140, 0);
-			new var12 = 0;
-			new var13 = 0;
-			GetCmdArg(4, var12, 30);
-			Database.Escape(var8, var12, var13, 64, 0);
-			new var14 = 0;
-			new var15 = 0;
-			if (_arg1 >= 6)
+			CloseHandle(rs);
+			rs = 0;
+			new String:alias[256];
+			new String:safe_alias[560];
+			GetCmdArg(1, alias, 64);
+			Database.Escape(db, alias, safe_alias, 140, 0);
+			new String:flags[128];
+			new String:safe_flags[256];
+			GetCmdArg(4, flags, 30);
+			Database.Escape(db, flags, safe_flags, 64, 0);
+			new String:password[128];
+			new String:safe_password[320];
+			if (args >= 6)
 			{
-				GetCmdArg(6, var14, 32);
-				Database.Escape(var8, var14, var15, 80, 0);
+				GetCmdArg(6, password, 32);
+				Database.Escape(db, password, safe_password, 80, 0);
 			}
 			else
 			{
-				var15 = 0;
+				safe_password[0] = '\x00';
 			}
-			new var16;
-			var16 = Format(var7, 256, "INSERT INTO sm_admins (authtype, identity, password, flags, name, immunity) VALUES");
-			if (var15)
+			new len = Format(query, 256, "INSERT INTO sm_admins (authtype, identity, password, flags, name, immunity) VALUES");
+			if (safe_password[0])
 			{
-				var16 = Format(var16 + var7, 256 - var16, " ('%s', '%s', '%s', '%s', '%s', %d)", var2, var6, var15, var13, var11, var3) + var16;
+				len = Format(query[len], 256 - len, " ('%s', '%s', '%s', '%s', '%s', %d)", authtype, safe_identity, safe_password, safe_flags, safe_alias, immunity) + len;
 			}
 			else
 			{
-				var16 = Format(var16 + var7, 256 - var16, " ('%s', '%s', NULL, '%s', '%s', %d)", var2, var6, var13, var11, var3) + var16;
+				len = Format(query[len], 256 - len, " ('%s', '%s', NULL, '%s', '%s', %d)", authtype, safe_identity, safe_flags, safe_alias, immunity) + len;
 			}
-			if (SQL_FastQuery(var8, var7, -1))
+			if (SQL_FastQuery(db, query, -1))
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 10492);
-				CloseHandle(var8);
-				var8 = 0;
+				ReplyToCommand(client, "[SM] %t", 10492);
+				CloseHandle(db);
+				db = 0;
 				return 3;
 			}
-			return DoError(_arg0, var8, var7, "Admin insertion query failed");
+			return DoError(client, db, query, "Admin insertion query failed");
 		}
-		return DoError(_arg0, var8, var7, "Admin retrieval query failed");
+		return DoError(client, db, query, "Admin retrieval query failed");
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 10128);
+	ReplyToCommand(client, "[SM] %t", 10128);
 	return 3;
 }
 
-public Action:Command_AddGroup(_arg0, _arg1)
+public Action:Command_AddGroup(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_addgroup <name> <flags> [immunity]");
+		ReplyToCommand(client, "[SM] Usage: sm_sql_addgroup <name> <flags> [immunity]");
 		return 3;
 	}
-	new var1 = 0;
-	if (_arg1 >= 3)
+	new immunity;
+	if (args >= 3)
 	{
-		new var2 = 0;
-		GetCmdArg(3, var2, 32);
-		if (!(StringToIntEx(var2, var1, 10)))
+		new String:arg3[128];
+		GetCmdArg(3, arg3, 32);
+		if (!(StringToIntEx(arg3, immunity, 10)))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 9148);
+			ReplyToCommand(client, "[SM] %t", 9148);
 			return 3;
 		}
 	}
-	new var3;
-	var3 = Connect();
-	if (var3)
+	new Database:db = Connect();
+	if (db)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		GetCmdArg(1, var4, 64);
-		Database.Escape(var3, var4, var5, 64, 0);
-		new var6 = 0;
-		new var7 = 0;
-		Format(var7, 256, "SELECT id FROM sm_groups WHERE name = '%s'", var5);
-		if ((var6 = SQL_Query(var3, var7, -1)))
+		new String:name[256];
+		new String:safe_name[256];
+		GetCmdArg(1, name, 64);
+		Database.Escape(db, name, safe_name, 64, 0);
+		new DBResultSet:rs;
+		new String:query[1024];
+		Format(query, 256, "SELECT id FROM sm_groups WHERE name = '%s'", safe_name);
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			if (0 < DBResultSet.RowCount.get(var6))
+			if (0 < DBResultSet.RowCount.get(rs))
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 9292);
-				CloseHandle(var6);
-				var6 = 0;
-				CloseHandle(var3);
-				var3 = 0;
+				ReplyToCommand(client, "[SM] %t", 9292);
+				CloseHandle(rs);
+				rs = 0;
+				CloseHandle(db);
+				db = 0;
 				return 3;
 			}
-			CloseHandle(var6);
-			var6 = 0;
-			new var8 = 0;
-			new var9 = 0;
-			GetCmdArg(2, var8, 64);
-			Database.Escape(var3, var8, var9, 64, 0);
-			Format(var7, 256, "INSERT INTO sm_groups (flags, name, immunity_level) VALUES ('%s', '%s', '%d')", var9, var5, var1);
-			if (SQL_FastQuery(var3, var7, -1))
+			CloseHandle(rs);
+			rs = 0;
+			new String:flags[128];
+			new String:safe_flags[256];
+			GetCmdArg(2, flags, 64);
+			Database.Escape(db, flags, safe_flags, 64, 0);
+			Format(query, 256, "INSERT INTO sm_groups (flags, name, immunity_level) VALUES ('%s', '%s', '%d')", safe_flags, safe_name, immunity);
+			if (SQL_FastQuery(db, query, -1))
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 9440);
-				CloseHandle(var3);
-				var3 = 0;
+				ReplyToCommand(client, "[SM] %t", 9440);
+				CloseHandle(db);
+				db = 0;
 				return 3;
 			}
-			return DoError(_arg0, var3, var7, "Group insertion query failed");
+			return DoError(client, db, query, "Group insertion query failed");
 		}
-		return DoError(_arg0, var3, var7, "Group retrieval query failed");
+		return DoError(client, db, query, "Group retrieval query failed");
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 9176);
+	ReplyToCommand(client, "[SM] %t", 9176);
 	return 3;
 }
 
-public Action:Command_CreateTables(_arg0)
+public Action:Command_CreateTables(args)
 {
-	new var1 = 0;
-	new var2;
-	var2 = Connect();
-	if (var2)
+	new client;
+	new Database:db = Connect();
+	if (db)
 	{
-		new var3 = var4;
-		new var4 = "1.10.0.6484";
-		DBDriver.GetIdentifier(Database.Driver.get(var2), var3, 16);
-		if (strcmp(var3, "mysql", true))
+		new String:ident[64];
+		DBDriver.GetIdentifier(Database.Driver.get(db), ident, 16);
+		if (strcmp(ident, "mysql", true))
 		{
-			if (strcmp(var3, "sqlite", true))
+			if (strcmp(ident, "sqlite", true))
 			{
-				ReplyToCommand(var1, "[SM] Unknown driver type '%s', cannot create tables.", var3);
+				ReplyToCommand(client, "[SM] Unknown driver type '%s', cannot create tables.", ident);
 			}
-			CreateSQLite(var1, var2);
+			CreateSQLite(client, db);
 		}
 		else
 		{
-			CreateMySQL(var1, var2);
+			CreateMySQL(client, db);
 		}
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(db);
+		db = 0;
 		return 3;
 	}
-	ReplyToCommand(var1, "[SM] %t", 5708);
+	ReplyToCommand(client, "[SM] %t", 5708);
 	return 3;
 }
 
-public Action:Command_DelAdmin(_arg0, _arg1)
+public Action:Command_DelAdmin(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_deladmin <authtype> <identity>");
-		ReplyToCommand(_arg0, "[SM] %t", 9516);
+		ReplyToCommand(client, "[SM] Usage: sm_sql_deladmin <authtype> <identity>");
+		ReplyToCommand(client, "[SM] %t", 9516);
 		return 3;
 	}
-	new var2 = 0;
-	GetCmdArg(1, var2, 16);
+	new String:authtype[64];
+	GetCmdArg(1, authtype, 16);
 	new var1;
-	if (StrEqual(var2, "steam", true) && StrEqual(var2, "ip", true) && StrEqual(var2, "name", true))
+	if (StrEqual(authtype, "steam", true) && StrEqual(authtype, "ip", true) && StrEqual(authtype, "name", true))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 9564);
+		ReplyToCommand(client, "[SM] %t", 9564);
 		return 3;
 	}
-	new var3;
-	var3 = Connect();
-	if (var3)
+	new Database:db = Connect();
+	if (db)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		GetCmdArg(2, var4, 65);
-		Database.Escape(var3, var4, var5, 140, 0);
-		new var6 = 0;
-		Format(var6, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var2, var5);
-		new var7 = 0;
-		if ((var7 = SQL_Query(var3, var6, -1)))
+		new String:identity[272];
+		new String:safe_identity[560];
+		GetCmdArg(2, identity, 65);
+		Database.Escape(db, identity, safe_identity, 140, 0);
+		new String:query[1024];
+		Format(query, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", authtype, safe_identity);
+		new DBResultSet:rs;
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			if (DBResultSet.FetchRow(var7))
+			if (DBResultSet.FetchRow(rs))
 			{
-				new var8;
-				var8 = DBResultSet.FetchInt(var7, 0, 0);
-				CloseHandle(var7);
-				var7 = 0;
-				Format(var6, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", var8);
-				if (SQL_FastQuery(var3, var6, -1))
+				new id = DBResultSet.FetchInt(rs, 0, 0);
+				CloseHandle(rs);
+				rs = 0;
+				Format(query, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", id);
+				if (SQL_FastQuery(db, query, -1))
 				{
-					Format(var6, 255, "DELETE FROM sm_admins WHERE id = %d", var8);
-					if (SQL_FastQuery(var3, var6, -1))
+					Format(query, 255, "DELETE FROM sm_admins WHERE id = %d", id);
+					if (SQL_FastQuery(db, query, -1))
 					{
-						CloseHandle(var3);
-						var3 = 0;
-						ReplyToCommand(_arg0, "[SM] %t", 9908);
+						CloseHandle(db);
+						db = 0;
+						ReplyToCommand(client, "[SM] %t", 9908);
 						return 3;
 					}
-					return DoError(_arg0, var3, var6, "Admin deletion query failed");
+					return DoError(client, db, query, "Admin deletion query failed");
 				}
-				return DoError(_arg0, var3, var6, "Admin group deletion query failed");
+				return DoError(client, db, query, "Admin group deletion query failed");
 			}
-			ReplyToCommand(_arg0, "[SM] %t", 9728);
-			CloseHandle(var7);
-			var7 = 0;
-			CloseHandle(var3);
-			var3 = 0;
+			ReplyToCommand(client, "[SM] %t", 9728);
+			CloseHandle(rs);
+			rs = 0;
+			CloseHandle(db);
+			db = 0;
 			return 3;
 		}
-		CloseHandle(var3);
-		var3 = 0;
-		return DoError(_arg0, var3, var6, "Admin lookup query failed");
+		CloseHandle(db);
+		db = 0;
+		return DoError(client, db, query, "Admin lookup query failed");
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 9592);
+	ReplyToCommand(client, "[SM] %t", 9592);
 	return 3;
 }
 
-public Action:Command_DelGroup(_arg0, _arg1)
+public Action:Command_DelGroup(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_delgroup <name>");
+		ReplyToCommand(client, "[SM] Usage: sm_sql_delgroup <name>");
 		return 3;
 	}
-	new var3;
-	var3 = Connect();
-	if (var3)
+	new Database:db = Connect();
+	if (db)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		GetCmdArgString(var4, 80);
-		new var6;
-		var6 = strlen(var4);
+		new String:name[320];
+		new String:safe_name[720];
+		GetCmdArgString(name, 80);
+		new len = strlen(name);
 		new var2;
-		if (var6 > 1 && (var4 == 34 && var4[var6 + -1] == 34))
+		if (len > 1 && (name[0] == '"' && name[len + -1] == '"'))
 		{
-			var6--;
-			var4[var6] = 0;
-			Database.Escape(var3, var4 + 1, var5, 180, 0);
+			len--;
+			name[len] = '\x00';
+			Database.Escape(db, name[0], safe_name, 180, 0);
 		}
 		else
 		{
-			Database.Escape(var3, var4, var5, 180, 0);
+			Database.Escape(db, name, safe_name, 180, 0);
 		}
-		new var7 = 0;
-		new var8 = 0;
-		Format(var7, 256, "SELECT id FROM sm_groups WHERE name = '%s'", var5);
-		if ((var8 = SQL_Query(var3, var7, -1)))
+		new String:query[1024];
+		new DBResultSet:rs;
+		Format(query, 256, "SELECT id FROM sm_groups WHERE name = '%s'", safe_name);
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			if (DBResultSet.FetchRow(var8))
+			if (DBResultSet.FetchRow(rs))
 			{
-				new var9;
-				var9 = DBResultSet.FetchInt(var8, 0, 0);
-				CloseHandle(var8);
-				var8 = 0;
-				Format(var7, 256, "DELETE FROM sm_admins_groups WHERE group_id = %d", var9);
-				if (SQL_FastQuery(var3, var7, -1))
+				new id = DBResultSet.FetchInt(rs, 0, 0);
+				CloseHandle(rs);
+				rs = 0;
+				Format(query, 256, "DELETE FROM sm_admins_groups WHERE group_id = %d", id);
+				if (SQL_FastQuery(db, query, -1))
 				{
-					Format(var7, 256, "DELETE FROM sm_group_overrides WHERE group_id = %d", var9);
-					if (SQL_FastQuery(var3, var7, -1))
+					Format(query, 256, "DELETE FROM sm_group_overrides WHERE group_id = %d", id);
+					if (SQL_FastQuery(db, query, -1))
 					{
-						Format(var7, 256, "DELETE FROM sm_group_immunity WHERE group_id = %d OR other_id = %d", var9, var9);
-						if (SQL_FastQuery(var3, var7, -1))
+						Format(query, 256, "DELETE FROM sm_group_immunity WHERE group_id = %d OR other_id = %d", id, id);
+						if (SQL_FastQuery(db, query, -1))
 						{
-							Format(var7, 256, "DELETE FROM sm_groups WHERE id = %d", var9);
-							if (SQL_FastQuery(var3, var7, -1))
+							Format(query, 256, "DELETE FROM sm_groups WHERE id = %d", id);
+							if (SQL_FastQuery(db, query, -1))
 							{
-								ReplyToCommand(_arg0, "[SM] %t", 9064);
-								CloseHandle(var3);
-								var3 = 0;
+								ReplyToCommand(client, "[SM] %t", 9064);
+								CloseHandle(db);
+								db = 0;
 								return 3;
 							}
-							return DoError(_arg0, var3, var7, "Group deletion query failed");
+							return DoError(client, db, query, "Group deletion query failed");
 						}
-						return DoError(_arg0, var3, var7, "Group immunity deletion query failed");
+						return DoError(client, db, query, "Group immunity deletion query failed");
 					}
-					return DoError(_arg0, var3, var7, "Group override deletion query failed");
+					return DoError(client, db, query, "Group override deletion query failed");
 				}
-				return DoError(_arg0, var3, var7, "Admin group deletion query failed");
+				return DoError(client, db, query, "Admin group deletion query failed");
 			}
-			ReplyToCommand(_arg0, "[SM] %t", 8684);
-			CloseHandle(var8);
-			var8 = 0;
-			CloseHandle(var3);
-			var3 = 0;
+			ReplyToCommand(client, "[SM] %t", 8684);
+			CloseHandle(rs);
+			rs = 0;
+			CloseHandle(db);
+			db = 0;
 			return 3;
 		}
-		return DoError(_arg0, var3, var7, "Group retrieval query failed");
+		return DoError(client, db, query, "Group retrieval query failed");
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 8568);
+	ReplyToCommand(client, "[SM] %t", 8568);
 	return 3;
 }
 
-public Action:Command_SetAdminGroups(_arg0, _arg1)
+public Action:Command_SetAdminGroups(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_sql_setadmingroups <authtype> <identity> [group1] ... [group N]");
+		ReplyToCommand(client, "[SM] Usage: sm_sql_setadmingroups <authtype> <identity> [group1] ... [group N]");
 		return 3;
 	}
-	new var3 = 0;
-	GetCmdArg(1, var3, 16);
+	new String:authtype[64];
+	GetCmdArg(1, authtype, 16);
 	new var1;
-	if (StrEqual(var3, "steam", true) && StrEqual(var3, "ip", true) && StrEqual(var3, "name", true))
+	if (StrEqual(authtype, "steam", true) && StrEqual(authtype, "ip", true) && StrEqual(authtype, "name", true))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 7908);
+		ReplyToCommand(client, "[SM] %t", 7908);
 		return 3;
 	}
-	new var4;
-	var4 = Connect();
-	if (var4)
+	new Database:db = Connect();
+	if (db)
 	{
-		new var5 = 0;
-		new var6 = 0;
-		GetCmdArg(2, var5, 65);
-		Database.Escape(var4, var5, var6, 140, 0);
-		new var7 = 0;
-		Format(var7, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", var3, var6);
-		new var8 = 0;
-		if ((var8 = SQL_Query(var4, var7, -1)))
+		new String:identity[272];
+		new String:safe_identity[560];
+		GetCmdArg(2, identity, 65);
+		Database.Escape(db, identity, safe_identity, 140, 0);
+		new String:query[1024];
+		Format(query, 255, "SELECT id FROM sm_admins WHERE authtype = '%s' AND identity = '%s'", authtype, safe_identity);
+		new DBResultSet:rs;
+		if ((rs = SQL_Query(db, query, -1)))
 		{
-			if (DBResultSet.FetchRow(var8))
+			if (DBResultSet.FetchRow(rs))
 			{
-				new var9;
-				var9 = DBResultSet.FetchInt(var8, 0, 0);
-				CloseHandle(var8);
-				var8 = 0;
-				Format(var7, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", var9);
-				if (SQL_FastQuery(var4, var7, -1))
+				new id = DBResultSet.FetchInt(rs, 0, 0);
+				CloseHandle(rs);
+				rs = 0;
+				Format(query, 255, "DELETE FROM sm_admins_groups WHERE admin_id = %d", id);
+				if (SQL_FastQuery(db, query, -1))
 				{
-					if (_arg1 < 3)
+					if (args < 3)
 					{
-						CloseHandle(var4);
-						var4 = 0;
-						ReplyToCommand(_arg0, "[SM] %t", 8188);
+						CloseHandle(db);
+						db = 0;
+						ReplyToCommand(client, "[SM] %t", 8188);
 						return 3;
 					}
-					new var10 = 0;
-					new var11 = 0;
-					new var12 = 0;
-					Format(var7, 255, "SELECT id FROM sm_groups WHERE name = ?");
-					if ((var12 = SQL_PrepareQuery(var4, var7, var10, 256)))
+					new String:error[1024];
+					new DBStatement:hAddQuery;
+					new DBStatement:hFindQuery;
+					Format(query, 255, "SELECT id FROM sm_groups WHERE name = ?");
+					if ((hFindQuery = SQL_PrepareQuery(db, query, error, 256)))
 					{
-						Format(var7, 255, "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (%d, ?, ?)", var9);
-						if ((var11 = SQL_PrepareQuery(var4, var7, var10, 256)))
+						Format(query, 255, "INSERT INTO sm_admins_groups (admin_id, group_id, inherit_order) VALUES (%d, ?, ?)", id);
+						if ((hAddQuery = SQL_PrepareQuery(db, query, error, 256)))
 						{
-							new var13 = 0;
-							new var14 = 0;
-							new var15 = 3;
-							while (var15 <= _arg1)
+							new String:name[320];
+							new inherit_order;
+							new i = 3;
+							while (i <= args)
 							{
-								GetCmdArg(var15, var13, 80);
-								DBStatement.BindString(var12, 0, var13, false);
+								GetCmdArg(i, name, 80);
+								DBStatement.BindString(hFindQuery, 0, name, false);
 								new var2;
-								if (SQL_Execute(var12) && SQL_FetchRow(var12))
+								if (SQL_Execute(hFindQuery) && SQL_FetchRow(hFindQuery))
 								{
-									ReplyToCommand(_arg0, "[SM] %t", "SQL Group X not found", var13);
+									ReplyToCommand(client, "[SM] %t", "SQL Group X not found", name);
 								}
 								else
 								{
-									new var16;
-									var16 = SQL_FetchInt(var12, 0, 0);
-									DBStatement.BindInt(var11, 0, var16, true);
-									var14++;
-									DBStatement.BindInt(var11, 1, var14, true);
-									if (SQL_Execute(var11))
+									new gid = SQL_FetchInt(hFindQuery, 0, 0);
+									DBStatement.BindInt(hAddQuery, 0, gid, true);
+									inherit_order++;
+									DBStatement.BindInt(hAddQuery, 1, inherit_order, true);
+									if (SQL_Execute(hAddQuery))
 									{
 									}
 									else
 									{
-										ReplyToCommand(_arg0, "[SM] %t", "SQL Group X failed to bind", var13);
-										var14--;
+										ReplyToCommand(client, "[SM] %t", "SQL Group X failed to bind", name);
+										inherit_order--;
 									}
 								}
-								var15++;
+								i++;
 							}
-							CloseHandle(var11);
-							var11 = 0;
-							CloseHandle(var12);
-							var12 = 0;
-							CloseHandle(var4);
-							var4 = 0;
-							if (var14 == 1)
+							CloseHandle(hAddQuery);
+							hAddQuery = 0;
+							CloseHandle(hFindQuery);
+							hFindQuery = 0;
+							CloseHandle(db);
+							db = 0;
+							if (inherit_order == 1)
 							{
-								ReplyToCommand(_arg0, "[SM] %t", 8472);
+								ReplyToCommand(client, "[SM] %t", 8472);
 							}
 							else
 							{
-								if (var14 > 1)
+								if (inherit_order > 1)
 								{
-									ReplyToCommand(_arg0, "[SM] %t", "Added groups to user", var14);
+									ReplyToCommand(client, "[SM] %t", "Added groups to user", inherit_order);
 								}
 							}
 							return 3;
 						}
-						CloseHandle(var12);
-						var12 = 0;
-						return DoStmtError(_arg0, var4, var7, var10, "Add admin group prepare failed");
+						CloseHandle(hFindQuery);
+						hFindQuery = 0;
+						return DoStmtError(client, db, query, error, "Add admin group prepare failed");
 					}
-					return DoStmtError(_arg0, var4, var7, var10, "Group search prepare failed");
+					return DoStmtError(client, db, query, error, "Group search prepare failed");
 				}
-				return DoError(_arg0, var4, var7, "Admin group deletion query failed");
+				return DoError(client, db, query, "Admin group deletion query failed");
 			}
-			ReplyToCommand(_arg0, "[SM] %t", 8072);
-			CloseHandle(var8);
-			var8 = 0;
-			CloseHandle(var4);
-			var4 = 0;
+			ReplyToCommand(client, "[SM] %t", 8072);
+			CloseHandle(rs);
+			rs = 0;
+			CloseHandle(db);
+			db = 0;
 			return 3;
 		}
-		return DoError(_arg0, var4, var7, "Admin lookup query failed");
+		return DoError(client, db, query, "Admin lookup query failed");
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 7936);
+	ReplyToCommand(client, "[SM] %t", 7936);
 	return 3;
 }
 
-public Action:Command_UpdateTables(_arg0)
+public Action:Command_UpdateTables(args)
 {
-	new var1 = 0;
-	new var2;
-	var2 = Connect();
-	if (var2)
+	new client;
+	new Database:db = Connect();
+	if (db)
 	{
-		new var3 = var4;
-		new var4 = "1.10.0.6484";
-		DBDriver.GetIdentifier(Database.Driver.get(var2), var3, 16);
-		if (strcmp(var3, "mysql", true))
+		new String:ident[64];
+		DBDriver.GetIdentifier(Database.Driver.get(db), ident, 16);
+		if (strcmp(ident, "mysql", true))
 		{
-			if (strcmp(var3, "sqlite", true))
+			if (strcmp(ident, "sqlite", true))
 			{
-				ReplyToCommand(var1, "[SM] Unknown driver type, cannot upgrade.");
+				ReplyToCommand(client, "[SM] Unknown driver type, cannot upgrade.");
 			}
-			UpdateSQLite(var1, var2);
+			UpdateSQLite(client, db);
 		}
 		else
 		{
-			UpdateMySQL(var1, var2);
+			UpdateMySQL(client, db);
 		}
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(db);
+		db = 0;
 		return 3;
 	}
-	ReplyToCommand(var1, "[SM] %t", 7708);
+	ReplyToCommand(client, "[SM] %t", 7708);
 	return 3;
 }
 

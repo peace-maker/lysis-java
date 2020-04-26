@@ -46,71 +46,69 @@ public Plugin:myinfo =
 new TopMenu:hTopMenu;
 new g_SlapDamage[66];
 new String:g_NewName[128][264];
-void:DisplayRenameTargetMenu(_arg0)
+void:DisplayRenameTargetMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(31, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Rename player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, false);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(31, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Rename player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, false);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:RandomizeName(_arg0)
+void:RandomizeName(client)
 {
-	new var1 = 0;
-	GetClientName(_arg0, var1, 128);
-	new var2;
-	var2 = strlen(var1);
-	g_NewName[_arg0][0] = '\x00';
-	new var3 = 0;
-	while (var3 < var2)
+	new String:name[512];
+	GetClientName(client, name, 128);
+	new len = strlen(name);
+	g_NewName[client][0] = '\x00';
+	new i;
+	while (i < len)
 	{
-		g_NewName[_arg0][var3] = var1[GetRandomInt(0, var2 + -1)];
-		var3++;
+		g_NewName[client][i] = name[GetRandomInt(0, len + -1)];
+		i++;
 	}
-	g_NewName[_arg0][var2] = '\x00';
+	g_NewName[client][len] = '\x00';
 	return 0;
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2492);
+			ReplyToCommand(client, "[SM] %t", 2492);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2464);
+			ReplyToCommand(client, "[SM] %t", 2464);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2436);
+			ReplyToCommand(client, "[SM] %t", 2436);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2408);
+			ReplyToCommand(client, "[SM] %t", 2408);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2376);
+			ReplyToCommand(client, "[SM] %t", 2376);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2348);
+			ReplyToCommand(client, "[SM] %t", 2348);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2316);
+			ReplyToCommand(client, "[SM] %t", 2316);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2288);
+			ReplyToCommand(client, "[SM] %t", 2288);
 		}
 		default:
 		{
@@ -119,449 +117,444 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-void:PerformSlay(_arg0, _arg1)
+void:PerformSlay(client, target)
 {
-	LogAction(_arg0, _arg1, "\"%L\" slayed \"%L\"", _arg0, _arg1);
-	ForcePlayerSuicide(_arg1);
+	LogAction(client, target, "\"%L\" slayed \"%L\"", client, target);
+	ForcePlayerSuicide(target);
 	return 0;
 }
 
-void:DisplaySlayMenu(_arg0)
+void:DisplaySlayMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(37, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Slay player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(37, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Slay player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:PerformSlap(_arg0, _arg1, _arg2)
+void:PerformSlap(client, target, damage)
 {
-	LogAction(_arg0, _arg1, "\"%L\" slapped \"%L\" (damage \"%d\")", _arg0, _arg1, _arg2);
-	SlapPlayer(_arg1, _arg2, true);
+	LogAction(client, target, "\"%L\" slapped \"%L\" (damage \"%d\")", client, target, damage);
+	SlapPlayer(target, damage, true);
 	return 0;
 }
 
-void:DisplaySlapDamageMenu(_arg0)
+void:DisplaySlapDamageMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(35, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Slap damage", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	Menu.AddItem(var1, "0", "0", 0);
-	Menu.AddItem(var1, "1", "1", 0);
-	Menu.AddItem(var1, "5", "5", 0);
-	Menu.AddItem(var1, "10", "10", 0);
-	Menu.AddItem(var1, "20", "20", 0);
-	Menu.AddItem(var1, "50", "50", 0);
-	Menu.AddItem(var1, "99", "99", 0);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(35, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Slap damage", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	Menu.AddItem(menu, "0", "0", 0);
+	Menu.AddItem(menu, "1", "1", 0);
+	Menu.AddItem(menu, "5", "5", 0);
+	Menu.AddItem(menu, "10", "10", 0);
+	Menu.AddItem(menu, "20", "20", 0);
+	Menu.AddItem(menu, "50", "50", 0);
+	Menu.AddItem(menu, "99", "99", 0);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplaySlapTargetMenu(_arg0)
+void:DisplaySlapTargetMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(33, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T: %d damage", "Slap player", _arg0, g_SlapDamage[_arg0]);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(33, 28);
+	new String:title[400];
+	Format(title, 100, "%T: %d damage", "Slap player", client, g_SlapDamage[client]);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:PerformRename(_arg0, _arg1)
+void:PerformRename(client, target)
 {
-	LogAction(_arg0, _arg1, "\"%L\" renamed \"%L\" (to \"%s\")", _arg0, _arg1, g_NewName[_arg1]);
-	SetClientName(_arg1, g_NewName[_arg1]);
-	g_NewName[_arg1][0] = '\x00';
+	LogAction(client, target, "\"%L\" renamed \"%L\" (to \"%s\")", client, target, g_NewName[target]);
+	SetClientName(target, g_NewName[target]);
+	g_NewName[target][0] = '\x00';
 	return 0;
 }
 
-public void:AdminMenu_Rename(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Rename(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayRenameTargetMenu(_arg3);
+			DisplayRenameTargetMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Rename player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Rename player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Slap(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Slap(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplaySlapDamageMenu(_arg3);
+			DisplaySlapDamageMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Slap player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Slap player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Slay(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Slay(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplaySlayMenu(_arg3);
+			DisplaySlayMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Slay player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Slay player", param);
 	}
 	return 0;
 }
 
-public Action:Command_Rename(_arg0, _arg1)
+public Action:Command_Rename(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_rename <#userid|name> [newname]");
+		ReplyToCommand(client, "[SM] Usage: sm_rename <#userid|name> [newname]");
 		return 3;
 	}
-	new var1 = 0;
-	new var2 = 0;
-	GetCmdArg(1, var1, 128);
-	new var3 = 0;
-	if (_arg1 > 1)
+	new String:arg[512];
+	new String:arg2[512];
+	GetCmdArg(1, arg, 128);
+	new bool:randomize;
+	if (args > 1)
 	{
-		GetCmdArg(2, var2, 128);
+		GetCmdArg(2, arg2, 128);
 	}
 	else
 	{
-		var3 = 1;
+		randomize = true;
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 < (var6 = ProcessTargetString(var1, _arg0, var5, 65, 0, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 < (target_count = ProcessTargetString(arg, client, target_list, 65, 0, target_name, 64, tn_is_ml)))
 	{
-		if (var7)
+		if (tn_is_ml)
 		{
-			ShowActivity2(_arg0, "[SM] ", "%t", "Renamed target", var4);
+			ShowActivity2(client, "[SM] ", "%t", "Renamed target", target_name);
 		}
 		else
 		{
-			ShowActivity2(_arg0, "[SM] ", "%t", "Renamed target", "_s", var4);
+			ShowActivity2(client, "[SM] ", "%t", "Renamed target", "_s", target_name);
 		}
-		new var8 = 0;
-		while (var8 < var6)
+		new i;
+		while (i < target_count)
 		{
-			if (var3)
+			if (randomize)
 			{
-				RandomizeName(var5[var8]);
+				RandomizeName(target_list[i]);
 			}
 			else
 			{
-				if (var6 > 1)
+				if (target_count > 1)
 				{
-					Format(g_NewName[var5[var8]], 128, "%s %i", var2, var8 + 1);
+					Format(g_NewName[target_list[i]], 128, "%s %i", arg2, i + 1);
 				}
-				Format(g_NewName[var5[var8]], 128, "%s", var2);
+				Format(g_NewName[target_list[i]], 128, "%s", arg2);
 			}
-			PerformRename(_arg0, var5[var8]);
-			var8++;
+			PerformRename(client, target_list[i]);
+			i++;
 		}
 	}
 	else
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 	}
 	return 3;
 }
 
-public Action:Command_Slap(_arg0, _arg1)
+public Action:Command_Slap(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_slap <#userid|name> [damage]");
+		ReplyToCommand(client, "[SM] Usage: sm_slap <#userid|name> [damage]");
 		return 3;
 	}
-	new var2 = 0;
-	GetCmdArg(1, var2, 65);
-	new var3 = 0;
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new damage;
+	if (args > 1)
 	{
-		new var4 = 0;
-		GetCmdArg(2, var4, 20);
+		new String:arg2[80];
+		GetCmdArg(2, arg2, 20);
 		new var1;
-		if (StringToIntEx(var4, var3, 10) && var3 < 0)
+		if (StringToIntEx(arg2, damage, 10) && damage < 0)
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 4100);
+			ReplyToCommand(client, "[SM] %t", 4100);
 			return 3;
 		}
 	}
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	if (0 >= (var7 = ProcessTargetString(var2, _arg0, var6, 65, 1, var5, 64, var8)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var7);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var9 = 0;
-	while (var9 < var7)
+	new i;
+	while (i < target_count)
 	{
-		PerformSlap(_arg0, var6[var9], var3);
-		var9++;
+		PerformSlap(client, target_list[i], damage);
+		i++;
 	}
-	if (var8)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Slapped target", var5);
+		ShowActivity2(client, "[SM] ", "%t", "Slapped target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Slapped target", "_s", var5);
+		ShowActivity2(client, "[SM] ", "%t", "Slapped target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Slay(_arg0, _arg1)
+public Action:Command_Slay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_slay <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_slay <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformSlay(_arg0, var3[var6]);
-		var6++;
+		PerformSlay(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Slayed target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Slayed target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Slayed target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Slayed target", "_s", target_name);
 	}
 	return 3;
 }
 
-public MenuHandler_Rename(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Rename(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			var3 = StringToInt(var2, 10);
-			if ((var4 = GetClientOfUserId(var3)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var4))
+				if (CanUserTarget(param1, target))
 				{
-					new var5 = 0;
-					GetClientName(var4, var5, 128);
-					RandomizeName(var4);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Renamed target", "_s", var5);
-					PerformRename(_arg2, var4);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					RandomizeName(target);
+					ShowActivity2(param1, "[SM] ", "%t", "Renamed target", "_s", name);
+					PerformRename(param1, target);
 				}
-				PrintToChat(_arg2, "[SM] %t", 13000);
+				PrintToChat(param1, "[SM] %t", 13000);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 12964);
+				PrintToChat(param1, "[SM] %t", 12964);
 			}
-			DisplayRenameTargetMenu(_arg2);
+			DisplayRenameTargetMenu(param1);
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Slap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Slap(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
-			if (_arg3 == -6)
+			if (param2 == -6)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var1 = 0;
-			new var2 = 0;
-			new var3 = 0;
-			Menu.GetItem(_arg0, _arg3, var1, 32, 0, "", 0);
-			var2 = StringToInt(var1, 10);
-			if ((var3 = GetClientOfUserId(var2)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var3))
+				if (CanUserTarget(param1, target))
 				{
-					if (IsPlayerAlive(var3))
+					if (IsPlayerAlive(target))
 					{
-						new var4 = 0;
-						GetClientName(var3, var4, 128);
-						PerformSlap(_arg2, var3, g_SlapDamage[_arg2]);
-						ShowActivity2(_arg2, "[SM] ", "%t", "Slapped target", "_s", var4);
+						new String:name[512];
+						GetClientName(target, name, 128);
+						PerformSlap(param1, target, g_SlapDamage[param1]);
+						ShowActivity2(param1, "[SM] ", "%t", "Slapped target", "_s", name);
 					}
-					ReplyToCommand(_arg2, "[SM] %t", 3992);
+					ReplyToCommand(param1, "[SM] %t", 3992);
 				}
-				PrintToChat(_arg2, "[SM] %t", 3964);
+				PrintToChat(param1, "[SM] %t", 3964);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 3928);
+				PrintToChat(param1, "[SM] %t", 3928);
 			}
-			DisplaySlapTargetMenu(_arg2);
+			DisplaySlapTargetMenu(param1);
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_SlapDamage(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_SlapDamage(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			g_SlapDamage[_arg2] = StringToInt(var2, 10);
-			DisplaySlapTargetMenu(_arg2);
+			new String:info[128];
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			g_SlapDamage[param1] = StringToInt(info, 10);
+			DisplaySlapTargetMenu(param1);
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Slay(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Slay(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			var3 = StringToInt(var2, 10);
-			if ((var4 = GetClientOfUserId(var3)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var4))
+				if (CanUserTarget(param1, target))
 				{
-					if (IsPlayerAlive(var4))
+					if (IsPlayerAlive(target))
 					{
-						new var5 = 0;
-						GetClientName(var4, var5, 128);
-						PerformSlay(_arg2, var4);
-						ShowActivity2(_arg2, "[SM] ", "%t", "Slayed target", "_s", var5);
+						new String:name[512];
+						GetClientName(target, name, 128);
+						PerformSlay(param1, target);
+						ShowActivity2(param1, "[SM] ", "%t", "Slayed target", "_s", name);
 					}
-					ReplyToCommand(_arg2, "[SM] %t", 3356);
+					ReplyToCommand(param1, "[SM] %t", 3356);
 				}
-				PrintToChat(_arg2, "[SM] %t", 3328);
+				PrintToChat(param1, "[SM] %t", 3328);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 3292);
+				PrintToChat(param1, "[SM] %t", 3292);
 			}
-			DisplaySlayMenu(_arg2);
+			DisplaySlayMenu(param1);
 		}
 	}
 	return 0;
 }
 
-public void:OnAdminMenuReady(Handle:_arg0)
+public void:OnAdminMenuReady(Handle:aTopMenu)
 {
-	new var1;
-	var1 = TopMenu.FromHandle(_arg0);
-	if (hTopMenu == var1)
+	new TopMenu:topmenu = TopMenu.FromHandle(aTopMenu);
+	if (hTopMenu == topmenu)
 	{
 		return 0;
 	}
-	hTopMenu = var1;
-	new var2;
-	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
-	if (var2)
+	hTopMenu = topmenu;
+	new TopMenuObject:player_commands = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
+	if (player_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_slay", 23, var2, "sm_slay", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_slap", 21, var2, "sm_slap", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_rename", 19, var2, "sm_rename", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_slay", 23, player_commands, "sm_slay", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_slap", 21, player_commands, "sm_slap", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_rename", 19, player_commands, "sm_rename", 32, "");
 	}
 	return 0;
 }
@@ -573,11 +566,11 @@ public void:OnPluginStart()
 	RegAdminCmd("sm_slap", 27, 32, "sm_slap <#userid|name> [damage]", "", 0);
 	RegAdminCmd("sm_slay", 29, 32, "sm_slay <#userid|name>", "", 0);
 	RegAdminCmd("sm_rename", 25, 32, "sm_rename <#userid|name>", "", 0);
-	new var2 = 0;
+	new TopMenu:topmenu;
 	new var1;
-	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()))
 	{
-		OnAdminMenuReady(var2);
+		OnAdminMenuReady(topmenu);
 	}
 	return 0;
 }

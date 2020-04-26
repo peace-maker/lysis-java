@@ -30,85 +30,82 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-public Action:Command_Cookie(_arg0, _arg1)
+public Action:Command_Cookie(client, args)
 {
-	if (_arg1)
+	if (args)
 	{
-		if (_arg0)
+		if (client)
 		{
-			new var5 = 0;
-			var5 = 0;
-			GetCmdArg(1, var5, 30);
-			new var6;
-			var6 = FindClientCookie(var5);
-			if (var6)
+			new String:name[128];
+			name[0] = '\x00';
+			GetCmdArg(1, name, 30);
+			new Handle:cookie = FindClientCookie(name);
+			if (cookie)
 			{
-				new var7;
-				var7 = GetCookieAccess(var6);
-				if (var7 == 2)
+				new CookieAccess:access = GetCookieAccess(cookie);
+				if (access == 2)
 				{
-					ReplyToCommand(_arg0, "[SM] %t", "Cookie not Found", var5);
-					CloseHandle(var6);
-					var6 = 0;
+					ReplyToCommand(client, "[SM] %t", "Cookie not Found", name);
+					CloseHandle(cookie);
+					cookie = 0;
 					return 3;
 				}
-				new var8 = 0;
-				var8 = 0;
-				if (_arg1 == 1)
+				new String:value[400];
+				value[0] = '\x00';
+				if (args == 1)
 				{
-					GetClientCookie(_arg0, var6, var8, 100);
-					ReplyToCommand(_arg0, "[SM] %t", "Cookie Value", var5, var8);
-					CloseHandle(var6);
-					var6 = 0;
+					GetClientCookie(client, cookie, value, 100);
+					ReplyToCommand(client, "[SM] %t", "Cookie Value", name, value);
+					CloseHandle(cookie);
+					cookie = 0;
 					return 3;
 				}
-				if (var7 == 1)
+				if (access == 1)
 				{
-					ReplyToCommand(_arg0, "[SM] %t", "Protected Cookie", var5);
-					CloseHandle(var6);
-					var6 = 0;
+					ReplyToCommand(client, "[SM] %t", "Protected Cookie", name);
+					CloseHandle(cookie);
+					cookie = 0;
 					return 3;
 				}
-				GetCmdArg(2, var8, 100);
-				SetClientCookie(_arg0, var6, var8);
-				CloseHandle(var6);
-				var6 = 0;
-				ReplyToCommand(_arg0, "[SM] %t", "Cookie Changed Value", var5, var8);
+				GetCmdArg(2, value, 100);
+				SetClientCookie(client, cookie, value);
+				CloseHandle(cookie);
+				cookie = 0;
+				ReplyToCommand(client, "[SM] %t", "Cookie Changed Value", name, value);
 				return 3;
 			}
-			ReplyToCommand(_arg0, "[SM] %t", "Cookie not Found", var5);
+			ReplyToCommand(client, "[SM] %t", "Cookie not Found", name);
 			return 3;
 		}
 		PrintToServer("%T", "No Console", 0);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] Usage: sm_cookies <name> [value]");
-	ReplyToCommand(_arg0, "[SM] %t", 2592);
-	new var1;
-	var1 = GetCookieIterator();
-	new var2 = 0;
-	var2 = 0;
-	new var3 = 0;
-	var3 = 0;
-	PrintToConsole(_arg0, "%t:", 2620);
-	new var4 = 0;
-	while (ReadCookieIterator(var1, var2, 30, var4, var3, 255))
+	ReplyToCommand(client, "[SM] Usage: sm_cookies <name> [value]");
+	ReplyToCommand(client, "[SM] %t", 2592);
+	new Handle:iter = GetCookieIterator();
+	new String:name[128];
+	name[0] = '\x00';
+	new String:description[1024];
+	description[0] = '\x00';
+	PrintToConsole(client, "%t:", 2620);
+	new CookieAccess:access;
+	while (ReadCookieIterator(iter, name, 30, access, description, 255))
 	{
-		if (var4 < 2)
+		if (access < 2)
 		{
-			PrintToConsole(_arg0, "%s - %s", var2, var3);
+			PrintToConsole(client, "%s - %s", name, description);
 		}
 	}
-	CloseHandle(var1);
-	var1 = 0;
+	CloseHandle(iter);
+	iter = 0;
 	return 3;
 }
 
-public Action:Command_Settings(_arg0, _arg1)
+public Action:Command_Settings(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
-		ShowCookieMenu(_arg0);
+		ShowCookieMenu(client);
 		return 3;
 	}
 	PrintToServer("%T", "No Console", 0);

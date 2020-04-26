@@ -27,11 +27,11 @@ new ConVar:g_Cvar_ExcludeMaps;
 new ArrayList:g_MapList;
 new ArrayList:g_OldMapList;
 new g_mapListSerial = -1;
-ByteCountToCells(_arg0)
+ByteCountToCells(size)
 {
-	if (_arg0)
+	if (size)
 	{
-		return _arg0 + 3 / 4;
+		return size + 3 / 4;
 	}
 	return 1;
 }
@@ -51,35 +51,34 @@ public void:OnConfigsExecuted()
 
 public void:OnPluginStart()
 {
-	new var1;
-	var1 = ByteCountToCells(256);
-	g_MapList = ArrayList.ArrayList(var1, 0);
-	g_OldMapList = ArrayList.ArrayList(var1, 0);
+	new arraySize = ByteCountToCells(256);
+	g_MapList = ArrayList.ArrayList(arraySize, 0);
+	g_OldMapList = ArrayList.ArrayList(arraySize, 0);
 	g_Cvar_ExcludeMaps = CreateConVar("sm_randomcycle_exclude", "5", "Specifies how many past maps to exclude from the vote.", 0, true, 0.0, false, 0.0);
 	AutoExecConfig(true, "randomcycle", "sourcemod");
 	return 0;
 }
 
-public Action:Timer_RandomizeNextmap(Handle:_arg0)
+public Action:Timer_RandomizeNextmap(Handle:timer)
 {
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
+	new String:map[1024];
+	new String:resolvedMap[1024];
+	new bool:oldMaps;
 	new var1;
 	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) && ArrayList.Length.get(g_MapList) > ConVar.IntValue.get(g_Cvar_ExcludeMaps))
 	{
-		var5 = 1;
+		oldMaps = true;
 	}
-	while (var5 && ArrayList.FindString(g_OldMapList, var4) != -1)
+	while (oldMaps && ArrayList.FindString(g_OldMapList, resolvedMap) != -1)
 	{
 	}
-	ArrayList.PushString(g_OldMapList, var4);
-	SetNextMap(var3);
+	ArrayList.PushString(g_OldMapList, resolvedMap);
+	SetNextMap(map);
 	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) < ArrayList.Length.get(g_OldMapList))
 	{
 		ArrayList.Erase(g_OldMapList, 0);
 	}
-	LogAction(-1, -1, "RandomCycle has chosen %s for the nextmap.", var3);
+	LogAction(-1, -1, "RandomCycle has chosen %s for the nextmap.", map);
 	return 4;
 }
 

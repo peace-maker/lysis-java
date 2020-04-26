@@ -48,157 +48,153 @@ new <enumstruct2>:g_currentPlace[66] =
 	264, 272, 280, 288, 296, 304, 312, 320, 328, 336, 344, 352, 360, 368, 376, 384, 392, 400, 408, 416, 424, 432, 440, 448, 456, 464, 472, 480, 488, 496, 504, 512, 520, 528, 536, 544, 552, 560, 568, 576, 584, 592, 600, 608, 616, 624, 632, 640, 648, 656, 664, 672, 680, 688, 696, 704, 712, 720, 728, 736, 744, 752, 760, 768, 776, 784
 };
 new ArrayList:g_DataArray;
-bool:QuoteString(String:_arg0[], String:_arg1[], _arg2, String:_arg3[])
+bool:QuoteString(String:input[], String:output[], maxlen, String:quotechars[])
 {
-	new var2 = 0;
-	new var3;
-	var3 = strlen(_arg0[0]);
-	new var4 = 0;
-	while (var4 < var3)
+	new count;
+	new len = strlen(input[0]);
+	new i;
+	while (i < len)
 	{
-		_arg1[0][var2] = _arg0[0][var4];
-		var2++;
-		if (var2 >= _arg2)
+		output[0][count] = input[0][i];
+		count++;
+		if (count >= maxlen)
 		{
-			_arg1[0][_arg2 + -1] = '\x00';
+			output[0][maxlen + -1] = '\x00';
 			return 0;
 		}
 		new var1;
-		if (FindCharInString(_arg3[0], _arg0[0][var4], false) == -1 && _arg0[0][var4] == '\')
+		if (FindCharInString(quotechars[0], input[0][i], false) == -1 && input[0][i] == '\')
 		{
-			_arg1[0][var2] = '\';
-			var2++;
-			if (var2 >= _arg2)
+			output[0][count] = '\';
+			count++;
+			if (count >= maxlen)
 			{
-				_arg1[0][_arg2 + -1] = '\x00';
+				output[0][maxlen + -1] = '\x00';
 				return 0;
 			}
 		}
-		var4++;
+		i++;
 	}
-	_arg1[0][var2] = '\x00';
+	output[0][count] = '\x00';
 	return 1;
 }
 
-bool:UnQuoteString(String:_arg0[], String:_arg1[], _arg2, String:_arg3[])
+bool:UnQuoteString(String:input[], String:output[], maxlen, String:quotechars[])
 {
-	new var3 = 1;
-	new var4;
-	var4 = strlen(_arg0[0]);
-	_arg1[0] = _arg0[0];
-	new var5 = 1;
-	while (var5 < var4)
+	new count = 1;
+	new len = strlen(input[0]);
+	output[0] = input[0];
+	new i = 1;
+	while (i < len)
 	{
-		_arg1[0][var3] = _arg0[0][var5];
-		var3++;
+		output[0][count] = input[0][i];
+		count++;
 		new var2;
-		if (_arg0[0][var5 + 1] == '\' && (_arg0[0][var5] == '\' || FindCharInString(_arg3[0], _arg0[0][var5], false) == -1))
+		if (input[0][i + 1] == '\' && (input[0][i] == '\' || FindCharInString(quotechars[0], input[0][i], false) == -1))
 		{
-			var5++;
+			i++;
 		}
-		if (var3 >= _arg2)
+		if (count >= maxlen)
 		{
-			_arg1[0][_arg2 + -1] = '\x00';
+			output[0][maxlen + -1] = '\x00';
 			return 0;
 		}
-		var5++;
+		i++;
 	}
-	_arg1[0][var3] = '\x00';
+	output[0][count] = '\x00';
 	return 1;
 }
 
-UTIL_AddTargetsToMenu2(Menu:_arg0, _arg1, _arg2)
+UTIL_AddTargetsToMenu2(Menu:menu, source_client, flags)
 {
-	new var8 = 0;
-	new var9 = 0;
-	new var10 = 0;
-	new var11 = 0;
-	new var12 = 1;
-	while (var12 <= MaxClients)
+	new String:user_id[48];
+	new String:name[512];
+	new String:display[560];
+	new num_clients;
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientConnected(var12) && IsClientInKickQueue(var12))
+		if (IsClientConnected(i) && IsClientInKickQueue(i))
 		{
 		}
 		else
 		{
 			new var2;
-			if (!(_arg2 & 32 == 32 && IsFakeClient(var12)))
+			if (!(flags & 32 == 32 && IsFakeClient(i)))
 			{
 				new var3;
-				if (!(_arg2 & 4 != 4 && IsClientInGame(var12)))
+				if (!(flags & 4 != 4 && IsClientInGame(i)))
 				{
 					new var4;
-					if (!(_arg2 & 1 == 1 && IsPlayerAlive(var12)))
+					if (!(flags & 1 == 1 && IsPlayerAlive(i)))
 					{
 						new var5;
-						if (!(_arg2 & 2 == 2 && IsPlayerAlive(var12)))
+						if (!(flags & 2 == 2 && IsPlayerAlive(i)))
 						{
 							new var6;
-							if (!((_arg1 && _arg2 & 8 != 8) && CanUserTarget(_arg1, var12)))
+							if (!((source_client && flags & 8 != 8) && CanUserTarget(source_client, i)))
 							{
-								IntToString(GetClientUserId(var12), var8, 12);
-								GetClientName(var12, var9, 128);
-								Format(var10, 140, "%s (%s)", var9, var8);
-								Menu.AddItem(_arg0, var8, var10, 0);
-								var11++;
+								IntToString(GetClientUserId(i), user_id, 12);
+								GetClientName(i, name, 128);
+								Format(display, 140, "%s (%s)", name, user_id);
+								Menu.AddItem(menu, user_id, display, 0);
+								num_clients++;
 							}
 						}
 					}
 				}
 			}
 		}
-		var12++;
+		i++;
 	}
-	return var11;
+	return num_clients;
 }
 
-UTIL_AddTargetsToMenu(Menu:_arg0, _arg1, bool:_arg2, bool:_arg3)
+UTIL_AddTargetsToMenu(Menu:menu, source_client, bool:in_game_only, bool:alive_only)
 {
-	new var1 = 0;
-	if (!_arg2)
+	new flags;
+	if (!in_game_only)
 	{
-		var1 |= 4;
+		flags |= 4;
 	}
-	if (_arg3)
+	if (alive_only)
 	{
-		var1 |= 1;
+		flags |= 1;
 	}
-	return UTIL_AddTargetsToMenu2(_arg0, _arg1, var1);
+	return UTIL_AddTargetsToMenu2(menu, source_client, flags);
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-FindCharInString(String:_arg0[], String:_arg1, bool:_arg2)
+FindCharInString(String:str[], String:c, bool:reverse)
 {
-	new var1;
-	var1 = strlen(_arg0[0]);
-	if (_arg2)
+	new len = strlen(str[0]);
+	if (reverse)
 	{
-		new var3;
-		var3 = var1 + -1;
-		while (0 <= var3)
+		new i = len + -1;
+		while (0 <= i)
 		{
-			if (_arg1 == _arg0[0][var3])
+			if (c == str[0][i])
 			{
-				return var3;
+				return i;
 			}
-			var3--;
+			i--;
 		}
 	}
 	else
 	{
-		new var2 = 0;
-		while (var2 < var1)
+		new i;
+		while (i < len)
 		{
-			if (_arg1 == _arg0[0][var2])
+			if (c == str[0][i])
 			{
-				return var2;
+				return i;
 			}
-			var2++;
+			i++;
 		}
 	}
 	return -1;
@@ -225,36 +221,35 @@ void:ParseConfigs()
 	var2 = 0;
 	g_groupList = ArrayList.ArrayList(32, 0);
 	g_groupList + 4/* ERROR unknown load Binary */ = ArrayList.ArrayList(32, 0);
-	new var3 = 0;
-	BuildPath(0, var3, 256, "configs/dynamicmenu/adminmenu_grouping.txt");
-	if (FileExists(var3, false, "GAME"))
+	new String:configPath[1024];
+	BuildPath(0, configPath, 256, "configs/dynamicmenu/adminmenu_grouping.txt");
+	if (FileExists(configPath, false, "GAME"))
 	{
 		LogError("Warning! configs/dynamicmenu/adminmenu_grouping.txt is now configs/adminmenu_grouping.txt.");
 		LogError("Read the 1.0.2 release notes, as the dynamicmenu folder has been removed.");
 	}
 	else
 	{
-		BuildPath(0, var3, 256, "configs/adminmenu_grouping.txt");
+		BuildPath(0, configPath, 256, "configs/adminmenu_grouping.txt");
 	}
-	if (FileExists(var3, false, "GAME"))
+	if (FileExists(configPath, false, "GAME"))
 	{
-		new var4 = 0;
-		new var5;
-		var5 = SMCParser.ParseFile(g_configParser, var3, var4, 0);
-		if (var5)
+		new line;
+		new SMCError:err = SMCParser.ParseFile(g_configParser, configPath, line, 0);
+		if (err)
 		{
-			new var6 = 0;
-			SMC_GetErrorString(var5, var6, 256);
-			LogError("Could not parse file (line %d, file \"%s\"):", var4, var3);
-			LogError("Parser encountered error: %s", var6);
+			new String:error[1024];
+			SMC_GetErrorString(err, error, 256);
+			LogError("Could not parse file (line %d, file \"%s\"):", line, configPath);
+			LogError("Parser encountered error: %s", error);
 		}
 		return 0;
 	}
-	LogError("Unable to locate admin menu groups file: %s", var3);
+	LogError("Unable to locate admin menu groups file: %s", configPath);
 	return 0;
 }
 
-public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	CreateNative("GetAdminTopMenu", 49);
 	CreateNative("AddTargetsToMenu", 45);
@@ -263,147 +258,145 @@ public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
 	return 0;
 }
 
-public Action:Command_DisplayMenu(_arg0, _arg1)
+public Action:Command_DisplayMenu(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
-		TopMenu.Display(hAdminMenu, _arg0, 0);
+		TopMenu.Display(hAdminMenu, client, 0);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 22136);
+	ReplyToCommand(client, "[SM] %t", 22136);
 	return 3;
 }
 
-public void:DefaultCategoryHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:DefaultCategoryHandler(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1 == 1)
+	if (action == 1)
 	{
-		if (_arg2)
+		if (object_id)
 		{
-			if (obj_playercmds == _arg2)
+			if (obj_playercmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T:", "Player Commands", _arg3);
+				Format(buffer[0], maxlength, "%T:", "Player Commands", param);
 			}
-			if (obj_servercmds == _arg2)
+			if (obj_servercmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T:", "Server Commands", _arg3);
+				Format(buffer[0], maxlength, "%T:", "Server Commands", param);
 			}
-			if (obj_votingcmds == _arg2)
+			if (obj_votingcmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T:", "Voting Commands", _arg3);
+				Format(buffer[0], maxlength, "%T:", "Voting Commands", param);
 			}
 		}
 		else
 		{
-			Format(_arg4[0], _arg5, "%T:", "Admin Menu", _arg3);
+			Format(buffer[0], maxlength, "%T:", "Admin Menu", param);
 		}
 	}
 	else
 	{
-		if (!_arg1)
+		if (!action)
 		{
-			if (obj_playercmds == _arg2)
+			if (obj_playercmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T", "Player Commands", _arg3);
+				Format(buffer[0], maxlength, "%T", "Player Commands", param);
 			}
-			if (obj_servercmds == _arg2)
+			if (obj_servercmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T", "Server Commands", _arg3);
+				Format(buffer[0], maxlength, "%T", "Server Commands", param);
 			}
-			if (obj_votingcmds == _arg2)
+			if (obj_votingcmds == object_id)
 			{
-				Format(_arg4[0], _arg5, "%T", "Voting Commands", _arg3);
+				Format(buffer[0], maxlength, "%T", "Voting Commands", param);
 			}
 		}
 	}
 	return 0;
 }
 
-public void:DynamicMenuCategoryHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:DynamicMenuCategoryHandler(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	new var1;
-	if (_arg1 == 1 || _arg1)
+	if (action == 1 || action)
 	{
-		TopMenu.GetObjName(_arg0, _arg2, _arg4[0], _arg5);
+		TopMenu.GetObjName(topmenu, object_id, buffer[0], maxlength);
 	}
 	return 0;
 }
 
-public void:DynamicMenuItemHandler(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:DynamicMenuItemHandler(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			new var1 = 0;
-			TopMenu.GetInfoString(_arg0, _arg2, var1, 10);
-			new var2;
-			var2 = StringToInt(var1, 10);
-			new var3 = 0;
-			ArrayList.GetArray(g_DataArray, var2, var3, -1);
-			strcopy(g_command[_arg3], 255, var3);
-			g_currentPlace[_arg3][1] = var2;
-			g_currentPlace[_arg3][2] = 1;
-			ParamCheck(_arg3);
+			new String:locString[48];
+			TopMenu.GetInfoString(topmenu, object_id, locString, 10);
+			new location = StringToInt(locString, 10);
+			new <enumstruct1>:output;
+			ArrayList.GetArray(g_DataArray, location, output, -1);
+			strcopy(g_command[param], 255, output);
+			g_currentPlace[param][1] = location;
+			g_currentPlace[param][2] = 1;
+			ParamCheck(param);
 		}
 	}
 	else
 	{
-		TopMenu.GetObjName(_arg0, _arg2, _arg4[0], _arg5);
+		TopMenu.GetObjName(topmenu, object_id, buffer[0], maxlength);
 	}
 	return 0;
 }
 
-public SMCResult:EndSection(SMCParser:_arg0)
+public SMCResult:EndSection(SMCParser:smc)
 {
 	g_groupCount = ArrayList.Length.get(g_groupList);
 	return 0;
 }
 
-public SMCResult:KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+public SMCResult:KeyValue(SMCParser:smc, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
 {
-	ArrayList.PushString(g_groupList, _arg1[0]);
-	ArrayList.PushString(g_groupList + 4/* ERROR unknown load Binary */, _arg2[0]);
+	ArrayList.PushString(g_groupList, key[0]);
+	ArrayList.PushString(g_groupList + 4/* ERROR unknown load Binary */, value[0]);
 	return 0;
 }
 
-public Menu_Selection(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public Menu_Selection(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
-	if (_arg1 == 4)
+	if (action == 4)
 	{
-		new var2 = 0;
-		new var3;
-		var3 = Menu.GetItem(_arg0, _arg3, var2, 64, 0, "", 0);
-		if (var3)
+		new String:unquotedinfo[256];
+		new bool:found = Menu.GetItem(menu, param2, unquotedinfo, 64, 0, "", 0);
+		if (found)
 		{
-			new var4 = 0;
-			QuoteString(var2, var4, 129, "#@");
-			new var5 = 0;
-			new var6 = 0;
-			Format(var6, 66, "\"%s\"", var4);
-			Format(var5, 5, "#%i", g_currentPlace[_arg2][2]);
-			ReplaceString(g_command[_arg2], 255, var5, var6, true);
-			Format(var5, 5, "@%i", g_currentPlace[_arg2][2]);
-			ReplaceString(g_command[_arg2], 255, var5, var4, true);
-			g_currentPlace[_arg2][2]++;
-			ParamCheck(_arg2);
+			new String:info[528];
+			QuoteString(unquotedinfo, info, 129, "#@");
+			new String:buffer[32];
+			new String:infobuffer[272];
+			Format(infobuffer, 66, "\"%s\"", info);
+			Format(buffer, 5, "#%i", g_currentPlace[param1][2]);
+			ReplaceString(g_command[param1], 255, buffer, infobuffer, true);
+			Format(buffer, 5, "@%i", g_currentPlace[param1][2]);
+			ReplaceString(g_command[param1], 255, buffer, info, true);
+			g_currentPlace[param1][2]++;
+			ParamCheck(param1);
 		}
 		return 0;
 	}
 	new var1;
-	if (_arg1 == 8 && _arg3 == -6)
+	if (action == 8 && param2 == -6)
 	{
-		TopMenu.Display(hAdminMenu, _arg2, 3);
+		TopMenu.Display(hAdminMenu, param1, 3);
 	}
 	return 0;
 }
 
-public SMCResult:NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	return 0;
 }
@@ -426,14 +419,14 @@ public void:OnAllPluginsLoaded()
 
 public void:OnConfigsExecuted()
 {
-	new var1 = 0;
-	new var2 = 0;
-	BuildPath(0, var1, 256, "configs/adminmenu_sorting.txt");
-	if (TopMenu.LoadConfig(hAdminMenu, var1, var2, 256))
+	new String:path[1024];
+	new String:error[1024];
+	BuildPath(0, path, 256, "configs/adminmenu_sorting.txt");
+	if (TopMenu.LoadConfig(hAdminMenu, path, error, 256))
 	{
 		return 0;
 	}
-	LogError("Could not load admin menu config (file \"%s\": %s)", var1, var2);
+	LogError("Could not load admin menu config (file \"%s\": %s)", path, error);
 	return 0;
 }
 
@@ -453,59 +446,54 @@ public void:OnPluginStart()
 	return 0;
 }
 
-public void:ParamCheck(_arg0)
+public void:ParamCheck(client)
 {
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	ArrayList.GetArray(g_DataArray, g_currentPlace[_arg0][1], var7, -1);
-	if (g_currentPlace[_arg0][2] < 1)
+	new String:buffer[32];
+	new String:buffer2[32];
+	new <enumstruct1>:outputItem;
+	new <enumstruct0>:outputSubmenu;
+	ArrayList.GetArray(g_DataArray, g_currentPlace[client][1], outputItem, -1);
+	if (g_currentPlace[client][2] < 1)
 	{
-		g_currentPlace[_arg0][2] = 1;
+		g_currentPlace[client][2] = 1;
 	}
-	Format(var5, 5, "#%i", g_currentPlace[_arg0][2]);
-	Format(var6, 5, "@%i", g_currentPlace[_arg0][2]);
+	Format(buffer, 5, "#%i", g_currentPlace[client][2]);
+	Format(buffer2, 5, "@%i", g_currentPlace[client][2]);
 	new var1;
-	if (StrContains(g_command[_arg0], var5, true) == -1 && StrContains(g_command[_arg0], var6, true) == -1)
+	if (StrContains(g_command[client], buffer, true) == -1 && StrContains(g_command[client], buffer2, true) == -1)
 	{
-		ArrayList.GetArray(var7 + 260/* ERROR unknown load Binary */, g_currentPlace[_arg0][2][0], var8, -1);
-		new var9;
-		var9 = Menu.Menu(31, 28);
-		Menu.ExitBackButton.set(var9, true);
+		ArrayList.GetArray(outputItem + 260/* ERROR unknown load Binary */, g_currentPlace[client][2][0], outputSubmenu, -1);
+		new Menu:itemMenu = Menu.Menu(31, 28);
+		Menu.ExitBackButton.set(itemMenu, true);
 		new var2;
-		if (var8[0][0] && var8[0][0] == 1)
+		if (outputSubmenu && outputSubmenu == 1)
 		{
-			new var10 = var11;
-			new var11 = "1.10.0.6484";
-			new var12 = var13;
-			new var13 = "1.10.0.6484";
-			new var14 = 0;
-			while (var14 < g_groupCount)
+			new String:nameBuffer[128];
+			new String:commandBuffer[128];
+			new i;
+			while (i < g_groupCount)
 			{
-				ArrayList.GetString(g_groupList, var14, var10, 32);
-				ArrayList.GetString(g_groupList + 4/* ERROR unknown load Binary */, var14, var12, 32);
-				Menu.AddItem(var9, var12, var10, 0);
-				var14++;
+				ArrayList.GetString(g_groupList, i, nameBuffer, 32);
+				ArrayList.GetString(g_groupList + 4/* ERROR unknown load Binary */, i, commandBuffer, 32);
+				Menu.AddItem(itemMenu, commandBuffer, nameBuffer, 0);
+				i++;
 			}
 		}
-		if (var8[0][0] == 3)
+		if (outputSubmenu == 3)
 		{
-			new var15 = var16;
-			new var16 = "1.10.0.6484";
-			DataPack.ReadString(var8[11][0], var15, 200);
-			DataPack.Reset(var8[11][0], false);
-			new var17;
-			var17 = OpenFile(var15, "rt", false, "GAME");
-			new var18 = 0;
-			if (var17)
+			new String:path[800];
+			DataPack.ReadString(outputSubmenu + 44/* ERROR unknown load Binary */, path, 200);
+			DataPack.Reset(outputSubmenu + 44/* ERROR unknown load Binary */, false);
+			new File:file = OpenFile(path, "rt", false, "GAME");
+			new String:readData[512];
+			if (file)
 			{
-				while (File.EndOfFile(var17) && File.ReadLine(var17, var18, 128))
+				while (File.EndOfFile(file) && File.ReadLine(file, readData, 128))
 				{
-					TrimString(var18);
-					if (IsMapValid(var18))
+					TrimString(readData);
+					if (IsMapValid(readData))
 					{
-						Menu.AddItem(var9, var18, var18, 0);
+						Menu.AddItem(itemMenu, readData, readData, 0);
 					}
 				}
 			}
@@ -513,125 +501,119 @@ public void:ParamCheck(_arg0)
 		else
 		{
 			new var4;
-			if (var8[0][0] == 2 || var8[0][0] == 1)
+			if (outputSubmenu == 2 || outputSubmenu == 1)
 			{
-				new var19;
-				var19 = var8[9][0];
-				new var20 = 0;
-				new var21 = 0;
-				new var22 = 0;
-				new var23 = 1;
-				while (var23 <= MaxClients)
+				new PlayerMethod:playermethod = outputSubmenu + 36/* ERROR unknown load Binary */;
+				new String:nameBuffer[512];
+				new String:infoBuffer[128];
+				new String:temp[16];
+				new i = 1;
+				while (i <= MaxClients)
 				{
-					if (IsClientInGame(var23))
+					if (IsClientInGame(i))
 					{
-						GetClientName(var23, var20, 128);
-						switch (var19)
+						GetClientName(i, nameBuffer, 128);
+						switch (playermethod)
 						{
 							case 1:
 							{
-								new var25;
-								var25 = GetClientUserId(var23);
-								Format(var21, 32, "#%i", var25);
-								Menu.AddItem(var9, var21, var20, 0);
+								new userid = GetClientUserId(i);
+								Format(infoBuffer, 32, "#%i", userid);
+								Menu.AddItem(itemMenu, infoBuffer, nameBuffer, 0);
 							}
 							case 2:
 							{
-								Menu.AddItem(var9, var20, var20, 0);
+								Menu.AddItem(itemMenu, nameBuffer, nameBuffer, 0);
 							}
 							case 3:
 							{
-								if (GetClientAuthId(var23, 1, var21, 32, true))
+								if (GetClientAuthId(i, 1, infoBuffer, 32, true))
 								{
-									Menu.AddItem(var9, var21, var20, 0);
+									Menu.AddItem(itemMenu, infoBuffer, nameBuffer, 0);
 								}
 							}
 							case 4:
 							{
-								GetClientIP(var23, var21, 32, true);
-								Menu.AddItem(var9, var21, var20, 0);
+								GetClientIP(i, infoBuffer, 32, true);
+								Menu.AddItem(itemMenu, infoBuffer, nameBuffer, 0);
 							}
 							case 5:
 							{
-								new var24;
-								var24 = GetClientUserId(var23);
-								Format(var21, 32, "%i", var24);
-								Menu.AddItem(var9, var21, var20, 0);
+								new userid = GetClientUserId(i);
+								Format(infoBuffer, 32, "%i", userid);
+								Menu.AddItem(itemMenu, infoBuffer, nameBuffer, 0);
 							}
 							default:
 							{
-								Format(var22, 3, "%i", var23);
-								Menu.AddItem(var9, var22, var20, 0);
+								Format(temp, 3, "%i", i);
+								Menu.AddItem(itemMenu, temp, nameBuffer, 0);
 							}
 						}
 					}
-					var23++;
+					i++;
 				}
 			}
-			if (var8[0][0] == 5)
+			if (outputSubmenu == 5)
 			{
-				Menu.AddItem(var9, "1", "On", 0);
-				Menu.AddItem(var9, "0", "Off", 0);
+				Menu.AddItem(itemMenu, "1", "On", 0);
+				Menu.AddItem(itemMenu, "0", "Off", 0);
 			}
-			new var26 = var27;
-			new var27 = "1.10.0.6484";
-			new var28 = var29;
-			new var29 = "1.10.0.6484";
-			new var30 = var31;
-			new var31 = "1.10.0.6484";
-			new var32 = 0;
-			while (var8[10][0] > var32)
+			new String:value[256];
+			new String:text[256];
+			new String:admin[256];
+			new i;
+			while (outputSubmenu + 40/* ERROR unknown load Binary */ > i)
 			{
-				DataPack.ReadString(var8[11][0], var26, 64);
-				DataPack.ReadString(var8[11][0], var28, 64);
-				DataPack.ReadString(var8[11][0], var30, 64);
-				if (CheckCommandAccess(_arg0, var30, 0, false))
+				DataPack.ReadString(outputSubmenu + 44/* ERROR unknown load Binary */, value, 64);
+				DataPack.ReadString(outputSubmenu + 44/* ERROR unknown load Binary */, text, 64);
+				DataPack.ReadString(outputSubmenu + 44/* ERROR unknown load Binary */, admin, 64);
+				if (CheckCommandAccess(client, admin, 0, false))
 				{
-					Menu.AddItem(var9, var26, var28, 0);
+					Menu.AddItem(itemMenu, value, text, 0);
 				}
-				var32++;
+				i++;
 			}
-			DataPack.Reset(var8[11][0], false);
+			DataPack.Reset(outputSubmenu + 44/* ERROR unknown load Binary */, false);
 		}
-		Menu.SetTitle(var9, var8[1]);
-		Menu.Display(var9, _arg0, 0);
+		Menu.SetTitle(itemMenu, outputSubmenu + 4);
+		Menu.Display(itemMenu, client, 0);
 	}
 	else
 	{
-		TopMenu.Display(hAdminMenu, _arg0, 3);
-		new var33 = 0;
-		UnQuoteString(g_command[_arg0], var33, 255, "#@");
-		if (var7 + 256/* ERROR unknown load Binary */)
+		TopMenu.Display(hAdminMenu, client, 3);
+		new String:unquotedCommand[1024];
+		UnQuoteString(g_command[client], unquotedCommand, 255, "#@");
+		if (outputItem + 256/* ERROR unknown load Binary */)
 		{
-			InsertServerCommand(var33);
+			InsertServerCommand(unquotedCommand);
 			ServerExecute();
 		}
 		else
 		{
-			FakeClientCommand(_arg0, var33);
+			FakeClientCommand(client, unquotedCommand);
 		}
-		g_command[_arg0][0] = '\x00';
-		g_currentPlace[_arg0][2] = 1;
+		g_command[client][0] = '\x00';
+		g_currentPlace[client][2] = 1;
 	}
 	return 0;
 }
 
-public __AddTargetsToMenu(Handle:_arg0, _arg1)
+public __AddTargetsToMenu(Handle:plugin, numParams)
 {
-	new var1 = 0;
-	if (_arg1 >= 4)
+	new bool:alive_only;
+	if (numParams >= 4)
 	{
-		var1 = GetNativeCell(4);
+		alive_only = GetNativeCell(4);
 	}
-	return UTIL_AddTargetsToMenu(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), var1);
+	return UTIL_AddTargetsToMenu(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3), alive_only);
 }
 
-public __AddTargetsToMenu2(Handle:_arg0, _arg1)
+public __AddTargetsToMenu2(Handle:plugin, numParams)
 {
 	return UTIL_AddTargetsToMenu2(GetNativeCell(1), GetNativeCell(2), GetNativeCell(3));
 }
 
-public any:__GetAdminTopMenu(Handle:_arg0, _arg1)
+public any:__GetAdminTopMenu(Handle:plugin, numParams)
 {
 	return hAdminMenu;
 }

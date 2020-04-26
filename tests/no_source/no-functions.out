@@ -19,46 +19,45 @@ new Handle:db;
 new ConVar:Liste_Kredi_Miktari;
 new ConVar:Liste_Kisi_Sayisi;
 new bool:IPAktif;
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-SQL_Baglan(Handle:_arg0)
+SQL_Baglan(&Handle:DbHNDL)
 {
-	new var1 = var2;
-	new var2 = "1.11.0.6497";
-	_arg0 = SQL_Connect("storage-local", true, var1, 255);
-	if (_arg0 == 0)
+	new String:Hata[1024];
+	DbHNDL = SQL_Connect("storage-local", true, Hata, 255);
+	if (DbHNDL == 0)
 	{
-		SetFailState(var1);
+		SetFailState(Hata);
 	}
 	return 0;
 }
 
-public Menu_Zenginler_(Handle:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public Menu_Zenginler_(Handle:hndl, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
+		CloseHandle(hndl);
 	}
 	return 0;
 }
 
-public void:OnClientPostAdminCheck(_arg0)
+public void:OnClientPostAdminCheck(client)
 {
 	if (IPAktif)
 	{
-		new var1 = 1;
-		while (var1 <= MaxClients)
+		new i = 1;
+		while (i <= MaxClients)
 		{
-			if (IsClientInGame(var1))
+			if (IsClientInGame(i))
 			{
-				new var2 = 0;
-				GetPluginFilename(0, var2, 32);
-				KickClient(var1, "Bu Sunucuda İzinsiz olarak www.plugincim.com 'a ait %s İsimli eklenti kullanılıyor Bu Eklenti XXX Sunucusuna Aittir, lütfen Eklentiyi Siliniz.", var2);
+				new String:Eklenti[128];
+				GetPluginFilename(0, Eklenti, 32);
+				KickClient(i, "Bu Sunucuda İzinsiz olarak www.plugincim.com 'a ait %s İsimli eklenti kullanılıyor Bu Eklenti XXX Sunucusuna Aittir, lütfen Eklentiyi Siliniz.", Eklenti);
 			}
-			var1++;
+			i++;
 		}
 	}
 	return 0;
@@ -66,17 +65,15 @@ public void:OnClientPostAdminCheck(_arg0)
 
 public void:OnMapStart()
 {
-	new var1 = var2;
-	new var2 = "1.11.0.6497";
-	new var3 = 0;
-	new var4;
-	var4 = GetConVarInt(FindConVar("hostip"));
-	var3 = var4 >>> 24 & 255;
-	var3 + 4/* ERROR unknown load Binary */ = var4 >>> 16 & 255;
-	var3 + 8/* ERROR unknown load Binary */ = var4 >>> 8 & 255;
-	var3 + 12/* ERROR unknown load Binary */ = var4 & 255;
-	Format(var1, 32, "%d.%d.%d.%d", var3, var3 + 4, var3 + 8, var3 + 12);
-	if (!(StrEqual(var1, "45.10.57.207", true)))
+	new String:NetIP[128];
+	new pieces[4];
+	new longip = GetConVarInt(FindConVar("hostip"));
+	pieces = longip >>> 24 & 255;
+	pieces + 4/* ERROR unknown load Binary */ = longip >>> 16 & 255;
+	pieces + 8/* ERROR unknown load Binary */ = longip >>> 8 & 255;
+	pieces + 12/* ERROR unknown load Binary */ = longip & 255;
+	Format(NetIP, 32, "%d.%d.%d.%d", pieces, pieces + 4, pieces + 8, pieces + 12);
+	if (!(StrEqual(NetIP, "45.10.57.207", true)))
 	{
 		IPAktif = true;
 	}
@@ -98,12 +95,11 @@ public void:OnPluginStart()
 /* ERROR! null */
  function "SQL_ReadAll" (number 6)
 
-public Action:Zenginler(_arg0, _arg1)
+public Action:Zenginler(client, args)
 {
-	new var1 = var2;
-	new var2 = "1.11.0.6497";
-	Format(var1, 256, "SELECT name, credits FROM store_players ORDER BY credits DESC LIMIT 0, %d;", GetConVarInt(Liste_Kisi_Sayisi));
-	SQL_TQuery(db, 13, var1, _arg0, 0);
+	new String:SQL_Kodu[1024];
+	Format(SQL_Kodu, 256, "SELECT name, credits FROM store_players ORDER BY credits DESC LIMIT 0, %d;", GetConVarInt(Liste_Kisi_Sayisi));
+	SQL_TQuery(db, 13, SQL_Kodu, client, 0);
 	return 0;
 }
 

@@ -38,295 +38,286 @@ new ConVar:g_Cvar_FragLimit;
 new ConVar:g_Cvar_MaxRounds;
 new bool:mapchooser;
 new g_TotalRounds;
-void:ShowFriendlyFire(_arg0)
+void:ShowFriendlyFire(client)
 {
 	if (g_Cvar_FriendlyFire)
 	{
-		new var1 = 0;
+		new String:phrase[96];
 		if (ConVar.BoolValue.get(g_Cvar_FriendlyFire))
 		{
-			strcopy(var1, 24, "Friendly Fire On");
+			strcopy(phrase, 24, "Friendly Fire On");
 		}
 		else
 		{
-			strcopy(var1, 24, "Friendly Fire Off");
+			strcopy(phrase, 24, "Friendly Fire Off");
 		}
 		if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 		{
-			PrintToChatAll("[SM] %t", var1);
+			PrintToChatAll("[SM] %t", phrase);
 		}
 		else
 		{
-			PrintToChat(_arg0, "[SM] %t", var1);
+			PrintToChat(client, "[SM] %t", phrase);
 		}
 	}
 	return 0;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-void:PrintToChatAll(String:_arg0[], any:_arg1)
+void:PrintToChatAll(String:format[], any:_arg1)
 {
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		if (IsClientInGame(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintToChat(var2, "%s", var1);
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintToChat(i, "%s", buffer);
 		}
-		var2++;
+		i++;
 	}
 	return 0;
 }
 
-void:ShowMOTDPanel(_arg0, String:_arg1[], String:_arg2[], _arg3)
+void:ShowMOTDPanel(client, String:title[], String:msg[], type)
 {
-	new var1 = 0;
-	IntToString(_arg3, var1, 3);
-	new var2;
-	var2 = KeyValues.KeyValues("data", "", "");
-	KeyValues.SetString(var2, "title", _arg1[0]);
-	KeyValues.SetString(var2, "type", var1);
-	KeyValues.SetString(var2, "msg", _arg2[0]);
-	ShowVGUIPanel(_arg0, "info", var2, true);
-	CloseHandle(var2);
-	var2 = 0;
+	new String:num[16];
+	IntToString(type, num, 3);
+	new KeyValues:kv = KeyValues.KeyValues("data", "", "");
+	KeyValues.SetString(kv, "title", title[0]);
+	KeyValues.SetString(kv, "type", num);
+	KeyValues.SetString(kv, "msg", msg[0]);
+	ShowVGUIPanel(client, "info", kv, true);
+	CloseHandle(kv);
+	kv = 0;
 	return 0;
 }
 
-void:ShowTimeLeft(_arg0, _arg1)
+void:ShowTimeLeft(client, who)
 {
-	new var8 = 0;
-	new var9 = 0;
-	new var10 = 0;
-	new var11 = 0;
+	new bool:lastround;
+	new bool:written;
+	new bool:notimelimit;
+	new String:finalOutput[4096];
 	new var2;
-	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
+	if (who && (who == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
 	{
-		_arg0 = 0;
+		client = 0;
 	}
-	new var12 = 0;
-	if (GetMapTimeLeft(var12))
+	new timeleft;
+	if (GetMapTimeLeft(timeleft))
 	{
-		new var13 = 0;
-		new var14 = 0;
-		new var15 = 0;
-		if (0 < var12)
+		new mins;
+		new secs;
+		new timelimit;
+		if (0 < timeleft)
 		{
-			var13 = var12 / 60;
-			var14 = var12 % 60;
-			var9 = 1;
-			FormatEx(var11, 1024, "%T %d:%02d", "Timeleft", _arg0, var13, var14);
+			mins = timeleft / 60;
+			secs = timeleft % 60;
+			written = true;
+			FormatEx(finalOutput, 1024, "%T %d:%02d", "Timeleft", client, mins, secs);
 		}
 		else
 		{
 			new var3;
-			if (GetMapTimeLimit(var15) && var15)
+			if (GetMapTimeLimit(timelimit) && timelimit)
 			{
-				var10 = 1;
+				notimelimit = true;
 			}
-			var8 = 1;
+			lastround = true;
 		}
 	}
-	if (!var8)
+	if (!lastround)
 	{
 		if (g_Cvar_WinLimit)
 		{
-			new var16;
-			var16 = ConVar.IntValue.get(g_Cvar_WinLimit);
-			if (0 < var16)
+			new winlimit = ConVar.IntValue.get(g_Cvar_WinLimit);
+			if (0 < winlimit)
 			{
-				if (var9)
+				if (written)
 				{
-					new var17;
-					var17 = strlen(var11);
-					if (var17 < 1024)
+					new len = strlen(finalOutput);
+					if (len < 1024)
 					{
-						if (var16 > 1)
+						if (winlimit > 1)
 						{
-							FormatEx(var17 + var11, 1024 - var17, "%T", "WinLimitAppendPlural", _arg0, var16);
+							FormatEx(finalOutput[len], 1024 - len, "%T", "WinLimitAppendPlural", client, winlimit);
 						}
-						FormatEx(var17 + var11, 1024 - var17, "%T", "WinLimitAppend", _arg0);
+						FormatEx(finalOutput[len], 1024 - len, "%T", "WinLimitAppend", client);
 					}
 				}
-				if (var16 > 1)
+				if (winlimit > 1)
 				{
-					FormatEx(var11, 1024, "%T", "WinLimitPlural", _arg0, var16);
+					FormatEx(finalOutput, 1024, "%T", "WinLimitPlural", client, winlimit);
 				}
 				else
 				{
-					FormatEx(var11, 1024, "%T", "WinLimit", _arg0);
+					FormatEx(finalOutput, 1024, "%T", "WinLimit", client);
 				}
-				var9 = 1;
+				written = true;
 			}
 		}
 		if (g_Cvar_FragLimit)
 		{
-			new var18;
-			var18 = ConVar.IntValue.get(g_Cvar_FragLimit);
-			if (0 < var18)
+			new fraglimit = ConVar.IntValue.get(g_Cvar_FragLimit);
+			if (0 < fraglimit)
 			{
-				if (var9)
+				if (written)
 				{
-					new var19;
-					var19 = strlen(var11);
-					if (var19 < 1024)
+					new len = strlen(finalOutput);
+					if (len < 1024)
 					{
-						if (var18 > 1)
+						if (fraglimit > 1)
 						{
-							FormatEx(var19 + var11, 1024 - var19, "%T", "FragLimitAppendPlural", _arg0, var18);
+							FormatEx(finalOutput[len], 1024 - len, "%T", "FragLimitAppendPlural", client, fraglimit);
 						}
-						FormatEx(var19 + var11, 1024 - var19, "%T", "FragLimitAppend", _arg0);
+						FormatEx(finalOutput[len], 1024 - len, "%T", "FragLimitAppend", client);
 					}
 				}
-				if (var18 > 1)
+				if (fraglimit > 1)
 				{
-					FormatEx(var11, 1024, "%T", "FragLimitPlural", _arg0, var18);
+					FormatEx(finalOutput, 1024, "%T", "FragLimitPlural", client, fraglimit);
 				}
 				else
 				{
-					FormatEx(var11, 1024, "%T", "FragLimit", _arg0);
+					FormatEx(finalOutput, 1024, "%T", "FragLimit", client);
 				}
-				var9 = 1;
+				written = true;
 			}
 		}
 		if (g_Cvar_MaxRounds)
 		{
-			new var20;
-			var20 = ConVar.IntValue.get(g_Cvar_MaxRounds);
-			if (0 < var20)
+			new maxrounds = ConVar.IntValue.get(g_Cvar_MaxRounds);
+			if (0 < maxrounds)
 			{
-				new var21;
-				var21 = var20 - g_TotalRounds;
-				if (var9)
+				new remaining = maxrounds - g_TotalRounds;
+				if (written)
 				{
-					new var22;
-					var22 = strlen(var11);
-					if (var22 < 1024)
+					new len = strlen(finalOutput);
+					if (len < 1024)
 					{
-						if (var21 > 1)
+						if (remaining > 1)
 						{
-							FormatEx(var22 + var11, 1024 - var22, "%T", "MaxRoundsAppendPlural", _arg0, var21);
+							FormatEx(finalOutput[len], 1024 - len, "%T", "MaxRoundsAppendPlural", client, remaining);
 						}
-						FormatEx(var22 + var11, 1024 - var22, "%T", "MaxRoundsAppend", _arg0);
+						FormatEx(finalOutput[len], 1024 - len, "%T", "MaxRoundsAppend", client);
 					}
 				}
 				else
 				{
-					if (var21 > 1)
+					if (remaining > 1)
 					{
-						FormatEx(var11, 1024, "%T", "MaxRoundsPlural", _arg0, var21);
+						FormatEx(finalOutput, 1024, "%T", "MaxRoundsPlural", client, remaining);
 					}
 					else
 					{
-						FormatEx(var11, 1024, "%T", "MaxRounds", _arg0);
+						FormatEx(finalOutput, 1024, "%T", "MaxRounds", client);
 					}
-					var9 = 1;
+					written = true;
 				}
 			}
 		}
 	}
-	if (var8)
+	if (lastround)
 	{
-		FormatEx(var11, 1024, "%T", "LastRound", _arg0);
+		FormatEx(finalOutput, 1024, "%T", "LastRound", client);
 	}
 	else
 	{
 		new var4;
-		if (var10 && var9)
+		if (notimelimit && written)
 		{
-			FormatEx(var11, 1024, "%T", "NoTimelimit", _arg0);
+			FormatEx(finalOutput, 1024, "%T", "NoTimelimit", client);
 		}
 	}
 	new var6;
-	if (_arg1 && (_arg1 == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
+	if (who && (who == 1 && ConVar.IntValue.get(g_Cvar_TriggerShow)))
 	{
-		PrintToChatAll("[SM] %s", var11);
+		PrintToChatAll("[SM] %s", finalOutput);
 	}
 	else
 	{
 		new var7;
-		if (_arg0 && IsClientInGame(_arg0))
+		if (client && IsClientInGame(client))
 		{
-			PrintToChat(_arg0, "[SM] %s", var11);
+			PrintToChat(client, "[SM] %s", finalOutput);
 		}
 	}
-	if (!_arg0)
+	if (!client)
 	{
-		PrintToServer("[SM] %s", var11);
+		PrintToServer("[SM] %s", finalOutput);
 	}
 	return 0;
 }
 
-public Action:Command_FriendlyFire(_arg0, _arg1)
+public Action:Command_FriendlyFire(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
-		if (IsClientInGame(_arg0))
+		if (IsClientInGame(client))
 		{
-			ShowFriendlyFire(_arg0);
+			ShowFriendlyFire(client);
 			return 3;
 		}
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 3344);
+	ReplyToCommand(client, "[SM] %t", 3344);
 	return 3;
 }
 
-public Action:Command_Motd(_arg0, _arg1)
+public Action:Command_Motd(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
-		if (IsClientInGame(_arg0))
+		if (IsClientInGame(client))
 		{
-			ShowMOTDPanel(_arg0, "Message Of The Day", "motd", 1);
+			ShowMOTDPanel(client, "Message Of The Day", "motd", 1);
 			return 3;
 		}
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 3284);
+	ReplyToCommand(client, "[SM] %t", 3284);
 	return 3;
 }
 
-public Action:Command_Nextmap(_arg0, _arg1)
+public Action:Command_Nextmap(client, args)
 {
 	new var1;
-	if (_arg0 && IsClientInGame(_arg0))
+	if (client && IsClientInGame(client))
 	{
 		return 3;
 	}
-	new var3 = 0;
-	GetNextMap(var3, 256);
+	new String:map[1024];
+	GetNextMap(map, 256);
 	new var2;
 	if (mapchooser && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 3240);
+		ReplyToCommand(client, "[SM] %t", 3240);
 	}
 	else
 	{
-		GetMapDisplayName(var3, var3, 256);
-		ReplyToCommand(_arg0, "[SM] %t", "Next Map", var3);
+		GetMapDisplayName(map, map, 256);
+		ReplyToCommand(client, "[SM] %t", "Next Map", map);
 	}
 	return 3;
 }
 
-public Action:Command_Timeleft(_arg0, _arg1)
+public Action:Command_Timeleft(client, args)
 {
-	ShowTimeLeft(_arg0, 2);
+	ShowTimeLeft(client, 2);
 	return 3;
 }
 
-public void:ConVarChange_TimeleftInterval(ConVar:_arg0, String:_arg1[], String:_arg2[])
+public void:ConVarChange_TimeleftInterval(ConVar:convar, String:oldValue[], String:newValue[])
 {
-	new var1;
-	var1 = StringToFloat(_arg2[0]);
-	if (var1 < 1.0)
+	new Float:newval = StringToFloat(newValue[0]);
+	if (newval < 1.0)
 	{
 		if (g_Timer_TimeShow)
 		{
@@ -337,65 +328,65 @@ public void:ConVarChange_TimeleftInterval(ConVar:_arg0, String:_arg1[], String:_
 	if (g_Timer_TimeShow)
 	{
 		KillTimer(g_Timer_TimeShow, false);
-		g_Timer_TimeShow = CreateTimer(var1, 39, 0, 1);
+		g_Timer_TimeShow = CreateTimer(newval, 39, 0, 1);
 	}
 	else
 	{
-		g_Timer_TimeShow = CreateTimer(var1, 39, 0, 1);
+		g_Timer_TimeShow = CreateTimer(newval, 39, 0, 1);
 	}
 	return 0;
 }
 
-public void:Event_GameStart(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_GameStart(Event:event, String:name[], bool:dontBroadcast)
 {
 	g_TotalRounds = 0;
 	return 0;
 }
 
-public void:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_RoundEnd(Event:event, String:name[], bool:dontBroadcast)
 {
 	g_TotalRounds += 1;
 	return 0;
 }
 
-public void:Event_TFRestartRound(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_TFRestartRound(Event:event, String:name[], bool:dontBroadcast)
 {
 	g_TotalRounds = 0;
 	return 0;
 }
 
-public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_TeamPlayWinPanel(Event:event, String:name[], bool:dontBroadcast)
 {
 	new var1;
-	if (Event.GetInt(_arg0, "round_complete", 0) == 1 || StrEqual(_arg1[0], "arena_win_panel", true))
+	if (Event.GetInt(event, "round_complete", 0) == 1 || StrEqual(name[0], "arena_win_panel", true))
 	{
 		g_TotalRounds += 1;
 	}
 	return 0;
 }
 
-public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+public void:OnClientSayCommand_Post(client, String:command[], String:sArgs[])
 {
 	if (!(IsChatTrigger()))
 	{
-		if (strcmp(_arg2[0], "timeleft", false))
+		if (strcmp(sArgs[0], "timeleft", false))
 		{
-			if (strcmp(_arg2[0], "thetime", false))
+			if (strcmp(sArgs[0], "thetime", false))
 			{
-				if (strcmp(_arg2[0], "ff", false))
+				if (strcmp(sArgs[0], "ff", false))
 				{
-					if (strcmp(_arg2[0], "currentmap", false))
+					if (strcmp(sArgs[0], "currentmap", false))
 					{
-						if (strcmp(_arg2[0], "nextmap", false))
+						if (strcmp(sArgs[0], "nextmap", false))
 						{
-							if (!(strcmp(_arg2[0], "motd", false)))
+							if (!(strcmp(sArgs[0], "motd", false)))
 							{
-								ShowMOTDPanel(_arg0, "Message Of The Day", "motd", 1);
+								ShowMOTDPanel(client, "Message Of The Day", "motd", 1);
 							}
 						}
-						new var5 = 0;
-						GetNextMap(var5, 256);
-						GetMapDisplayName(var5, var5, 256);
+						new String:map[1024];
+						GetNextMap(map, 256);
+						GetMapDisplayName(map, map, 256);
 						if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 						{
 							new var1;
@@ -405,7 +396,7 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 							}
 							else
 							{
-								PrintToChatAll("[SM] %t", "Next Map", var5);
+								PrintToChatAll("[SM] %t", "Next Map", map);
 							}
 						}
 						else
@@ -413,52 +404,52 @@ public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
 							new var2;
 							if (mapchooser && EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 							{
-								PrintToChat(_arg0, "[SM] %t", 3536);
+								PrintToChat(client, "[SM] %t", 3536);
 							}
-							PrintToChat(_arg0, "[SM] %t", "Next Map", var5);
+							PrintToChat(client, "[SM] %t", "Next Map", map);
 						}
 					}
-					new var4 = 0;
-					GetCurrentMap(var4, 64);
+					new String:map[256];
+					GetCurrentMap(map, 64);
 					if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 					{
-						PrintToChatAll("[SM] %t", "Current Map", var4);
+						PrintToChatAll("[SM] %t", "Current Map", map);
 					}
 					else
 					{
-						PrintToChat(_arg0, "[SM] %t", "Current Map", var4);
+						PrintToChat(client, "[SM] %t", "Current Map", map);
 					}
 				}
-				ShowFriendlyFire(_arg0);
+				ShowFriendlyFire(client);
 			}
-			new var3 = 0;
-			FormatTime(var3, 64, NULL_STRING, -1);
+			new String:ctime[256];
+			FormatTime(ctime, 64, NULL_STRING, -1);
 			if (ConVar.IntValue.get(g_Cvar_TriggerShow))
 			{
-				PrintToChatAll("[SM] %t", "Thetime", var3);
+				PrintToChatAll("[SM] %t", "Thetime", ctime);
 			}
 			else
 			{
-				PrintToChat(_arg0, "[SM] %t", "Thetime", var3);
+				PrintToChat(client, "[SM] %t", "Thetime", ctime);
 			}
 		}
-		ShowTimeLeft(_arg0, 1);
+		ShowTimeLeft(client, 1);
 	}
 	return 0;
 }
 
-public void:OnLibraryAdded(String:_arg0[])
+public void:OnLibraryAdded(String:name[])
 {
-	if (StrEqual(_arg0[0], "mapchooser", true))
+	if (StrEqual(name[0], "mapchooser", true))
 	{
 		mapchooser = true;
 	}
 	return 0;
 }
 
-public void:OnLibraryRemoved(String:_arg0[])
+public void:OnLibraryRemoved(String:name[])
 {
-	if (StrEqual(_arg0[0], "mapchooser", true))
+	if (StrEqual(name[0], "mapchooser", true))
 	{
 		mapchooser = false;
 	}
@@ -483,9 +474,9 @@ public void:OnPluginStart()
 	RegConsoleCmd("motd", 13, "", 0);
 	RegConsoleCmd("ff", 11, "", 0);
 	ConVar.AddChangeHook(g_Cvar_TimeleftInterval, 19);
-	new var1 = 0;
-	GetGameFolderName(var1, 64);
-	if (strcmp(var1, "insurgency", true))
+	new String:folder[256];
+	GetGameFolderName(folder, 64);
+	if (strcmp(folder, "insurgency", true))
 	{
 		HookEvent("game_start", 21, 1);
 	}
@@ -493,7 +484,7 @@ public void:OnPluginStart()
 	{
 		HookEvent("game_newmap", 21, 1);
 	}
-	if (strcmp(var1, "nucleardawn", true))
+	if (strcmp(folder, "nucleardawn", true))
 	{
 		HookEvent("round_end", 23, 1);
 	}
@@ -511,7 +502,7 @@ public void:OnPluginStart()
 	return 0;
 }
 
-public Action:Timer_DisplayTimeleft(Handle:_arg0)
+public Action:Timer_DisplayTimeleft(Handle:timer)
 {
 	ShowTimeLeft(0, 0);
 	return 0;

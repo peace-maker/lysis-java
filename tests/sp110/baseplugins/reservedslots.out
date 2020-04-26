@@ -40,22 +40,21 @@ void:CheckHiddenSlots()
 	return 0;
 }
 
-void:SetVisibleMaxSlots(_arg0, _arg1)
+void:SetVisibleMaxSlots(clients, limit)
 {
-	new var1;
-	var1 = _arg0;
-	if (GetMaxHumanPlayers() == _arg0)
+	new num = clients;
+	if (GetMaxHumanPlayers() == clients)
 	{
-		var1 = GetMaxHumanPlayers();
+		num = GetMaxHumanPlayers();
 	}
 	else
 	{
-		if (_arg0 < _arg1)
+		if (clients < limit)
 		{
-			var1 = _arg1;
+			num = limit;
 		}
 	}
-	ConVar.IntValue.set(sv_visiblemaxplayers, var1);
+	ConVar.IntValue.set(sv_visiblemaxplayers, num);
 	return 0;
 }
 
@@ -67,145 +66,136 @@ void:ResetVisibleMax()
 
 SelectKickClient()
 {
-	new var2;
-	var2 = ConVar.IntValue.get(sm_reserve_kicktype);
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	new var9 = 1;
-	while (var9 <= MaxClients)
+	new KickType:type = ConVar.IntValue.get(sm_reserve_kicktype);
+	new Float:highestValue = 0.0;
+	new highestValueId;
+	new Float:highestSpecValue = 0.0;
+	new highestSpecValueId;
+	new bool:specFound;
+	new Float:value = 0.0;
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientConnected(var9))
+		if (IsClientConnected(i))
 		{
-			new var10;
-			var10 = GetUserFlagBits(var9);
+			new flags = GetUserFlagBits(i);
 			new var1;
-			if (!(IsFakeClient(var9) || var10 & 16384 || var10 & 1 || CheckCommandAccess(var9, "sm_reskick_immunity", 1, true)))
+			if (!(IsFakeClient(i) || flags & 16384 || flags & 1 || CheckCommandAccess(i, "sm_reskick_immunity", 1, true)))
 			{
-				var8 = 0;
-				if (IsClientInGame(var9))
+				value = 0.0;
+				if (IsClientInGame(i))
 				{
-					if (var2)
+					if (type)
 					{
-						if (var2 == 1)
+						if (type == 1)
 						{
-							var8 = GetClientTime(var9);
+							value = GetClientTime(i);
 						}
-						var8 = GetRandomFloat(0.0, 100.0);
+						value = GetRandomFloat(0.0, 100.0);
 					}
 					else
 					{
-						var8 = GetClientAvgLatency(var9, 0);
+						value = GetClientAvgLatency(i, 0);
 					}
-					if (IsClientObserver(var9))
+					if (IsClientObserver(i))
 					{
-						var7 = 1;
-						if (var8 > var5)
+						specFound = true;
+						if (value > highestSpecValue)
 						{
-							var5 = var8;
-							var6 = var9;
+							highestSpecValue = value;
+							highestSpecValueId = i;
 						}
 					}
 				}
-				if (var8 >= var3)
+				if (value >= highestValue)
 				{
-					var3 = var8;
-					var4 = var9;
+					highestValue = value;
+					highestValueId = i;
 				}
 			}
 		}
-		var9++;
+		i++;
 	}
-	if (var7)
+	if (specFound)
 	{
-		return var6;
+		return highestSpecValueId;
 	}
-	return var4;
+	return highestValueId;
 }
 
-public void:OnClientDisconnect_Post(_arg0)
+public void:OnClientDisconnect_Post(client)
 {
 	CheckHiddenSlots();
-	if (g_isAdmin[_arg0])
+	if (g_isAdmin[client])
 	{
 		g_adminCount -= 1;
-		g_isAdmin[_arg0] = 0;
+		g_isAdmin[client] = 0;
 	}
 	return 0;
 }
 
-public void:OnClientPostAdminCheck(_arg0)
+public void:OnClientPostAdminCheck(client)
 {
-	new var5;
-	var5 = ConVar.IntValue.get(sm_reserved_slots);
-	if (0 < var5)
+	new reserved = ConVar.IntValue.get(sm_reserved_slots);
+	if (0 < reserved)
 	{
-		new var6;
-		var6 = GetClientCount(false);
-		new var7;
-		var7 = GetMaxHumanPlayers() - var5;
-		new var8;
-		var8 = GetUserFlagBits(_arg0);
-		new var9;
-		var9 = ConVar.IntValue.get(sm_reserve_type);
-		if (var9)
+		new clients = GetClientCount(false);
+		new limit = GetMaxHumanPlayers() - reserved;
+		new flags = GetUserFlagBits(client);
+		new type = ConVar.IntValue.get(sm_reserve_type);
+		if (type)
 		{
-			if (var9 == 1)
+			if (type == 1)
 			{
-				if (var6 > var7)
+				if (clients > limit)
 				{
 					new var2;
-					if (var8 & 16384 || var8 & 1)
+					if (flags & 16384 || flags & 1)
 					{
-						new var10;
-						var10 = SelectKickClient();
-						if (var10)
+						new target = SelectKickClient();
+						if (target)
 						{
-							CreateTimer(0.1, 21, var10, 0);
+							CreateTimer(0.1, 21, target, 0);
 						}
 					}
-					CreateTimer(0.1, 21, _arg0, 0);
+					CreateTimer(0.1, 21, client, 0);
 				}
 			}
-			if (var9 == 2)
+			if (type == 2)
 			{
 				new var3;
-				if (var8 & 16384 || var8 & 1)
+				if (flags & 16384 || flags & 1)
 				{
 					g_adminCount += 1;
-					g_isAdmin[_arg0] = 1;
+					g_isAdmin[client] = 1;
 				}
 				new var4;
-				if (var6 > var7 && g_adminCount < ConVar.IntValue.get(sm_reserve_maxadmins))
+				if (clients > limit && g_adminCount < ConVar.IntValue.get(sm_reserve_maxadmins))
 				{
-					if (g_isAdmin[_arg0])
+					if (g_isAdmin[client])
 					{
-						new var11;
-						var11 = SelectKickClient();
-						if (var11)
+						new target = SelectKickClient();
+						if (target)
 						{
-							CreateTimer(0.1, 21, var11, 0);
+							CreateTimer(0.1, 21, target, 0);
 						}
 					}
-					CreateTimer(0.1, 21, _arg0, 0);
+					CreateTimer(0.1, 21, client, 0);
 				}
 			}
 		}
 		else
 		{
 			new var1;
-			if (var6 <= var7 || IsFakeClient(_arg0) || var8 & 16384 || var8 & 1)
+			if (clients <= limit || IsFakeClient(client) || flags & 16384 || flags & 1)
 			{
 				if (ConVar.BoolValue.get(sm_hide_slots))
 				{
-					SetVisibleMaxSlots(var6, var7);
+					SetVisibleMaxSlots(clients, limit);
 				}
 				return 0;
 			}
-			CreateTimer(0.1, 21, _arg0, 0);
+			CreateTimer(0.1, 21, client, 0);
 		}
 	}
 	return 0;
@@ -243,27 +233,26 @@ public void:OnPluginStart()
 	return 0;
 }
 
-public Action:OnTimedKick(Handle:_arg0, any:_arg1)
+public Action:OnTimedKick(Handle:timer, any:client)
 {
 	new var1;
-	if (_arg1 && IsClientInGame(_arg1))
+	if (client && IsClientInGame(client))
 	{
 		return 3;
 	}
-	KickClient(_arg1, "%T", "Slot reserved", _arg1);
+	KickClient(client, "%T", "Slot reserved", client);
 	CheckHiddenSlots();
 	return 3;
 }
 
-public void:SlotCountChanged(ConVar:_arg0, String:_arg1[], String:_arg2[])
+public void:SlotCountChanged(ConVar:convar, String:oldValue[], String:newValue[])
 {
-	new var1;
-	var1 = ConVar.IntValue.get(_arg0);
-	if (var1)
+	new slotcount = ConVar.IntValue.get(convar);
+	if (slotcount)
 	{
 		if (ConVar.BoolValue.get(sm_hide_slots))
 		{
-			SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - var1);
+			SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - slotcount);
 		}
 	}
 	else
@@ -273,9 +262,9 @@ public void:SlotCountChanged(ConVar:_arg0, String:_arg1[], String:_arg2[])
 	return 0;
 }
 
-public void:SlotHideChanged(ConVar:_arg0, String:_arg1[], String:_arg2[])
+public void:SlotHideChanged(ConVar:convar, String:oldValue[], String:newValue[])
 {
-	if (ConVar.BoolValue.get(_arg0))
+	if (ConVar.BoolValue.get(convar))
 	{
 		SetVisibleMaxSlots(GetClientCount(false), GetMaxHumanPlayers() - ConVar.IntValue.get(sm_reserved_slots));
 	}

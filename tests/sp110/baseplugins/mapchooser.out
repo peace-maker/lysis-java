@@ -68,16 +68,16 @@ new MapChange:g_ChangeTime;
 new GlobalForward:g_NominationsResetForward;
 new GlobalForward:g_MapVoteStartedForward;
 new g_winCount[10];
-void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
+void:InitiateVote(MapChange:when, ArrayList:inputlist)
 {
 	g_WaitingForVote = true;
 	if (IsVoteInProgress(0))
 	{
-		new var6 = 0;
-		g_RetryTimer = CreateDataTimer(5.0, 83, var6, 2);
-		DataPack.WriteCell(var6, _arg0, false);
-		DataPack.WriteCell(var6, _arg1, false);
-		DataPack.Reset(var6, false);
+		new DataPack:data;
+		g_RetryTimer = CreateDataTimer(5.0, 83, data, 2);
+		DataPack.WriteCell(data, when, false);
+		DataPack.WriteCell(data, inputlist, false);
+		DataPack.Reset(data, false);
 		return 0;
 	}
 	new var1;
@@ -85,7 +85,7 @@ void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
 	{
 		return 0;
 	}
-	g_ChangeTime = _arg0;
+	g_ChangeTime = when;
 	g_WaitingForVote = false;
 	g_HasVoteStarted = true;
 	g_VoteMenu = Menu.Menu(49, -1);
@@ -93,81 +93,75 @@ void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
 	Menu.VoteResultCallback.set(g_VoteMenu, 47);
 	Call_StartForward(g_MapVoteStartedForward);
 	Call_Finish(0);
-	new var7 = 0;
-	if (_arg1)
+	new String:map[1024];
+	if (inputlist)
 	{
-		new var18;
-		var18 = ArrayList.Length.get(_arg1);
-		new var19 = 0;
-		while (var19 < var18)
+		new size = ArrayList.Length.get(inputlist);
+		new i;
+		while (i < size)
 		{
-			ArrayList.GetString(_arg1, var19, var7, 256);
-			if (IsMapValid(var7))
+			ArrayList.GetString(inputlist, i, map, 256);
+			if (IsMapValid(map))
 			{
-				new var20 = 0;
-				GetMapDisplayName(var7, var20, 256);
-				Menu.AddItem(g_VoteMenu, var7, var20, 0);
+				new String:displayName[1024];
+				GetMapDisplayName(map, displayName, 256);
+				Menu.AddItem(g_VoteMenu, map, displayName, 0);
 			}
-			var19++;
+			i++;
 		}
 	}
 	else
 	{
-		new var8;
-		var8 = ArrayList.Length.get(g_NominateList);
-		new var9;
-		var9 = ConVar.IntValue.get(g_Cvar_IncludeMaps);
-		new var10;
+		new nominateCount = ArrayList.Length.get(g_NominateList);
+		new voteSize = ConVar.IntValue.get(g_Cvar_IncludeMaps);
+		decl nominationsToAdd;
 		new var2;
-		if (var8 >= var9)
+		if (nominateCount >= voteSize)
 		{
-			var2 = var9;
+			var2 = voteSize;
 		}
 		else
 		{
-			var2 = var8;
+			var2 = nominateCount;
 		}
-		var10 = var2;
-		new var11 = 0;
-		while (var11 < var10)
+		nominationsToAdd = var2;
+		new i;
+		while (i < nominationsToAdd)
 		{
-			new var12 = 0;
-			ArrayList.GetString(g_NominateList, var11, var7, 256);
-			GetMapDisplayName(var7, var12, 256);
-			Menu.AddItem(g_VoteMenu, var7, var12, 0);
-			RemoveStringFromArray(g_NextMapList, var7);
+			new String:displayName[1024];
+			ArrayList.GetString(g_NominateList, i, map, 256);
+			GetMapDisplayName(map, displayName, 256);
+			Menu.AddItem(g_VoteMenu, map, displayName, 0);
+			RemoveStringFromArray(g_NextMapList, map);
 			Call_StartForward(g_NominationsResetForward);
-			Call_PushString(var7);
-			Call_PushCell(ArrayList.Get(g_NominateOwners, var11, 0, false));
+			Call_PushString(map);
+			Call_PushCell(ArrayList.Get(g_NominateOwners, i, 0, false));
 			Call_Finish(0);
-			var11++;
+			i++;
 		}
-		new var13;
-		var13 = var10;
-		while (var13 < var8)
+		new i = nominationsToAdd;
+		while (i < nominateCount)
 		{
-			ArrayList.GetString(g_NominateList, var13, var7, 256);
+			ArrayList.GetString(g_NominateList, i, map, 256);
 			Call_StartForward(g_NominationsResetForward);
-			Call_PushString(var7);
-			Call_PushCell(ArrayList.Get(g_NominateOwners, var13, 0, false));
+			Call_PushString(map);
+			Call_PushCell(ArrayList.Get(g_NominateOwners, i, 0, false));
 			Call_Finish(0);
-			var13++;
+			i++;
 		}
-		new var14;
-		var14 = var10;
-		new var15 = 0;
-		new var16;
-		var16 = ArrayList.Length.get(g_NextMapList);
-		while (var14 < var9)
+		new i = nominationsToAdd;
+		new count;
+		new availableMaps = ArrayList.Length.get(g_NextMapList);
+		while (i < voteSize)
 		{
-			if (!(var15 >= var16))
+			if (!(count >= availableMaps))
 			{
-				ArrayList.GetString(g_NextMapList, var15, var7, 256);
-				var15++;
-				new var17 = 0;
-				GetMapDisplayName(var7, var17, 256);
-				Menu.AddItem(g_VoteMenu, var7, var17, 0);
-				var14++;
+				ArrayList.GetString(g_NextMapList, count, map, 256);
+				count++;
+				new String:displayName[1024];
+				GetMapDisplayName(map, displayName, 256);
+				Menu.AddItem(g_VoteMenu, map, displayName, 0);
+				i++;
 			}
 			ArrayList.Clear(g_NominateOwners);
 			ArrayList.Clear(g_NominateList);
@@ -176,7 +170,7 @@ void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
 		ArrayList.Clear(g_NominateList);
 	}
 	new var3;
-	if ((_arg0 && _arg0 == 1) && ConVar.BoolValue.get(g_Cvar_DontChange))
+	if ((when && when == 1) && ConVar.BoolValue.get(g_Cvar_DontChange))
 	{
 		Menu.AddItem(g_VoteMenu, "##dontchange##", "Don't Change", 0);
 	}
@@ -190,10 +184,9 @@ void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
 	}
 	if (Menu.ItemCount.get(g_VoteMenu))
 	{
-		new var21;
-		var21 = ConVar.IntValue.get(g_Cvar_VoteDuration);
+		new voteDuration = ConVar.IntValue.get(g_Cvar_VoteDuration);
 		Menu.ExitButton.set(g_VoteMenu, false);
-		Menu.DisplayVoteToAll(g_VoteMenu, var21, 0);
+		Menu.DisplayVoteToAll(g_VoteMenu, voteDuration, 0);
 		LogAction(-1, -1, "Voting for next map has started.");
 		PrintToChatAll("[SM] %t", 5364);
 		return 0;
@@ -204,13 +197,12 @@ void:InitiateVote(MapChange:_arg0, ArrayList:_arg1)
 	return 0;
 }
 
-bool:RemoveStringFromArray(ArrayList:_arg0, String:_arg1[])
+bool:RemoveStringFromArray(ArrayList:array, String:str[])
 {
-	new var1;
-	var1 = ArrayList.FindString(_arg0, _arg1[0]);
-	if (var1 != -1)
+	new index = ArrayList.FindString(array, str[0]);
+	if (index != -1)
 	{
-		ArrayList.Erase(_arg0, var1);
+		ArrayList.Erase(array, index);
 		return 1;
 	}
 	return 0;
@@ -219,55 +211,53 @@ bool:RemoveStringFromArray(ArrayList:_arg0, String:_arg1[])
 void:CreateNextVote()
 {
 	ArrayList.Clear(g_NextMapList);
-	new var3 = 0;
-	new var4;
-	var4 = ArrayList.ArrayList(ByteCountToCells(256), 0);
-	new var5 = 0;
-	while (ArrayList.Length.get(g_MapList) > var5)
+	new String:map[1024];
+	new ArrayList:tempMaps = ArrayList.ArrayList(ByteCountToCells(256), 0);
+	new i;
+	while (ArrayList.Length.get(g_MapList) > i)
 	{
-		ArrayList.GetString(g_MapList, var5, var3, 256);
-		if (FindMap(var3, var3, 256) != 1)
+		ArrayList.GetString(g_MapList, i, map, 256);
+		if (FindMap(map, map, 256) != 1)
 		{
-			ArrayList.PushString(var4, var3);
+			ArrayList.PushString(tempMaps, map);
 		}
-		var5++;
+		i++;
 	}
-	GetCurrentMap(var3, 256);
-	RemoveStringFromArray(var4, var3);
+	GetCurrentMap(map, 256);
+	RemoveStringFromArray(tempMaps, map);
 	new var1;
-	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) && ArrayList.Length.get(var4) > ConVar.IntValue.get(g_Cvar_ExcludeMaps))
+	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) && ArrayList.Length.get(tempMaps) > ConVar.IntValue.get(g_Cvar_ExcludeMaps))
 	{
-		new var6 = 0;
-		while (ArrayList.Length.get(g_OldMapList) > var6)
+		new i;
+		while (ArrayList.Length.get(g_OldMapList) > i)
 		{
-			ArrayList.GetString(g_OldMapList, var6, var3, 256);
-			RemoveStringFromArray(var4, var3);
-			var6++;
+			ArrayList.GetString(g_OldMapList, i, map, 256);
+			RemoveStringFromArray(tempMaps, map);
+			i++;
 		}
 	}
-	new var7;
+	decl limit;
 	new var2;
-	if (ConVar.IntValue.get(g_Cvar_IncludeMaps) < ArrayList.Length.get(var4))
+	if (ConVar.IntValue.get(g_Cvar_IncludeMaps) < ArrayList.Length.get(tempMaps))
 	{
 		var2 = ConVar.IntValue.get(g_Cvar_IncludeMaps);
 	}
 	else
 	{
-		var2 = ArrayList.Length.get(var4);
+		var2 = ArrayList.Length.get(tempMaps);
 	}
-	var7 = var2;
-	new var8 = 0;
-	while (var8 < var7)
+	limit = var2;
+	new i;
+	while (i < limit)
 	{
-		new var9;
-		var9 = GetRandomInt(0, ArrayList.Length.get(var4) + -1);
-		ArrayList.GetString(var4, var9, var3, 256);
-		ArrayList.PushString(g_NextMapList, var3);
-		ArrayList.Erase(var4, var9);
-		var8++;
+		new b = GetRandomInt(0, ArrayList.Length.get(tempMaps) + -1);
+		ArrayList.GetString(tempMaps, b, map, 256);
+		ArrayList.PushString(g_NextMapList, map);
+		ArrayList.Erase(tempMaps, b);
+		i++;
 	}
-	CloseHandle(var4);
-	var4 = 0;
+	CloseHandle(tempMaps);
+	tempMaps = 0;
 	return 0;
 }
 
@@ -281,40 +271,40 @@ bool:CanVoteStart()
 	return 1;
 }
 
-NominateResult:InternalNominateMap(String:_arg0[], bool:_arg1, _arg2)
+NominateResult:InternalNominateMap(String:map[], bool:force, owner)
 {
-	if (IsMapValid(_arg0[0]))
+	if (IsMapValid(map[0]))
 	{
-		if (ArrayList.FindString(g_NominateList, _arg0[0]) != -1)
+		if (ArrayList.FindString(g_NominateList, map[0]) != -1)
 		{
 			return 2;
 		}
-		new var3 = 0;
+		new index;
 		new var1;
-		if (_arg2 && (var3 = ArrayList.FindValue(g_NominateOwners, _arg2, 0)) != -1)
+		if (owner && (index = ArrayList.FindValue(g_NominateOwners, owner, 0)) != -1)
 		{
-			new var4 = 0;
-			ArrayList.GetString(g_NominateList, var3, var4, 256);
+			new String:oldmap[1024];
+			ArrayList.GetString(g_NominateList, index, oldmap, 256);
 			Call_StartForward(g_NominationsResetForward);
-			Call_PushString(var4);
-			Call_PushCell(_arg2);
+			Call_PushString(oldmap);
+			Call_PushCell(owner);
 			Call_Finish(0);
-			ArrayList.SetString(g_NominateList, var3, _arg0[0]);
+			ArrayList.SetString(g_NominateList, index, map[0]);
 			return 1;
 		}
 		new var2;
-		if (ArrayList.Length.get(g_NominateList) >= ConVar.IntValue.get(g_Cvar_IncludeMaps) && _arg1)
+		if (ArrayList.Length.get(g_NominateList) >= ConVar.IntValue.get(g_Cvar_IncludeMaps) && force)
 		{
 			return 4;
 		}
-		ArrayList.PushString(g_NominateList, _arg0[0]);
-		ArrayList.Push(g_NominateOwners, _arg2);
+		ArrayList.PushString(g_NominateList, map[0]);
+		ArrayList.Push(g_NominateOwners, owner);
 		while (ConVar.IntValue.get(g_Cvar_IncludeMaps) < ArrayList.Length.get(g_NominateList))
 		{
-			new var5 = 0;
-			ArrayList.GetString(g_NominateList, 0, var5, 256);
+			new String:oldmap[1024];
+			ArrayList.GetString(g_NominateList, 0, oldmap, 256);
 			Call_StartForward(g_NominationsResetForward);
-			Call_PushString(var5);
+			Call_PushString(oldmap);
 			Call_PushCell(ArrayList.Get(g_NominateOwners, 0, 0, false));
 			Call_Finish(0);
 			ArrayList.Erase(g_NominateList, 0);
@@ -325,107 +315,120 @@ NominateResult:InternalNominateMap(String:_arg0[], bool:_arg1, _arg2)
 	return 3;
 }
 
-bool:InternalRemoveNominationByMap(String:_arg0[])
+bool:InternalRemoveNominationByMap(String:map[])
 {
-	new var1 = 0;
-	while (ArrayList.Length.get(g_NominateList) > var1)
+	new i;
+	while (ArrayList.Length.get(g_NominateList) > i)
 	{
-		new var2 = 0;
-		ArrayList.GetString(g_NominateList, var1, var2, 256);
-		if (!(strcmp(_arg0[0], var2, false)))
+		new String:oldmap[1024];
+		ArrayList.GetString(g_NominateList, i, oldmap, 256);
+		if (!(strcmp(map[0], oldmap, false)))
 		{
 			Call_StartForward(g_NominationsResetForward);
-			Call_PushString(var2);
-			Call_PushCell(ArrayList.Get(g_NominateOwners, var1, 0, false));
+			Call_PushString(oldmap);
+			Call_PushCell(ArrayList.Get(g_NominateOwners, i, 0, false));
 			Call_Finish(0);
-			ArrayList.Erase(g_NominateList, var1);
-			ArrayList.Erase(g_NominateOwners, var1);
+			ArrayList.Erase(g_NominateList, i);
+			ArrayList.Erase(g_NominateOwners, i);
 			return 1;
 		}
-		var1++;
+		i++;
 	}
 	return 0;
 }
 
-bool:InternalRemoveNominationByOwner(_arg0)
+bool:InternalRemoveNominationByOwner(owner)
 {
-	new var2 = 0;
+	new index;
 	new var1;
-	if (_arg0 && (var2 = ArrayList.FindValue(g_NominateOwners, _arg0, 0)) != -1)
+	if (owner && (index = ArrayList.FindValue(g_NominateOwners, owner, 0)) != -1)
 	{
-		new var3 = 0;
-		ArrayList.GetString(g_NominateList, var2, var3, 256);
+		new String:oldmap[1024];
+		ArrayList.GetString(g_NominateList, index, oldmap, 256);
 		Call_StartForward(g_NominationsResetForward);
-		Call_PushString(var3);
-		Call_PushCell(_arg0);
+		Call_PushString(oldmap);
+		Call_PushCell(owner);
 		Call_Finish(0);
-		ArrayList.Erase(g_NominateList, var2);
-		ArrayList.Erase(g_NominateOwners, var2);
+		ArrayList.Erase(g_NominateList, index);
+		ArrayList.Erase(g_NominateOwners, index);
 		return 1;
 	}
 	return 0;
 }
 
-Float:5*0(Float:_arg0, _arg1)
+Float:5*0(Float:oper1, oper2)
 {
-	return _arg0 * float(_arg1);
+	return oper1 * float(oper2);
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-Handle:CreateDataTimer(Float:_arg0, <typeset 0>:_arg1, Handle:_arg2, _arg3)
+Handle:CreateDataTimer(Float:interval, <typeset 0>:func, &Handle:datapack, flags)
 {
-	_arg2 = DataPack.DataPack();
-	_arg3 |= 512;
-	return CreateTimer(_arg0, _arg1, _arg2, _arg3);
+	datapack = DataPack.DataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
 }
 
-bool:Menu.DisplayVoteToAll(Menu:_arg0, _arg1, _arg2)
+bool:Menu.DisplayVoteToAll(Menu:this, time, flags)
 {
-	new var2 = 0;
-
-/* ERROR! null */
- function "Menu.DisplayVoteToAll" (number 10)
-
-void:PrintToChatAll(String:_arg0[], any:_arg1)
-{
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new total;
+	new players[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		new var1;
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintToChat(var2, "%s", var1);
 		}
-		var2++;
+		else
+		{
+			total++;
+			players[0][total] = i;
+		}
+		i++;
+	}
+	return Menu.DisplayVote(this, players[0], total, time, flags);
+}
+
+void:PrintToChatAll(String:format[], any:_arg1)
+{
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
 	}
 	return 0;
 }
 
-ByteCountToCells(_arg0)
+ByteCountToCells(size)
 {
-	if (_arg0)
+	if (size)
 	{
-		return _arg0 + 3 / 4;
+		return size + 3 / 4;
 	}
 	return 1;
 }
 
 void:SetupTimeleftTimer()
 {
-	new var3 = 0;
+	new time;
 	new var1;
-	if (GetMapTimeLeft(var3) && var3 > 0)
+	if (GetMapTimeLeft(time) && time > 0)
 	{
-		new var4;
-		var4 = ConVar.IntValue.get(g_Cvar_StartTime) * 60;
+		new startTime = ConVar.IntValue.get(g_Cvar_StartTime) * 60;
 		new var2;
-		if (var3 - var4 < 0 && ConVar.BoolValue.get(g_Cvar_EndOfMapVote) && g_MapVoteCompleted && g_HasVoteStarted)
+		if (time - startTime < 0 && ConVar.BoolValue.get(g_Cvar_EndOfMapVote) && g_MapVoteCompleted && g_HasVoteStarted)
 		{
 			InitiateVote(2, 0);
 		}
@@ -436,17 +439,17 @@ void:SetupTimeleftTimer()
 				KillTimer(g_VoteTimer, false);
 				g_VoteTimer = 0;
 			}
-			new var5 = 0;
-			g_VoteTimer = CreateDataTimer(float(var3 - var4), 83, var5, 2);
-			DataPack.WriteCell(var5, 2, false);
-			DataPack.WriteCell(var5, 0, false);
-			DataPack.Reset(var5, false);
+			new DataPack:data;
+			g_VoteTimer = CreateDataTimer(float(time - startTime), 83, data, 2);
+			DataPack.WriteCell(data, 2, false);
+			DataPack.WriteCell(data, 0, false);
+			DataPack.Reset(data, false);
 		}
 	}
 	return 0;
 }
 
-public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	RegPluginLibrary("mapchooser");
 	CreateNative("NominateMap", 65);
@@ -461,15 +464,14 @@ public APLRes:AskPluginLoad2(Handle:_arg0, bool:_arg1, String:_arg2[], _arg3)
 	return 0;
 }
 
-public void:CheckMaxRounds(_arg0)
+public void:CheckMaxRounds(roundcount)
 {
 	if (g_Cvar_Maxrounds)
 	{
-		new var1;
-		var1 = ConVar.IntValue.get(g_Cvar_Maxrounds);
-		if (var1)
+		new maxrounds = ConVar.IntValue.get(g_Cvar_Maxrounds);
+		if (maxrounds)
 		{
-			if (var1 - ConVar.IntValue.get(g_Cvar_StartRounds) <= _arg0)
+			if (maxrounds - ConVar.IntValue.get(g_Cvar_StartRounds) <= roundcount)
 			{
 				InitiateVote(2, 0);
 			}
@@ -478,15 +480,14 @@ public void:CheckMaxRounds(_arg0)
 	return 0;
 }
 
-public void:CheckWinLimit(_arg0)
+public void:CheckWinLimit(winner_score)
 {
 	if (g_Cvar_Winlimit)
 	{
-		new var1;
-		var1 = ConVar.IntValue.get(g_Cvar_Winlimit);
-		if (var1)
+		new winlimit = ConVar.IntValue.get(g_Cvar_Winlimit);
+		if (winlimit)
 		{
-			if (var1 - ConVar.IntValue.get(g_Cvar_StartRounds) <= _arg0)
+			if (winlimit - ConVar.IntValue.get(g_Cvar_StartRounds) <= winner_score)
 			{
 				InitiateVote(2, 0);
 			}
@@ -495,36 +496,36 @@ public void:CheckWinLimit(_arg0)
 	return 0;
 }
 
-public Action:Command_Mapvote(_arg0, _arg1)
+public Action:Command_Mapvote(client, args)
 {
 	InitiateVote(2, 0);
 	return 3;
 }
 
-public Action:Command_SetNextmap(_arg0, _arg1)
+public Action:Command_SetNextmap(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_setnextmap <map>");
+		ReplyToCommand(client, "[SM] Usage: sm_setnextmap <map>");
 		return 3;
 	}
-	new var1 = 0;
-	new var2 = 0;
-	GetCmdArg(1, var1, 256);
-	if (FindMap(var1, var2, 256) == 1)
+	new String:map[1024];
+	new String:displayName[1024];
+	GetCmdArg(1, map, 256);
+	if (FindMap(map, displayName, 256) == 1)
 	{
-		ReplyToCommand(_arg0, "[SM] %t", "Map was not found", var1);
+		ReplyToCommand(client, "[SM] %t", "Map was not found", map);
 		return 3;
 	}
-	GetMapDisplayName(var2, var2, 256);
-	ShowActivity2(_arg0, "[SM] ", "%t", "Changed Next Map", var2);
-	LogAction(_arg0, -1, "\"%L\" changed nextmap to \"%s\"", _arg0, var1);
-	SetNextMap(var1);
+	GetMapDisplayName(displayName, displayName, 256);
+	ShowActivity2(client, "[SM] ", "%t", "Changed Next Map", displayName);
+	LogAction(client, -1, "\"%L\" changed nextmap to \"%s\"", client, map);
+	SetNextMap(map);
 	g_MapVoteCompleted = true;
 	return 3;
 }
 
-public void:Event_PlayerDeath(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_PlayerDeath(Event:event, String:name[], bool:dontBroadcast)
 {
 	new var1;
 	if (ArrayList.Length.get(g_MapList) && g_Cvar_Fraglimit && g_HasVoteStarted)
@@ -540,11 +541,10 @@ public void:Event_PlayerDeath(Event:_arg0, String:_arg1[], bool:_arg2)
 	{
 		return 0;
 	}
-	new var3;
-	var3 = GetClientOfUserId(Event.GetInt(_arg0, "attacker", 0));
-	if (var3)
+	new fragger = GetClientOfUserId(Event.GetInt(event, "attacker", 0));
+	if (fragger)
 	{
-		if (ConVar.IntValue.get(g_Cvar_Fraglimit) - ConVar.IntValue.get(g_Cvar_StartFrags) <= GetClientFrags(var3))
+		if (ConVar.IntValue.get(g_Cvar_Fraglimit) - ConVar.IntValue.get(g_Cvar_StartFrags) <= GetClientFrags(fragger))
 		{
 			InitiateVote(2, 0);
 		}
@@ -553,7 +553,7 @@ public void:Event_PlayerDeath(Event:_arg0, String:_arg1[], bool:_arg2)
 	return 0;
 }
 
-public void:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_RoundEnd(Event:event, String:name[], bool:dontBroadcast)
 {
 	if (g_ChangeMapAtRoundEnd)
 	{
@@ -561,43 +561,43 @@ public void:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
 		CreateTimer(2.0, 81, 0, 2);
 		g_ChangeMapInProgress = true;
 	}
-	new var3 = 0;
-	if (strcmp(_arg1[0], "round_win", true))
+	new winner;
+	if (strcmp(name[0], "round_win", true))
 	{
-		var3 = Event.GetInt(_arg0, "winner", 0);
+		winner = Event.GetInt(event, "winner", 0);
 	}
 	else
 	{
-		var3 = Event.GetInt(_arg0, "team", 0);
+		winner = Event.GetInt(event, "team", 0);
 	}
 	new var1;
-	if (var3 && var3 == 1 && ConVar.BoolValue.get(g_Cvar_EndOfMapVote))
+	if (winner && winner == 1 && ConVar.BoolValue.get(g_Cvar_EndOfMapVote))
 	{
 		return 0;
 	}
-	if (var3 >= 10)
+	if (winner >= 10)
 	{
 		SetFailState("Mod exceed maximum team count - Please file a bug report.");
 	}
 	g_TotalRounds += 1;
-	g_winCount[var3]++;
+	g_winCount[winner]++;
 	new var2;
 	if (ArrayList.Length.get(g_MapList) && g_HasVoteStarted && g_MapVoteCompleted)
 	{
 		return 0;
 	}
-	CheckWinLimit(g_winCount[var3]);
+	CheckWinLimit(g_winCount[winner]);
 	CheckMaxRounds(g_TotalRounds);
 	return 0;
 }
 
-public void:Event_TFRestartRound(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_TFRestartRound(Event:event, String:name[], bool:dontBroadcast)
 {
 	g_TotalRounds = 0;
 	return 0;
 }
 
-public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
+public void:Event_TeamPlayWinPanel(Event:event, String:name[], bool:dontBroadcast)
 {
 	if (g_ChangeMapAtRoundEnd)
 	{
@@ -605,12 +605,10 @@ public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
 		CreateTimer(2.0, 81, 0, 2);
 		g_ChangeMapInProgress = true;
 	}
-	new var3;
-	var3 = Event.GetInt(_arg0, "blue_score", 0);
-	new var4;
-	var4 = Event.GetInt(_arg0, "red_score", 0);
+	new bluescore = Event.GetInt(event, "blue_score", 0);
+	new redscore = Event.GetInt(event, "red_score", 0);
 	new var1;
-	if (Event.GetInt(_arg0, "round_complete", 0) == 1 || StrEqual(_arg1[0], "arena_win_panel", true))
+	if (Event.GetInt(event, "round_complete", 0) == 1 || StrEqual(name[0], "arena_win_panel", true))
 	{
 		g_TotalRounds += 1;
 		new var2;
@@ -619,15 +617,15 @@ public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
 			return 0;
 		}
 		CheckMaxRounds(g_TotalRounds);
-		switch (Event.GetInt(_arg0, "winning_team", 0))
+		switch (Event.GetInt(event, "winning_team", 0))
 		{
 			case 2:
 			{
-				CheckWinLimit(var4);
+				CheckWinLimit(redscore);
 			}
 			case 3:
 			{
-				CheckWinLimit(var3);
+				CheckWinLimit(bluescore);
 			}
 			default:
 			{
@@ -638,83 +636,75 @@ public void:Event_TeamPlayWinPanel(Event:_arg0, String:_arg1[], bool:_arg2)
 	return 0;
 }
 
-public void:Handler_MapVoteFinished(Menu:_arg0, _arg1, _arg2, _arg3[][], _arg4, _arg5[][])
+public void:Handler_MapVoteFinished(Menu:menu, num_votes, num_clients, client_info[][], num_items, item_info[][])
 {
 	new var1;
-	if (ConVar.BoolValue.get(g_Cvar_RunOff) && _arg4 > 1)
+	if (ConVar.BoolValue.get(g_Cvar_RunOff) && num_items > 1)
 	{
-		new var2;
-		var2 = float(_arg5[0][0] + 4/* ERROR unknown load Binary */);
-		new var3;
-		var3 = 5*0(ConVar.FloatValue.get(g_Cvar_RunOffPercent) / 100.0, _arg1);
-		if (var2 < var3)
+		new Float:winningvotes = float(item_info[0][0] + 4/* ERROR unknown load Binary */);
+		new Float:required = 5*0(ConVar.FloatValue.get(g_Cvar_RunOffPercent) / 100.0, num_votes);
+		if (winningvotes < required)
 		{
 			g_VoteMenu = Menu.Menu(49, -1);
 			Menu.SetTitle(g_VoteMenu, "Runoff Vote Nextmap");
 			Menu.VoteResultCallback.set(g_VoteMenu, 51);
-			new var4 = 0;
-			new var5 = 0;
-			new var6 = 0;
-			Menu.GetItem(_arg0, _arg5[0][0], var4, 256, 0, var5, 256);
-			Menu.AddItem(g_VoteMenu, var4, var5, 0);
-			Menu.GetItem(_arg0, _arg5[0][1], var4, 256, 0, var6, 256);
-			Menu.AddItem(g_VoteMenu, var4, var6, 0);
-			new var7;
-			var7 = ConVar.IntValue.get(g_Cvar_VoteDuration);
+			new String:map[1024];
+			new String:info1[1024];
+			new String:info2[1024];
+			Menu.GetItem(menu, item_info[0][0], map, 256, 0, info1, 256);
+			Menu.AddItem(g_VoteMenu, map, info1, 0);
+			Menu.GetItem(menu, item_info[0][1], map, 256, 0, info2, 256);
+			Menu.AddItem(g_VoteMenu, map, info2, 0);
+			new voteDuration = ConVar.IntValue.get(g_Cvar_VoteDuration);
 			Menu.ExitButton.set(g_VoteMenu, false);
-			Menu.DisplayVoteToAll(g_VoteMenu, var7, 0);
-			new var8;
-			var8 = 5*0(float(_arg5[0][0] + 4/* ERROR unknown load Binary */) / float(_arg1), 100);
-			new var9;
-			var9 = 5*0(float(_arg5[0][1] + 4/* ERROR unknown load Binary */) / float(_arg1), 100);
-			PrintToChatAll("[SM] %t", "Starting Runoff", ConVar.FloatValue.get(g_Cvar_RunOffPercent), var5, var8, var6, var9);
+			Menu.DisplayVoteToAll(g_VoteMenu, voteDuration, 0);
+			new Float:map1percent = 5*0(float(item_info[0][0] + 4/* ERROR unknown load Binary */) / float(num_votes), 100);
+			new Float:map2percent = 5*0(float(item_info[0][1] + 4/* ERROR unknown load Binary */) / float(num_votes), 100);
+			PrintToChatAll("[SM] %t", "Starting Runoff", ConVar.FloatValue.get(g_Cvar_RunOffPercent), info1, map1percent, info2, map2percent);
 			LogMessage("Voting for next map was indecisive, beginning runoff vote");
 			return 0;
 		}
 	}
-	Handler_VoteFinishedGeneric(_arg0, _arg1, _arg2, _arg3[0], _arg4, _arg5[0]);
+	Handler_VoteFinishedGeneric(menu, num_votes, num_clients, client_info[0], num_items, item_info[0]);
 	return 0;
 }
 
-public Handler_MapVoteMenu(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public Handler_MapVoteMenu(Menu:menu, MenuAction:action, param1, param2)
 {
-	switch (_arg1)
+	switch (action)
 	{
 		case 2:
 		{
-			new var9 = 0;
-			Format(var9, 255, "%T", "Vote Nextmap", _arg2);
-			new var10;
-			var10 = _arg3;
-			Panel.SetTitle(var10, var9, false);
+			new String:buffer[1024];
+			Format(buffer, 255, "%T", "Vote Nextmap", param1);
+			new Panel:panel = param2;
+			Panel.SetTitle(panel, buffer, false);
 		}
 		case 16:
 		{
 			g_VoteMenu = 0;
-			CloseHandle(_arg0);
-			_arg0 = 0;
+			CloseHandle(menu);
+			menu = 0;
 		}
 		case 128:
 		{
 			new var1;
-			if (_arg2 == -2 && ConVar.BoolValue.get(g_Cvar_NoVoteMode))
+			if (param1 == -2 && ConVar.BoolValue.get(g_Cvar_NoVoteMode))
 			{
-				new var6;
-				var6 = Menu.ItemCount.get(_arg0);
-				new var7 = 0;
-				Menu.GetItem(_arg0, 0, var7, 256, 0, "", 0);
+				new count = Menu.ItemCount.get(menu);
+				new String:map[1024];
+				Menu.GetItem(menu, 0, map, 256, 0, "", 0);
 				new var2;
-				if (strcmp(var7, "##extend##", false) && strcmp(var7, "##dontchange##", false))
+				if (strcmp(map, "##extend##", false) && strcmp(map, "##dontchange##", false))
 				{
-					new var8;
-					var8 = GetRandomInt(0, var6 + -1);
-					Menu.GetItem(_arg0, var8, var7, 256, 0, "", 0);
-					while (strcmp(var7, "##extend##", false) && strcmp(var7, "##dontchange##", false))
+					new item = GetRandomInt(0, count + -1);
+					Menu.GetItem(menu, item, map, 256, 0, "", 0);
+					while (strcmp(map, "##extend##", false) && strcmp(map, "##dontchange##", false))
 					{
-						var8 = GetRandomInt(0, var6 + -1);
-						Menu.GetItem(_arg0, var8, var7, 256, 0, "", 0);
+						item = GetRandomInt(0, count + -1);
+						Menu.GetItem(menu, item, map, 256, 0, "", 0);
 					}
-					SetNextMap(var7);
+					SetNextMap(map);
 					g_MapVoteCompleted = true;
 				}
 			}
@@ -722,21 +712,21 @@ public Handler_MapVoteMenu(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		}
 		case 512:
 		{
-			if (_arg3 == Menu.ItemCount.get(_arg0) + -1)
+			if (param2 == Menu.ItemCount.get(menu) + -1)
 			{
-				new var4 = 0;
-				new var5 = 0;
-				Menu.GetItem(_arg0, _arg3, var4, 256, 0, "", 0);
-				if (strcmp(var4, "##extend##", false))
+				new String:map[1024];
+				new String:buffer[1024];
+				Menu.GetItem(menu, param2, map, 256, 0, "", 0);
+				if (strcmp(map, "##extend##", false))
 				{
-					if (!(strcmp(var4, "##dontchange##", false)))
+					if (!(strcmp(map, "##dontchange##", false)))
 					{
-						Format(var5, 255, "%T", "Dont Change", _arg2);
-						return RedrawMenuItem(var5);
+						Format(buffer, 255, "%T", "Dont Change", param1);
+						return RedrawMenuItem(buffer);
 					}
 				}
-				Format(var5, 255, "%T", "Extend Map", _arg2);
-				return RedrawMenuItem(var5);
+				Format(buffer, 255, "%T", "Extend Map", param1);
+				return RedrawMenuItem(buffer);
 			}
 		}
 		default:
@@ -746,37 +736,37 @@ public Handler_MapVoteMenu(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	return 0;
 }
 
-public void:Handler_VoteFinishedGeneric(Menu:_arg0, _arg1, _arg2, _arg3[][], _arg4, _arg5[][])
+public void:Handler_VoteFinishedGeneric(Menu:menu, num_votes, num_clients, client_info[][], num_items, item_info[][])
 {
-	new var1 = 0;
-	new var2 = 0;
-	Menu.GetItem(_arg0, _arg5[0][0], var1, 256, 0, var2, 256);
-	if (strcmp(var1, "##extend##", false))
+	new String:map[1024];
+	new String:displayName[1024];
+	Menu.GetItem(menu, item_info[0][0], map, 256, 0, displayName, 256);
+	if (strcmp(map, "##extend##", false))
 	{
-		if (strcmp(var1, "##dontchange##", false))
+		if (strcmp(map, "##dontchange##", false))
 		{
 			if (g_ChangeTime == 2)
 			{
-				SetNextMap(var1);
+				SetNextMap(map);
 			}
 			else
 			{
 				if (g_ChangeTime)
 				{
-					SetNextMap(var1);
+					SetNextMap(map);
 					g_ChangeMapAtRoundEnd = true;
 				}
-				new var7 = 0;
-				CreateDataTimer(2.0, 81, var7, 0);
-				DataPack.WriteString(var7, var1, false);
+				new DataPack:data;
+				CreateDataTimer(2.0, 81, data, 0);
+				DataPack.WriteString(data, map, false);
 				g_ChangeMapInProgress = false;
 			}
 			g_HasVoteStarted = false;
 			g_MapVoteCompleted = true;
-			PrintToChatAll("[SM] %t", "Nextmap Voting Finished", var2, RoundToFloor(5*0(float(_arg5[0][0] + 4/* ERROR unknown load Binary */) / float(_arg1), 100)), _arg1);
-			LogAction(-1, -1, "Voting for next map has finished. Nextmap: %s.", var1);
+			PrintToChatAll("[SM] %t", "Nextmap Voting Finished", displayName, RoundToFloor(5*0(float(item_info[0][0] + 4/* ERROR unknown load Binary */) / float(num_votes), 100)), num_votes);
+			LogAction(-1, -1, "Voting for next map has finished. Nextmap: %s.", map);
 		}
-		PrintToChatAll("[SM] %t", "Current Map Stays", RoundToFloor(5*0(float(_arg5[0][0] + 4/* ERROR unknown load Binary */) / float(_arg1), 100)), _arg1);
+		PrintToChatAll("[SM] %t", "Current Map Stays", RoundToFloor(5*0(float(item_info[0][0] + 4/* ERROR unknown load Binary */) / float(num_votes), 100)), num_votes);
 		LogAction(-1, -1, "Voting for next map has finished. 'No Change' was the winner");
 		g_HasVoteStarted = false;
 		CreateNextVote();
@@ -785,42 +775,39 @@ public void:Handler_VoteFinishedGeneric(Menu:_arg0, _arg1, _arg2, _arg3[][], _ar
 	else
 	{
 		g_Extends += 1;
-		new var3 = 0;
-		if (GetMapTimeLimit(var3))
+		new time;
+		if (GetMapTimeLimit(time))
 		{
-			if (0 < var3)
+			if (0 < time)
 			{
 				ExtendMapTimeLimit(ConVar.IntValue.get(g_Cvar_ExtendTimeStep) * 60);
 			}
 		}
 		if (g_Cvar_Winlimit)
 		{
-			new var4;
-			var4 = ConVar.IntValue.get(g_Cvar_Winlimit);
-			if (var4)
+			new winlimit = ConVar.IntValue.get(g_Cvar_Winlimit);
+			if (winlimit)
 			{
-				ConVar.IntValue.set(g_Cvar_Winlimit, ConVar.IntValue.get(g_Cvar_ExtendRoundStep) + var4);
+				ConVar.IntValue.set(g_Cvar_Winlimit, ConVar.IntValue.get(g_Cvar_ExtendRoundStep) + winlimit);
 			}
 		}
 		if (g_Cvar_Maxrounds)
 		{
-			new var5;
-			var5 = ConVar.IntValue.get(g_Cvar_Maxrounds);
-			if (var5)
+			new maxrounds = ConVar.IntValue.get(g_Cvar_Maxrounds);
+			if (maxrounds)
 			{
-				ConVar.IntValue.set(g_Cvar_Maxrounds, ConVar.IntValue.get(g_Cvar_ExtendRoundStep) + var5);
+				ConVar.IntValue.set(g_Cvar_Maxrounds, ConVar.IntValue.get(g_Cvar_ExtendRoundStep) + maxrounds);
 			}
 		}
 		if (g_Cvar_Fraglimit)
 		{
-			new var6;
-			var6 = ConVar.IntValue.get(g_Cvar_Fraglimit);
-			if (var6)
+			new fraglimit = ConVar.IntValue.get(g_Cvar_Fraglimit);
+			if (fraglimit)
 			{
-				ConVar.IntValue.set(g_Cvar_Fraglimit, ConVar.IntValue.get(g_Cvar_ExtendFragStep) + var6);
+				ConVar.IntValue.set(g_Cvar_Fraglimit, ConVar.IntValue.get(g_Cvar_ExtendFragStep) + fraglimit);
 			}
 		}
-		PrintToChatAll("[SM] %t", "Current Map Extended", RoundToFloor(5*0(float(_arg5[0][0] + 4/* ERROR unknown load Binary */) / float(_arg1), 100)), _arg1);
+		PrintToChatAll("[SM] %t", "Current Map Extended", RoundToFloor(5*0(float(item_info[0][0] + 4/* ERROR unknown load Binary */) / float(num_votes), 100)), num_votes);
 		LogAction(-1, -1, "Voting for next map has finished. The current map has been extended.");
 		g_HasVoteStarted = false;
 		CreateNextVote();
@@ -829,125 +816,119 @@ public void:Handler_VoteFinishedGeneric(Menu:_arg0, _arg1, _arg2, _arg3[][], _ar
 	return 0;
 }
 
-public Native_CanVoteStart(Handle:_arg0, _arg1)
+public Native_CanVoteStart(Handle:plugin, numParams)
 {
 	return CanVoteStart();
 }
 
-public Native_CheckVoteDone(Handle:_arg0, _arg1)
+public Native_CheckVoteDone(Handle:plugin, numParams)
 {
 	return g_MapVoteCompleted;
 }
 
-public Native_EndOfMapVoteEnabled(Handle:_arg0, _arg1)
+public Native_EndOfMapVoteEnabled(Handle:plugin, numParams)
 {
 	return ConVar.BoolValue.get(g_Cvar_EndOfMapVote);
 }
 
-public Native_GetExcludeMapList(Handle:_arg0, _arg1)
+public Native_GetExcludeMapList(Handle:plugin, numParams)
 {
-	new var1;
-	var1 = GetNativeCell(1);
-	if (var1)
+	new ArrayList:array = GetNativeCell(1);
+	if (array)
 	{
-		new var2;
-		var2 = ArrayList.Length.get(g_OldMapList);
-		new var3 = 0;
-		new var4 = 0;
-		while (var4 < var2)
+		new size = ArrayList.Length.get(g_OldMapList);
+		new String:map[1024];
+		new i;
+		while (i < size)
 		{
-			ArrayList.GetString(g_OldMapList, var4, var3, 256);
-			ArrayList.PushString(var1, var3);
-			var4++;
+			ArrayList.GetString(g_OldMapList, i, map, 256);
+			ArrayList.PushString(array, map);
+			i++;
 		}
 		return 0;
 	}
 	return 0;
 }
 
-public Native_GetNominatedMapList(Handle:_arg0, _arg1)
+public Native_GetNominatedMapList(Handle:plugin, numParams)
 {
-	new var1;
-	var1 = GetNativeCell(1);
-	new var2;
-	var2 = GetNativeCell(2);
-	if (var1)
+	new ArrayList:maparray = GetNativeCell(1);
+	new ArrayList:ownerarray = GetNativeCell(2);
+	if (maparray)
 	{
-		new var3 = 0;
-		new var4 = 0;
-		while (ArrayList.Length.get(g_NominateList) > var4)
+		new String:map[1024];
+		new i;
+		while (ArrayList.Length.get(g_NominateList) > i)
 		{
-			ArrayList.GetString(g_NominateList, var4, var3, 256);
-			ArrayList.PushString(var1, var3);
-			if (var2)
+			ArrayList.GetString(g_NominateList, i, map, 256);
+			ArrayList.PushString(maparray, map);
+			if (ownerarray)
 			{
-				new var5;
-				var5 = ArrayList.Get(g_NominateOwners, var4, 0, false);
-				ArrayList.Push(var2, var5);
+				new index = ArrayList.Get(g_NominateOwners, i, 0, false);
+				ArrayList.Push(ownerarray, index);
 			}
-			var4++;
+			i++;
 		}
 		return 0;
 	}
 	return 0;
 }
 
-public Native_InitiateVote(Handle:_arg0, _arg1)
+public Native_InitiateVote(Handle:plugin, numParams)
 {
-	new var1;
-	var1 = GetNativeCell(1);
-	new var2;
-	var2 = GetNativeCell(2);
+	new MapChange:when = GetNativeCell(1);
+	new ArrayList:inputarray = GetNativeCell(2);
 	LogAction(-1, -1, "Starting map vote because outside request");
-	InitiateVote(var1, var2);
+	InitiateVote(when, inputarray);
 	return 0;
 }
 
-public Native_NominateMap(Handle:_arg0, _arg1)
+public Native_NominateMap(Handle:plugin, numParams)
 {
-	new var1 = 0;
-	GetNativeStringLength(1, var1);
-	if (0 >= var1)
+	new len;
+	GetNativeStringLength(1, len);
+	if (0 >= len)
 	{
 		return 0;
 	}
+	new map[len + 1];
+	GetNativeString(1, map[0], len + 1, 0);
+	return InternalNominateMap(map[0], GetNativeCell(2), GetNativeCell(3));
+}
 
-/* ERROR! null */
- function "Native_NominateMap" (number 32)
-
-public Native_RemoveNominationByMap(Handle:_arg0, _arg1)
+public Native_RemoveNominationByMap(Handle:plugin, numParams)
 {
-	new var1 = 0;
-	GetNativeStringLength(1, var1);
-	if (0 >= var1)
+	new len;
+	GetNativeStringLength(1, len);
+	if (0 >= len)
 	{
 		return 0;
 	}
+	new map[len + 1];
+	GetNativeString(1, map[0], len + 1, 0);
+	return InternalRemoveNominationByMap(map[0]);
+}
 
-/* ERROR! null */
- function "Native_RemoveNominationByMap" (number 33)
-
-public Native_RemoveNominationByOwner(Handle:_arg0, _arg1)
+public Native_RemoveNominationByOwner(Handle:plugin, numParams)
 {
 	return InternalRemoveNominationByOwner(GetNativeCell(1));
 }
 
-public void:OnClientDisconnect(_arg0)
+public void:OnClientDisconnect(client)
 {
-	new var1;
-	var1 = ArrayList.FindValue(g_NominateOwners, _arg0, 0);
-	if (var1 == -1)
+	new index = ArrayList.FindValue(g_NominateOwners, client, 0);
+	if (index == -1)
 	{
 		return 0;
 	}
-	new var2 = 0;
-	ArrayList.GetString(g_NominateList, var1, var2, 256);
+	new String:oldmap[1024];
+	ArrayList.GetString(g_NominateList, index, oldmap, 256);
 	Call_StartForward(g_NominationsResetForward);
-	Call_PushString(var2);
-	Call_PushCell(ArrayList.Get(g_NominateOwners, var1, 0, false));
+	Call_PushString(oldmap);
+	Call_PushCell(ArrayList.Get(g_NominateOwners, index, 0, false));
 	Call_Finish(0);
-	ArrayList.Erase(g_NominateOwners, var1);
-	ArrayList.Erase(g_NominateList, var1);
+	ArrayList.Erase(g_NominateOwners, index);
+	ArrayList.Erase(g_NominateList, index);
 	return 0;
 }
 
@@ -967,11 +948,11 @@ public void:OnConfigsExecuted()
 	g_MapVoteCompleted = false;
 	ArrayList.Clear(g_NominateList);
 	ArrayList.Clear(g_NominateOwners);
-	new var2 = 0;
-	while (var2 < 10)
+	new i;
+	while (i < 10)
 	{
-		g_winCount[var2] = 0;
-		var2++;
+		g_winCount[i] = 0;
+		i++;
 	}
 	new var1;
 	if (g_Cvar_Bonusroundtime && ConVar.IntValue.get(g_Cvar_StartRounds))
@@ -992,9 +973,9 @@ public void:OnMapEnd()
 	g_ChangeMapInProgress = false;
 	g_VoteTimer = 0;
 	g_RetryTimer = 0;
-	new var1 = 0;
-	GetCurrentMap(var1, 256);
-	ArrayList.PushString(g_OldMapList, var1);
+	new String:map[1024];
+	GetCurrentMap(map, 256);
+	ArrayList.PushString(g_OldMapList, map);
 	if (ConVar.IntValue.get(g_Cvar_ExcludeMaps) < ArrayList.Length.get(g_OldMapList))
 	{
 		ArrayList.Erase(g_OldMapList, 0);
@@ -1015,13 +996,12 @@ public void:OnPluginStart()
 {
 	LoadTranslations("mapchooser.phrases");
 	LoadTranslations("common.phrases");
-	new var2;
-	var2 = ByteCountToCells(256);
-	g_MapList = ArrayList.ArrayList(var2, 0);
-	g_NominateList = ArrayList.ArrayList(var2, 0);
+	new arraySize = ByteCountToCells(256);
+	g_MapList = ArrayList.ArrayList(arraySize, 0);
+	g_NominateList = ArrayList.ArrayList(arraySize, 0);
 	g_NominateOwners = ArrayList.ArrayList(1, 0);
-	g_OldMapList = ArrayList.ArrayList(var2, 0);
-	g_NextMapList = ArrayList.ArrayList(var2, 0);
+	g_OldMapList = ArrayList.ArrayList(arraySize, 0);
+	g_NextMapList = ArrayList.ArrayList(arraySize, 0);
 	g_Cvar_EndOfMapVote = CreateConVar("sm_mapvote_endvote", "1", "Specifies if MapChooser should run an end of map vote", 0, true, 0.0, true, 1.0);
 	g_Cvar_StartTime = CreateConVar("sm_mapvote_start", "3.0", "Specifies when to start the vote based on time remaining.", 0, true, 1.0, false, 0.0);
 	g_Cvar_StartRounds = CreateConVar("sm_mapvote_startround", "2.0", "Specifies when to start the vote based on rounds remaining. Use 0 on TF2 to start vote during bonus round time", 0, true, 0.0, false, 0.0);
@@ -1046,13 +1026,13 @@ public void:OnPluginStart()
 	new var1;
 	if (g_Cvar_Winlimit || g_Cvar_Maxrounds)
 	{
-		new var3 = 0;
-		GetGameFolderName(var3, 64);
-		if (strcmp(var3, "tf", true))
+		new String:folder[256];
+		GetGameFolderName(folder, 64);
+		if (strcmp(folder, "tf", true))
 		{
-			if (strcmp(var3, "nucleardawn", true))
+			if (strcmp(folder, "nucleardawn", true))
 			{
-				if (strcmp(var3, "empires", true))
+				if (strcmp(folder, "empires", true))
 				{
 					HookEvent("round_end", 41, 1);
 				}
@@ -1081,29 +1061,29 @@ public void:OnPluginStart()
 	return 0;
 }
 
-public Action:Timer_ChangeMap(Handle:_arg0, DataPack:_arg1)
+public Action:Timer_ChangeMap(Handle:hTimer, DataPack:dp)
 {
 	g_ChangeMapInProgress = false;
-	new var1 = 0;
-	if (_arg1)
+	new String:map[1024];
+	if (dp)
 	{
-		DataPack.Reset(_arg1, false);
-		DataPack.ReadString(_arg1, var1, 256);
+		DataPack.Reset(dp, false);
+		DataPack.ReadString(dp, map, 256);
 	}
 	else
 	{
-		if (!(GetNextMap(var1, 256)))
+		if (!(GetNextMap(map, 256)))
 		{
 			return 4;
 		}
 	}
-	ForceChangeLevel(var1, "Map Vote");
+	ForceChangeLevel(map, "Map Vote");
 	return 4;
 }
 
-public Action:Timer_StartMapVote(Handle:_arg0, DataPack:_arg1)
+public Action:Timer_StartMapVote(Handle:timer, DataPack:data)
 {
-	if (g_RetryTimer == _arg0)
+	if (g_RetryTimer == timer)
 	{
 		g_WaitingForVote = false;
 		g_RetryTimer = 0;
@@ -1117,11 +1097,9 @@ public Action:Timer_StartMapVote(Handle:_arg0, DataPack:_arg1)
 	{
 		return 4;
 	}
-	new var2;
-	var2 = DataPack.ReadCell(_arg1);
-	new var3;
-	var3 = DataPack.ReadCell(_arg1);
-	InitiateVote(var2, var3);
+	new MapChange:mapChange = DataPack.ReadCell(data);
+	new ArrayList:hndl = DataPack.ReadCell(data);
+	InitiateVote(mapChange, hndl);
 	return 4;
 }
 

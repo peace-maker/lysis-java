@@ -36,125 +36,122 @@ new Menu:g_MapMenu;
 new ArrayList:g_MapList;
 new g_mapFileSerial = -1;
 new StringMap:g_mapTrie;
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-void:PrintToChatAll(String:_arg0[], any:_arg1)
+void:PrintToChatAll(String:format[], any:_arg1)
 {
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		if (IsClientInGame(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintToChat(var2, "%s", var1);
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintToChat(i, "%s", buffer);
 		}
-		var2++;
+		i++;
 	}
 	return 0;
 }
 
-ByteCountToCells(_arg0)
+ByteCountToCells(size)
 {
-	if (_arg0)
+	if (size)
 	{
-		return _arg0 + 3 / 4;
+		return size + 3 / 4;
 	}
 	return 1;
 }
 
-FindMatchingMaps(ArrayList:_arg0, ArrayList:_arg1, String:_arg2[])
+FindMatchingMaps(ArrayList:mapList, ArrayList:results, String:input[])
 {
-	new var2;
-	var2 = ArrayList.Length.get(_arg0);
-	if (var2)
+	new map_count = ArrayList.Length.get(mapList);
+	if (map_count)
 	{
-		new var3 = 0;
-		new var4 = 0;
-		new var5;
-		var5 = ConVar.IntValue.get(g_Cvar_MaxMatches);
-		new var6 = 0;
-		while (var6 < var2)
+		new matches;
+		new String:map[1024];
+		new maxmatches = ConVar.IntValue.get(g_Cvar_MaxMatches);
+		new i;
+		while (i < map_count)
 		{
-			ArrayList.GetString(_arg0, var6, var4, 256);
-			if (StrContains(var4, _arg2[0], true) != -1)
+			ArrayList.GetString(mapList, i, map, 256);
+			if (StrContains(map, input[0], true) != -1)
 			{
-				ArrayList.Push(_arg1, var6);
-				var3++;
+				ArrayList.Push(results, i);
+				matches++;
 				new var1;
-				if (var5 > 0 && var3 >= var5)
+				if (maxmatches > 0 && matches >= maxmatches)
 				{
-					return var3;
+					return matches;
 				}
 			}
-			var6++;
+			i++;
 		}
-		return var3;
+		return matches;
 	}
 	return -1;
 }
 
-void:AttemptNominate(_arg0, String:_arg1[], _arg2)
+void:AttemptNominate(client, String:map[], size)
 {
-	new var1 = 0;
-	if (FindMap(_arg1[0], var1, _arg2) == 1)
+	new String:mapname[1024];
+	if (FindMap(map[0], mapname, size) == 1)
 	{
-		ReplyToCommand(_arg0, "%t", "Map was not found", var1);
+		ReplyToCommand(client, "%t", "Map was not found", mapname);
 		return 0;
 	}
-	new var2 = 0;
-	GetMapDisplayName(var1, var2, 256);
-	new var3 = 0;
-	if (StringMap.GetValue(g_mapTrie, var1, var3))
+	new String:displayName[1024];
+	GetMapDisplayName(mapname, displayName, 256);
+	new status;
+	if (StringMap.GetValue(g_mapTrie, mapname, status))
 	{
-		if (var3 & 2 == 2)
+		if (status & 2 == 2)
 		{
-			if (var3 & 4 == 4)
+			if (status & 4 == 4)
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 3484);
+				ReplyToCommand(client, "[SM] %t", 3484);
 			}
-			if (var3 & 8 == 8)
+			if (status & 8 == 8)
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 3520);
+				ReplyToCommand(client, "[SM] %t", 3520);
 			}
-			if (var3 & 16 == 16)
+			if (status & 16 == 16)
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 3548);
+				ReplyToCommand(client, "[SM] %t", 3548);
 			}
 			return 0;
 		}
-		new var4;
-		var4 = NominateMap(var1, false, _arg0);
-		if (var4 > 1)
+		new NominateResult:result = NominateMap(mapname, false, client);
+		if (result > 1)
 		{
-			if (var4 == 2)
+			if (result == 2)
 			{
-				ReplyToCommand(_arg0, "%t", "Map Already In Vote", var2);
+				ReplyToCommand(client, "%t", "Map Already In Vote", displayName);
 			}
 			else
 			{
-				ReplyToCommand(_arg0, "[SM] %t", 3604);
+				ReplyToCommand(client, "[SM] %t", 3604);
 			}
 			return 0;
 		}
-		StringMap.SetValue(g_mapTrie, var1, 18, true);
-		new var5 = 0;
-		GetClientName(_arg0, var5, 128);
-		PrintToChatAll("[SM] %t", "Map Nominated", var5, var2);
+		StringMap.SetValue(g_mapTrie, mapname, 18, true);
+		new String:name[512];
+		GetClientName(client, name, 128);
+		PrintToChatAll("[SM] %t", "Map Nominated", name, displayName);
 		return 0;
 	}
-	ReplyToCommand(_arg0, "%t", "Map was not found", var2);
+	ReplyToCommand(client, "%t", "Map was not found", displayName);
 	return 0;
 }
 
-void:OpenNominationMenu(_arg0)
+void:OpenNominationMenu(client)
 {
-	Menu.SetTitle(g_MapMenu, "%T", "Nominate Title", _arg0);
-	Menu.Display(g_MapMenu, _arg0, 0);
+	Menu.SetTitle(g_MapMenu, "%T", "Nominate Title", client);
+	Menu.Display(g_MapMenu, client, 0);
 	return 0;
 }
 
@@ -164,163 +161,173 @@ void:BuildMapMenu()
 	g_MapMenu = 0;
 	StringMap.Clear(g_mapTrie);
 	g_MapMenu = Menu.Menu(19, 796);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
+	new String:map[1024];
+	new ArrayList:excludeMaps;
+	new String:currentMap[1024];
 	if (ConVar.BoolValue.get(g_Cvar_ExcludeOld))
 	{
-		var3 = ArrayList.ArrayList(ByteCountToCells(256), 0);
-		GetExcludeMapList(var3);
+		excludeMaps = ArrayList.ArrayList(ByteCountToCells(256), 0);
+		GetExcludeMapList(excludeMaps);
 	}
 	if (ConVar.BoolValue.get(g_Cvar_ExcludeCurrent))
 	{
-		GetCurrentMap(var4, 256);
+		GetCurrentMap(currentMap, 256);
 	}
-	new var5 = 0;
-	while (ArrayList.Length.get(g_MapList) > var5)
+	new i;
+	while (ArrayList.Length.get(g_MapList) > i)
 	{
-		new var6 = 1;
-		ArrayList.GetString(g_MapList, var5, var2, 256);
-		FindMap(var2, var2, 256);
-		new var7 = 0;
-		GetMapDisplayName(var2, var7, 256);
+		new status = 1;
+		ArrayList.GetString(g_MapList, i, map, 256);
+		FindMap(map, map, 256);
+		new String:displayName[1024];
+		GetMapDisplayName(map, displayName, 256);
 		if (ConVar.BoolValue.get(g_Cvar_ExcludeCurrent))
 		{
-			if (StrEqual(var2, var4, true))
+			if (StrEqual(map, currentMap, true))
 			{
-				var6 = 6;
+				status = 6;
 			}
 		}
 		new var1;
-		if (ConVar.BoolValue.get(g_Cvar_ExcludeOld) && var6 == 1)
+		if (ConVar.BoolValue.get(g_Cvar_ExcludeOld) && status == 1)
 		{
-			if (ArrayList.FindString(var3, var2) != -1)
+			if (ArrayList.FindString(excludeMaps, map) != -1)
 			{
-				var6 = 10;
+				status = 10;
 			}
 		}
-		Menu.AddItem(g_MapMenu, var2, var7, 0);
-		StringMap.SetValue(g_mapTrie, var2, var6, true);
-		var5++;
+		Menu.AddItem(g_MapMenu, map, displayName, 0);
+		StringMap.SetValue(g_mapTrie, map, status, true);
+		i++;
 	}
 	Menu.ExitButton.set(g_MapMenu, true);
-	CloseHandle(var3);
-	var3 = 0;
+	CloseHandle(excludeMaps);
+	excludeMaps = 0;
 	return 0;
 }
 
-public Action:Command_Addmap(_arg0, _arg1)
+public Action:Command_Addmap(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_nominate_addmap <mapname>");
+		ReplyToCommand(client, "[SM] Usage: sm_nominate_addmap <mapname>");
 		return 3;
 	}
-	new var1 = 0;
-	new var2 = 0;
-	GetCmdArg(1, var1, 256);
-	if (FindMap(var1, var2, 256) == 1)
+	new String:mapname[1024];
+	new String:resolvedMap[1024];
+	GetCmdArg(1, mapname, 256);
+	if (FindMap(mapname, resolvedMap, 256) == 1)
 	{
-		ReplyToCommand(_arg0, "%t", "Map was not found", var1);
+		ReplyToCommand(client, "%t", "Map was not found", mapname);
 		return 3;
 	}
-	new var3 = 0;
-	GetMapDisplayName(var2, var3, 256);
-
-/* ERROR! null */
- function "Command_Addmap" (number 7)
-
-public Action:Command_Nominate(_arg0, _arg1)
-{
-	if (_arg0)
+	new String:displayName[1024];
+	GetMapDisplayName(resolvedMap, displayName, 256);
+	new status;
+	if (StringMap.GetValue(g_mapTrie, resolvedMap, status))
 	{
-		new var1;
-		var1 = GetCmdReplySource();
-		if (_arg1)
+		new NominateResult:result = NominateMap(resolvedMap, true, 0);
+		if (result > 1)
 		{
-			new var2 = 0;
-			GetCmdArg(1, var2, 256);
-			new var3;
-			var3 = ArrayList.ArrayList(1, 0);
-			new var4;
-			var4 = FindMatchingMaps(g_MapList, var3, var2);
-			new var5 = 0;
-			if (0 >= var4)
+			ReplyToCommand(client, "%t", "Map Already In Vote", displayName);
+			return 3;
+		}
+		StringMap.SetValue(g_mapTrie, resolvedMap, 18, true);
+		ReplyToCommand(client, "%t", "Map Inserted", displayName);
+		LogAction(client, -1, "\"%L\" inserted map \"%s\".", client, mapname);
+		return 3;
+	}
+	ReplyToCommand(client, "%t", "Map was not found", displayName);
+	return 3;
+}
+
+public Action:Command_Nominate(client, args)
+{
+	if (client)
+	{
+		new ReplySource:source = GetCmdReplySource();
+		if (args)
+		{
+			new String:mapname[1024];
+			GetCmdArg(1, mapname, 256);
+			new ArrayList:results = ArrayList.ArrayList(1, 0);
+			new matches = FindMatchingMaps(g_MapList, results, mapname);
+			new String:mapResult[1024];
+			if (0 >= matches)
 			{
-				ReplyToCommand(_arg0, "%t", "Map was not found", var2);
+				ReplyToCommand(client, "%t", "Map was not found", mapname);
 			}
 			else
 			{
-				if (var4 == 1)
+				if (matches == 1)
 				{
-					ArrayList.GetString(g_MapList, ArrayList.Get(var3, 0, 0, false), var5, 256);
-					AttemptNominate(_arg0, var5, 256);
+					ArrayList.GetString(g_MapList, ArrayList.Get(results, 0, 0, false), mapResult, 256);
+					AttemptNominate(client, mapResult, 256);
 				}
-				if (var4 > 1)
+				if (matches > 1)
 				{
-					if (var1)
+					if (source)
 					{
-						new var6;
-						var6 = Menu.Menu(19, 796);
-						Menu.SetTitle(var6, "Select map");
-						new var7 = 0;
-						while (ArrayList.Length.get(var3) > var7)
+						new Menu:menu = Menu.Menu(19, 796);
+						Menu.SetTitle(menu, "Select map");
+						new i;
+						while (ArrayList.Length.get(results) > i)
 						{
-							ArrayList.GetString(g_MapList, ArrayList.Get(var3, var7, 0, false), var5, 256);
-							Menu.AddItem(var6, var5, var5, 0);
-							var7++;
+							ArrayList.GetString(g_MapList, ArrayList.Get(results, i, 0, false), mapResult, 256);
+							Menu.AddItem(menu, mapResult, mapResult, 0);
+							i++;
 						}
-						Menu.Display(var6, _arg0, 30);
+						Menu.Display(menu, client, 30);
 					}
-					AttemptNominate(_arg0, var2, 256);
-					CloseHandle(var3);
-					var3 = 0;
+					AttemptNominate(client, mapname, 256);
+					CloseHandle(results);
+					results = 0;
 					return 3;
 				}
 			}
-			CloseHandle(var3);
-			var3 = 0;
+			CloseHandle(results);
+			results = 0;
 			return 3;
 		}
-		if (var1 == 1)
+		if (source == 1)
 		{
-			OpenNominationMenu(_arg0);
+			OpenNominationMenu(client);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_nominate <mapname>");
+			ReplyToCommand(client, "[SM] Usage: sm_nominate <mapname>");
 		}
 		return 3;
 	}
 	return 3;
 }
 
-public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_MapSelect(Menu:menu, MenuAction:action, param1, param2)
 {
-	switch (_arg1)
+	switch (action)
 	{
 		case 4:
 		{
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var5, 256, 0, "", 0);
-			AttemptNominate(_arg2, var5, 256);
+			new String:mapname[1024];
+			Menu.GetItem(menu, param2, mapname, 256, 0, "", 0);
+			AttemptNominate(param1, mapname, 256);
 		}
 		case 16:
 		{
-			if (g_MapMenu != _arg0)
+			if (g_MapMenu != menu)
 			{
-				CloseHandle(_arg0);
-				_arg0 = 0;
+				CloseHandle(menu);
+				menu = 0;
 			}
 		}
 		case 256:
 		{
-			new var3 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 256, 0, "", 0);
-			new var4 = 0;
-			if (StringMap.GetValue(g_mapTrie, var3, var4))
+			new String:map[1024];
+			Menu.GetItem(menu, param2, map, 256, 0, "", 0);
+			new status;
+			if (StringMap.GetValue(g_mapTrie, map, status))
 			{
-				if (var4 & 2 == 2)
+				if (status & 2 == 2)
 				{
 					return 1;
 				}
@@ -331,27 +338,27 @@ public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 		}
 		case 512:
 		{
-			new var1 = 0;
-			Menu.GetItem(_arg0, _arg3, var1, 256, 0, "", 0);
-			new var2 = 0;
-			if (StringMap.GetValue(g_mapTrie, var1, var2))
+			new String:mapname[1024];
+			Menu.GetItem(menu, param2, mapname, 256, 0, "", 0);
+			new status;
+			if (StringMap.GetValue(g_mapTrie, mapname, status))
 			{
-				if (var2 & 2 == 2)
+				if (status & 2 == 2)
 				{
-					if (var2 & 4 == 4)
+					if (status & 4 == 4)
 					{
-						Format(var1, 256, "%s (%T)", var1, "Current Map", _arg2);
-						return RedrawMenuItem(var1);
+						Format(mapname, 256, "%s (%T)", mapname, "Current Map", param1);
+						return RedrawMenuItem(mapname);
 					}
-					if (var2 & 8 == 8)
+					if (status & 8 == 8)
 					{
-						Format(var1, 256, "%s (%T)", var1, "Recently Played", _arg2);
-						return RedrawMenuItem(var1);
+						Format(mapname, 256, "%s (%T)", mapname, "Recently Played", param1);
+						return RedrawMenuItem(mapname);
 					}
-					if (var2 & 16 == 16)
+					if (status & 16 == 16)
 					{
-						Format(var1, 256, "%s (%T)", var1, "Nominated", _arg2);
-						return RedrawMenuItem(var1);
+						Format(mapname, 256, "%s (%T)", mapname, "Nominated", param1);
+						return RedrawMenuItem(mapname);
 					}
 				}
 			}
@@ -365,19 +372,18 @@ public MenuHandler_MapSelect(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	return 0;
 }
 
-public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+public void:OnClientSayCommand_Post(client, String:command[], String:sArgs[])
 {
 	new var1;
-	if (_arg0 && IsChatTrigger())
+	if (client && IsChatTrigger())
 	{
 		return 0;
 	}
-	if (!(strcmp(_arg2[0], "nominate", false)))
+	if (!(strcmp(sArgs[0], "nominate", false)))
 	{
-		new var2;
-		var2 = SetCmdReplySource(1);
-		OpenNominationMenu(_arg0);
-		SetCmdReplySource(var2);
+		new ReplySource:old = SetCmdReplySource(1);
+		OpenNominationMenu(client);
+		SetCmdReplySource(old);
 	}
 	return 0;
 }
@@ -395,18 +401,18 @@ public void:OnConfigsExecuted()
 	return 0;
 }
 
-public void:OnNominationRemoved(String:_arg0[], _arg1)
+public void:OnNominationRemoved(String:map[], owner)
 {
-	new var1 = 0;
-	new var2 = 0;
-	FindMap(_arg0[0], var2, 256);
-	if (StringMap.GetValue(g_mapTrie, var2, var1))
+	new status;
+	new String:resolvedMap[1024];
+	FindMap(map[0], resolvedMap, 256);
+	if (StringMap.GetValue(g_mapTrie, resolvedMap, status))
 	{
-		if (var1 & 16 != 16)
+		if (status & 16 != 16)
 		{
 			return 0;
 		}
-		StringMap.SetValue(g_mapTrie, var2, 1, true);
+		StringMap.SetValue(g_mapTrie, resolvedMap, 1, true);
 		return 0;
 	}
 	return 0;
@@ -416,9 +422,8 @@ public void:OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("nominations.phrases");
-	new var1;
-	var1 = ByteCountToCells(256);
-	g_MapList = ArrayList.ArrayList(var1, 0);
+	new arraySize = ByteCountToCells(256);
+	g_MapList = ArrayList.ArrayList(arraySize, 0);
 	g_Cvar_ExcludeOld = CreateConVar("sm_nominate_excludeold", "1", "Specifies if the MapChooser excluded maps should also be excluded from Nominations", 0, true, 0.0, true, 1.0);
 	g_Cvar_ExcludeCurrent = CreateConVar("sm_nominate_excludecurrent", "1", "Specifies if the current map should be excluded from the Nominations list", 0, true, 0.0, true, 1.0);
 	g_Cvar_MaxMatches = CreateConVar("sm_nominate_maxfound", "0", "Maximum number of nomination matches to add to the menu. 0 = infinite.", 0, true, 0.0, false, 0.0);

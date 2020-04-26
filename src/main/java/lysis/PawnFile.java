@@ -227,22 +227,6 @@ public abstract class PawnFile {
 		variables_[variables_.length - 1] = var;
 		return true;
 	}
-	
-	public Variable insertArgumentVar(Function func, int argNum, RttiType type, LinkedList<Dimension> dims) {
-		long varAddr = 12 + argNum * 4;
-		
-		// Variable already exists.
-		if (lookupVariable(func.address(), varAddr) != null)
-			return null;
-		Dimension[] dimarray = null;
-		if (!dims.isEmpty())
-			dimarray = dims.toArray(new Dimension[0]);
-		Variable var = new Variable(varAddr, func.codeStart(), func.codeEnd(),
-				type.toVariableType(), Scope.Local, "_arg" + argNum, dimarray, type);
-		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
-		variables_[variables_.length - 1] = var;
-		return var;
-	}
 
 	public Argument buildArgumentInfo(Function func, int argNum) {
 		int argOffset = 12 + 4 * argNum;

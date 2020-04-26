@@ -31,49 +31,47 @@ new <enumstruct0>:playerinfo[66] =
 {
 	264, 268, 272, 276, 280, 284, 288, 292, 296, 300, 304, 308, 312, 316, 320, 324, 328, 332, 336, 340, 344, 348, 352, 356, 360, 364, 368, 372, 376, 380, 384, 388, 392, 396, 400, 404, 408, 412, 416, 420, 424, 428, 432, 436, 440, 444, 448, 452, 456, 460, 464, 468, 472, 476, 480, 484, 488, 492, 496, 500, 504, 508, 512, 516, 520, 524
 };
-void:FetchUsersWeCan(Database:_arg0)
+void:FetchUsersWeCan(Database:db)
 {
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (playerinfo[var2][1] && GetUserAdmin(var2) == -1)
+		if (playerinfo[i][1] && GetUserAdmin(i) == -1)
 		{
-			FetchUser(_arg0, var2);
+			FetchUser(db, i);
 		}
-		var2++;
+		i++;
 	}
 	RebuildCachePart[2] = 0;
 	return 0;
 }
 
-void:FetchGroups(Database:_arg0, _arg1)
+void:FetchGroups(Database:db, sequence)
 {
-	new var1 = 0;
-	Format(var1, 255, "SELECT flags, name, immunity_level FROM sm_groups");
-	new var2;
-	var2 = DataPack.DataPack();
-	DataPack.WriteCell(var2, _arg1, false);
-	DataPack.WriteString(var2, var1, false);
-	Database.Query(_arg0, 29, var1, var2, 0);
+	new String:query[1024];
+	Format(query, 255, "SELECT flags, name, immunity_level FROM sm_groups");
+	new DataPack:pk = DataPack.DataPack();
+	DataPack.WriteCell(pk, sequence, false);
+	DataPack.WriteString(pk, query, false);
+	Database.Query(db, 29, query, pk, 0);
 	return 0;
 }
 
-void:FetchOverrides(Database:_arg0, _arg1)
+void:FetchOverrides(Database:db, sequence)
 {
-	new var1 = 0;
-	Format(var1, 255, "SELECT type, name, flags FROM sm_overrides");
-	new var2;
-	var2 = DataPack.DataPack();
-	DataPack.WriteCell(var2, _arg1, false);
-	DataPack.WriteString(var2, var1, false);
-	Database.Query(_arg0, 31, var1, var2, 0);
+	new String:query[1024];
+	Format(query, 255, "SELECT type, name, flags FROM sm_overrides");
+	new DataPack:pk = DataPack.DataPack();
+	DataPack.WriteCell(pk, sequence, false);
+	DataPack.WriteString(pk, query, false);
+	Database.Query(db, 31, query, pk, 0);
 	return 0;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
 void:RequestDatabaseConnection()
@@ -91,35 +89,34 @@ void:RequestDatabaseConnection()
 	return 0;
 }
 
-void:FetchUser(Database:_arg0, _arg1)
+void:FetchUser(Database:db, client)
 {
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	GetClientName(_arg1, var2, 128);
-	GetClientIP(_arg1, var6, 24, true);
-	var4 = 0;
-	if (GetClientAuthId(_arg1, 1, var4, 32, true))
+	new String:name[512];
+	new String:safe_name[1024];
+	new String:steamid[128];
+	new String:steamidalt[128];
+	new String:ipaddr[96];
+	GetClientName(client, name, 128);
+	GetClientIP(client, ipaddr, 24, true);
+	steamid[0] = '\x00';
+	if (GetClientAuthId(client, 1, steamid, 32, true))
 	{
-		if (StrEqual(var4, "STEAM_ID_LAN", true))
+		if (StrEqual(steamid, "STEAM_ID_LAN", true))
 		{
-			var4 = 0;
+			steamid[0] = '\x00';
 		}
 	}
-	Database.Escape(_arg0, var2, var3, 255, 0);
-	new var7 = 0;
-	new var8 = 0;
-	var8 = Format(var8 + var7, 512 - var8, "SELECT a.id, a.authtype, a.identity, a.password, a.flags, a.name, COUNT(ag.group_id), immunity") + var8;
-	var8 = Format(var8 + var7, 512 - var8, " FROM sm_admins a LEFT JOIN sm_admins_groups ag ON a.id = ag.admin_id WHERE ") + var8;
-	var8 = Format(var8 + var7, 512 - var8, " (a.authtype = 'ip' AND a.identity = '%s')", var6) + var8;
-	var8 = Format(var8 + var7, 512 - var8, " OR (a.authtype = 'name' AND a.identity = '%s')", var3) + var8;
-	if (var4)
+	Database.Escape(db, name, safe_name, 255, 0);
+	new String:query[2048];
+	new len = Format(query[len], 512 - len, "SELECT a.id, a.authtype, a.identity, a.password, a.flags, a.name, COUNT(ag.group_id), immunity") + len;
+	len = Format(query[len], 512 - len, " FROM sm_admins a LEFT JOIN sm_admins_groups ag ON a.id = ag.admin_id WHERE ") + len;
+	len = Format(query[len], 512 - len, " (a.authtype = 'ip' AND a.identity = '%s')", ipaddr) + len;
+	len = Format(query[len], 512 - len, " OR (a.authtype = 'name' AND a.identity = '%s')", safe_name) + len;
+	if (steamid[0])
 	{
-		strcopy(var5, 32, var4);
+		strcopy(steamidalt, 32, steamid);
 		new var1;
-		if (var4 + 6/* ERROR unknown load Binary */ == 48)
+		if (steamid[1] == '0')
 		{
 			var1 = 49;
 		}
@@ -127,83 +124,82 @@ void:FetchUser(Database:_arg0, _arg1)
 		{
 			var1 = 48;
 		}
-		var5 + 6/* ERROR unknown load Binary */ = var1;
-		var8 = Format(var8 + var7, 512 - var8, " OR (a.authtype = 'steam' AND (a.identity = '%s' OR a.identity = '%s'))", var4, var5) + var8;
+		steamidalt[1] = var1;
+		len = Format(query[len], 512 - len, " OR (a.authtype = 'steam' AND (a.identity = '%s' OR a.identity = '%s'))", steamid, steamidalt) + len;
 	}
-	var8 = Format(var8 + var7, 512 - var8, " GROUP BY a.id") + var8;
+	len = Format(query[len], 512 - len, " GROUP BY a.id") + len;
 	g_sequence += 1;
-	playerinfo[_arg1] = g_sequence;
-	new var9;
-	var9 = DataPack.DataPack();
-	DataPack.WriteCell(var9, _arg1, false);
-	DataPack.WriteCell(var9, playerinfo[_arg1], false);
-	DataPack.WriteString(var9, var7, false);
-	Database.Query(_arg0, 33, var7, var9, 0);
+	playerinfo[client] = g_sequence;
+	new DataPack:pk = DataPack.DataPack();
+	DataPack.WriteCell(pk, client, false);
+	DataPack.WriteCell(pk, playerinfo[client], false);
+	DataPack.WriteString(pk, query, false);
+	Database.Query(db, 33, query, pk, 0);
 	return 0;
 }
 
-public bool:OnClientConnect(_arg0, String:_arg1[], _arg2)
+public bool:OnClientConnect(client, String:rejectmsg[], maxlen)
 {
-	playerinfo[_arg0] = 0;
-	playerinfo[_arg0][1] = 0;
+	playerinfo[client] = 0;
+	playerinfo[client][1] = 0;
 	return 1;
 }
 
-public void:OnClientDisconnect(_arg0)
+public void:OnClientDisconnect(client)
 {
-	playerinfo[_arg0] = 0;
-	playerinfo[_arg0][1] = 0;
+	playerinfo[client] = 0;
+	playerinfo[client][1] = 0;
 	return 0;
 }
 
-public Action:OnClientPreAdminCheck(_arg0)
+public Action:OnClientPreAdminCheck(client)
 {
-	playerinfo[_arg0][1] = 1;
+	playerinfo[client][1] = 1;
 	if (hDatabase)
 	{
 		if (RebuildCachePart[2])
 		{
 			return 0;
 		}
-		if (GetUserAdmin(_arg0) != -1)
+		if (GetUserAdmin(client) != -1)
 		{
 			return 0;
 		}
-		FetchUser(hDatabase, _arg0);
+		FetchUser(hDatabase, client);
 		return 3;
 	}
 	return 0;
 }
 
-public void:OnDatabaseConnect(Database:_arg0, String:_arg1[], any:_arg2)
+public void:OnDatabaseConnect(Database:db, String:error[], any:data)
 {
 	new var1;
-	if (ConnectLock == _arg2 && hDatabase)
+	if (ConnectLock == data && hDatabase)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(db);
+		db = 0;
 		return 0;
 	}
 	ConnectLock = 0;
-	hDatabase = _arg0;
+	hDatabase = db;
 	if (hDatabase)
 	{
-		new var2 = 0;
-		if ((var2 = RebuildCachePart[0]))
+		new sequence;
+		if ((sequence = RebuildCachePart[0]))
 		{
-			FetchOverrides(hDatabase, var2);
+			FetchOverrides(hDatabase, sequence);
 		}
-		if ((var2 = RebuildCachePart[1]))
+		if ((sequence = RebuildCachePart[1]))
 		{
-			FetchGroups(hDatabase, var2);
+			FetchGroups(hDatabase, sequence);
 		}
-		if ((var2 = RebuildCachePart[2]))
+		if ((sequence = RebuildCachePart[2]))
 		{
 			FetchUsersWeCan(hDatabase);
 		}
 		return 0;
 	}
-	LogError("Failed to connect to database: %s", _arg1[0]);
+	LogError("Failed to connect to database: %s", error[0]);
 	return 0;
 }
 
@@ -214,28 +210,28 @@ public void:OnMapEnd()
 	return 0;
 }
 
-public void:OnRebuildAdminCache(AdminCachePart:_arg0)
+public void:OnRebuildAdminCache(AdminCachePart:part)
 {
-	new var1;
+	decl sequence;
 	g_sequence += 1;
-	var1 = g_sequence;
-	RebuildCachePart[_arg0] = var1;
+	sequence = g_sequence;
+	RebuildCachePart[part] = sequence;
 	if (hDatabase)
 	{
-		if (_arg0)
+		if (part)
 		{
-			if (_arg0 == 1)
+			if (part == 1)
 			{
-				FetchGroups(hDatabase, var1);
+				FetchGroups(hDatabase, sequence);
 			}
-			if (_arg0 == 2)
+			if (part == 2)
 			{
 				FetchUsersWeCan(hDatabase);
 			}
 		}
 		else
 		{
-			FetchOverrides(hDatabase, var1);
+			FetchOverrides(hDatabase, sequence);
 		}
 		return 0;
 	}
@@ -246,301 +242,387 @@ public void:OnRebuildAdminCache(AdminCachePart:_arg0)
 	return 0;
 }
 
-public void:OnReceiveGroupImmunity(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
+public void:OnReceiveGroupImmunity(Database:db, DBResultSet:rs, String:error[], any:data)
 {
-	new var2;
-	var2 = _arg3;
-	DataPack.Reset(var2, false);
-	new var3;
-	var3 = DataPack.ReadCell(var2);
-	if (var3 != RebuildCachePart[1])
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != RebuildCachePart[1])
 	{
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	if (_arg1)
+	if (rs)
 	{
-		CloseHandle(var2);
-		var2 = 0;
-		while (DBResultSet.FetchRow(_arg1))
+		CloseHandle(pk);
+		pk = 0;
+		while (DBResultSet.FetchRow(rs))
 		{
-			new var5 = 0;
-			new var6 = 0;
-			new var7 = 0;
-			new var8 = 0;
-			DBResultSet.FetchString(_arg1, 0, var5, 80, 0);
-			DBResultSet.FetchString(_arg1, 1, var6, 80, 0);
+			new String:group1[320];
+			new String:group2[320];
+			new GroupId:grp;
+			new GroupId:other;
+			DBResultSet.FetchString(rs, 0, group1, 80, 0);
+			DBResultSet.FetchString(rs, 1, group2, 80, 0);
 			new var1;
-			if (!((var7 = FindAdmGroup(var5)) == -1 || (var8 = FindAdmGroup(var6)) == -1))
+			if (!((grp = FindAdmGroup(group1)) == -1 || (other = FindAdmGroup(group2)) == -1))
 			{
-				GroupId.AddGroupImmunity(var7, var8);
+				GroupId.AddGroupImmunity(grp, other);
 			}
 		}
 		RebuildCachePart[1] = 0;
 		return 0;
 	}
-	new var4 = 0;
-	DataPack.ReadString(var2, var4, 255);
-	LogError("SQL error receiving group immunity: %s", _arg2[0]);
-	LogError("Query dump: %s", var4);
-	CloseHandle(var2);
-	var2 = 0;
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving group immunity: %s", error[0]);
+	LogError("Query dump: %s", query);
+	CloseHandle(pk);
+	pk = 0;
 	return 0;
 }
 
-public void:OnReceiveGroupOverrides(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
+public void:OnReceiveGroupOverrides(Database:db, DBResultSet:rs, String:error[], any:data)
 {
-	new var1;
-	var1 = _arg3;
-	DataPack.Reset(var1, false);
-	new var2;
-	var2 = DataPack.ReadCell(var1);
-	if (var2 != RebuildCachePart[1])
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != RebuildCachePart[1])
 	{
-		CloseHandle(var1);
-		var1 = 0;
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	if (_arg1)
+	if (rs)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		new var7 = 0;
-		new var8 = 0;
-		while (DBResultSet.FetchRow(_arg1))
+		new String:name[320];
+		new String:type[64];
+		new String:command[256];
+		new String:access[64];
+		new GroupId:grp;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(_arg1, 0, var4, 80, 0);
-			DBResultSet.FetchString(_arg1, 1, var5, 16, 0);
-			DBResultSet.FetchString(_arg1, 2, var6, 64, 0);
-			DBResultSet.FetchString(_arg1, 3, var7, 16, 0);
-			if (!((var8 = FindAdmGroup(var4)) == -1))
+			DBResultSet.FetchString(rs, 0, name, 80, 0);
+			DBResultSet.FetchString(rs, 1, type, 16, 0);
+			DBResultSet.FetchString(rs, 2, command, 64, 0);
+			DBResultSet.FetchString(rs, 3, access, 16, 0);
+			if (!((grp = FindAdmGroup(name)) == -1))
 			{
-				new var9 = 1;
-				if (StrEqual(var5, "group", true))
+				new OverrideType:o_type = 1;
+				if (StrEqual(type, "group", true))
 				{
-					var9 = 2;
+					o_type = 2;
 				}
-				new var10 = 0;
-				if (StrEqual(var7, "allow", true))
+				new OverrideRule:o_rule;
+				if (StrEqual(access, "allow", true))
 				{
-					var10 = 1;
+					o_rule = 1;
 				}
-				GroupId.AddCommandOverride(var8, var6, var9, var10);
+				GroupId.AddCommandOverride(grp, command, o_type, o_rule);
 			}
 		}
-		new var11 = 0;
-		new var12 = 0;
-		var11 = Format(var11 + var12, 256 - var11, "SELECT g1.name, g2.name FROM sm_group_immunity gi") + var11;
-		var11 = Format(var11 + var12, 256 - var11, " LEFT JOIN sm_groups g1 ON g1.id = gi.group_id ") + var11;
-		var11 = Format(var11 + var12, 256 - var11, " LEFT JOIN sm_groups g2 ON g2.id = gi.other_id") + var11;
-		DataPack.Reset(var1, false);
-		DataPack.WriteCell(var1, var2, false);
-		DataPack.WriteString(var1, var12, false);
-		Database.Query(_arg0, 25, var12, var1, 0);
+		new len;
+		new String:query[1024];
+		len = Format(query[len], 256 - len, "SELECT g1.name, g2.name FROM sm_group_immunity gi") + len;
+		len = Format(query[len], 256 - len, " LEFT JOIN sm_groups g1 ON g1.id = gi.group_id ") + len;
+		len = Format(query[len], 256 - len, " LEFT JOIN sm_groups g2 ON g2.id = gi.other_id") + len;
+		DataPack.Reset(pk, false);
+		DataPack.WriteCell(pk, sequence, false);
+		DataPack.WriteString(pk, query, false);
+		Database.Query(db, 25, query, pk, 0);
 		return 0;
 	}
-	new var3 = 0;
-	DataPack.ReadString(var1, var3, 255);
-	LogError("SQL error receiving group overrides: %s", _arg2[0]);
-	LogError("Query dump: %s", var3);
-	CloseHandle(var1);
-	var1 = 0;
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving group overrides: %s", error[0]);
+	LogError("Query dump: %s", query);
+	CloseHandle(pk);
+	pk = 0;
 	return 0;
 }
 
-public void:OnReceiveGroups(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
+public void:OnReceiveGroups(Database:db, DBResultSet:rs, String:error[], any:data)
 {
-	new var1;
-	var1 = _arg3;
-	DataPack.Reset(var1, false);
-	new var2;
-	var2 = DataPack.ReadCell(var1);
-	if (var2 != RebuildCachePart[1])
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != RebuildCachePart[1])
 	{
-		CloseHandle(var1);
-		var1 = 0;
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	if (_arg1)
+	if (rs)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		while (DBResultSet.FetchRow(_arg1))
+		new String:flags[128];
+		new String:name[512];
+		new immunity;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(_arg1, 0, var4, 32, 0);
-			DBResultSet.FetchString(_arg1, 1, var5, 128, 0);
-			var6 = DBResultSet.FetchInt(_arg1, 2, 0);
-			new var7 = 0;
-			if ((var7 = FindAdmGroup(var5)) == -1)
+			DBResultSet.FetchString(rs, 0, flags, 32, 0);
+			DBResultSet.FetchString(rs, 1, name, 128, 0);
+			immunity = DBResultSet.FetchInt(rs, 2, 0);
+			new GroupId:grp;
+			if ((grp = FindAdmGroup(name)) == -1)
 			{
-				var7 = CreateAdmGroup(var5);
+				grp = CreateAdmGroup(name);
 			}
-			new var8;
-			var8 = strlen(var4);
-			new var9 = 0;
-			while (var9 < var8)
+			new num_flag_chars = strlen(flags);
+			new i;
+			while (i < num_flag_chars)
 			{
-				new var10 = 0;
-				if (FindFlagByChar(var4[var9], var10))
+				new AdminFlag:flag;
+				if (FindFlagByChar(flags[i], flag))
 				{
-					GroupId.SetFlag(var7, var10, true);
+					GroupId.SetFlag(grp, flag, true);
 				}
-				var9++;
+				i++;
 			}
-			GroupId.ImmunityLevel.set(var7, var6);
+			GroupId.ImmunityLevel.set(grp, immunity);
 		}
-		new var11 = 0;
-		Format(var11, 255, "SELECT g.name, og.type, og.name, og.access FROM sm_group_overrides og JOIN sm_groups g ON og.group_id = g.id ORDER BY g.id DESC");
-		DataPack.Reset(var1, false);
-		DataPack.WriteCell(var1, var2, false);
-		DataPack.WriteString(var1, var11, false);
-		Database.Query(_arg0, 27, var11, var1, 0);
+		new String:query[1024];
+		Format(query, 255, "SELECT g.name, og.type, og.name, og.access FROM sm_group_overrides og JOIN sm_groups g ON og.group_id = g.id ORDER BY g.id DESC");
+		DataPack.Reset(pk, false);
+		DataPack.WriteCell(pk, sequence, false);
+		DataPack.WriteString(pk, query, false);
+		Database.Query(db, 27, query, pk, 0);
 		return 0;
 	}
-	new var3 = 0;
-	DataPack.ReadString(var1, var3, 255);
-	LogError("SQL error receiving groups: %s", _arg2[0]);
-	LogError("Query dump: %s", var3);
-	CloseHandle(var1);
-	var1 = 0;
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving groups: %s", error[0]);
+	LogError("Query dump: %s", query);
+	CloseHandle(pk);
+	pk = 0;
 	return 0;
 }
 
-public void:OnReceiveOverrides(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
+public void:OnReceiveOverrides(Database:db, DBResultSet:rs, String:error[], any:data)
 {
-	new var1;
-	var1 = _arg3;
-	DataPack.Reset(var1, false);
-	new var2;
-	var2 = DataPack.ReadCell(var1);
-	if (var2 != RebuildCachePart[0])
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != RebuildCachePart[0])
 	{
-		CloseHandle(var1);
-		var1 = 0;
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	if (_arg1)
+	if (rs)
 	{
-		CloseHandle(var1);
-		var1 = 0;
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		new var7 = 0;
-		while (DBResultSet.FetchRow(_arg1))
+		CloseHandle(pk);
+		pk = 0;
+		new String:type[256];
+		new String:name[256];
+		new String:flags[128];
+		new flag_bits;
+		while (DBResultSet.FetchRow(rs))
 		{
-			DBResultSet.FetchString(_arg1, 0, var4, 64, 0);
-			DBResultSet.FetchString(_arg1, 1, var5, 64, 0);
-			DBResultSet.FetchString(_arg1, 2, var6, 32, 0);
-			var7 = ReadFlagString(var6, 0);
-			if (StrEqual(var4, "command", true))
+			DBResultSet.FetchString(rs, 0, type, 64, 0);
+			DBResultSet.FetchString(rs, 1, name, 64, 0);
+			DBResultSet.FetchString(rs, 2, flags, 32, 0);
+			flag_bits = ReadFlagString(flags, 0);
+			if (StrEqual(type, "command", true))
 			{
-				AddCommandOverride(var5, 1, var7);
+				AddCommandOverride(name, 1, flag_bits);
 			}
 			else
 			{
-				if (StrEqual(var4, "group", true))
+				if (StrEqual(type, "group", true))
 				{
-					AddCommandOverride(var5, 2, var7);
+					AddCommandOverride(name, 2, flag_bits);
 				}
 			}
 		}
 		RebuildCachePart[0] = 0;
 		return 0;
 	}
-	new var3 = 0;
-	DataPack.ReadString(var1, var3, 255);
-	LogError("SQL error receiving overrides: %s", _arg2[0]);
-	LogError("Query dump: %s", var3);
-	CloseHandle(var1);
-	var1 = 0;
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving overrides: %s", error[0]);
+	LogError("Query dump: %s", query);
+	CloseHandle(pk);
+	pk = 0;
 	return 0;
 }
 
-public void:OnReceiveUser(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
+public void:OnReceiveUser(Database:db, DBResultSet:rs, String:error[], any:data)
 {
-	new var2;
-	var2 = _arg3;
-	DataPack.Reset(var2, false);
-	new var3;
-	var3 = DataPack.ReadCell(var2);
-	new var4;
-	var4 = DataPack.ReadCell(var2);
-	if (var4 != playerinfo[var3])
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new client = DataPack.ReadCell(pk);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != playerinfo[client])
 	{
-		CloseHandle(var2);
-		var2 = 0;
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	if (_arg1)
+	if (rs)
 	{
-		new var6;
-		var6 = DBResultSet.RowCount.get(_arg1);
-		if (var6)
+		new num_accounts = DBResultSet.RowCount.get(rs);
+		if (num_accounts)
 		{
-			new var7 = 0;
-			new var8 = 0;
-			new var9 = 0;
-			new var10 = 0;
-			new var11 = 0;
-			new var12 = 0;
-			new var13 = 0;
-			new var14 = 0;
-
-/* ERROR! null */
- function "OnReceiveUser" (number 16)
-
-public void:OnReceiveUserGroups(Database:_arg0, DBResultSet:_arg1, String:_arg2[], any:_arg3)
-{
-	new var1;
-	var1 = _arg3;
-	DataPack.Reset(var1, false);
-	new var2;
-	var2 = DataPack.ReadCell(var1);
-	new var3;
-	var3 = DataPack.ReadCell(var1);
-	if (var3 != playerinfo[var2])
-	{
-		CloseHandle(var1);
-		var1 = 0;
-		return 0;
-	}
-	new var4;
-	var4 = DataPack.ReadCell(var1);
-	if (var4 != GetUserAdmin(var2))
-	{
-		NotifyPostAdminCheck(var2);
-		CloseHandle(var1);
-		var1 = 0;
-		return 0;
-	}
-	if (_arg1)
-	{
-		new var6 = 0;
-		new var7 = 0;
-		while (DBResultSet.FetchRow(_arg1))
-		{
-			DBResultSet.FetchString(_arg1, 0, var6, 80, 0);
-			if (!((var7 = FindAdmGroup(var6)) == -1))
+			new String:authtype[64];
+			new String:identity[320];
+			new String:password[320];
+			new String:flags[128];
+			new String:name[320];
+			new immunity;
+			new id;
+			new AdminId:adm;
+			new user_lookup[num_accounts][3];
+			new total_users;
+			while (DBResultSet.FetchRow(rs))
 			{
-				AdminId.InheritGroup(var4, var7);
+				id = DBResultSet.FetchInt(rs, 0, 0);
+				DBResultSet.FetchString(rs, 1, authtype, 16, 0);
+				DBResultSet.FetchString(rs, 2, identity, 80, 0);
+				DBResultSet.FetchString(rs, 3, password, 80, 0);
+				DBResultSet.FetchString(rs, 4, flags, 32, 0);
+				DBResultSet.FetchString(rs, 5, name, 80, 0);
+				immunity = DBResultSet.FetchInt(rs, 7, 0);
+				if ((adm = FindAdminByIdentity(authtype, identity)) != -1)
+				{
+					RemoveAdmin(adm);
+				}
+				adm = CreateAdmin(name);
+				if (AdminId.BindIdentity(adm, authtype, identity))
+				{
+					user_lookup[0][total_users] = id;
+					user_lookup[0][total_users][1] = adm;
+					user_lookup[0][total_users][2] = DBResultSet.FetchInt(rs, 6, 0);
+					total_users++;
+					if (password[0])
+					{
+						AdminId.SetPassword(adm, password);
+					}
+					AdminId.ImmunityLevel.set(adm, immunity);
+					new len = strlen(flags);
+					new AdminFlag:flag;
+					new i;
+					while (i < len)
+					{
+						if (FindFlagByChar(flags[i], flag))
+						{
+							AdminId.SetFlag(adm, flag, true);
+						}
+						i++;
+					}
+				}
+				LogError("Could not bind prefetched SQL admin (authtype \"%s\") (identity \"%s\")", authtype, identity);
+			}
+			new group_count;
+			RunAdminCacheChecks(client);
+			adm = GetUserAdmin(client);
+			id = 0;
+			new i;
+			while (i < total_users)
+			{
+				if (adm == user_lookup[0][i][1])
+				{
+					id = user_lookup[0][i];
+					group_count = user_lookup[0][i][2];
+					new var1;
+					if (id && group_count)
+					{
+						NotifyPostAdminCheck(client);
+						CloseHandle(pk);
+						pk = 0;
+						return 0;
+					}
+					new String:query[1024];
+					Format(query, 255, "SELECT g.name FROM sm_admins_groups ag JOIN sm_groups g ON ag.group_id = g.id WHERE ag.admin_id = %d", id);
+					DataPack.Reset(pk, false);
+					DataPack.WriteCell(pk, client, false);
+					DataPack.WriteCell(pk, sequence, false);
+					DataPack.WriteCell(pk, adm, false);
+					DataPack.WriteString(pk, query, false);
+					Database.Query(db, 35, query, pk, 0);
+					return 0;
+				}
+				i++;
+			}
+			new var1;
+			if (id && group_count)
+			{
+				NotifyPostAdminCheck(client);
+				CloseHandle(pk);
+				pk = 0;
+				return 0;
+			}
+			new String:query[1024];
+			Format(query, 255, "SELECT g.name FROM sm_admins_groups ag JOIN sm_groups g ON ag.group_id = g.id WHERE ag.admin_id = %d", id);
+			DataPack.Reset(pk, false);
+			DataPack.WriteCell(pk, client, false);
+			DataPack.WriteCell(pk, sequence, false);
+			DataPack.WriteCell(pk, adm, false);
+			DataPack.WriteString(pk, query, false);
+			Database.Query(db, 35, query, pk, 0);
+			return 0;
+		}
+		RunAdminCacheChecks(client);
+		NotifyPostAdminCheck(client);
+		CloseHandle(pk);
+		pk = 0;
+		return 0;
+	}
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving user: %s", error[0]);
+	LogError("Query dump: %s", query);
+	RunAdminCacheChecks(client);
+	NotifyPostAdminCheck(client);
+	CloseHandle(pk);
+	pk = 0;
+	return 0;
+}
+
+public void:OnReceiveUserGroups(Database:db, DBResultSet:rs, String:error[], any:data)
+{
+	new DataPack:pk = data;
+	DataPack.Reset(pk, false);
+	new client = DataPack.ReadCell(pk);
+	new sequence = DataPack.ReadCell(pk);
+	if (sequence != playerinfo[client])
+	{
+		CloseHandle(pk);
+		pk = 0;
+		return 0;
+	}
+	new AdminId:adm = DataPack.ReadCell(pk);
+	if (adm != GetUserAdmin(client))
+	{
+		NotifyPostAdminCheck(client);
+		CloseHandle(pk);
+		pk = 0;
+		return 0;
+	}
+	if (rs)
+	{
+		new String:name[320];
+		new GroupId:grp;
+		while (DBResultSet.FetchRow(rs))
+		{
+			DBResultSet.FetchString(rs, 0, name, 80, 0);
+			if (!((grp = FindAdmGroup(name)) == -1))
+			{
+				AdminId.InheritGroup(adm, grp);
 			}
 		}
-		NotifyPostAdminCheck(var2);
-		CloseHandle(var1);
-		var1 = 0;
+		NotifyPostAdminCheck(client);
+		CloseHandle(pk);
+		pk = 0;
 		return 0;
 	}
-	new var5 = 0;
-	DataPack.ReadString(var1, var5, 255);
-	LogError("SQL error receiving user: %s", _arg2[0]);
-	LogError("Query dump: %s", var5);
-	NotifyPostAdminCheck(var2);
-	CloseHandle(var1);
-	var1 = 0;
+	new String:query[1024];
+	DataPack.ReadString(pk, query, 255);
+	LogError("SQL error receiving user: %s", error[0]);
+	LogError("Query dump: %s", query);
+	NotifyPostAdminCheck(client);
+	CloseHandle(pk);
+	pk = 0;
 	return 0;
 }
 

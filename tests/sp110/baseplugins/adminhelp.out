@@ -23,35 +23,35 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-public Action:HelpCmd(_arg0, _arg1)
+public Action:HelpCmd(client, args)
 {
 	new var1;
-	if (_arg0 && IsClientInGame(_arg0))
+	if (client && IsClientInGame(client))
 	{
 		return 3;
 	}
-	new var10 = 0;
-	new var11 = 0;
-	new var12 = 1;
-	new var13 = 0;
-	GetCmdArg(0, var11, 20);
+	new String:arg[256];
+	new String:CmdName[80];
+	new PageNum = 1;
+	new bool:DoSearch;
+	GetCmdArg(0, CmdName, 20);
 	if (GetCmdArgs() >= 1)
 	{
-		GetCmdArg(1, var10, 64);
-		StringToIntEx(var10, var12, 10);
+		GetCmdArg(1, arg, 64);
+		StringToIntEx(arg, PageNum, 10);
 		new var2;
-		if (var12 <= 0)
+		if (PageNum <= 0)
 		{
 			var2 = 1;
 		}
 		else
 		{
-			var2 = var12;
+			var2 = PageNum;
 		}
-		var12 = var2;
+		PageNum = var2;
 	}
 	new var3;
-	if (strcmp("sm_help", var11, true))
+	if (strcmp("sm_help", CmdName, true))
 	{
 		var3 = 1;
 	}
@@ -59,105 +59,102 @@ public Action:HelpCmd(_arg0, _arg1)
 	{
 		var3 = 0;
 	}
-	var13 = var3;
+	DoSearch = var3;
 	if (GetCmdReplySource() == 1)
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 2552);
+		ReplyToCommand(client, "[SM] %t", 2552);
 	}
-	new var14 = 0;
-	new var15 = 0;
-	new var16 = 0;
-	new var17 = 0;
-	new var18;
-	var18 = GetCommandIterator();
-	FormatEx(var16, 128, "%T", "No description available", _arg0);
-	if (var13)
+	new String:Name[256];
+	new String:Desc[1024];
+	new String:NoDesc[512];
+	new Flags;
+	new Handle:CmdIter = GetCommandIterator();
+	FormatEx(NoDesc, 128, "%T", "No description available", client);
+	if (DoSearch)
 	{
-		new var19 = 1;
-		while (ReadCommandIterator(var18, var14, 64, var17, var15, 255))
+		new i = 1;
+		while (ReadCommandIterator(CmdIter, Name, 64, Flags, Desc, 255))
 		{
 			new var4;
-			if (StrContains(var14, var10, false) != -1 && CheckCommandAccess(_arg0, var14, var17, false))
+			if (StrContains(Name, arg, false) != -1 && CheckCommandAccess(client, Name, Flags, false))
 			{
 				new var5;
-				if (var15)
+				if (Desc[0])
 				{
-					var5 = var15;
+					var5 = Desc;
 				}
 				else
 				{
-					var5 = var16;
+					var5 = NoDesc;
 				}
-				var19++;
-				PrintToConsole(_arg0, "[%03d] %s - %s", var19, var14, var5);
+				i++;
+				PrintToConsole(client, "[%03d] %s - %s", i, Name, var5);
 			}
 		}
-		if (var19 == 1)
+		if (i == 1)
 		{
-			PrintToConsole(_arg0, "%t", 2628);
+			PrintToConsole(client, "%t", 2628);
 		}
 	}
 	else
 	{
-		PrintToConsole(_arg0, "%t", 2660);
-		if (var12 > 1)
+		PrintToConsole(client, "%t", 2660);
+		if (PageNum > 1)
 		{
-			new var20 = 0;
-			new var21;
-			var21 = var12 + -1 * 10 + -1;
-			var20 = 0;
-			while (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && var20 < var21)
+			new i;
+			new EndCmd = PageNum + -1 * 10 + -1;
+			i = 0;
+			while (ReadCommandIterator(CmdIter, Name, 64, Flags, Desc, 255) && i < EndCmd)
 			{
-				if (CheckCommandAccess(_arg0, var14, var17, false))
+				if (CheckCommandAccess(client, Name, Flags, false))
 				{
-					var20++;
+					i++;
 				}
 			}
-			if (!var20)
+			if (!i)
 			{
-				PrintToConsole(_arg0, "%t", 2684);
-				CloseHandle(var18);
-				var18 = 0;
+				PrintToConsole(client, "%t", 2684);
+				CloseHandle(CmdIter);
+				CmdIter = 0;
 				return 3;
 			}
 		}
-		new var22 = 0;
-		new var23;
-		var23 = var12 + -1 * 10;
-		var22 = 0;
-		while (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && var22 < 10)
+		new i;
+		new StartCmd = PageNum + -1 * 10;
+		i = 0;
+		while (ReadCommandIterator(CmdIter, Name, 64, Flags, Desc, 255) && i < 10)
 		{
-			if (CheckCommandAccess(_arg0, var14, var17, false))
+			if (CheckCommandAccess(client, Name, Flags, false))
 			{
-				var22++;
+				i++;
 				new var8;
-				if (var15)
+				if (Desc[0])
 				{
-					var8 = var15;
+					var8 = Desc;
 				}
 				else
 				{
-					var8 = var16;
+					var8 = NoDesc;
 				}
-				PrintToConsole(_arg0, "[%03d] %s - %s", var23 + var22, var14, var8);
+				PrintToConsole(client, "[%03d] %s - %s", StartCmd + i, Name, var8);
 			}
 		}
-		if (var22)
+		if (i)
 		{
-			PrintToConsole(_arg0, "%t", "Entries n - m in page k", var23 + 1, var23 + var22, var12);
+			PrintToConsole(client, "%t", "Entries n - m in page k", StartCmd + 1, StartCmd + i, PageNum);
 		}
 		else
 		{
-			PrintToConsole(_arg0, "%t", 2728);
+			PrintToConsole(client, "%t", 2728);
 		}
 		new var9;
-		if (ReadCommandIterator(var18, var14, 64, var17, var15, 255) && CheckCommandAccess(_arg0, var14, var17, false))
+		if (ReadCommandIterator(CmdIter, Name, 64, Flags, Desc, 255) && CheckCommandAccess(client, Name, Flags, false))
 		{
-			PrintToConsole(_arg0, "%t", "Type sm_help to see more", var12 + 1);
+			PrintToConsole(client, "%t", "Type sm_help to see more", PageNum + 1);
 		}
 	}
-	CloseHandle(var18);
-	var18 = 0;
+	CloseHandle(CmdIter);
+	CmdIter = 0;
 	return 3;
 }
 

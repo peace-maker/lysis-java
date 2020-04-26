@@ -41,55 +41,55 @@ new g_Votes;
 new g_VotesNeeded;
 new bool:g_Voted[66];
 new bool:g_InChange;
-void:PrintToChatAll(String:_arg0[], any:_arg1)
+void:PrintToChatAll(String:format[], any:_arg1)
 {
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		if (IsClientInGame(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintToChat(var2, "%s", var1);
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintToChat(i, "%s", buffer);
 		}
-		var2++;
+		i++;
 	}
 	return 0;
 }
 
-void:AttemptRTV(_arg0)
+void:AttemptRTV(client)
 {
 	new var2;
 	if (g_RTVAllowed && (ConVar.IntValue.get(g_Cvar_RTVPostVoteAction) == 1 && HasEndOfMapVoteFinished()))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 3592);
+		ReplyToCommand(client, "[SM] %t", 3592);
 		return 0;
 	}
 	if (CanMapChooserStartVote())
 	{
 		if (ConVar.IntValue.get(g_Cvar_MinPlayers) > GetClientCount(true))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 3636);
+			ReplyToCommand(client, "[SM] %t", 3636);
 			return 0;
 		}
-		if (g_Voted[_arg0])
+		if (g_Voted[client])
 		{
-			ReplyToCommand(_arg0, "[SM] %t", "Already Voted", g_Votes, g_VotesNeeded);
+			ReplyToCommand(client, "[SM] %t", "Already Voted", g_Votes, g_VotesNeeded);
 			return 0;
 		}
-		new var3 = 0;
-		GetClientName(_arg0, var3, 128);
+		new String:name[512];
+		GetClientName(client, name, 128);
 		g_Votes += 1;
-		g_Voted[_arg0] = 1;
-		PrintToChatAll("[SM] %t", "RTV Requested", var3, g_Votes, g_VotesNeeded);
+		g_Voted[client] = 1;
+		PrintToChatAll("[SM] %t", "RTV Requested", name, g_Votes, g_VotesNeeded);
 		if (g_Votes >= g_VotesNeeded)
 		{
 			StartRTV();
 		}
 		return 0;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 3616);
+	ReplyToCommand(client, "[SM] %t", 3616);
 	return 0;
 }
 
@@ -102,11 +102,11 @@ void:StartRTV()
 	new var1;
 	if (EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 	{
-		new var2 = 0;
-		if (GetNextMap(var2, 256))
+		new String:map[1024];
+		if (GetNextMap(map, 256))
 		{
-			GetMapDisplayName(var2, var2, 256);
-			PrintToChatAll("[SM] %t", "Changing Maps", var2);
+			GetMapDisplayName(map, map, 256);
+			PrintToChatAll("[SM] %t", "Changing Maps", map);
 			CreateTimer(5.0, 23, 0, 2);
 			g_InChange = true;
 			ResetRTV();
@@ -116,9 +116,8 @@ void:StartRTV()
 	}
 	if (CanMapChooserStartVote())
 	{
-		new var3;
-		var3 = ConVar.IntValue.get(g_Cvar_ChangeTime);
-		InitiateMapChooserVote(var3, 0);
+		new MapChange:when = ConVar.IntValue.get(g_Cvar_ChangeTime);
+		InitiateMapChooserVote(when, 0);
 		ResetRTV();
 		g_RTVAllowed = false;
 		CreateTimer(ConVar.FloatValue.get(g_Cvar_Interval), 25, 0, 2);
@@ -129,28 +128,28 @@ void:StartRTV()
 void:ResetRTV()
 {
 	g_Votes = 0;
-	new var1 = 1;
-	while (var1 <= 65)
+	new i = 1;
+	while (i <= 65)
 	{
-		g_Voted[var1] = 0;
-		var1++;
+		g_Voted[i] = 0;
+		i++;
 	}
 	return 0;
 }
 
-public Action:Command_RTV(_arg0, _arg1)
+public Action:Command_RTV(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
-		AttemptRTV(_arg0);
+		AttemptRTV(client);
 		return 3;
 	}
 	return 3;
 }
 
-public void:OnClientConnected(_arg0)
+public void:OnClientConnected(client)
 {
-	if (!(IsFakeClient(_arg0)))
+	if (!(IsFakeClient(client)))
 	{
 		g_Voters += 1;
 		g_VotesNeeded = RoundToCeil(float(g_Voters) * ConVar.FloatValue.get(g_Cvar_Needed));
@@ -158,14 +157,14 @@ public void:OnClientConnected(_arg0)
 	return 0;
 }
 
-public void:OnClientDisconnect(_arg0)
+public void:OnClientDisconnect(client)
 {
-	if (g_Voted[_arg0])
+	if (g_Voted[client])
 	{
 		g_Votes -= 1;
-		g_Voted[_arg0] = 0;
+		g_Voted[client] = 0;
 	}
-	if (!(IsFakeClient(_arg0)))
+	if (!(IsFakeClient(client)))
 	{
 		g_Voters -= 1;
 		g_VotesNeeded = RoundToCeil(float(g_Voters) * ConVar.FloatValue.get(g_Cvar_Needed));
@@ -183,20 +182,19 @@ public void:OnClientDisconnect(_arg0)
 	return 0;
 }
 
-public void:OnClientSayCommand_Post(_arg0, String:_arg1[], String:_arg2[])
+public void:OnClientSayCommand_Post(client, String:command[], String:sArgs[])
 {
 	new var1;
-	if (_arg0 && IsChatTrigger())
+	if (client && IsChatTrigger())
 	{
 		return 0;
 	}
 	new var2;
-	if (strcmp(_arg2[0], "rtv", false) && strcmp(_arg2[0], "rockthevote", false))
+	if (strcmp(sArgs[0], "rtv", false) && strcmp(sArgs[0], "rockthevote", false))
 	{
-		new var3;
-		var3 = SetCmdReplySource(1);
-		AttemptRTV(_arg0);
-		SetCmdReplySource(var3);
+		new ReplySource:old = SetCmdReplySource(1);
+		AttemptRTV(client);
+		SetCmdReplySource(old);
 	}
 	return 0;
 }
@@ -230,31 +228,31 @@ public void:OnPluginStart()
 	RegConsoleCmd("sm_rtv", 9, "", 0);
 	AutoExecConfig(true, "rtv", "sourcemod");
 	OnMapEnd();
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientConnected(var1))
+		if (IsClientConnected(i))
 		{
-			OnClientConnected(var1);
+			OnClientConnected(i);
 		}
-		var1++;
+		i++;
 	}
 	return 0;
 }
 
-public Action:Timer_ChangeMap(Handle:_arg0)
+public Action:Timer_ChangeMap(Handle:hTimer)
 {
 	g_InChange = false;
 	LogMessage("RTV changing map manually");
-	new var1 = 0;
-	if (GetNextMap(var1, 256))
+	new String:map[1024];
+	if (GetNextMap(map, 256))
 	{
-		ForceChangeLevel(var1, "RTV after mapvote");
+		ForceChangeLevel(map, "RTV after mapvote");
 	}
 	return 4;
 }
 
-public Action:Timer_DelayRTV(Handle:_arg0)
+public Action:Timer_DelayRTV(Handle:timer)
 {
 	g_RTVAllowed = true;
 	return 0;

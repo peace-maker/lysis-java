@@ -102,6 +102,11 @@ public class Variable {
 		return rtti_type_;
 	}
 	
+	public void updateByRef() {
+		rtti_type_.setByRef();
+		type_ = rtti_type_.toVariableType();
+	}
+	
 	public boolean isString() {
 		if (tag_ != null && tag_.isString())
 			return true;

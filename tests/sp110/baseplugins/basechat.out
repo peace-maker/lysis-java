@@ -52,113 +52,111 @@ new g_Colors[3][13] =
 };
 new ConVar:g_Cvar_Chatmode;
 new EngineVersion:g_GameEngine;
-void:SendDialogToOne(_arg0, _arg1, String:_arg2[], any:_arg3)
+void:SendDialogToOne(client, color, String:text[], any:_arg3)
 {
-	new var1 = 0;
-	VFormat(var1, 100, _arg2[0], 4);
-	new var2;
-	var2 = KeyValues.KeyValues("Stuff", "title", var1);
-	KeyValues.SetColor(var2, "color", g_Colors[_arg1][0], g_Colors[_arg1][1], g_Colors[_arg1][2], 255);
-	KeyValues.SetNum(var2, "level", 1);
-	KeyValues.SetNum(var2, "time", 10);
-	CreateDialog(_arg0, var2, 0);
-	CloseHandle(var2);
-	var2 = 0;
+	new String:message[400];
+	VFormat(message, 100, text[0], 4);
+	new KeyValues:kv = KeyValues.KeyValues("Stuff", "title", message);
+	KeyValues.SetColor(kv, "color", g_Colors[color][0], g_Colors[color][1], g_Colors[color][2], 255);
+	KeyValues.SetNum(kv, "level", 1);
+	KeyValues.SetNum(kv, "time", 10);
+	CreateDialog(client, kv, 0);
+	CloseHandle(kv);
+	kv = 0;
 	return 0;
 }
 
-void:SendPrivateChat(_arg0, _arg1, String:_arg2[])
+void:SendPrivateChat(client, target, String:message[])
 {
-	if (_arg0)
+	if (client)
 	{
-		if (_arg0 != _arg1)
+		if (client != target)
 		{
 			if (g_GameEngine == 12)
 			{
-				PrintToChat(_arg0, " \x01\x0B\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
+				PrintToChat(client, " \x01\x0B\x04%t: \x01%s", "Private say to", target, client, message[0]);
 			}
-			PrintToChat(_arg0, "\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
+			PrintToChat(client, "\x04%t: \x01%s", "Private say to", target, client, message[0]);
 		}
 	}
 	else
 	{
-		PrintToServer("(Private to %N) %N: %s", _arg1, _arg0, _arg2[0]);
+		PrintToServer("(Private to %N) %N: %s", target, client, message[0]);
 	}
 	if (g_GameEngine == 12)
 	{
-		PrintToChat(_arg1, " \x01\x0B\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
+		PrintToChat(target, " \x01\x0B\x04%t: \x01%s", "Private say to", target, client, message[0]);
 	}
 	else
 	{
-		PrintToChat(_arg1, "\x04%t: \x01%s", "Private say to", _arg1, _arg0, _arg2[0]);
+		PrintToChat(target, "\x04%t: \x01%s", "Private say to", target, client, message[0]);
 	}
-	LogAction(_arg0, _arg1, "\"%L\" triggered sm_psay to \"%L\" (text %s)", _arg0, _arg1, _arg2[0]);
+	LogAction(client, target, "\"%L\" triggered sm_psay to \"%L\" (text %s)", client, target, message[0]);
 	return 0;
 }
 
-void:SendPanelToAll(_arg0, String:_arg1[])
+void:SendPanelToAll(from, String:message[])
 {
-	new var2 = 0;
-	Format(var2, 64, "%N:", _arg0);
-	ReplaceString(_arg1[0], 192, "\n", "\n", true);
-	new var3;
-	var3 = Panel.Panel(0);
-	Panel.SetTitle(var3, var2, false);
-	Panel.DrawItem(var3, "", 8);
-	Panel.DrawText(var3, _arg1[0]);
-	Panel.DrawItem(var3, "", 8);
-	Panel.CurrentKey.set(var3, GetMaxPageItems(Panel.Style.get(var3)));
-	Panel.DrawItem(var3, "Exit", 16);
-	new var4 = 1;
-	while (var4 <= MaxClients)
+	new String:title[400];
+	Format(title, 64, "%N:", from);
+	ReplaceString(message[0], 192, "\n", "\n", true);
+	new Panel:mSayPanel = Panel.Panel(0);
+	Panel.SetTitle(mSayPanel, title, false);
+	Panel.DrawItem(mSayPanel, "", 8);
+	Panel.DrawText(mSayPanel, message[0]);
+	Panel.DrawItem(mSayPanel, "", 8);
+	Panel.CurrentKey.set(mSayPanel, GetMaxPageItems(Panel.Style.get(mSayPanel)));
+	Panel.DrawItem(mSayPanel, "Exit", 16);
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientInGame(var4) && IsFakeClient(var4))
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
-			Panel.Send(var3, var4, 33, 10);
+			Panel.Send(mSayPanel, i, 33, 10);
 		}
-		var4++;
+		i++;
 	}
-	CloseHandle(var3);
-	var3 = 0;
+	CloseHandle(mSayPanel);
+	mSayPanel = 0;
 	return 0;
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2492);
+			ReplyToCommand(client, "[SM] %t", 2492);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2464);
+			ReplyToCommand(client, "[SM] %t", 2464);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2436);
+			ReplyToCommand(client, "[SM] %t", 2436);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2408);
+			ReplyToCommand(client, "[SM] %t", 2408);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2376);
+			ReplyToCommand(client, "[SM] %t", 2376);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2348);
+			ReplyToCommand(client, "[SM] %t", 2348);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2316);
+			ReplyToCommand(client, "[SM] %t", 2316);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2288);
+			ReplyToCommand(client, "[SM] %t", 2288);
 		}
 		default:
 		{
@@ -167,98 +165,103 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
+FindTarget(client, String:target[], bool:nobots, bool:immunity)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 16;
-	if (_arg2)
+	new String:target_name[256];
+	new target_list[1];
+	new target_count;
+	new bool:tn_is_ml;
+	new flags = 16;
+	if (nobots)
 	{
-		var3 |= 32;
+		flags |= 32;
 	}
-	if (!_arg3)
+	if (!immunity)
 	{
-		var3 |= 8;
+		flags |= 8;
 	}
+	if (0 < (target_count = ProcessTargetString(target[0], client, target_list, 1, flags, target_name, 64, tn_is_ml)))
+	{
+		return target_list[0];
+	}
+	ReplyToTargetError(client, target_count);
+	return -1;
+}
 
-/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
- function "FindTarget" (number 4)
-
-FindColor(String:_arg0[])
+FindColor(String:color[])
 {
-	new var1 = 0;
-	while (var1 < 13)
+	new i;
+	while (i < 13)
 	{
-		if (!(strcmp(_arg0[0], g_ColorNames[var1], false)))
+		if (!(strcmp(color[0], g_ColorNames[i], false)))
 		{
-			return var1;
+			return i;
 		}
-		var1++;
+		i++;
 	}
 	return -1;
 }
 
-void:SendChatToAll(_arg0, String:_arg1[])
+void:SendChatToAll(client, String:message[])
 {
-	new var2 = 0;
-	new var3 = 1;
-	while (var3 <= MaxClients)
+	new String:nameBuf[512];
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientInGame(var3) && IsFakeClient(var3))
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
 		}
 		else
 		{
-			FormatActivitySource(_arg0, var3, var2, 128);
+			FormatActivitySource(client, i, nameBuf, 128);
 			if (g_GameEngine == 12)
 			{
-				PrintToChat(var3, " \x01\x0B\x04%t: \x01%s", "Say all", var2, _arg1[0]);
+				PrintToChat(i, " \x01\x0B\x04%t: \x01%s", "Say all", nameBuf, message[0]);
 			}
 			else
 			{
-				PrintToChat(var3, "\x04%t: \x01%s", "Say all", var2, _arg1[0]);
+				PrintToChat(i, "\x04%t: \x01%s", "Say all", nameBuf, message[0]);
 			}
 		}
-		var3++;
+		i++;
 	}
 	return 0;
 }
 
-void:DisplayCenterTextToAll(_arg0, String:_arg1[])
+void:DisplayCenterTextToAll(client, String:message[])
 {
-	new var2 = 0;
-	new var3 = 1;
-	while (var3 <= MaxClients)
+	new String:nameBuf[512];
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientInGame(var3) && IsFakeClient(var3))
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
 		}
 		else
 		{
-			FormatActivitySource(_arg0, var3, var2, 128);
-			PrintCenterText(var3, "%s: %s", var2, _arg1[0]);
+			FormatActivitySource(client, i, nameBuf, 128);
+			PrintCenterText(i, "%s: %s", nameBuf, message[0]);
 		}
-		var3++;
+		i++;
 	}
 	return 0;
 }
 
-void:SendChatToAdmins(_arg0, String:_arg1[])
+void:SendChatToAdmins(from, String:message[])
 {
-	new var5;
-	var5 = CheckCommandAccess(_arg0, "sm_chat", 512, false);
-	new var6 = 1;
-	while (var6 <= MaxClients)
+	new fromAdmin = CheckCommandAccess(from, "sm_chat", 512, false);
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var2;
-		if (IsClientInGame(var6) && (var6 != _arg0 && CheckCommandAccess(var6, "sm_chat", 512, false)))
+		if (IsClientInGame(i) && (i != from && CheckCommandAccess(i, "sm_chat", 512, false)))
 		{
 			if (g_GameEngine == 12)
 			{
 				new var3;
-				if (var5)
+				if (fromAdmin)
 				{
 					var3 = 4312;
 				}
@@ -266,10 +269,10 @@ void:SendChatToAdmins(_arg0, String:_arg1[])
 				{
 					var3 = 4324;
 				}
-				PrintToChat(var6, " \x01\x0B\x04%t: \x01%s", var3, _arg0, _arg1[0]);
+				PrintToChat(i, " \x01\x0B\x04%t: \x01%s", var3, from, message[0]);
 			}
 			new var4;
-			if (var5)
+			if (fromAdmin)
 			{
 				var4 = 4352;
 			}
@@ -277,223 +280,217 @@ void:SendChatToAdmins(_arg0, String:_arg1[])
 			{
 				var4 = 4364;
 			}
-			PrintToChat(var6, "\x04%t: \x01%s", var4, _arg0, _arg1[0]);
+			PrintToChat(i, "\x04%t: \x01%s", var4, from, message[0]);
 		}
-		var6++;
+		i++;
 	}
 	return 0;
 }
 
-public Action:Command_SmChat(_arg0, _arg1)
+public Action:Command_SmChat(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_chat <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_chat <message>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 192);
-	SendChatToAdmins(_arg0, var1);
-	LogAction(_arg0, -1, "\"%L\" triggered sm_chat (text %s)", _arg0, var1);
+	new String:text[768];
+	GetCmdArgString(text, 192);
+	SendChatToAdmins(client, text);
+	LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, text);
 	return 3;
 }
 
-public Action:Command_SmCsay(_arg0, _arg1)
+public Action:Command_SmCsay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_csay <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_csay <message>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 192);
-	DisplayCenterTextToAll(_arg0, var1);
-	LogAction(_arg0, -1, "\"%L\" triggered sm_csay (text %s)", _arg0, var1);
+	new String:text[768];
+	GetCmdArgString(text, 192);
+	DisplayCenterTextToAll(client, text);
+	LogAction(client, -1, "\"%L\" triggered sm_csay (text %s)", client, text);
 	return 3;
 }
 
-public Action:Command_SmHsay(_arg0, _arg1)
+public Action:Command_SmHsay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_hsay <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_hsay <message>");
 		return 3;
 	}
-	new var2 = 0;
-	GetCmdArgString(var2, 192);
-	new var3 = 0;
-	new var4 = 1;
-	while (var4 <= MaxClients)
+	new String:text[768];
+	GetCmdArgString(text, 192);
+	new String:nameBuf[512];
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientInGame(var4) && IsFakeClient(var4))
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
 		}
 		else
 		{
-			FormatActivitySource(_arg0, var4, var3, 128);
-			PrintHintText(var4, "%s: %s", var3, var2);
+			FormatActivitySource(client, i, nameBuf, 128);
+			PrintHintText(i, "%s: %s", nameBuf, text);
 		}
-		var4++;
+		i++;
 	}
-	LogAction(_arg0, -1, "\"%L\" triggered sm_hsay (text %s)", _arg0, var2);
+	LogAction(client, -1, "\"%L\" triggered sm_hsay (text %s)", client, text);
 	return 3;
 }
 
-public Action:Command_SmMsay(_arg0, _arg1)
+public Action:Command_SmMsay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_msay <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_msay <message>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 192);
-	SendPanelToAll(_arg0, var1);
-	LogAction(_arg0, -1, "\"%L\" triggered sm_msay (text %s)", _arg0, var1);
+	new String:text[768];
+	GetCmdArgString(text, 192);
+	SendPanelToAll(client, text);
+	LogAction(client, -1, "\"%L\" triggered sm_msay (text %s)", client, text);
 	return 3;
 }
 
-public Action:Command_SmPsay(_arg0, _arg1)
+public Action:Command_SmPsay(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_psay <name or #userid> <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_psay <name or #userid> <message>");
 		return 3;
 	}
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 0;
-	GetCmdArgString(var1, 192);
-	new var4;
-	var4 = BreakString(var1, var2, 64);
-	BreakString(var4 + var1, var3, 192);
-	new var5;
-	var5 = FindTarget(_arg0, var2, true, false);
-	if (var5 == -1)
+	new String:text[768];
+	new String:arg[256];
+	new String:message[768];
+	GetCmdArgString(text, 192);
+	new len = BreakString(text, arg, 64);
+	BreakString(text[len], message, 192);
+	new target = FindTarget(client, arg, true, false);
+	if (target == -1)
 	{
 		return 3;
 	}
-	SendPrivateChat(_arg0, var5, var3);
+	SendPrivateChat(client, target, message);
 	return 3;
 }
 
-public Action:Command_SmSay(_arg0, _arg1)
+public Action:Command_SmSay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_say <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_say <message>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 192);
-	SendChatToAll(_arg0, var1);
-	LogAction(_arg0, -1, "\"%L\" triggered sm_say (text %s)", _arg0, var1);
+	new String:text[768];
+	GetCmdArgString(text, 192);
+	SendChatToAll(client, text);
+	LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, text);
 	return 3;
 }
 
-public Action:Command_SmTsay(_arg0, _arg1)
+public Action:Command_SmTsay(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_tsay <message>");
+		ReplyToCommand(client, "[SM] Usage: sm_tsay <message>");
 		return 3;
 	}
-	new var2 = 0;
-	new var3 = 0;
-	GetCmdArgString(var2, 192);
-	new var4;
-	var4 = BreakString(var2, var3, 16);
-	new var5;
-	var5 = FindColor(var3);
-	new var6 = 0;
-	if (var5 == -1)
+	new String:text[768];
+	new String:colorStr[64];
+	GetCmdArgString(text, 192);
+	new len = BreakString(text, colorStr, 16);
+	new color = FindColor(colorStr);
+	new String:nameBuf[512];
+	if (color == -1)
 	{
-		var5 = 0;
-		var4 = 0;
+		color = 0;
+		len = 0;
 	}
-	new var7 = 1;
-	while (var7 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
 		new var1;
-		if (IsClientInGame(var7) && IsFakeClient(var7))
+		if (IsClientInGame(i) && IsFakeClient(i))
 		{
 		}
 		else
 		{
-			FormatActivitySource(_arg0, var7, var6, 128);
-			SendDialogToOne(var7, var5, "%s: %s", var6, var4 + var2);
+			FormatActivitySource(client, i, nameBuf, 128);
+			SendDialogToOne(i, color, "%s: %s", nameBuf, text[len]);
 		}
-		var7++;
+		i++;
 	}
-	LogAction(_arg0, -1, "\"%L\" triggered sm_tsay (text %s)", _arg0, var2);
+	LogAction(client, -1, "\"%L\" triggered sm_tsay (text %s)", client, text);
 	return 3;
 }
 
-public Handler_DoNothing(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public Handler_DoNothing(Menu:menu, MenuAction:action, param1, param2)
 {
 	return 0;
 }
 
-public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
+public Action:OnClientSayCommand(client, String:command[], String:sArgs[])
 {
-	new var4 = 0;
-	if (_arg2[0][var4] != '@')
+	new startidx;
+	if (sArgs[0][startidx] != '@')
 	{
 		return 0;
 	}
-	var4++;
-	if (strcmp(_arg1[0], "say", false))
+	startidx++;
+	if (strcmp(command[0], "say", false))
 	{
 		new var2;
-		if (strcmp(_arg1[0], "say_team", false) && strcmp(_arg1[0], "say_squad", false))
+		if (strcmp(command[0], "say_team", false) && strcmp(command[0], "say_squad", false))
 		{
 			new var3;
-			if (CheckCommandAccess(_arg0, "sm_chat", 512, false) && ConVar.BoolValue.get(g_Cvar_Chatmode))
+			if (CheckCommandAccess(client, "sm_chat", 512, false) && ConVar.BoolValue.get(g_Cvar_Chatmode))
 			{
 				return 0;
 			}
-			SendChatToAdmins(_arg0, var4 + _arg2[0]);
-			LogAction(_arg0, -1, "\"%L\" triggered sm_chat (text %s)", _arg0, var4 + _arg2[0]);
+			SendChatToAdmins(client, startidx + sArgs[0]);
+			LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, startidx + sArgs[0]);
 			return 4;
 		}
 		return 0;
 	}
-	if (_arg2[0][var4] != '@')
+	if (sArgs[0][startidx] != '@')
 	{
-		if (CheckCommandAccess(_arg0, "sm_say", 512, false))
+		if (CheckCommandAccess(client, "sm_say", 512, false))
 		{
-			SendChatToAll(_arg0, var4 + _arg2[0]);
-			LogAction(_arg0, -1, "\"%L\" triggered sm_say (text %s)", _arg0, var4 + _arg2[0]);
+			SendChatToAll(client, startidx + sArgs[0]);
+			LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, startidx + sArgs[0]);
 			return 4;
 		}
 		return 0;
 	}
-	var4++;
-	if (_arg2[0][var4] != '@')
+	startidx++;
+	if (sArgs[0][startidx] != '@')
 	{
-		if (CheckCommandAccess(_arg0, "sm_psay", 512, false))
+		if (CheckCommandAccess(client, "sm_psay", 512, false))
 		{
-			new var5 = 0;
-			new var6;
-			var6 = BreakString(var4 + _arg2[0], var5, 64);
-			new var7;
-			var7 = FindTarget(_arg0, var5, true, false);
+			new String:arg[256];
+			new len = BreakString(startidx + sArgs[0], arg, 64);
+			new target = FindTarget(client, arg, true, false);
 			new var1;
-			if (var7 == -1 || var6 == -1)
+			if (target == -1 || len == -1)
 			{
 				return 4;
 			}
-			SendPrivateChat(_arg0, var7, var6 + var4 + _arg2[0]);
+			SendPrivateChat(client, target, len + startidx + sArgs[0]);
 			return 4;
 		}
 		return 0;
 	}
-	var4++;
-	if (CheckCommandAccess(_arg0, "sm_csay", 512, false))
+	startidx++;
+	if (CheckCommandAccess(client, "sm_csay", 512, false))
 	{
-		DisplayCenterTextToAll(_arg0, var4 + _arg2[0]);
-		LogAction(_arg0, -1, "\"%L\" triggered sm_csay (text %s)", _arg0, var4 + _arg2[0]);
+		DisplayCenterTextToAll(client, startidx + sArgs[0]);
+		LogAction(client, -1, "\"%L\" triggered sm_csay (text %s)", client, startidx + sArgs[0]);
 		return 4;
 	}
 	return 0;

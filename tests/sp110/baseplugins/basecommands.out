@@ -44,43 +44,42 @@ new g_map_serial = -1;
 new Menu:g_ConfigMenu;
 new SMCParser:config_parser;
 new String:g_FlagNames[20][56];
-LoadMapList(Menu:_arg0)
+LoadMapList(Menu:menu)
 {
-	new var1 = 0;
-	if ((var1 = ReadMapList(g_map_array, g_map_serial, "sm_map menu", 3)))
+	new Handle:map_array;
+	if ((map_array = ReadMapList(g_map_array, g_map_serial, "sm_map menu", 3)))
 	{
-		g_map_array = var1;
+		g_map_array = map_array;
 	}
 	if (g_map_array)
 	{
-		Menu.RemoveAllItems(_arg0);
-		new var2 = 0;
-		new var3;
-		var3 = GetArraySize(g_map_array);
-		new var4 = 0;
-		while (var4 < var3)
+		Menu.RemoveAllItems(menu);
+		new String:map_name[1024];
+		new map_count = GetArraySize(g_map_array);
+		new i;
+		while (i < map_count)
 		{
-			new var5 = 0;
-			GetArrayString(g_map_array, var4, var2, 256);
-			GetMapDisplayName(var2, var5, 256);
-			Menu.AddItem(_arg0, var2, var5, 0);
-			var4++;
+			new String:displayName[1024];
+			GetArrayString(g_map_array, i, map_name, 256);
+			GetMapDisplayName(map_name, displayName, 256);
+			Menu.AddItem(menu, map_name, displayName, 0);
+			i++;
 		}
-		return var3;
+		return map_count;
 	}
 	return 0;
 }
 
-void:PerformExec(_arg0, String:_arg1[])
+void:PerformExec(client, String:path[])
 {
-	if (FileExists(_arg1[0], false, "GAME"))
+	if (FileExists(path[0], false, "GAME"))
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Executed config", _arg1[0] + 4);
-		LogAction(_arg0, -1, "\"%L\" executed config (file \"%s\")", _arg0, _arg1[0] + 4);
-		ServerCommand("exec \"%s\"", _arg1[0] + 4);
+		ShowActivity2(client, "[SM] ", "%t", "Executed config", path[0] + 4);
+		LogAction(client, -1, "\"%L\" executed config (file \"%s\")", client, path[0] + 4);
+		ServerCommand("exec \"%s\"", path[0] + 4);
 		return 0;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", "Config not found", _arg1[0] + 4);
+	ReplyToCommand(client, "[SM] %t", "Config not found", path[0] + 4);
 	return 0;
 }
 
@@ -101,19 +100,18 @@ void:ParseConfigs()
 	g_ConfigMenu = Menu.Menu(79, 2);
 	Menu.SetTitle(g_ConfigMenu, "%T", "Choose Config", 0);
 	Menu.ExitBackButton.set(g_ConfigMenu, true);
-	new var1 = 0;
-	BuildPath(0, var1, 256, "configs/adminmenu_cfgs.txt");
-	if (FileExists(var1, false, "GAME"))
+	new String:configPath[1024];
+	BuildPath(0, configPath, 256, "configs/adminmenu_cfgs.txt");
+	if (FileExists(configPath, false, "GAME"))
 	{
-		new var2 = 0;
-		new var3;
-		var3 = SMCParser.ParseFile(config_parser, var1, var2, 0);
-		if (var3)
+		new line;
+		new SMCError:err = SMCParser.ParseFile(config_parser, configPath, line, 0);
+		if (err)
 		{
-			new var4 = 0;
-			SMC_GetErrorString(var3, var4, 256);
-			LogError("Could not parse file (line %d, file \"%s\"):", var2, var1);
-			LogError("Parser encountered error: %s", var4);
+			new String:error[1024];
+			SMC_GetErrorString(err, error, 256);
+			LogError("Could not parse file (line %d, file \"%s\"):", line, configPath);
+			LogError("Parser encountered error: %s", error);
 		}
 		return 0;
 	}
@@ -121,174 +119,180 @@ void:ParseConfigs()
 	return 0;
 }
 
-void:ProtectVar(String:_arg0[])
+void:ProtectVar(String:cvar[])
 {
-	StringMap.SetValue(g_ProtectedVars, _arg0[0], 1, true);
+	StringMap.SetValue(g_ProtectedVars, cvar[0], 1, true);
 	return 0;
 }
 
-bool:IsVarProtected(String:_arg0[])
+bool:IsVarProtected(String:cvar[])
 {
+	new dummy_value;
+	return StringMap.GetValue(g_ProtectedVars, cvar[0], dummy_value);
+}
 
-/* ERROR! null */
- function "IsVarProtected" (number 4)
-
-bool:IsClientAllowedToChangeCvar(_arg0, String:_arg1[])
+bool:IsClientAllowedToChangeCvar(client, String:cvarname[])
 {
-	new var2;
-	var2 = FindConVar(_arg1[0]);
-	new var3 = 0;
-	new var4;
+	new ConVar:hndl = FindConVar(cvarname[0]);
+	new bool:allowed;
+	decl client_flags;
 	new var1;
-	if (_arg0)
+	if (client)
 	{
-		var1 = GetUserFlagBits(_arg0);
+		var1 = GetUserFlagBits(client);
 	}
 	else
 	{
 		var1 = 16384;
 	}
-	var4 = var1;
-	if (var4 & 16384)
+	client_flags = var1;
+	if (client_flags & 16384)
 	{
-		var3 = 1;
+		allowed = true;
 	}
 	else
 	{
-		if (ConVar.Flags.get(var2) & 32)
+		if (ConVar.Flags.get(hndl) & 32)
 		{
-			var3 = var4 & 2048 == 2048;
+			allowed = client_flags & 2048 == 2048;
 		}
-		if (StrEqual(_arg1[0], "sv_cheats", true))
+		if (StrEqual(cvarname[0], "sv_cheats", true))
 		{
-			var3 = var4 & 8192 == 8192;
+			allowed = client_flags & 8192 == 8192;
 		}
-		if (!(IsVarProtected(_arg1[0])))
+		if (!(IsVarProtected(cvarname[0])))
 		{
-			var3 = 1;
+			allowed = true;
 		}
 	}
-	return var3;
+	return allowed;
 }
 
-CustomFlagsToString(String:_arg0[], _arg1, _arg2)
+CustomFlagsToString(String:buffer[], maxlength, flags)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 15;
-	while (var3 <= 20)
-	{
-		if (1 << var3 & _arg2)
+	new String:joins[8][24] = {
 		{
-			var2++;
-			IntToString(var3 + -14, var1[var2], 6);
+			44, 60, 88, 116, 144, 172
+		},
+		{
+			88, 116, 144, 172, 200, 228
+		},
+		{
+			144, 172, 200, 228, 256, 284
+		},
+		{
+			200, 228, 256, 284, 312, 340
+		},
+		{
+			256, 284, 312, 340, 368, 396
+		},
+		{
+			312, 340, 368, 396, 424, 452
+		},
+		{
+			340, 368, 396, 424, 452, 1953723747
+		},
+		{
+			1953723747, 623406447, 10611, 8236, 1565348699, 1634948384
 		}
-		var3++;
-	}
-	ImplodeStrings(var1, var2, ",", _arg0[0], _arg1);
-	return var2;
-}
-
-void:FlagsToString(String:_arg0[], _arg1, _arg2)
-{
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 0;
-	while (var3 < 14)
+	};
+	new total;
+	new i = 15;
+	while (i <= 20)
 	{
-		if (1 << var3 & _arg2)
+		if (1 << i & flags)
 		{
-			var2++;
-			strcopy(var1[var2], 32, g_FlagNames[var3]);
+			total++;
+			IntToString(i + -14, joins[total], 6);
 		}
-		var3++;
+		i++;
 	}
-	new var4 = 0;
-	if (CustomFlagsToString(var4, 32, _arg2))
-	{
-		var2++;
-		Format(var1[var2], 32, "custom(%s)", var4);
-	}
-	ImplodeStrings(var1, var2, ", ", _arg0[0], _arg1);
-	return 0;
+	ImplodeStrings(joins, total, ",", buffer[0], maxlength);
+	return total;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+void:FlagsToString(String:buffer[], maxlength, flags)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+
+/* ERROR! null */
+ function "FlagsToString" (number 7)
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-ImplodeStrings(String:_arg0[][], _arg1, String:_arg2[], String:_arg3[], _arg4)
+ImplodeStrings(String:strings[][], numStrings, String:join[], String:buffer[], maxLength)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3;
-	var3 = strlen(_arg2[0]);
-	new var4 = 0;
-	while (var4 < _arg1)
+	new total;
+	new length;
+	new part_length;
+	new join_length = strlen(join[0]);
+	new i;
+	while (i < numStrings)
 	{
-		var2 = strcopy(var1 + _arg3[0], _arg4 - var1, _arg0[0][var4]);
-		var1 = var2 + var1;
-		if (!(var2 < 0/* ERROR unknown load Constant */))
+		length = strcopy(total + buffer[0], maxLength - total, strings[0][i]);
+		total = length + total;
+		if (!(length < part_length))
 		{
-			if (_arg1 + -1 != var4)
+			if (numStrings + -1 != i)
 			{
-				var2 = strcopy(var1 + _arg3[0], _arg4 - var1, _arg2[0]);
-				var1 = var2 + var1;
-				if (var2 < var3)
+				length = strcopy(total + buffer[0], maxLength - total, join[0]);
+				total = length + total;
+				if (length < join_length)
 				{
-					return var1;
+					return total;
 				}
 			}
-			var4++;
+			i++;
 		}
-		return var1;
+		return total;
 	}
-	return var1;
+	return total;
 }
 
-Handle:CreateDataTimer(Float:_arg0, <typeset 0>:_arg1, Handle:_arg2, _arg3)
+Handle:CreateDataTimer(Float:interval, <typeset 0>:func, &Handle:datapack, flags)
 {
-	_arg2 = DataPack.DataPack();
-	_arg3 |= 512;
-	return CreateTimer(_arg0, _arg1, _arg2, _arg3);
+	datapack = DataPack.DataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2492);
+			ReplyToCommand(client, "[SM] %t", 2492);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2464);
+			ReplyToCommand(client, "[SM] %t", 2464);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2436);
+			ReplyToCommand(client, "[SM] %t", 2436);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2408);
+			ReplyToCommand(client, "[SM] %t", 2408);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2376);
+			ReplyToCommand(client, "[SM] %t", 2376);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2348);
+			ReplyToCommand(client, "[SM] %t", 2348);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2316);
+			ReplyToCommand(client, "[SM] %t", 2316);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2288);
+			ReplyToCommand(client, "[SM] %t", 2288);
 		}
 		default:
 		{
@@ -297,156 +301,157 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
+FindTarget(client, String:target[], bool:nobots, bool:immunity)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 16;
-	if (_arg2)
+	new String:target_name[256];
+	new target_list[1];
+	new target_count;
+	new bool:tn_is_ml;
+	new flags = 16;
+	if (nobots)
 	{
-		var3 |= 32;
+		flags |= 32;
 	}
-	if (!_arg3)
+	if (!immunity)
 	{
-		var3 |= 8;
+		flags |= 8;
 	}
+	if (0 < (target_count = ProcessTargetString(target[0], client, target_list, 1, flags, target_name, 64, tn_is_ml)))
+	{
+		return target_list[0];
+	}
+	ReplyToTargetError(client, target_count);
+	return -1;
+}
 
-/* ERROR! null */
- function "FindTarget" (number 12)
-
-bool:RedisplayAdminMenu(Handle:_arg0, _arg1)
+bool:RedisplayAdminMenu(Handle:topmenu, client)
 {
-	if (_arg0)
+	if (topmenu)
 	{
-		return DisplayTopMenu(_arg0, _arg1, 3);
+		return DisplayTopMenu(topmenu, client, 3);
 	}
 	return 0;
 }
 
-void:PerformKick(_arg0, _arg1, String:_arg2[])
+void:PerformKick(client, target, String:reason[])
 {
-	LogAction(_arg0, _arg1, "\"%L\" kicked \"%L\" (reason \"%s\")", _arg0, _arg1, _arg2[0]);
-	if (_arg2[0])
+	LogAction(client, target, "\"%L\" kicked \"%L\" (reason \"%s\")", client, target, reason[0]);
+	if (reason[0])
 	{
-		KickClient(_arg1, "%s", _arg2[0]);
+		KickClient(target, "%s", reason[0]);
 	}
 	else
 	{
-		KickClient(_arg1, "%t", 3228);
+		KickClient(target, "%t", 3228);
 	}
 	return 0;
 }
 
-void:DisplayKickMenu(_arg0)
+void:DisplayKickMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(81, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Kick player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, false, false);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(81, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Kick player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, false, false);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:PerformReloadAdmins(_arg0)
+void:PerformReloadAdmins(client)
 {
 	DumpAdminCache(1, true);
 	DumpAdminCache(0, true);
-	LogAction(_arg0, -1, "\"%L\" refreshed the admin cache.", _arg0);
-	ReplyToCommand(_arg0, "[SM] %t", 3604);
+	LogAction(client, -1, "\"%L\" refreshed the admin cache.", client);
+	ReplyToCommand(client, "[SM] %t", 3604);
 	return 0;
 }
 
-void:PerformCancelVote(_arg0)
+void:PerformCancelVote(client)
 {
 	if (IsVoteInProgress(0))
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", 3692);
+		ShowActivity2(client, "[SM] ", "%t", 3692);
 		CancelVote();
 		return 0;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 3656);
+	ReplyToCommand(client, "[SM] %t", 3656);
 	return 0;
 }
 
-void:PerformWho(_arg0, _arg1, ReplySource:_arg2, bool:_arg3)
+void:PerformWho(client, target, ReplySource:reply, bool:is_admin)
 {
-	new var2 = 0;
-	GetClientName(_arg1, var2, 128);
-	new var3 = 0;
-	new var4 = 0;
-	new var5;
-	var5 = GetUserAdmin(_arg1);
+	new String:name[512];
+	GetClientName(target, name, 128);
+	new bool:show_name;
+	new String:admin_name[512];
+	new AdminId:id = GetUserAdmin(target);
 	new var1;
-	if (var5 != -1 && AdminId.GetUsername(var5, var4, 128))
+	if (id != -1 && AdminId.GetUsername(id, admin_name, 128))
 	{
-		var3 = 1;
+		show_name = true;
 	}
-	new var6;
-	var6 = SetCmdReplySource(_arg2);
-	if (var5 == -1)
+	new ReplySource:old_reply = SetCmdReplySource(reply);
+	if (id == -1)
 	{
-		ReplyToCommand(_arg0, "[SM] %t", "Player is not an admin", var2);
+		ReplyToCommand(client, "[SM] %t", "Player is not an admin", name);
 	}
 	else
 	{
-		if (_arg3)
+		if (is_admin)
 		{
-			new var7;
-			var7 = GetUserFlagBits(_arg1);
-			new var8 = 0;
-			if (var7)
+			new flags = GetUserFlagBits(target);
+			new String:flagstring[1024];
+			if (flags)
 			{
-				if (var7 & 16384)
+				if (flags & 16384)
 				{
-					strcopy(var8, 255, "root");
+					strcopy(flagstring, 255, "root");
 				}
-				FlagsToString(var8, 255, var7);
+				FlagsToString(flagstring, 255, flags);
 			}
 			else
 			{
-				strcopy(var8, 255, "none");
+				strcopy(flagstring, 255, "none");
 			}
-			if (var3)
+			if (show_name)
 			{
-				ReplyToCommand(_arg0, "[SM] %t", "Admin logged in as", var2, var4, var8);
+				ReplyToCommand(client, "[SM] %t", "Admin logged in as", name, admin_name, flagstring);
 			}
 			else
 			{
-				ReplyToCommand(_arg0, "[SM] %t", "Admin logged in anon", var2, var8);
+				ReplyToCommand(client, "[SM] %t", "Admin logged in anon", name, flagstring);
 			}
 		}
-		ReplyToCommand(_arg0, "[SM] %t", "Player is an admin", var2);
+		ReplyToCommand(client, "[SM] %t", "Player is an admin", name);
 	}
-	SetCmdReplySource(var6);
+	SetCmdReplySource(old_reply);
 	return 0;
 }
 
-void:DisplayWhoMenu(_arg0)
+void:DisplayWhoMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(83, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Identify player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu2(var1, 0, 4);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(83, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Identify player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu2(menu, 0, 4);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-public void:AdminMenu_CancelVote(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_CancelVote(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			PerformCancelVote(_arg3);
-			RedisplayAdminMenu(_arg0, _arg3);
+			PerformCancelVote(param);
+			RedisplayAdminMenu(topmenu, param);
 		}
-		if (_arg1 == 3)
+		if (action == 3)
 		{
 			new var1;
 			if (IsVoteInProgress(0))
@@ -457,632 +462,623 @@ public void:AdminMenu_CancelVote(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObje
 			{
 				var1 = 6;
 			}
-			_arg4[0] = var1;
+			buffer[0] = var1;
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Cancel vote", _arg3);
+		Format(buffer[0], maxlength, "%T", "Cancel vote", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_ExecCFG(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_ExecCFG(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			Menu.Display(g_ConfigMenu, _arg3, 0);
+			Menu.Display(g_ConfigMenu, param, 0);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Exec CFG", _arg3);
+		Format(buffer[0], maxlength, "%T", "Exec CFG", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Kick(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Kick(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayKickMenu(_arg3);
+			DisplayKickMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Kick player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Kick player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Map(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Map(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			Menu.Display(g_MapList, _arg3, 0);
+			Menu.Display(g_MapList, param, 0);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Choose Map", _arg3);
+		Format(buffer[0], maxlength, "%T", "Choose Map", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_ReloadAdmins(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_ReloadAdmins(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			PerformReloadAdmins(_arg3);
-			RedisplayAdminMenu(_arg0, _arg3);
+			PerformReloadAdmins(param);
+			RedisplayAdminMenu(topmenu, param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Reload admins", _arg3);
+		Format(buffer[0], maxlength, "%T", "Reload admins", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Who(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Who(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayWhoMenu(_arg3);
+			DisplayWhoMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Identify player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Identify player", param);
 	}
 	return 0;
 }
 
-public Action:Command_CancelVote(_arg0, _arg1)
+public Action:Command_CancelVote(client, args)
 {
-	PerformCancelVote(_arg0);
+	PerformCancelVote(client);
 	return 3;
 }
 
-public Action:Command_Cvar(_arg0, _arg1)
+public Action:Command_Cvar(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		if (_arg0)
+		if (client)
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <cvar> [value]");
+			ReplyToCommand(client, "[SM] Usage: sm_cvar <cvar> [value]");
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <cvar|protect> [value]");
+			ReplyToCommand(client, "[SM] Usage: sm_cvar <cvar|protect> [value]");
 		}
 		return 3;
 	}
-	new var3 = 0;
-	GetCmdArg(1, var3, 64);
+	new String:cvarname[256];
+	GetCmdArg(1, cvarname, 64);
 	new var1;
-	if (_arg0 && StrEqual(var3, "protect", true))
+	if (client && StrEqual(cvarname, "protect", true))
 	{
-		if (_arg1 < 2)
+		if (args < 2)
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_cvar <protect> <cvar>");
+			ReplyToCommand(client, "[SM] Usage: sm_cvar <protect> <cvar>");
 			return 3;
 		}
-		GetCmdArg(2, var3, 64);
-		ProtectVar(var3);
-		ReplyToCommand(_arg0, "[SM] %t", "Cvar is now protected", var3);
+		GetCmdArg(2, cvarname, 64);
+		ProtectVar(cvarname);
+		ReplyToCommand(client, "[SM] %t", "Cvar is now protected", cvarname);
 		return 3;
 	}
-	new var4;
-	var4 = FindConVar(var3);
-	if (var4)
+	new ConVar:hndl = FindConVar(cvarname);
+	if (hndl)
 	{
-		if (IsClientAllowedToChangeCvar(_arg0, var3))
+		if (IsClientAllowedToChangeCvar(client, cvarname))
 		{
-			new var5 = 0;
-			if (_arg1 < 2)
+			new String:value[1024];
+			if (args < 2)
 			{
-				ConVar.GetString(var4, var5, 255);
-				ReplyToCommand(_arg0, "[SM] %t", "Value of cvar", var3, var5);
+				ConVar.GetString(hndl, value, 255);
+				ReplyToCommand(client, "[SM] %t", "Value of cvar", cvarname, value);
 				return 3;
 			}
-			GetCmdArg(2, var5, 255);
+			GetCmdArg(2, value, 255);
 			new var2;
-			if (StrEqual(var3, "servercfgfile", false) || StrEqual(var3, "lservercfgfile", false))
+			if (StrEqual(cvarname, "servercfgfile", false) || StrEqual(cvarname, "lservercfgfile", false))
 			{
-				new var6;
-				var6 = StrContains(var5, ";", true);
-				if (var6 != -1)
+				new pos = StrContains(value, ";", true);
+				if (pos != -1)
 				{
-					var5[var6] = 0;
+					value[pos] = '\x00';
 				}
 			}
-			if (ConVar.Flags.get(var4) & 32 != 32)
+			if (ConVar.Flags.get(hndl) & 32 != 32)
 			{
-				ShowActivity2(_arg0, "[SM] ", "%t", "Cvar changed", var3, var5);
+				ShowActivity2(client, "[SM] ", "%t", "Cvar changed", cvarname, value);
 			}
 			else
 			{
-				ReplyToCommand(_arg0, "[SM] %t", "Cvar changed", var3, var5);
+				ReplyToCommand(client, "[SM] %t", "Cvar changed", cvarname, value);
 			}
-			LogAction(_arg0, -1, "\"%L\" changed cvar (cvar \"%s\") (value \"%s\")", _arg0, var3, var5);
-			ConVar.SetString(var4, var5, true, false);
+			LogAction(client, -1, "\"%L\" changed cvar (cvar \"%s\") (value \"%s\")", client, cvarname, value);
+			ConVar.SetString(hndl, value, true, false);
 			return 3;
 		}
-		ReplyToCommand(_arg0, "[SM] %t", 6136);
+		ReplyToCommand(client, "[SM] %t", 6136);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", "Unable to find cvar", var3);
+	ReplyToCommand(client, "[SM] %t", "Unable to find cvar", cvarname);
 	return 3;
 }
 
-public Action:Command_ExecCfg(_arg0, _arg1)
+public Action:Command_ExecCfg(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_execcfg <filename>");
+		ReplyToCommand(client, "[SM] Usage: sm_execcfg <filename>");
 		return 3;
 	}
-	new var1 = 0;
-	var1 = "cfg/";
-	GetCmdArg(1, var1 + 4, 60);
-	PerformExec(_arg0, var1);
+	new String:path[256];
+	path[0] = "cfg/";
+	GetCmdArg(1, path[1], 60);
+	PerformExec(client, path);
 	return 3;
 }
 
-public Action:Command_Kick(_arg0, _arg1)
+public Action:Command_Kick(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
 		new var1;
-		if (GetCmdReplySource() == 1 && _arg0)
+		if (GetCmdReplySource() == 1 && client)
 		{
-			DisplayKickMenu(_arg0);
+			DisplayKickMenu(client);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_kick <#userid|name> [reason]");
+			ReplyToCommand(client, "[SM] Usage: sm_kick <#userid|name> [reason]");
 		}
 		return 3;
 	}
-	new var2 = 0;
-	GetCmdArgString(var2, 256);
-	new var3 = 0;
-	new var4;
-	var4 = BreakString(var2, var3, 65);
-	if (var4 == -1)
+	new String:Arguments[1024];
+	GetCmdArgString(Arguments, 256);
+	new String:arg[272];
+	new len = BreakString(Arguments, arg, 65);
+	if (len == -1)
 	{
-		var4 = 0;
-		var2 = 0;
+		len = 0;
+		Arguments[0] = '\x00';
 	}
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	if (0 < (var7 = ProcessTargetString(var3, _arg0, var6, 65, 4, var5, 64, var8)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 < (target_count = ProcessTargetString(arg, client, target_list, 65, 4, target_name, 64, tn_is_ml)))
 	{
-		new var9 = 0;
-		Format(var9, 64, var4 + var2);
-		if (var8)
+		new String:reason[256];
+		Format(reason, 64, Arguments[len]);
+		if (tn_is_ml)
 		{
-			if (var9)
+			if (reason[0])
 			{
-				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target reason", var5, var9);
+				ShowActivity2(client, "[SM] ", "%t", "Kicked target reason", target_name, reason);
 			}
 			else
 			{
-				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target", var5);
+				ShowActivity2(client, "[SM] ", "%t", "Kicked target", target_name);
 			}
 		}
 		else
 		{
-			if (var9)
+			if (reason[0])
 			{
-				ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target reason", "_s", var5, var9);
+				ShowActivity2(client, "[SM] ", "%t", "Kicked target reason", "_s", target_name, reason);
 			}
-			ShowActivity2(_arg0, "[SM] ", "%t", "Kicked target", "_s", var5);
+			ShowActivity2(client, "[SM] ", "%t", "Kicked target", "_s", target_name);
 		}
-		new var10 = 0;
-		new var11 = 0;
-		while (var11 < var7)
+		new kick_self;
+		new i;
+		while (i < target_count)
 		{
-			if (_arg0 == var6[var11])
+			if (client == target_list[i])
 			{
-				var10 = _arg0;
+				kick_self = client;
 			}
 			else
 			{
-				PerformKick(_arg0, var6[var11], var9);
+				PerformKick(client, target_list[i], reason);
 			}
-			var11++;
+			i++;
 		}
-		if (var10)
+		if (kick_self)
 		{
-			PerformKick(_arg0, _arg0, var9);
+			PerformKick(client, client, reason);
 		}
 	}
 	else
 	{
-		ReplyToTargetError(_arg0, var7);
+		ReplyToTargetError(client, target_count);
 	}
 	return 3;
 }
 
-public Action:Command_Map(_arg0, _arg1)
+public Action:Command_Map(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
 		new var1;
-		if (GetCmdReplySource() == 1 && _arg0)
+		if (GetCmdReplySource() == 1 && client)
 		{
-			Menu.SetTitle(g_MapList, "%T", "Choose Map", _arg0);
-			Menu.Display(g_MapList, _arg0, 0);
+			Menu.SetTitle(g_MapList, "%T", "Choose Map", client);
+			Menu.Display(g_MapList, client, 0);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_map <map>");
+			ReplyToCommand(client, "[SM] Usage: sm_map <map>");
 		}
 		return 3;
 	}
-	new var2 = 0;
-	new var3 = 0;
-	GetCmdArg(1, var2, 256);
-	if (FindMap(var2, var3, 256) == 1)
+	new String:map[1024];
+	new String:displayName[1024];
+	GetCmdArg(1, map, 256);
+	if (FindMap(map, displayName, 256) == 1)
 	{
-		ReplyToCommand(_arg0, "[SM] %t", "Map was not found", var2);
+		ReplyToCommand(client, "[SM] %t", "Map was not found", map);
 		return 3;
 	}
-	GetMapDisplayName(var3, var3, 256);
-	ShowActivity2(_arg0, "[SM] ", "%t", "Changing map", var3);
-	LogAction(_arg0, -1, "\"%L\" changed map to \"%s\"", _arg0, var2);
-	new var4 = 0;
-	CreateDataTimer(3.0, 97, var4, 0);
-	DataPack.WriteString(var4, var2, false);
+	GetMapDisplayName(displayName, displayName, 256);
+	ShowActivity2(client, "[SM] ", "%t", "Changing map", displayName);
+	LogAction(client, -1, "\"%L\" changed map to \"%s\"", client, map);
+	new DataPack:dp;
+	CreateDataTimer(3.0, 97, dp, 0);
+	DataPack.WriteString(dp, map, false);
 	return 3;
 }
 
-public Action:Command_Rcon(_arg0, _arg1)
+public Action:Command_Rcon(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_rcon <args>");
+		ReplyToCommand(client, "[SM] Usage: sm_rcon <args>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 255);
-	LogAction(_arg0, -1, "\"%L\" console command (cmdline \"%s\")", _arg0, var1);
-	if (_arg0)
+	new String:argstring[1024];
+	GetCmdArgString(argstring, 255);
+	LogAction(client, -1, "\"%L\" console command (cmdline \"%s\")", client, argstring);
+	if (client)
 	{
-		new var2 = 0;
-		ServerCommandEx(var2, 4096, "%s", var1);
-		if (IsClientConnected(_arg0))
+		new String:responseBuffer[16384];
+		ServerCommandEx(responseBuffer, 4096, "%s", argstring);
+		if (IsClientConnected(client))
 		{
-			ReplyToCommand(_arg0, var2);
+			ReplyToCommand(client, responseBuffer);
 		}
 	}
 	else
 	{
-		ServerCommand("%s", var1);
+		ServerCommand("%s", argstring);
 	}
 	return 3;
 }
 
-public Action:Command_ReVote(_arg0, _arg1)
+public Action:Command_ReVote(client, args)
 {
-	if (_arg0)
+	if (client)
 	{
 		if (IsVoteInProgress(0))
 		{
-			if (IsClientInVotePool(_arg0))
+			if (IsClientInVotePool(client))
 			{
-				if (!(RedrawClientVoteMenu(_arg0, true)))
+				if (!(RedrawClientVoteMenu(client, true)))
 				{
-					ReplyToCommand(_arg0, "[SM] %t", 6676);
+					ReplyToCommand(client, "[SM] %t", 6676);
 				}
 				return 3;
 			}
-			ReplyToCommand(_arg0, "[SM] %t", 6640);
+			ReplyToCommand(client, "[SM] %t", 6640);
 			return 3;
 		}
-		ReplyToCommand(_arg0, "[SM] %t", 6608);
+		ReplyToCommand(client, "[SM] %t", 6608);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 6576);
+	ReplyToCommand(client, "[SM] %t", 6576);
 	return 3;
 }
 
-public Action:Command_ReloadAdmins(_arg0, _arg1)
+public Action:Command_ReloadAdmins(client, args)
 {
-	PerformReloadAdmins(_arg0);
+	PerformReloadAdmins(client);
 	return 3;
 }
 
-public Action:Command_ResetCvar(_arg0, _arg1)
+public Action:Command_ResetCvar(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_resetcvar <cvar>");
+		ReplyToCommand(client, "[SM] Usage: sm_resetcvar <cvar>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 64);
-	new var2;
-	var2 = FindConVar(var1);
-	if (var2)
+	new String:cvarname[256];
+	GetCmdArg(1, cvarname, 64);
+	new ConVar:hndl = FindConVar(cvarname);
+	if (hndl)
 	{
-		if (IsClientAllowedToChangeCvar(_arg0, var1))
+		if (IsClientAllowedToChangeCvar(client, cvarname))
 		{
-			ConVar.RestoreDefault(var2, false, false);
-			new var3 = 0;
-			ConVar.GetString(var2, var3, 255);
-			if (ConVar.Flags.get(var2) & 32 != 32)
+			ConVar.RestoreDefault(hndl, false, false);
+			new String:value[1024];
+			ConVar.GetString(hndl, value, 255);
+			if (ConVar.Flags.get(hndl) & 32 != 32)
 			{
-				ShowActivity2(_arg0, "[SM] ", "%t", "Cvar changed", var1, var3);
+				ShowActivity2(client, "[SM] ", "%t", "Cvar changed", cvarname, value);
 			}
 			else
 			{
-				ReplyToCommand(_arg0, "[SM] %t", "Cvar changed", var1, var3);
+				ReplyToCommand(client, "[SM] %t", "Cvar changed", cvarname, value);
 			}
-			LogAction(_arg0, -1, "\"%L\" reset cvar (cvar \"%s\") (value \"%s\")", _arg0, var1, var3);
+			LogAction(client, -1, "\"%L\" reset cvar (cvar \"%s\") (value \"%s\")", client, cvarname, value);
 			return 3;
 		}
-		ReplyToCommand(_arg0, "[SM] %t", 6380);
+		ReplyToCommand(client, "[SM] %t", 6380);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", "Unable to find cvar", var1);
+	ReplyToCommand(client, "[SM] %t", "Unable to find cvar", cvarname);
 	return 3;
 }
 
-public Action:Command_Who(_arg0, _arg1)
+public Action:Command_Who(client, args)
 {
-	new var3 = 0;
+	new bool:is_admin;
 	new var2;
-	if (_arg0 && (_arg0 && GetUserFlagBits(_arg0)))
+	if (client && (client && GetUserFlagBits(client)))
 	{
-		var3 = 1;
+		is_admin = true;
 	}
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		Format(var4, 16, "%T", "Admin access", _arg0);
-		Format(var5, 16, "%T", "Name", _arg0);
-		Format(var6, 16, "%T", "Username", _arg0);
-		if (var3)
+		new String:t_access[64];
+		new String:t_name[64];
+		new String:t_username[64];
+		Format(t_access, 16, "%T", "Admin access", client);
+		Format(t_name, 16, "%T", "Name", client);
+		Format(t_username, 16, "%T", "Username", client);
+		if (is_admin)
 		{
-			PrintToConsole(_arg0, "    %-24.23s %-18.17s %s", var5, var6, var4);
+			PrintToConsole(client, "    %-24.23s %-18.17s %s", t_name, t_username, t_access);
 		}
 		else
 		{
-			PrintToConsole(_arg0, "    %-24.23s %s", var5, var4);
+			PrintToConsole(client, "    %-24.23s %s", t_name, t_access);
 		}
-		new var7 = 0;
-		new var8 = 1;
-		while (var8 <= MaxClients)
+		new String:flagstring[1024];
+		new i = 1;
+		while (i <= MaxClients)
 		{
-			if (IsClientInGame(var8))
+			if (IsClientInGame(i))
 			{
-				new var9;
-				var9 = GetUserFlagBits(var8);
-				new var10;
-				var10 = GetUserAdmin(var8);
-				if (var9)
+				new flags = GetUserFlagBits(i);
+				new AdminId:id = GetUserAdmin(i);
+				if (flags)
 				{
-					if (var9 & 16384)
+					if (flags & 16384)
 					{
-						strcopy(var7, 255, "root");
+						strcopy(flagstring, 255, "root");
 					}
-					FlagsToString(var7, 255, var9);
+					FlagsToString(flagstring, 255, flags);
 				}
 				else
 				{
-					strcopy(var7, 255, "none");
+					strcopy(flagstring, 255, "none");
 				}
-				new var11 = 0;
-				new var12 = 0;
-				GetClientName(var8, var11, 128);
-				if (var10 != -1)
+				new String:name[512];
+				new String:username[512];
+				GetClientName(i, name, 128);
+				if (id != -1)
 				{
-					AdminId.GetUsername(var10, var12, 128);
+					AdminId.GetUsername(id, username, 128);
 				}
-				if (var3)
+				if (is_admin)
 				{
-					PrintToConsole(_arg0, "%2d. %-24.23s %-18.17s %s", var8, var11, var12, var7);
+					PrintToConsole(client, "%2d. %-24.23s %-18.17s %s", i, name, username, flagstring);
 				}
 				else
 				{
-					if (var9)
+					if (flags)
 					{
-						PrintToConsole(_arg0, "%2d. %-24.23s %t", var8, var11, "Yes");
+						PrintToConsole(client, "%2d. %-24.23s %t", i, name, "Yes");
 					}
-					PrintToConsole(_arg0, "%2d. %-24.23s %t", var8, var11, "No");
+					PrintToConsole(client, "%2d. %-24.23s %t", i, name, "No");
 				}
 			}
-			var8++;
+			i++;
 		}
 		if (GetCmdReplySource() == 1)
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 4156);
+			ReplyToCommand(client, "[SM] %t", 4156);
 		}
 		return 3;
 	}
-	new var13 = 0;
-	GetCmdArg(1, var13, 65);
-	new var14;
-	var14 = FindTarget(_arg0, var13, false, false);
-	if (var14 == -1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new target = FindTarget(client, arg, false, false);
+	if (target == -1)
 	{
 		return 3;
 	}
-	PerformWho(_arg0, var14, GetCmdReplySource(), var3);
+	PerformWho(client, target, GetCmdReplySource(), is_admin);
 	return 3;
 }
 
-public SMCResult:EndSection(SMCParser:_arg0)
+public SMCResult:EndSection(SMCParser:smc)
 {
 	return 0;
 }
 
-public SMCResult:KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+public SMCResult:KeyValue(SMCParser:smc, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
 {
-	Menu.AddItem(g_ConfigMenu, _arg1[0], _arg2[0], 0);
+	Menu.AddItem(g_ConfigMenu, key[0], value[0], 0);
 	return 0;
 }
 
-public MenuHandler_ChangeMap(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_ChangeMap(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 8)
+	if (action == 8)
 	{
 		new var1;
-		if (_arg3 == -6 && hTopMenu)
+		if (param2 == -6 && hTopMenu)
 		{
-			TopMenu.Display(hTopMenu, _arg2, 3);
+			TopMenu.Display(hTopMenu, param1, 3);
 		}
 	}
 	else
 	{
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 256, 0, "", 0);
-			ShowActivity2(_arg2, "[SM] ", "%t", "Changing map", var2);
-			LogAction(_arg2, -1, "\"%L\" changed map to \"%s\"", _arg2, var2);
-			new var3 = 0;
-			CreateDataTimer(3.0, 97, var3, 0);
-			DataPack.WriteString(var3, var2, false);
+			new String:map[1024];
+			Menu.GetItem(menu, param2, map, 256, 0, "", 0);
+			ShowActivity2(param1, "[SM] ", "%t", "Changing map", map);
+			LogAction(param1, -1, "\"%L\" changed map to \"%s\"", param1, map);
+			new DataPack:dp;
+			CreateDataTimer(3.0, 97, dp, 0);
+			DataPack.WriteString(dp, map, false);
 		}
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			new var4 = 0;
-			Format(var4, 128, "%T", "Please select a map", _arg2);
-			new var5;
-			var5 = _arg3;
-			Panel.SetTitle(var5, var4, false);
+			new String:title[512];
+			Format(title, 128, "%T", "Please select a map", param1);
+			new Panel:panel = param2;
+			Panel.SetTitle(panel, title, false);
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_ExecCFG(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_ExecCFG(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 8)
+	if (action == 8)
 	{
 		new var1;
-		if (_arg3 == -6 && hTopMenu)
+		if (param2 == -6 && hTopMenu)
 		{
-			TopMenu.Display(hTopMenu, _arg2, 3);
+			TopMenu.Display(hTopMenu, param1, 3);
 		}
 	}
 	else
 	{
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 256, 0, "", 0);
-			PerformExec(_arg2, var2);
+			new String:path[1024];
+			Menu.GetItem(menu, param2, path, 256, 0, "", 0);
+			PerformExec(param1, path);
 		}
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			new var3 = 0;
-			Format(var3, 128, "%T", "Choose Config", _arg2);
-			new var4;
-			var4 = _arg3;
-			Panel.SetTitle(var4, var3, false);
+			new String:title[512];
+			Format(title, 128, "%T", "Choose Config", param1);
+			new Panel:panel = param2;
+			Panel.SetTitle(panel, title, false);
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Kick(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Kick(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Kicked target", "_s", var6);
-					PerformKick(_arg2, var5, "");
+					new String:name[512];
+					GetClientName(target, name, 128);
+					ShowActivity2(param1, "[SM] ", "%t", "Kicked target", "_s", name);
+					PerformKick(param1, target, "");
 				}
-				PrintToChat(_arg2, "[SM] %t", 3328);
+				PrintToChat(param1, "[SM] %t", 3328);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 3292);
+				PrintToChat(param1, "[SM] %t", 3292);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayKickMenu(_arg2);
+				DisplayKickMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Who(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Who(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
 					new var2;
-					if (GetUserFlagBits(_arg2))
+					if (GetUserFlagBits(param1))
 					{
 						var2 = true;
 					}
@@ -1090,53 +1086,49 @@ public MenuHandler_Who(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 					{
 						var2 = false;
 					}
-					PerformWho(_arg2, var5, 1, var2);
+					PerformWho(param1, target, 1, var2);
 				}
-				PrintToChat(_arg2, "[SM] %t", 3944);
+				PrintToChat(param1, "[SM] %t", 3944);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 3908);
+				PrintToChat(param1, "[SM] %t", 3908);
 			}
 		}
 	}
 	return 0;
 }
 
-public SMCResult:NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	return 0;
 }
 
-public void:OnAdminMenuReady(Handle:_arg0)
+public void:OnAdminMenuReady(Handle:aTopMenu)
 {
-	new var1;
-	var1 = TopMenu.FromHandle(_arg0);
-	if (hTopMenu == var1)
+	new TopMenu:topmenu = TopMenu.FromHandle(aTopMenu);
+	if (hTopMenu == topmenu)
 	{
 		return 0;
 	}
-	hTopMenu = var1;
-	new var2;
-	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
-	if (var2)
+	hTopMenu = topmenu;
+	new TopMenuObject:player_commands = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
+	if (player_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_kick", 45, var2, "sm_kick", 4, "");
-		TopMenu.AddItem(hTopMenu, "sm_who", 51, var2, "sm_who", 2, "");
+		TopMenu.AddItem(hTopMenu, "sm_kick", 45, player_commands, "sm_kick", 4, "");
+		TopMenu.AddItem(hTopMenu, "sm_who", 51, player_commands, "sm_who", 2, "");
 	}
-	new var3;
-	var3 = TopMenu.FindCategory(hTopMenu, "ServerCommands");
-	if (var3)
+	new TopMenuObject:server_commands = TopMenu.FindCategory(hTopMenu, "ServerCommands");
+	if (server_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_reloadadmins", 49, var3, "sm_reloadadmins", 8, "");
-		TopMenu.AddItem(hTopMenu, "sm_map", 47, var3, "sm_map", 64, "");
-		TopMenu.AddItem(hTopMenu, "sm_execcfg", 43, var3, "sm_execcfg", 256, "");
+		TopMenu.AddItem(hTopMenu, "sm_reloadadmins", 49, server_commands, "sm_reloadadmins", 8, "");
+		TopMenu.AddItem(hTopMenu, "sm_map", 47, server_commands, "sm_map", 64, "");
+		TopMenu.AddItem(hTopMenu, "sm_execcfg", 43, server_commands, "sm_execcfg", 256, "");
 	}
-	new var4;
-	var4 = TopMenu.FindCategory(hTopMenu, "VotingCommands");
-	if (var4)
+	new TopMenuObject:voting_commands = TopMenu.FindCategory(hTopMenu, "VotingCommands");
+	if (voting_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_cancelvote", 41, var4, "sm_cancelvote", 1024, "");
+		TopMenu.AddItem(hTopMenu, "sm_cancelvote", 41, voting_commands, "sm_cancelvote", 1024, "");
 	}
 	return 0;
 }
@@ -1147,9 +1139,9 @@ public void:OnConfigsExecuted()
 	return 0;
 }
 
-public void:OnLibraryRemoved(String:_arg0[])
+public void:OnLibraryRemoved(String:name[])
 {
-	if (!(strcmp(_arg0[0], "adminmenu", true)))
+	if (!(strcmp(name[0], "adminmenu", true)))
 	{
 		hTopMenu = 0;
 	}
@@ -1176,18 +1168,18 @@ public void:OnPluginStart()
 	RegAdminCmd("sm_reloadadmins", 67, 8, "sm_reloadadmins", "", 0);
 	RegAdminCmd("sm_cancelvote", 53, 1024, "sm_cancelvote", "", 0);
 	RegConsoleCmd("sm_revote", 65, "", 0);
-	new var2 = 0;
+	new TopMenu:topmenu;
 	new var1;
-	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()))
 	{
-		OnAdminMenuReady(var2);
+		OnAdminMenuReady(topmenu);
 	}
 	g_MapList = Menu.Menu(77, 2);
 	Menu.SetTitle(g_MapList, "%T", "Please select a map", 0);
 	Menu.ExitBackButton.set(g_MapList, true);
-	new var3 = 0;
-	BuildPath(0, var3, 256, "configs/adminmenu_maplist.ini");
-	SetMapListCompatBind("sm_map menu", var3);
+	new String:mapListPath[1024];
+	BuildPath(0, mapListPath, 256, "configs/adminmenu_maplist.ini");
+	SetMapListCompatBind("sm_map menu", mapListPath);
 	g_ProtectedVars = StringMap.StringMap();
 	ProtectVar("rcon_password");
 	ProtectVar("sm_show_activity");
@@ -1195,12 +1187,12 @@ public void:OnPluginStart()
 	return 0;
 }
 
-public Action:Timer_ChangeMap(Handle:_arg0, DataPack:_arg1)
+public Action:Timer_ChangeMap(Handle:timer, DataPack:dp)
 {
-	new var1 = 0;
-	DataPack.Reset(_arg1, false);
-	DataPack.ReadString(_arg1, var1, 256);
-	ForceChangeLevel(var1, "sm_map Command");
+	new String:map[1024];
+	DataPack.Reset(dp, false);
+	DataPack.ReadString(dp, map, 256);
+	ForceChangeLevel(map, "sm_map Command");
 	return 4;
 }
 

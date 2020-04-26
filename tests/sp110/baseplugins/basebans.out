@@ -50,10 +50,10 @@ void:LoadBanReasons()
 	g_hKvBanReasons = KeyValues.KeyValues("banreasons", "", "");
 	if (KeyValues.ImportFromFile(g_hKvBanReasons, g_BanReasonsPath))
 	{
-		new var1 = 0;
-		if (KeyValues.GetSectionName(g_hKvBanReasons, var1, 255))
+		new String:sectionName[1024];
+		if (KeyValues.GetSectionName(g_hKvBanReasons, sectionName, 255))
 		{
-			if (strcmp(var1, "banreasons", true))
+			if (strcmp(sectionName, "banreasons", true))
 			{
 				SetFailState("Error in %s: Couldn't find 'banreasons'", 4512);
 				return 0;
@@ -68,46 +68,46 @@ void:LoadBanReasons()
 	return 0;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2492);
+			ReplyToCommand(client, "[SM] %t", 2492);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2464);
+			ReplyToCommand(client, "[SM] %t", 2464);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2436);
+			ReplyToCommand(client, "[SM] %t", 2436);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2408);
+			ReplyToCommand(client, "[SM] %t", 2408);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2376);
+			ReplyToCommand(client, "[SM] %t", 2376);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2348);
+			ReplyToCommand(client, "[SM] %t", 2348);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2316);
+			ReplyToCommand(client, "[SM] %t", 2316);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2288);
+			ReplyToCommand(client, "[SM] %t", 2288);
 		}
 		default:
 		{
@@ -116,32 +116,37 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
+FindTarget(client, String:target[], bool:nobots, bool:immunity)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 16;
-	if (_arg2)
+	new String:target_name[256];
+	new target_list[1];
+	new target_count;
+	new bool:tn_is_ml;
+	new flags = 16;
+	if (nobots)
 	{
-		var3 |= 32;
+		flags |= 32;
 	}
-	if (!_arg3)
+	if (!immunity)
 	{
-		var3 |= 8;
+		flags |= 8;
 	}
+	if (0 < (target_count = ProcessTargetString(target[0], client, target_list, 1, flags, target_name, 64, tn_is_ml)))
+	{
+		return target_list[0];
+	}
+	ReplyToTargetError(client, target_count);
+	return -1;
+}
 
-/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
- function "FindTarget" (number 3)
-
-void:PrepareBan(_arg0, _arg1, _arg2, String:_arg3[])
+void:PrepareBan(client, target, time, String:reason[])
 {
-	new var1;
-	var1 = GetClientOfUserId(playerinfo[_arg0][1]);
-	if (_arg1 != var1)
+	new originalTarget = GetClientOfUserId(playerinfo[client][1]);
+	if (target != originalTarget)
 	{
-		if (_arg0)
+		if (client)
 		{
-			PrintToChat(_arg0, "[SM] %t", 4812);
+			PrintToChat(client, "[SM] %t", 4812);
 		}
 		else
 		{
@@ -149,410 +154,465 @@ void:PrepareBan(_arg0, _arg1, _arg2, String:_arg3[])
 		}
 		return 0;
 	}
-	new var2 = 0;
-	GetClientName(_arg1, var2, 128);
-	if (_arg2)
+	new String:name[512];
+	GetClientName(target, name, 128);
+	if (time)
 	{
-		if (_arg3[0])
+		if (reason[0])
 		{
-			ShowActivity(_arg0, "%t", "Banned player reason", var2, _arg2, _arg3[0]);
+			ShowActivity(client, "%t", "Banned player reason", name, time, reason[0]);
 		}
-		ShowActivity(_arg0, "%t", "Banned player", var2, _arg2);
+		ShowActivity(client, "%t", "Banned player", name, time);
 	}
 	else
 	{
-		if (_arg3[0])
+		if (reason[0])
 		{
-			ShowActivity(_arg0, "%t", "Permabanned player reason", var2, _arg3[0]);
+			ShowActivity(client, "%t", "Permabanned player reason", name, reason[0]);
 		}
 		else
 		{
-			ShowActivity(_arg0, "%t", "Permabanned player", var2);
+			ShowActivity(client, "%t", "Permabanned player", name);
 		}
 	}
-	LogAction(_arg0, _arg1, "\"%L\" banned \"%L\" (minutes \"%d\") (reason \"%s\")", _arg0, _arg1, _arg2, _arg3[0]);
-	if (_arg3[0])
+	LogAction(client, target, "\"%L\" banned \"%L\" (minutes \"%d\") (reason \"%s\")", client, target, time, reason[0]);
+	if (reason[0])
 	{
-		BanClient(_arg1, _arg2, 1, _arg3[0], _arg3[0], "sm_ban", _arg0);
+		BanClient(target, time, 1, reason[0], reason[0], "sm_ban", client);
 	}
 	else
 	{
-		BanClient(_arg1, _arg2, 1, "Banned", "Banned", "sm_ban", _arg0);
+		BanClient(target, time, 1, "Banned", "Banned", "sm_ban", client);
 	}
 	return 0;
 }
 
-void:DisplayBanTargetMenu(_arg0)
+void:DisplayBanTargetMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(29, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Ban player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu2(var1, _arg0, 36);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(29, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Ban player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu2(menu, client, 36);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayBanTimeMenu(_arg0)
+void:DisplayBanTimeMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(33, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Ban player", _arg0, playerinfo[_arg0]);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	Menu.AddItem(var1, "0", "Permanent", 0);
-	Menu.AddItem(var1, "10", "10 Minutes", 0);
-	Menu.AddItem(var1, "30", "30 Minutes", 0);
-	Menu.AddItem(var1, "60", "1 Hour", 0);
-	Menu.AddItem(var1, "240", "4 Hours", 0);
-	Menu.AddItem(var1, "1440", "1 Day", 0);
-	Menu.AddItem(var1, "10080", "1 Week", 0);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(33, 28);
+	new String:title[400];
+	Format(title, 100, "%T: %N", "Ban player", client, playerinfo[client]);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	Menu.AddItem(menu, "0", "Permanent", 0);
+	Menu.AddItem(menu, "10", "10 Minutes", 0);
+	Menu.AddItem(menu, "30", "30 Minutes", 0);
+	Menu.AddItem(menu, "60", "1 Hour", 0);
+	Menu.AddItem(menu, "240", "4 Hours", 0);
+	Menu.AddItem(menu, "1440", "1 Day", 0);
+	Menu.AddItem(menu, "10080", "1 Week", 0);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayBanReasonMenu(_arg0)
+void:DisplayBanReasonMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(31, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Ban reason", _arg0, playerinfo[_arg0]);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	Menu.AddItem(var1, "", "Custom reason (type in chat)", 0);
-	new var3 = 0;
-	new var4 = 0;
+	new Menu:menu = Menu.Menu(31, 28);
+	new String:title[400];
+	Format(title, 100, "%T: %N", "Ban reason", client, playerinfo[client]);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	Menu.AddItem(menu, "", "Custom reason (type in chat)", 0);
+	new String:reasonName[400];
+	new String:reasonFull[1024];
 	KeyValues.GotoFirstSubKey(g_hKvBanReasons, false);
 	do {
-		KeyValues.GetSectionName(g_hKvBanReasons, var3, 100);
-		KeyValues.GetString(g_hKvBanReasons, NULL_STRING, var4, 255, "");
-		Menu.AddItem(var1, var4, var3, 0);
+		KeyValues.GetSectionName(g_hKvBanReasons, reasonName, 100);
+		KeyValues.GetString(g_hKvBanReasons, NULL_STRING, reasonFull, 255, "");
+		Menu.AddItem(menu, reasonFull, reasonName, 0);
 	} while (KeyValues.GotoNextKey(g_hKvBanReasons, false));
 	KeyValues.Rewind(g_hKvBanReasons);
-	Menu.Display(var1, _arg0, 0);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-public void:AdminMenu_Ban(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Ban(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	playerinfo[_arg3][3] = 0;
-	if (_arg1)
+	playerinfo[param][3] = 0;
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayBanTargetMenu(_arg3);
+			DisplayBanTargetMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Ban player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Ban player", param);
 	}
 	return 0;
 }
 
-public Action:Command_AbortBan(_arg0, _arg1)
+public Action:Command_AbortBan(client, args)
 {
-	if (CheckCommandAccess(_arg0, "sm_ban", 8, false))
+	if (CheckCommandAccess(client, "sm_ban", 8, false))
 	{
-		if (playerinfo[_arg0][3])
+		if (playerinfo[client][3])
 		{
-			playerinfo[_arg0][3] = 0;
-			ReplyToCommand(_arg0, "[SM] %t", 6568);
+			playerinfo[client][3] = 0;
+			ReplyToCommand(client, "[SM] %t", 6568);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 6608);
+			ReplyToCommand(client, "[SM] %t", 6608);
 		}
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 6548);
+	ReplyToCommand(client, "[SM] %t", 6548);
 	return 3;
 }
 
-public Action:Command_AddBan(_arg0, _arg1)
+public Action:Command_AddBan(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_addban <time> <steamid> [reason]");
+		ReplyToCommand(client, "[SM] Usage: sm_addban <time> <steamid> [reason]");
 		return 3;
 	}
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	GetCmdArgString(var3, 256);
-	new var6 = 0;
-	new var7 = 0;
-	if ((var6 = BreakString(var3, var4, 50)) == -1)
+	new String:arg_string[1024];
+	new String:time[208];
+	new String:authid[208];
+	GetCmdArgString(arg_string, 256);
+	new len;
+	new total_len;
+	if ((len = BreakString(arg_string, time, 50)) == -1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_addban <time> <steamid> [reason]");
+		ReplyToCommand(client, "[SM] Usage: sm_addban <time> <steamid> [reason]");
 		return 3;
 	}
-	var7 = var6 + var7;
-	if ((var6 = BreakString(var7 + var3, var5, 50)) != -1)
+	total_len = len + total_len;
+	if ((len = BreakString(arg_string[total_len], authid, 50)) != -1)
 	{
-		var7 = var6 + var7;
+		total_len = len + total_len;
 	}
 	else
 	{
-		var7 = 0;
-		var3 = 0;
+		total_len = 0;
+		arg_string[0] = '\x00';
 	}
-	new var8 = 0;
+	new bool:idValid;
 	new var1;
-	if (strncmp(var5, "STEAM_", 6, true) && var5 + 7/* ERROR unknown load Binary */ == 58)
+	if (strncmp(authid, "STEAM_", 6, true) && authid[1] == ':')
 	{
-		var8 = 1;
+		idValid = true;
 	}
 	else
 	{
-		if (!(strncmp(var5, "[U:", 3, true)))
+		if (!(strncmp(authid, "[U:", 3, true)))
 		{
-			var8 = 1;
+			idValid = true;
 		}
 	}
-	if (var8)
+	if (idValid)
 	{
-		new var9;
-		var9 = FindAdminByIdentity("steam", var5);
+		new AdminId:tid = FindAdminByIdentity("steam", authid);
 		new var2;
-		if (_arg0 && CanAdminTarget(GetUserAdmin(_arg0), var9))
+		if (client && CanAdminTarget(GetUserAdmin(client), tid))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 6312);
+			ReplyToCommand(client, "[SM] %t", 6312);
 			return 3;
 		}
-		new var10;
-		var10 = StringToInt(var4, 10);
-		LogAction(_arg0, -1, "\"%L\" added ban (minutes \"%d\") (id \"%s\") (reason \"%s\")", _arg0, var10, var5, var7 + var3);
-		BanIdentity(var5, var10, 4, var7 + var3, "sm_addban", _arg0);
-		ReplyToCommand(_arg0, "[SM] %t", 6400);
+		new minutes = StringToInt(time, 10);
+		LogAction(client, -1, "\"%L\" added ban (minutes \"%d\") (id \"%s\") (reason \"%s\")", client, minutes, authid, arg_string[total_len]);
+		BanIdentity(authid, minutes, 4, arg_string[total_len], "sm_addban", client);
+		ReplyToCommand(client, "[SM] %t", 6400);
 		return 3;
 	}
-	ReplyToCommand(_arg0, "[SM] %t", 6268);
+	ReplyToCommand(client, "[SM] %t", 6268);
 	return 3;
 }
 
-public Action:Command_Ban(_arg0, _arg1)
+public Action:Command_Ban(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
 		new var1;
-		if (GetCmdReplySource() == 1 && _arg0 && _arg1)
+		if (GetCmdReplySource() == 1 && client && args)
 		{
-			DisplayBanTargetMenu(_arg0);
+			DisplayBanTargetMenu(client);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] Usage: sm_ban <#userid|name> <minutes|0> [reason]");
+			ReplyToCommand(client, "[SM] Usage: sm_ban <#userid|name> <minutes|0> [reason]");
 		}
 		return 3;
 	}
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	GetCmdArgString(var4, 256);
-	new var5 = 0;
-	var2 = BreakString(var4, var5, 65);
+	new len;
+	new next_len;
+	new String:Arguments[1024];
+	GetCmdArgString(Arguments, 256);
+	new String:arg[272];
+	len = BreakString(Arguments, arg, 65);
+	new target = FindTarget(client, arg, true, true);
+	if (target == -1)
+	{
+		return 3;
+	}
+	new String:s_time[48];
+	if ((next_len = BreakString(Arguments[len], s_time, 12)) != -1)
+	{
+		len = next_len + len;
+	}
+	else
+	{
+		len = 0;
+		Arguments[0] = '\x00';
+	}
+	playerinfo[client][1] = GetClientUserId(target);
+	new time = StringToInt(s_time, 10);
+	PrepareBan(client, target, time, Arguments[len]);
+	return 3;
+}
+
+public Action:Command_BanIp(client, args)
+{
+	if (args < 2)
+	{
+		ReplyToCommand(client, "[SM] Usage: sm_banip <ip|#userid|name> <time> [reason]");
+		return 3;
+	}
+	new len;
+	new next_len;
+	new String:Arguments[1024];
+	new String:arg[208];
+	new String:time[80];
+	GetCmdArgString(Arguments, 256);
+	len = BreakString(Arguments, arg, 50);
+	if ((next_len = BreakString(Arguments[len], time, 20)) != -1)
+	{
+		len = next_len + len;
+	}
+	else
+	{
+		len = 0;
+		Arguments[0] = '\x00';
+	}
+	if (StrEqual(arg, "0", true))
+	{
+		ReplyToCommand(client, "[SM] %t", 6012);
+		return 3;
+	}
+	new String:target_name[256];
+	new target_list[1];
+	new bool:tn_is_ml;
+	new found_client = -1;
+	if (0 < ProcessTargetString(arg, client, target_list, 1, 20, target_name, 64, tn_is_ml))
+	{
+		found_client = target_list[0];
+	}
+	new bool:has_rcon;
+	new var2;
+	if (client && (client == 1 && IsDedicatedServer()))
+	{
+		has_rcon = true;
+	}
+	else
+	{
+		new AdminId:id = GetUserAdmin(client);
+		new var3;
+		if (id == -1)
+		{
+			var3 = 0;
+		}
+		else
+		{
+			var3 = GetAdminFlag(id, 12, 1);
+		}
+		has_rcon = var3;
+	}
+	new hit_client = -1;
+	new var5;
+	if (found_client != -1 && IsFakeClient(found_client) && (has_rcon || CanUserTarget(client, found_client)))
+	{
+		GetClientIP(found_client, arg, 50, true);
+		hit_client = found_client;
+	}
 	new var6;
-	var6 = FindTarget(_arg0, var5, true, true);
-	if (var6 == -1)
+	if (hit_client == -1 && has_rcon)
 	{
+		ReplyToCommand(client, "[SM] %t", 6040);
 		return 3;
 	}
-	new var7 = 0;
-	if ((var3 = BreakString(var2 + var4, var7, 12)) != -1)
+	new minutes = StringToInt(time, 10);
+	LogAction(client, hit_client, "\"%L\" added ban (minutes \"%d\") (ip \"%s\") (reason \"%s\")", client, minutes, arg, Arguments[len]);
+	ReplyToCommand(client, "[SM] %t", 6116);
+	BanIdentity(arg, minutes, 2, Arguments[len], "sm_banip", client);
+	if (hit_client != -1)
 	{
-		var2 = var3 + var2;
+		KickClient(hit_client, "Banned: %s", Arguments[len]);
 	}
-	else
-	{
-		var2 = 0;
-		var4 = 0;
-	}
-	playerinfo[_arg0][1] = GetClientUserId(var6);
-	new var8;
-	var8 = StringToInt(var7, 10);
-	PrepareBan(_arg0, var6, var8, var2 + var4);
 	return 3;
 }
 
-public Action:Command_BanIp(_arg0, _arg1)
+public Action:Command_Unban(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_banip <ip|#userid|name> <time> [reason]");
+		ReplyToCommand(client, "[SM] Usage: sm_unban <steamid|ip>");
 		return 3;
 	}
-	new var7 = 0;
-	new var8 = 0;
-	new var9 = 0;
-	new var10 = 0;
-	new var11 = 0;
-	GetCmdArgString(var9, 256);
-	var7 = BreakString(var9, var10, 50);
-	if ((var8 = BreakString(var7 + var9, var11, 20)) != -1)
+	new String:arg[208];
+	GetCmdArgString(arg, 50);
+	ReplaceString(arg, 50, "\"", "", true);
+	new ban_flags;
+	if (IsCharNumeric(arg[0]))
 	{
-		var7 = var8 + var7;
+		ban_flags |= 2;
 	}
 	else
 	{
-		var7 = 0;
-		var9 = 0;
+		ban_flags |= 4;
 	}
-	if (StrEqual(var10, "0", true))
-	{
-		ReplyToCommand(_arg0, "[SM] %t", 6012);
-		return 3;
-	}
-	new var12 = 0;
-	new var13 = -1;
-
-/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
- function "Command_BanIp" (number 12)
-
-public Action:Command_Unban(_arg0, _arg1)
-{
-	if (_arg1 < 1)
-	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_unban <steamid|ip>");
-		return 3;
-	}
-	new var1 = 0;
-	GetCmdArgString(var1, 50);
-	ReplaceString(var1, 50, "\"", "", true);
-	new var2 = 0;
-	if (IsCharNumeric(var1))
-	{
-		var2 |= 2;
-	}
-	else
-	{
-		var2 |= 4;
-	}
-	LogAction(_arg0, -1, "\"%L\" removed ban (filter \"%s\")", _arg0, var1);
-	RemoveBan(var1, var2, "sm_unban", _arg0);
-	ReplyToCommand(_arg0, "[SM] %t", "Removed bans matching", var1);
+	LogAction(client, -1, "\"%L\" removed ban (filter \"%s\")", client, arg);
+	RemoveBan(arg, ban_flags, "sm_unban", client);
+	ReplyToCommand(client, "[SM] %t", "Removed bans matching", arg);
 	return 3;
 }
 
-public MenuHandler_BanPlayerList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_BanPlayerList(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
-
-/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
- function "MenuHandler_BanPlayerList" (number 14)
-
-public MenuHandler_BanReasonList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
-{
-	if (_arg1 == 16)
-	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
-	}
-	else
-	{
-		if (_arg1 == 8)
-		{
-			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			new String:info[128];
+			new String:name[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, name, 32);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				if (CanUserTarget(param1, target))
+				{
+					playerinfo[param1] = target;
+					playerinfo[param1][1] = userid;
+					DisplayBanTimeMenu(param1);
+				}
+				PrintToChat(param1, "[SM] %t", 5340);
 			}
-		}
-		if (_arg1 == 4)
-		{
-			if (_arg3)
+			else
 			{
-				new var2 = 0;
-				Menu.GetItem(_arg0, _arg3, var2, 64, 0, "", 0);
-				PrepareBan(_arg2, playerinfo[_arg2], playerinfo[_arg2][2], var2);
+				PrintToChat(param1, "[SM] %t", 5304);
 			}
-			playerinfo[_arg2][3] = 1;
-			PrintToChat(_arg2, "[SM] %t", "Custom ban reason explanation", "sm_abortban");
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_BanTimeList(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_BanReasonList(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			Menu.GetItem(_arg0, _arg3, var2, 32, 0, "", 0);
-			playerinfo[_arg2][2] = StringToInt(var2, 10);
-			DisplayBanReasonMenu(_arg2);
+			if (param2)
+			{
+				new String:info[256];
+				Menu.GetItem(menu, param2, info, 64, 0, "", 0);
+				PrepareBan(param1, playerinfo[param1], playerinfo[param1][2], info);
+			}
+			playerinfo[param1][3] = 1;
+			PrintToChat(param1, "[SM] %t", "Custom ban reason explanation", "sm_abortban");
 		}
 	}
 	return 0;
 }
 
-public void:OnAdminMenuReady(Handle:_arg0)
+public MenuHandler_BanTimeList(Menu:menu, MenuAction:action, param1, param2)
 {
-	new var1;
-	var1 = TopMenu.FromHandle(_arg0);
-	if (hTopMenu == var1)
+	if (action == 16)
+	{
+		CloseHandle(menu);
+		menu = 0;
+	}
+	else
+	{
+		if (action == 8)
+		{
+			new var1;
+			if (param2 == -6 && hTopMenu)
+			{
+				TopMenu.Display(hTopMenu, param1, 3);
+			}
+		}
+		if (action == 4)
+		{
+			new String:info[128];
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			playerinfo[param1][2] = StringToInt(info, 10);
+			DisplayBanReasonMenu(param1);
+		}
+	}
+	return 0;
+}
+
+public void:OnAdminMenuReady(Handle:aTopMenu)
+{
+	new TopMenu:topmenu = TopMenu.FromHandle(aTopMenu);
+	if (hTopMenu == topmenu)
 	{
 		return 0;
 	}
-	hTopMenu = var1;
-	new var2;
-	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
-	if (var2)
+	hTopMenu = topmenu;
+	new TopMenuObject:player_commands = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
+	if (player_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_ban", 17, var2, "sm_ban", 8, "");
+		TopMenu.AddItem(hTopMenu, "sm_ban", 17, player_commands, "sm_ban", 8, "");
 	}
 	return 0;
 }
 
-public void:OnClientDisconnect(_arg0)
+public void:OnClientDisconnect(client)
 {
-	playerinfo[_arg0][3] = 0;
+	playerinfo[client][3] = 0;
 	return 0;
 }
 
-public Action:OnClientSayCommand(_arg0, String:_arg1[], String:_arg2[])
+public Action:OnClientSayCommand(client, String:command[], String:sArgs[])
 {
-	if (playerinfo[_arg0][3])
+	if (playerinfo[client][3])
 	{
-		playerinfo[_arg0][3] = 0;
-		PrepareBan(_arg0, playerinfo[_arg0], playerinfo[_arg0][2], _arg2[0]);
+		playerinfo[client][3] = 0;
+		PrepareBan(client, playerinfo[client], playerinfo[client][2], sArgs[0]);
 		return 4;
 	}
 	return 0;
@@ -576,11 +636,11 @@ public void:OnPluginStart()
 	RegAdminCmd("sm_addban", 21, 4096, "sm_addban <time> <steamid> [reason]", "", 0);
 	RegAdminCmd("sm_banip", 25, 8, "sm_banip <ip|#userid|name> <time> [reason]", "", 0);
 	RegConsoleCmd("sm_abortban", 19, "sm_abortban", 0);
-	new var2 = 0;
+	new TopMenu:topmenu;
 	new var1;
-	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()))
 	{
-		OnAdminMenuReady(var2);
+		OnAdminMenuReady(topmenu);
 	}
 	return 0;
 }

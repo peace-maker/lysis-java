@@ -49,18 +49,18 @@ new ArrayList:g_SelectedMaps;
 new bool:g_VoteMapInUse;
 new Handle:g_map_array;
 new g_map_serial = -1;
-void:DisplayVoteMapMenu(_arg0, _arg1, String:_arg2[][])
+void:DisplayVoteMapMenu(client, mapCount, String:maps[][])
 {
-	LogAction(_arg0, -1, "\"%L\" initiated a map vote.", _arg0);
-	ShowActivity2(_arg0, "[SM] ", "%t", 4300);
+	LogAction(client, -1, "\"%L\" initiated a map vote.", client);
+	ShowActivity2(client, "[SM] ", "%t", 4300);
 	g_voteType = 0;
 	g_hVoteMenu = Menu.Menu(53, -1);
-	if (_arg1 == 1)
+	if (mapCount == 1)
 	{
 		new var1 = g_voteInfo;
-		GetMapDisplayName(_arg2[0][0], var1[0][var1], 65);
+		GetMapDisplayName(maps[0][0], var1[0][var1], 65);
 		Menu.SetTitle(g_hVoteMenu, "Change Map To");
-		Menu.AddItem(g_hVoteMenu, _arg2[0][0], "Yes", 0);
+		Menu.AddItem(g_hVoteMenu, maps[0][0], "Yes", 0);
 		Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
 	}
 	else
@@ -68,13 +68,13 @@ void:DisplayVoteMapMenu(_arg0, _arg1, String:_arg2[][])
 		new var2 = g_voteInfo;
 		var2[0][var2] = '\x00';
 		Menu.SetTitle(g_hVoteMenu, "Map Vote");
-		new var3 = 0;
-		while (var3 < _arg1)
+		new i;
+		while (i < mapCount)
 		{
-			new var4 = 0;
-			GetMapDisplayName(_arg2[0][var3], var4, 256);
-			Menu.AddItem(g_hVoteMenu, _arg2[0][var3], var4, 0);
-			var3++;
+			new String:displayName[1024];
+			GetMapDisplayName(maps[0][i], displayName, 256);
+			Menu.AddItem(g_hVoteMenu, maps[0][i], displayName, 0);
+			i++;
 		}
 	}
 	Menu.ExitButton.set(g_hVoteMenu, false);
@@ -89,44 +89,42 @@ void:ResetMenu()
 	return 0;
 }
 
-void:ConfirmVote(_arg0)
+void:ConfirmVote(client)
 {
-	new var1;
-	var1 = Menu.Menu(57, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Confirm Vote", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	new var3 = 0;
-	Format(var3, 256, "%T", "Start the Vote", _arg0);
-	Menu.AddItem(var1, "Confirm", var3, 0);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(57, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Confirm Vote", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	new String:itemtext[1024];
+	Format(itemtext, 256, "%T", "Start the Vote", client);
+	Menu.AddItem(menu, "Confirm", itemtext, 0);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-LoadMapList(Menu:_arg0)
+LoadMapList(Menu:menu)
 {
-	new var1 = 0;
-	if ((var1 = ReadMapList(g_map_array, g_map_serial, "sm_votemap menu", 3)))
+	new Handle:map_array;
+	if ((map_array = ReadMapList(g_map_array, g_map_serial, "sm_votemap menu", 3)))
 	{
-		g_map_array = var1;
+		g_map_array = map_array;
 	}
 	if (g_map_array)
 	{
-		Menu.RemoveAllItems(_arg0);
-		new var2 = 0;
-		new var3;
-		var3 = GetArraySize(g_map_array);
-		new var4 = 0;
-		while (var4 < var3)
+		Menu.RemoveAllItems(menu);
+		new String:map_name[1024];
+		new map_count = GetArraySize(g_map_array);
+		new i;
+		while (i < map_count)
 		{
-			new var5 = 0;
-			GetArrayString(g_map_array, var4, var2, 256);
-			GetMapDisplayName(var2, var5, 256);
-			Menu.AddItem(_arg0, var2, var5, 0);
-			var4++;
+			new String:displayName[1024];
+			GetArrayString(g_map_array, i, map_name, 256);
+			GetMapDisplayName(map_name, displayName, 256);
+			Menu.AddItem(menu, map_name, displayName, 0);
+			i++;
 		}
-		return var3;
+		return map_count;
 	}
 	return 0;
 }
@@ -138,48 +136,61 @@ void:VoteMenuClose()
 	return 0;
 }
 
-Float:GetVotePercent(_arg0, _arg1)
+Float:GetVotePercent(votes, totalVotes)
 {
-	return float(_arg0) / float(_arg1);
+	return float(votes) / float(totalVotes);
 }
 
-bool:TestVoteDelay(_arg0)
+bool:TestVoteDelay(client)
 {
-	new var1;
-	var1 = CheckVoteDelay();
-	if (0 < var1)
+	new delay = CheckVoteDelay();
+	if (0 < delay)
 	{
-		if (var1 > 60)
+		if (delay > 60)
 		{
-			ReplyToCommand(_arg0, "[SM] %t", "Vote Delay Minutes", var1 / 60);
+			ReplyToCommand(client, "[SM] %t", "Vote Delay Minutes", delay / 60);
 		}
 		else
 		{
-			ReplyToCommand(_arg0, "[SM] %t", "Vote Delay Seconds", var1);
+			ReplyToCommand(client, "[SM] %t", "Vote Delay Seconds", delay);
 		}
 		return 0;
 	}
 	return 1;
 }
 
-Handle:CreateDataTimer(Float:_arg0, <typeset 0>:_arg1, Handle:_arg2, _arg3)
+Handle:CreateDataTimer(Float:interval, <typeset 0>:func, &Handle:datapack, flags)
 {
-	_arg2 = DataPack.DataPack();
-	_arg3 |= 512;
-	return CreateTimer(_arg0, _arg1, _arg2, _arg3);
+	datapack = DataPack.DataPack();
+	flags |= 512;
+	return CreateTimer(interval, func, datapack, flags);
 }
 
-bool:Menu.DisplayVoteToAll(Menu:_arg0, _arg1, _arg2)
+bool:Menu.DisplayVoteToAll(Menu:this, time, flags)
 {
-	new var2 = 0;
+	new total;
+	new players[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		new var1;
+		if (IsClientInGame(i) && IsFakeClient(i))
+		{
+		}
+		else
+		{
+			total++;
+			players[0][total] = i;
+		}
+		i++;
+	}
+	return Menu.DisplayVote(this, players[0], total, time, flags);
+}
 
-/* ERROR! null */
- function "Menu.DisplayVoteToAll" (number 8)
-
-void:GetMenuVoteInfo(_arg0, _arg1, _arg2)
+void:GetMenuVoteInfo(param2, &winningVotes, &totalVotes)
 {
-	_arg1 = _arg0 & 65535;
-	_arg2 = _arg0 >>> 16;
+	winningVotes = param2 & 65535;
+	totalVotes = param2 >>> 16;
 	return 0;
 }
 
@@ -193,67 +204,67 @@ bool:IsNewVoteAllowed()
 	return 1;
 }
 
-void:PrintToChatAll(String:_arg0[], any:_arg1)
+void:PrintToChatAll(String:format[], any:_arg1)
 {
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		if (IsClientInGame(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintToChat(var2, "%s", var1);
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintToChat(i, "%s", buffer);
 		}
-		var2++;
+		i++;
 	}
 	return 0;
 }
 
-ByteCountToCells(_arg0)
+ByteCountToCells(size)
 {
-	if (_arg0)
+	if (size)
 	{
-		return _arg0 + 3 / 4;
+		return size + 3 / 4;
 	}
 	return 1;
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2496);
+			ReplyToCommand(client, "[SM] %t", 2496);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2468);
+			ReplyToCommand(client, "[SM] %t", 2468);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2440);
+			ReplyToCommand(client, "[SM] %t", 2440);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2412);
+			ReplyToCommand(client, "[SM] %t", 2412);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2380);
+			ReplyToCommand(client, "[SM] %t", 2380);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2352);
+			ReplyToCommand(client, "[SM] %t", 2352);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2320);
+			ReplyToCommand(client, "[SM] %t", 2320);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2292);
+			ReplyToCommand(client, "[SM] %t", 2292);
 		}
 		default:
 		{
@@ -262,31 +273,37 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-FindTarget(_arg0, String:_arg1[], bool:_arg2, bool:_arg3)
+FindTarget(client, String:target[], bool:nobots, bool:immunity)
 {
-	new var1 = 0;
-	new var2 = 0;
-	new var3 = 16;
-	if (_arg2)
+	new String:target_name[256];
+	new target_list[1];
+	new target_count;
+	new bool:tn_is_ml;
+	new flags = 16;
+	if (nobots)
 	{
-		var3 |= 32;
+		flags |= 32;
 	}
-	if (!_arg3)
+	if (!immunity)
 	{
-		var3 |= 8;
+		flags |= 8;
 	}
+	if (0 < (target_count = ProcessTargetString(target[0], client, target_list, 1, flags, target_name, 64, tn_is_ml)))
+	{
+		return target_list[0];
+	}
+	ReplyToTargetError(client, target_count);
+	return -1;
+}
 
-/* ERROR! null */
- function "FindTarget" (number 14)
-
-void:DisplayVoteKickMenu(_arg0, _arg1)
+void:DisplayVoteKickMenu(client, target)
 {
-	g_voteTarget = GetClientUserId(_arg1);
+	g_voteTarget = GetClientUserId(target);
 	new var1 = g_voteInfo;
-	GetClientName(_arg1, var1[0][var1], 65);
-	LogAction(_arg0, _arg1, "\"%L\" initiated a kick vote against \"%L\"", _arg0, _arg1);
+	GetClientName(target, var1[0][var1], 65);
+	LogAction(client, target, "\"%L\" initiated a kick vote against \"%L\"", client, target);
 	new var2 = g_voteInfo;
-	ShowActivity(_arg0, "%t", "Initiated Vote Kick", var2[0][var2]);
+	ShowActivity(client, "%t", "Initiated Vote Kick", var2[0][var2]);
 	g_voteType = 1;
 	g_hVoteMenu = Menu.Menu(53, -1);
 	Menu.SetTitle(g_hVoteMenu, "Votekick Player");
@@ -297,28 +314,27 @@ void:DisplayVoteKickMenu(_arg0, _arg1)
 	return 0;
 }
 
-void:DisplayKickTargetMenu(_arg0)
+void:DisplayKickTargetMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(59, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Kick vote", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, false, false);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(59, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Kick vote", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, false, false);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayVoteBanMenu(_arg0, _arg1)
+void:DisplayVoteBanMenu(client, target)
 {
-	g_voteTarget = GetClientUserId(_arg1);
+	g_voteTarget = GetClientUserId(target);
 	new var1 = g_voteInfo;
-	GetClientName(_arg1, var1[0][var1], 65);
-	GetClientIP(_arg1, g_voteInfo[2], 65, true);
-	LogAction(_arg0, _arg1, "\"%L\" initiated a ban vote against \"%L\"", _arg0, _arg1);
+	GetClientName(target, var1[0][var1], 65);
+	GetClientIP(target, g_voteInfo[2], 65, true);
+	LogAction(client, target, "\"%L\" initiated a ban vote against \"%L\"", client, target);
 	new var2 = g_voteInfo;
-	ShowActivity2(_arg0, "[SM] ", "%t", "Initiated Vote Ban", var2[0][var2]);
+	ShowActivity2(client, "[SM] ", "%t", "Initiated Vote Ban", var2[0][var2]);
 	g_voteType = 2;
 	g_hVoteMenu = Menu.Menu(53, -1);
 	Menu.SetTitle(g_hVoteMenu, "Voteban Player");
@@ -329,28 +345,27 @@ void:DisplayVoteBanMenu(_arg0, _arg1)
 	return 0;
 }
 
-void:DisplayBanTargetMenu(_arg0)
+void:DisplayBanTargetMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(55, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Ban vote", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, false, false);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(55, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Ban vote", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, false, false);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-public void:AdminMenu_VoteBan(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_VoteBan(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayBanTargetMenu(_arg3);
+			DisplayBanTargetMenu(param);
 		}
-		if (_arg1 == 3)
+		if (action == 3)
 		{
 			new var1;
 			if (IsNewVoteAllowed())
@@ -361,25 +376,25 @@ public void:AdminMenu_VoteBan(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:
 			{
 				var1 = 6;
 			}
-			_arg4[0] = var1;
+			buffer[0] = var1;
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Ban vote", _arg3);
+		Format(buffer[0], maxlength, "%T", "Ban vote", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_VoteKick(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_VoteKick(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayKickTargetMenu(_arg3);
+			DisplayKickTargetMenu(param);
 		}
-		if (_arg1 == 3)
+		if (action == 3)
 		{
 			new var1;
 			if (IsNewVoteAllowed())
@@ -390,34 +405,34 @@ public void:AdminMenu_VoteKick(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject
 			{
 				var1 = 6;
 			}
-			_arg4[0] = var1;
+			buffer[0] = var1;
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Kick vote", _arg3);
+		Format(buffer[0], maxlength, "%T", "Kick vote", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_VoteMap(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_VoteMap(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
 			if (g_VoteMapInUse)
 			{
-				PrintToChat(_arg3, "[SM] %T", "Map Vote In Use", _arg3);
+				PrintToChat(param, "[SM] %T", "Map Vote In Use", param);
 			}
 			else
 			{
 				ResetMenu();
 				g_VoteMapInUse = true;
-				Menu.Display(g_MapList, _arg3, 0);
+				Menu.Display(g_MapList, param, 0);
 			}
 		}
-		if (_arg1 == 3)
+		if (action == 3)
 		{
 			new var1;
 			if (IsNewVoteAllowed() && g_mapCount < 1 && g_VoteMapInUse)
@@ -428,313 +443,261 @@ public void:AdminMenu_VoteMap(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:
 			{
 				var2 = 0;
 			}
-			_arg4[0] = var2;
+			buffer[0] = var2;
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Map vote", _arg3);
+		Format(buffer[0], maxlength, "%T", "Map vote", param);
 	}
 	return 0;
 }
 
-public Action:Command_Vote(_arg0, _arg1)
+public Action:Command_Vote(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_vote <question> [Answer1] [Answer2] ... [Answer5]");
+		ReplyToCommand(client, "[SM] Usage: sm_vote <question> [Answer1] [Answer2] ... [Answer5]");
 		return 3;
 	}
 	if (IsVoteInProgress(0))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 5424);
+		ReplyToCommand(client, "[SM] %t", 5424);
 		return 3;
 	}
-	if (TestVoteDelay(_arg0))
+	if (TestVoteDelay(client))
 	{
-		new var2 = 0;
-		GetCmdArgString(var2, 256);
-		new var3 = 0;
-		new var4 = 0;
-		new var5;
-		var5 = BreakString(var2, g_voteArg, 256);
-		new var6;
-		var6 = var5;
-		while (_arg1 > 1 && var6 != -1 && var4 < 5)
-		{
-			var6 = BreakString(var5 + var2, var3[var4], 64);
-			var4++;
-			if (var6 != -1)
-			{
-				var5 = var6 + var5;
-			}
-		}
-		LogAction(_arg0, -1, "\"%L\" initiated a generic vote.", _arg0);
-		ShowActivity2(_arg0, "[SM] ", "%t", "Initiate Vote", g_voteArg);
-		g_voteType = 3;
-		g_hVoteMenu = Menu.Menu(53, -1);
-		Menu.SetTitle(g_hVoteMenu, "%s?", 3416);
-		if (var4 < 2)
-		{
-			Menu.AddItem(g_hVoteMenu, "###yes###", "Yes", 0);
-			Menu.AddItem(g_hVoteMenu, "###no###", "No", 0);
-		}
-		else
-		{
-			new var7 = 0;
-			while (var7 < var4)
-			{
-				Menu.AddItem(g_hVoteMenu, var3[var7], var3[var7], 0);
-				var7++;
-			}
-		}
-		Menu.ExitButton.set(g_hVoteMenu, false);
-		Menu.DisplayVoteToAll(g_hVoteMenu, 20, 0);
-		return 3;
-	}
-	return 3;
-}
-
-public Action:Command_Voteban(_arg0, _arg1)
-{
-	if (_arg1 < 1)
-	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_voteban <player> [reason]");
-		return 3;
-	}
-	if (IsVoteInProgress(0))
-	{
-		ReplyToCommand(_arg0, "[SM] %t", 4224);
-		return 3;
-	}
-	if (TestVoteDelay(_arg0))
-	{
-		new var1 = 0;
-		new var2 = 0;
-		GetCmdArgString(var1, 256);
-		new var3;
-		var3 = BreakString(var1, var2, 64);
-		if (var3 != -1)
-		{
-			strcopy(g_voteArg, 256, var3 + var1);
-		}
-		else
-		{
-			g_voteArg[0] = 0;
-		}
-		new var4 = 0;
-		new var5 = 0;
+		new String:text[1024];
+		GetCmdArgString(text, 256);
 
 /* ERROR! null */
- function "Command_Voteban" (number 23)
+ function "Command_Vote" (number 22)
 
-public Action:Command_Votekick(_arg0, _arg1)
+public Action:Command_Voteban(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_votekick <player> [reason]");
+		ReplyToCommand(client, "[SM] Usage: sm_voteban <player> [reason]");
 		return 3;
 	}
 	if (IsVoteInProgress(0))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 3936);
+		ReplyToCommand(client, "[SM] %t", 4224);
 		return 3;
 	}
-	if (TestVoteDelay(_arg0))
+	if (TestVoteDelay(client))
 	{
-		new var1 = 0;
-		new var2 = 0;
-		GetCmdArgString(var1, 256);
-		new var3;
-		var3 = BreakString(var1, var2, 64);
-		new var4;
-		var4 = FindTarget(_arg0, var2, false, true);
-		if (var4 == -1)
+		new String:text[1024];
+		new String:arg[256];
+		GetCmdArgString(text, 256);
+		new len = BreakString(text, arg, 64);
+		if (len != -1)
 		{
-			return 3;
-		}
-		if (var3 != -1)
-		{
-			strcopy(g_voteArg, 256, var3 + var1);
+			strcopy(g_voteArg, 256, text[len]);
 		}
 		else
 		{
 			g_voteArg[0] = 0;
 		}
-		DisplayVoteKickMenu(_arg0, var4);
+		new String:target_name[256];
+		new target_list[65];
+		new target_count;
+		new bool:tn_is_ml;
+		if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 48, target_name, 64, tn_is_ml)))
+		{
+			ReplyToTargetError(client, target_count);
+			return 3;
+		}
+		DisplayVoteBanMenu(client, target_list[0]);
 		return 3;
 	}
 	return 3;
 }
 
-public Action:Command_Votemap(_arg0, _arg1)
+public Action:Command_Votekick(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_votemap <mapname> [mapname2] ... [mapname5]");
+		ReplyToCommand(client, "[SM] Usage: sm_votekick <player> [reason]");
 		return 3;
 	}
 	if (IsVoteInProgress(0))
 	{
-		ReplyToCommand(_arg0, "[SM] %t", 4568);
+		ReplyToCommand(client, "[SM] %t", 3936);
 		return 3;
 	}
-	if (TestVoteDelay(_arg0))
+	if (TestVoteDelay(client))
 	{
-		new var2 = 0;
-		GetCmdArgString(var2, 256);
-		new var3 = 0;
-		new var4 = 0;
-		new var5 = 0;
-		new var6 = 0;
-		while (var6 != -1 && var4 < 5)
+		new String:text[1024];
+		new String:arg[256];
+		GetCmdArgString(text, 256);
+		new len = BreakString(text, arg, 64);
+		new target = FindTarget(client, arg, false, true);
+		if (target == -1)
 		{
-			var6 = BreakString(var5 + var2, var3[var4], 256);
-			if (IsMapValid(var3[var4]))
-			{
-				var4++;
-				if (var6 != -1)
-				{
-					var5 = var6 + var5;
-				}
-			}
-			ReplyToCommand(_arg0, "[SM] %t", "Map was not found", var3[var4]);
 			return 3;
 		}
-		DisplayVoteMapMenu(_arg0, var4, var3);
+		if (len != -1)
+		{
+			strcopy(g_voteArg, 256, text[len]);
+		}
+		else
+		{
+			g_voteArg[0] = 0;
+		}
+		DisplayVoteKickMenu(client, target);
 		return 3;
 	}
 	return 3;
 }
 
-public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public Action:Command_Votemap(client, args)
 {
-	if (_arg1 == 16)
+	if (args < 1)
+	{
+		ReplyToCommand(client, "[SM] Usage: sm_votemap <mapname> [mapname2] ... [mapname5]");
+		return 3;
+	}
+	if (IsVoteInProgress(0))
+	{
+		ReplyToCommand(client, "[SM] %t", 4568);
+		return 3;
+	}
+	if (TestVoteDelay(client))
+	{
+		new String:text[1024];
+		GetCmdArgString(text, 256);
+
+/* ERROR! null */
+ function "Command_Votemap" (number 25)
+
+public Handler_VoteCallback(Menu:menu, MenuAction:action, param1, param2)
+{
+	if (action == 16)
 	{
 		VoteMenuClose();
 	}
 	else
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
 			if (g_voteType != 3)
 			{
-				new var8 = 0;
-				Menu.GetTitle(_arg0, var8, 64);
-				new var9 = 0;
-				new var10 = g_voteInfo;
-				Format(var9, 255, "%T", var8, _arg2, var10[0][var10]);
-				new var11;
-				var11 = _arg3;
-				Panel.SetTitle(var11, var9, false);
+				new String:title[256];
+				Menu.GetTitle(menu, title, 64);
+				new String:buffer[1024];
+				new var8 = g_voteInfo;
+				Format(buffer, 255, "%T", title, param1, var8[0][var8]);
+				new Panel:panel = param2;
+				Panel.SetTitle(panel, buffer, false);
 			}
 		}
-		if (_arg1 == 512)
+		if (action == 512)
 		{
-			new var12 = 0;
-			Menu.GetItem(_arg0, _arg3, "", 0, 0, var12, 64);
+			new String:display[256];
+			Menu.GetItem(menu, param2, "", 0, 0, display, 64);
 			new var1;
-			if (strcmp(var12, "No", true) && strcmp(var12, "Yes", true))
+			if (strcmp(display, "No", true) && strcmp(display, "Yes", true))
 			{
-				new var13 = 0;
-				Format(var13, 255, "%T", var12, _arg2);
-				return RedrawMenuItem(var13);
+				new String:buffer[1024];
+				Format(buffer, 255, "%T", display, param1);
+				return RedrawMenuItem(buffer);
 			}
 		}
 		new var2;
-		if (_arg1 == 128 && _arg2 == -2)
+		if (action == 128 && param1 == -2)
 		{
 			PrintToChatAll("[SM] %t", 5588);
 		}
-		if (_arg1 == 32)
+		if (action == 32)
 		{
-			new var14 = 0;
-			new var15 = 0;
-			new var16 = 0;
-			new var17 = 0;
-			new var18 = 0;
-			new var19 = 0;
-			GetMenuVoteInfo(_arg3, var18, var19);
-			Menu.GetItem(_arg0, _arg2, var14, 256, 0, var15, 64);
+			new String:item[1024];
+			new String:display[256];
+			new Float:percent = 0.0;
+			new Float:limit = 0.0;
+			new votes;
+			new totalVotes;
+			GetMenuVoteInfo(param2, votes, totalVotes);
+			Menu.GetItem(menu, param1, item, 256, 0, display, 64);
 			new var3;
-			if (strcmp(var14, "###no###", true) && _arg2 == 1)
+			if (strcmp(item, "###no###", true) && param1 == 1)
 			{
-				var18 = var19 - var18;
+				votes = totalVotes - votes;
 			}
-			var16 = GetVotePercent(var18, var19);
+			percent = GetVotePercent(votes, totalVotes);
 			if (g_voteType != 3)
 			{
-				var17 = ConVar.FloatValue.get(g_Cvar_Limits[g_voteType]);
+				limit = ConVar.FloatValue.get(g_Cvar_Limits[g_voteType]);
 			}
 			new var4;
-			if ((strcmp(var14, "###yes###", true) && FloatCompare(var16, var17) < 0 && _arg2) || (strcmp(var14, "###no###", true) && _arg2 == 1))
+			if ((strcmp(item, "###yes###", true) && FloatCompare(percent, limit) < 0 && param1) || (strcmp(item, "###no###", true) && param1 == 1))
 			{
 				LogAction(-1, -1, "Vote failed.");
-				PrintToChatAll("[SM] %t", "Vote Failed", RoundToNearest(var17 * 100.0), RoundToNearest(var16 * 100.0), var19);
+				PrintToChatAll("[SM] %t", "Vote Failed", RoundToNearest(limit * 100.0), RoundToNearest(percent * 100.0), totalVotes);
 			}
 			else
 			{
-				PrintToChatAll("[SM] %t", "Vote Successful", RoundToNearest(var16 * 100.0), var19);
+				PrintToChatAll("[SM] %t", "Vote Successful", RoundToNearest(percent * 100.0), totalVotes);
 				switch (g_voteType)
 				{
 					case 0:
 					{
-						new var26 = 0;
-						GetMapDisplayName(var14, var26, 256);
-						LogAction(-1, -1, "Changing map to %s due to vote.", var14);
-						PrintToChatAll("[SM] %t", "Changing map", var26);
-						new var27 = 0;
-						CreateDataTimer(5.0, 69, var27, 0);
-						DataPack.WriteString(var27, var14, false);
+						new String:displayName[1024];
+						GetMapDisplayName(item, displayName, 256);
+						LogAction(-1, -1, "Changing map to %s due to vote.", item);
+						PrintToChatAll("[SM] %t", "Changing map", displayName);
+						new DataPack:dp;
+						CreateDataTimer(5.0, 69, dp, 0);
+						DataPack.WriteString(dp, item, false);
 					}
 					case 1:
 					{
-						new var23 = 0;
-						if ((var23 = GetClientOfUserId(g_voteTarget)))
+						new voteTarget;
+						if ((voteTarget = GetClientOfUserId(g_voteTarget)))
 						{
 							if (!g_voteArg[0])
 							{
 								strcopy(g_voteArg, 256, "Votekicked");
 							}
-							new var25 = g_voteInfo;
-							PrintToChatAll("[SM] %t", "Kicked target", "_s", var25[0][var25]);
-							LogAction(-1, var23, "Vote kick successful, kicked \"%L\" (reason \"%s\")", var23, g_voteArg);
+							new var12 = g_voteInfo;
+							PrintToChatAll("[SM] %t", "Kicked target", "_s", var12[0][var12]);
+							LogAction(-1, voteTarget, "Vote kick successful, kicked \"%L\" (reason \"%s\")", voteTarget, g_voteArg);
 							ServerCommand("kickid %d \"%s\"", g_voteTarget, g_voteArg);
 						}
 						else
 						{
-							new var24 = g_voteInfo;
-							LogAction(-1, -1, "Vote kick failed, unable to kick \"%s\" (reason \"%s\")", var24[0][var24], "Player no longer available");
+							new var11 = g_voteInfo;
+							LogAction(-1, -1, "Vote kick failed, unable to kick \"%s\" (reason \"%s\")", var11[0][var11], "Player no longer available");
 						}
 					}
 					case 2:
 					{
-						new var20 = 0;
-						if ((var20 = GetClientOfUserId(g_voteTarget)))
+						new voteTarget;
+						if ((voteTarget = GetClientOfUserId(g_voteTarget)))
 						{
 							if (!g_voteArg[0])
 							{
 								strcopy(g_voteArg, 256, "Votebanned");
 							}
-							new var22 = g_voteInfo;
-							PrintToChatAll("[SM] %t", "Banned player", var22[0][var22], 30);
-							LogAction(-1, var20, "Vote ban successful, banned \"%L\" (minutes \"30\") (reason \"%s\")", var20, g_voteArg);
-							BanClient(var20, 30, 1, g_voteArg, "Banned by vote", "sm_voteban", 0);
+							new var10 = g_voteInfo;
+							PrintToChatAll("[SM] %t", "Banned player", var10[0][var10], 30);
+							LogAction(-1, voteTarget, "Vote ban successful, banned \"%L\" (minutes \"30\") (reason \"%s\")", voteTarget, g_voteArg);
+							BanClient(voteTarget, 30, 1, g_voteArg, "Banned by vote", "sm_voteban", 0);
 						}
 						else
 						{
-							new var21 = g_voteInfo;
-							LogAction(-1, -1, "Vote ban failed, unable to ban \"%s\" (reason \"%s\")", var21[0][var21], "Player no longer available");
+							new var9 = g_voteInfo;
+							LogAction(-1, -1, "Vote ban failed, unable to ban \"%s\" (reason \"%s\")", var9[0][var9], "Player no longer available");
 						}
 					}
 					case 3:
 					{
 						new var7;
-						if (strcmp(var14, "###no###", true) && strcmp(var14, "###yes###", true))
+						if (strcmp(item, "###no###", true) && strcmp(item, "###yes###", true))
 						{
-							strcopy(var14, 256, var15);
+							strcopy(item, 256, display);
 						}
-						PrintToChatAll("[SM] %t", "Vote End", g_voteArg, var14);
+						PrintToChatAll("[SM] %t", "Vote End", g_voteArg, item);
 					}
 					default:
 					{
@@ -746,103 +709,125 @@ public Handler_VoteCallback(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	return 0;
 }
 
-public MenuHandler_Ban(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Ban(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
-
-/* ERROR! null */
- function "MenuHandler_Ban" (number 27)
-
-public MenuHandler_Confirm(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
-{
-	if (_arg1 == 16)
-	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
-		g_VoteMapInUse = false;
-	}
-	else
-	{
-		if (_arg1 == 8)
-		{
-			ResetMenu();
-			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			new String:info[128];
+			new String:name[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, name, 32);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				if (CanUserTarget(param1, target))
+				{
+					g_voteArg[0] = 0;
+					DisplayVoteBanMenu(param1, target);
+				}
+				PrintToChat(param1, "[SM] %t", 4152);
 			}
-		}
-		if (_arg1 == 4)
-		{
-			new var2 = 0;
-			new var3;
-			var3 = ArrayList.Length.get(g_SelectedMaps);
-			new var4 = 0;
-			while (var4 < var3)
+			else
 			{
-				ArrayList.GetString(g_SelectedMaps, var4, var2[var4], 256);
-				var4++;
+				PrintToChat(param1, "[SM] %t", 4116);
 			}
-			DisplayVoteMapMenu(_arg2, var3, var2);
-			ResetMenu();
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Kick(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Confirm(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
+		g_VoteMapInUse = false;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
+			ResetMenu();
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
 
 /* ERROR! null */
- function "MenuHandler_Kick" (number 29)
+ function "MenuHandler_Confirm" (number 28)
 
-public MenuHandler_Map(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Kick(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 8)
+	if (action == 16)
+	{
+		CloseHandle(menu);
+		menu = 0;
+	}
+	else
+	{
+		if (action == 8)
+		{
+			new var1;
+			if (param2 == -6 && hTopMenu)
+			{
+				TopMenu.Display(hTopMenu, param1, 3);
+			}
+		}
+		if (action == 4)
+		{
+			new String:info[128];
+			new String:name[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, name, 32);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
+			{
+				if (CanUserTarget(param1, target))
+				{
+					g_voteArg[0] = 0;
+					DisplayVoteKickMenu(param1, target);
+				}
+				PrintToChat(param1, "[SM] %t", 3864);
+			}
+			else
+			{
+				PrintToChat(param1, "[SM] %t", 3828);
+			}
+		}
+	}
+	return 0;
+}
+
+public MenuHandler_Map(Menu:menu, MenuAction:action, param1, param2)
+{
+	if (action == 8)
 	{
 		new var1;
-		if (_arg3 == -6 && hTopMenu)
+		if (param2 == -6 && hTopMenu)
 		{
-			ConfirmVote(_arg2);
+			ConfirmVote(param1);
 		}
 		else
 		{
@@ -851,29 +836,57 @@ public MenuHandler_Map(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
 	}
 	else
 	{
-		if (_arg1 == 256)
+		if (action == 256)
 		{
-			new var2 = 0;
+			new String:info[1024];
+			new String:name[128];
+			Menu.GetItem(menu, param2, info, 256, 0, name, 32);
+			if (ArrayList.FindString(g_SelectedMaps, info) != -1)
+			{
+				return 6;
+			}
+			return 0;
+		}
+		if (action == 4)
+		{
+			new String:info[1024];
+			new String:name[128];
+			Menu.GetItem(menu, param2, info, 256, 0, name, 32);
+			ArrayList.PushString(g_SelectedMaps, info);
+			if (ArrayList.Length.get(g_SelectedMaps) < 5)
+			{
+				Menu.Display(g_MapList, param1, 0);
+			}
+			else
+			{
+				ConfirmVote(param1);
+			}
+		}
+		if (action == 2)
+		{
+			new String:title[512];
+			Format(title, 128, "%T", "Please select a map", param1);
+			new Panel:panel = param2;
+			Panel.SetTitle(panel, title, false);
+		}
+	}
+	return 0;
+}
 
-/* ERROR! null */
- function "MenuHandler_Map" (number 30)
-
-public void:OnAdminMenuReady(Handle:_arg0)
+public void:OnAdminMenuReady(Handle:aTopMenu)
 {
-	new var1;
-	var1 = TopMenu.FromHandle(_arg0);
-	if (hTopMenu == var1)
+	new TopMenu:topmenu = TopMenu.FromHandle(aTopMenu);
+	if (hTopMenu == topmenu)
 	{
 		return 0;
 	}
-	hTopMenu = var1;
-	new var2;
-	var2 = TopMenu.FindCategory(hTopMenu, "VotingCommands");
-	if (var2)
+	hTopMenu = topmenu;
+	new TopMenuObject:voting_commands = TopMenu.FindCategory(hTopMenu, "VotingCommands");
+	if (voting_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_votekick", 41, var2, "sm_votekick", 1028, "");
-		TopMenu.AddItem(hTopMenu, "sm_voteban", 39, var2, "sm_voteban", 1032, "");
-		TopMenu.AddItem(hTopMenu, "sm_votemap", 43, var2, "sm_votemap", 1088, "");
+		TopMenu.AddItem(hTopMenu, "sm_votekick", 41, voting_commands, "sm_votekick", 1028, "");
+		TopMenu.AddItem(hTopMenu, "sm_voteban", 39, voting_commands, "sm_voteban", 1032, "");
+		TopMenu.AddItem(hTopMenu, "sm_votemap", 43, voting_commands, "sm_votemap", 1088, "");
 	}
 	return 0;
 }
@@ -898,28 +911,28 @@ public void:OnPluginStart()
 	g_Cvar_Limits[1] = CreateConVar("sm_vote_kick", "0.60", "percent required for successful kick vote.", 0, true, 0.05, true, 1.0);
 	g_Cvar_Limits[2] = CreateConVar("sm_vote_ban", "0.60", "percent required for successful ban vote.", 0, true, 0.05, true, 1.0);
 	AutoExecConfig(true, "basevotes", "sourcemod");
-	new var2 = 0;
+	new TopMenu:topmenu;
 	new var1;
-	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()))
 	{
-		OnAdminMenuReady(var2);
+		OnAdminMenuReady(topmenu);
 	}
 	g_SelectedMaps = ArrayList.ArrayList(ByteCountToCells(256), 0);
 	g_MapList = Menu.Menu(61, 258);
 	Menu.SetTitle(g_MapList, "%T", "Please select a map", 0);
 	Menu.ExitBackButton.set(g_MapList, true);
-	new var3 = 0;
-	BuildPath(0, var3, 256, "configs/adminmenu_maplist.ini");
-	SetMapListCompatBind("sm_votemap menu", var3);
+	new String:mapListPath[1024];
+	BuildPath(0, mapListPath, 256, "configs/adminmenu_maplist.ini");
+	SetMapListCompatBind("sm_votemap menu", mapListPath);
 	return 0;
 }
 
-public Action:Timer_ChangeMap(Handle:_arg0, DataPack:_arg1)
+public Action:Timer_ChangeMap(Handle:timer, DataPack:dp)
 {
-	new var1 = 0;
-	DataPack.Reset(_arg1, false);
-	DataPack.ReadString(_arg1, var1, 256);
-	ForceChangeLevel(var1, "sm_votemap Result");
+	new String:mapname[1024];
+	DataPack.Reset(dp, false);
+	DataPack.ReadString(dp, mapname, 256);
+	ForceChangeLevel(mapname, "sm_votemap Result");
 	return 4;
 }
 

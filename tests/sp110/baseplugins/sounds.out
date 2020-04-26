@@ -23,41 +23,41 @@ public Plugin:myinfo =
 	version = "1.10.0.6484",
 	url = "http://www.sourcemod.net/"
 };
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2492);
+			ReplyToCommand(client, "[SM] %t", 2492);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2464);
+			ReplyToCommand(client, "[SM] %t", 2464);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2436);
+			ReplyToCommand(client, "[SM] %t", 2436);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2408);
+			ReplyToCommand(client, "[SM] %t", 2408);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2376);
+			ReplyToCommand(client, "[SM] %t", 2376);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2348);
+			ReplyToCommand(client, "[SM] %t", 2348);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2316);
+			ReplyToCommand(client, "[SM] %t", 2316);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2288);
+			ReplyToCommand(client, "[SM] %t", 2288);
 		}
 		default:
 		{
@@ -66,56 +66,54 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-public Action:Command_Play(_arg0, _arg1)
+public Action:Command_Play(client, args)
 {
-	if (_arg1 < 2)
+	if (args < 2)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_play <#userid|name> <filename>");
+		ReplyToCommand(client, "[SM] Usage: sm_play <#userid|name> <filename>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArgString(var1, 321);
-	new var2 = 0;
-	new var3;
-	var3 = BreakString(var1, var2, 65);
-	if (var3 == -1)
+	new String:Arguments[1296];
+	GetCmdArgString(Arguments, 321);
+	new String:Arg[272];
+	new len = BreakString(Arguments, Arg, 65);
+	if (len == -1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_play <#userid|name> <filename>");
+		ReplyToCommand(client, "[SM] Usage: sm_play <#userid|name> <filename>");
 		return 3;
 	}
-	if (var1[var3] == 34)
+	if (Arguments[len] == '"')
 	{
-		var3++;
-		new var4;
-		var4 = TrimString(var3 + var1) + var3;
-		if (var1[var4 + -1] == 34)
+		len++;
+		new FileLen = TrimString(Arguments[len]) + len;
+		if (Arguments[FileLen + -1] == '"')
 		{
-			var1[var4 + -1] = 0;
+			Arguments[FileLen + -1] = '\x00';
 		}
 	}
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	if (0 >= (var7 = ProcessTargetString(var2, _arg0, var6, 65, 32, var5, 64, var8)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(Arg, client, target_list, 65, 32, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var7);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var9 = 0;
-	while (var9 < var7)
+	new i;
+	while (i < target_count)
 	{
-		ClientCommand(var6[var9], "playgamesound \"%s\"", var3 + var1);
-		LogAction(_arg0, var6[var9], "\"%L\" played sound on \"%L\" (file \"%s\")", _arg0, var6[var9], var3 + var1);
-		var9++;
+		ClientCommand(target_list[i], "playgamesound \"%s\"", Arguments[len]);
+		LogAction(client, target_list[i], "\"%L\" played sound on \"%L\" (file \"%s\")", client, target_list[i], Arguments[len]);
+		i++;
 	}
-	if (var8)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Played sound to target", var5);
+		ShowActivity2(client, "[SM] ", "%t", "Played sound to target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Played sound to target", "_s", var5);
+		ShowActivity2(client, "[SM] ", "%t", "Played sound to target", "_s", target_name);
 	}
 	return 3;
 }

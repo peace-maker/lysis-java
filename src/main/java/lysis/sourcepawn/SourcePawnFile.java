@@ -735,6 +735,125 @@ public class SourcePawnFile extends PawnFile {
 			}
 		}
 
+		if (sections_.containsKey("rtti.natives")) {
+			Section sc = sections_.get("rtti.natives");
+			ExtendedDataInputStream br = new ExtendedDataInputStream(
+					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+			RttiListTable rt = new RttiListTable(br);
+
+			for (int i = 0; i < rt.rowcount; i++) {
+				long nameoffs = br.ReadUInt32();
+				long signatureOffs = br.ReadUInt32();
+				String name = ReadString(binary, namesOffset + nameoffs);
+				RttiType type = TypeBuilder.FunctionFromOffset(this, (int) signatureOffs);
+
+				// Build argument type list right away.
+				Argument[] args = new Argument[type.getArguments().size()];
+				for (int j = 0; j < type.getArguments().size(); j++) {
+					RttiType arg = type.getArguments().get(j);
+					LinkedList<Dimension> dims = new LinkedList<>();
+					RttiType arrayType = arg;
+					while (arrayType.isArrayType()) {
+						// non FixedArrays have a size of 0.
+						dims.add(0, new Dimension((int) arrayType.getData()));
+						arrayType = arrayType.getInnerType();
+					}
+					args[j] = new Argument(arg.toVariableType(), "_arg" + j, arg, dims.toArray(new Dimension[0]));
+				}
+
+				if (name != null && !name.equals(natives_[i].name()))
+					System.err.printf(
+							"// Error reading rtti.natives section. Native %d has different names. (\"%s\" != \"%s\")\n",
+							i, natives_[i].name(), name);
+
+				natives_[i].setDebugInfo(type, args);
+			}
+
+			br.close();
+		}
+		
+		String[] variableDebugSections = new String[] {".dbg.globals", ".dbg.locals"};
+		for (String sectionName : variableDebugSections) {
+			if (sections_.containsKey(sectionName)) {
+				Section sc = sections_.get(sectionName);
+				ExtendedDataInputStream br = new ExtendedDataInputStream(
+						new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
+				RttiListTable rt = new RttiListTable(br);
+				
+				LinkedList<Variable> locals = new LinkedList<Variable>();
+				if (variables_ != null)
+					locals.addAll(Arrays.asList(variables_));
+				
+				// Merge the list with the .pubvars one
+				LinkedList<Variable> globals = new LinkedList<Variable>();
+				if (globals_ != null)
+					globals.addAll(Arrays.asList(globals_));
+	
+				for (int i = 0; i < rt.rowcount; i++) {
+					int address = br.ReadInt32();
+					byte scopeByte = br.readByte();
+					Scope scope = Scope.Local;
+					if (scopeByte >= 0 && scopeByte < Scope.values().length)
+						scope = Scope.values()[scopeByte];
+					long nameoffs = br.ReadUInt32();
+					long codestart = br.ReadUInt32();
+					long codeend = br.ReadUInt32();
+					long typeid = br.ReadUInt32();
+					String name = ReadString(binary, namesOffset + nameoffs);
+					
+					RttiType type = TypeBuilder.TypeFromTypeId(this, (int) typeid);
+					LinkedList<Dimension> dims = new LinkedList<>();
+					RttiType arrayType = type;
+					while (arrayType.isArrayType()) {
+						// non FixedArrays have a size of 0.
+						dims.add(0, new Dimension((int) arrayType.getData()));
+						arrayType = arrayType.getInnerType();
+					}
+					
+					Variable var = new Variable(address, codestart, codeend, type.toVariableType(), scope, name, dims.toArray(new Dimension[0]), type);
+					if (scope != Scope.Global) {
+						locals.add(var);
+					}
+					else {
+						// Been in .publics as well?
+						Variable existingGlobal = null;
+						for (Variable glob : globals) {
+							if (name.equals(glob.name())) {
+								existingGlobal = glob;
+								break;
+							}
+						}
+		
+						// This function came up already.
+						if (existingGlobal != null) {
+							if (existingGlobal.address() != address) {
+								System.err.printf(
+										"// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n",
+										name, existingGlobal.address());
+								continue;
+							}
+							// Remove the old one from the list as this might have more info.
+							globals.remove(existingGlobal);
+						}
+						globals.add(var);
+					}
+				}
+				
+				br.close();
+				
+				Collections.sort(globals, new Comparator<Variable>() {
+	
+					@Override
+					public int compare(Variable var1, Variable var2) {
+						return (int) (var1.address() - var2.address());
+					}
+	
+				});
+				variables_ = locals.toArray(new Variable[0]);
+				globals_ = globals.toArray(new Variable[0]);
+			}
+		}
+
 		if (sections_.containsKey("rtti.methods")) {
 			Section sc = sections_.get("rtti.methods");
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
@@ -783,112 +902,6 @@ public class SourcePawnFile extends PawnFile {
 			functions_ = functions.toArray(new Function[0]);
 
 			br.close();
-		}
-
-		if (sections_.containsKey("rtti.natives")) {
-			Section sc = sections_.get("rtti.natives");
-			ExtendedDataInputStream br = new ExtendedDataInputStream(
-					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
-			RttiListTable rt = new RttiListTable(br);
-
-			for (int i = 0; i < rt.rowcount; i++) {
-				long nameoffs = br.ReadUInt32();
-				long signatureOffs = br.ReadUInt32();
-				String name = ReadString(binary, namesOffset + nameoffs);
-				RttiType type = TypeBuilder.FunctionFromOffset(this, (int) signatureOffs);
-
-				// Build argument type list right away.
-				Argument[] args = new Argument[type.getArguments().size()];
-				for (int j = 0; j < type.getArguments().size(); j++) {
-					RttiType arg = type.getArguments().get(j);
-					LinkedList<Dimension> dims = new LinkedList<>();
-					RttiType arrayType = arg;
-					while (arrayType.isArrayType()) {
-						// non FixedArrays have a size of 0.
-						dims.add(0, new Dimension((int) arrayType.getData()));
-						arrayType = arrayType.getInnerType();
-					}
-					args[j] = new Argument(arg.toVariableType(), "_arg" + j, arg, dims.toArray(new Dimension[0]));
-				}
-
-				if (name != null && !name.equals(natives_[i].name()))
-					System.err.printf(
-							"// Error reading rtti.natives section. Native %d has different names. (\"%s\" != \"%s\")\n",
-							i, natives_[i].name(), name);
-
-				natives_[i].setDebugInfo(type, args);
-			}
-
-			br.close();
-		}
-		
-		if (sections_.containsKey(".dbg.globals")) {
-			Section sc = sections_.get(".dbg.globals");
-			ExtendedDataInputStream br = new ExtendedDataInputStream(
-					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
-			RttiListTable rt = new RttiListTable(br);
-			
-			// Merge the list with the .pubvars one
-			LinkedList<Variable> globals = new LinkedList<Variable>();
-			if (globals_ != null)
-				globals.addAll(Arrays.asList(globals_));
-
-			for (int i = 0; i < rt.rowcount; i++) {
-				int address = br.ReadInt32();
-				byte scope = br.readByte();
-				long nameoffs = br.ReadUInt32();
-				long codestart = br.ReadUInt32();
-				long codeend = br.ReadUInt32();
-				long typeid = br.ReadUInt32();
-				String name = ReadString(binary, namesOffset + nameoffs);
-				
-				// Scope of variables in the .dbg.globals list has to .. Global.
-				assert(scope == 0);
-				
-				RttiType type = TypeBuilder.TypeFromTypeId(this, (int) typeid);
-				LinkedList<Dimension> dims = new LinkedList<>();
-				RttiType arrayType = type;
-				while (arrayType.isArrayType()) {
-					// non FixedArrays have a size of 0.
-					dims.add(0, new Dimension((int) arrayType.getData()));
-					arrayType = arrayType.getInnerType();
-				}
-				
-				Variable var = new Variable(address, codestart, codeend, type.toVariableType(), Scope.Global, name, dims.toArray(new Dimension[0]), type);
-				// Been in .publics as well?
-				Variable existingGlobal = null;
-				for (Variable glob : globals) {
-					if (name.equals(glob.name())) {
-						existingGlobal = glob;
-						break;
-					}
-				}
-
-				// This function came up already.
-				if (existingGlobal != null) {
-					if (existingGlobal.address() != address) {
-						System.err.printf(
-								"// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n",
-								name, existingGlobal.address());
-						continue;
-					}
-					// Remove the old one from the list as this might have more info.
-					globals.remove(existingGlobal);
-				}
-				globals.add(var);
-			}
-			
-			br.close();
-			
-			Collections.sort(globals, new Comparator<Variable>() {
-
-				@Override
-				public int compare(Variable var1, Variable var2) {
-					return (int) (var1.address() - var2.address());
-				}
-
-			});
-			globals_ = globals.toArray(new Variable[0]);
 		}
 	}
 
@@ -939,6 +952,31 @@ public class SourcePawnFile extends PawnFile {
 			// Remove the old one from the list as this might have more info.
 			functions.remove(existingFunction);
 		}
+	}
+	
+	private Variable insertArgumentVar(Function func, int argNum, RttiType type, LinkedList<Dimension> dims) {
+		long varAddr = 12 + argNum * 4;
+		
+		// Variable already exists.
+		Variable var = lookupVariable(func.address(), varAddr);
+		if (var != null) {
+			// TODO: assert argument type and variable type are the same?
+			// Different info in rtti.methods and .dbg.locals?
+
+			// Reference flag is only in the function signature.
+			if (type.isByRef()) {
+				var.updateByRef();
+			}
+			return var;
+		}
+		Dimension[] dimarray = null;
+		if (!dims.isEmpty())
+			dimarray = dims.toArray(new Dimension[0]);
+		var = new Variable(varAddr, func.codeStart(), func.codeEnd(),
+				type.toVariableType(), Scope.Local, "_arg" + argNum, dimarray, type);
+		variables_ = Arrays.copyOf(variables_, variables_.length + 1);
+		variables_[variables_.length - 1] = var;
+		return var;
 	}
 
 	public InputStream getRTTIDataBytes() {

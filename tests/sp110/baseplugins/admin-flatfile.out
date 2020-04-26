@@ -68,14 +68,13 @@ void:ReadUsers()
 	BuildPath(0, g_Filename, 256, "configs/admins.cfg");
 	InitGlobalStates();
 	g_UserState = 0;
-	new var1;
-	var1 = SMCParser.ParseFile(g_hUserParser, g_Filename, 0, 0);
-	if (var1)
+	new SMCError:err = SMCParser.ParseFile(g_hUserParser, g_Filename, 0, 0);
+	if (err)
 	{
-		new var2 = 0;
-		if (SMCParser.GetErrorString(g_hUserParser, var1, var2, 64))
+		new String:buffer[256];
+		if (SMCParser.GetErrorString(g_hUserParser, err, buffer, 64))
 		{
-			ParseError("%s", var2);
+			ParseError("%s", buffer);
 		}
 		else
 		{
@@ -85,141 +84,139 @@ void:ReadUsers()
 	return 0;
 }
 
-void:DecodeAuthMethod(String:_arg0[], String:_arg1[128], _arg2)
+void:DecodeAuthMethod(String:auth[], String:method[128], &offset)
 {
 	new var1;
-	if (StrContains(_arg0[0], "STEAM_", true) && strncmp("0:", _arg0[0], 2, true) && strncmp("1:", _arg0[0], 2, true))
+	if (StrContains(auth[0], "STEAM_", true) && strncmp("0:", auth[0], 2, true) && strncmp("1:", auth[0], 2, true))
 	{
-		strcopy(_arg1[0], 32, "steam");
-		_arg2 = 0;
+		strcopy(method[0], 32, "steam");
+		offset = 0;
 	}
 	else
 	{
 		new var2;
-		if (strncmp(_arg0[0], "[U:", 3, true) && _arg0[0][strlen(_arg0[0]) + -1] == ']')
+		if (strncmp(auth[0], "[U:", 3, true) && auth[0][strlen(auth[0]) + -1] == ']')
 		{
-			strcopy(_arg1[0], 32, "steam");
-			_arg2 = 0;
+			strcopy(method[0], 32, "steam");
+			offset = 0;
 		}
-		if (_arg0[0] == '!')
+		if (auth[0] == '!')
 		{
-			strcopy(_arg1[0], 32, "ip");
-			_arg2 = 1;
+			strcopy(method[0], 32, "ip");
+			offset = 1;
 		}
-		strcopy(_arg1[0], 32, "name");
-		_arg2 = 0;
+		strcopy(method[0], 32, "name");
+		offset = 0;
 	}
 	return 0;
 }
 
-void:ReadAdminLine(String:_arg0[])
+void:ReadAdminLine(String:line[])
 {
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	new var8 = 0;
-	if ((var7 = BreakString(_arg0[0], var4, 64)) == -1)
+	new bool:is_bound;
+	new AdminId:admin;
+	new String:auth[256];
+	new String:auth_method[128];
+	new idx;
+	new cur_idx;
+	new auth_offset;
+	if ((cur_idx = BreakString(line[0], auth, 64)) == -1)
 	{
 		return 0;
 	}
-	var6 = var7;
-	DecodeAuthMethod(var4, var5, var8);
-	if ((var3 = FindAdminByIdentity(var5, var8 + var4)) == -1)
+	idx = cur_idx;
+	DecodeAuthMethod(auth, auth_method, auth_offset);
+	if ((admin = FindAdminByIdentity(auth_method, auth[auth_offset])) == -1)
 	{
-		var3 = CreateAdmin("");
+		admin = CreateAdmin("");
 	}
 	else
 	{
-		var2 = 1;
+		is_bound = true;
 	}
-	new var9 = 0;
-	var7 = BreakString(var6 + _arg0[0], var9, 64);
-	var6 = var7 + var6;
-	new var10 = 0;
-	new var11 = 0;
-	if (0 < (var11 = StringToIntEx(var9, var10, 10)))
+	new String:flags[256];
+	cur_idx = BreakString(idx + line[0], flags, 64);
+	idx = cur_idx + idx;
+	new level;
+	new flag_idx;
+	if (0 < (flag_idx = StringToIntEx(flags, level, 10)))
 	{
-		AdminId.ImmunityLevel.set(var3, var10);
-		if (var9[var11] == 58)
+		AdminId.ImmunityLevel.set(admin, level);
+		if (flags[flag_idx] == ':')
 		{
-			var11++;
+			flag_idx++;
 		}
 	}
-	if (var9[var11] == 64)
+	if (flags[flag_idx] == '@')
 	{
-		new var12;
-		var12 = FindAdmGroup(var11 + 1 + var9);
-		if (var12 == -1)
+		new GroupId:gid = FindAdmGroup(flags[flag_idx + 1]);
+		if (gid == -1)
 		{
-			ParseError("Invalid group detected: %s", var11 + 1 + var9);
+			ParseError("Invalid group detected: %s", flags[flag_idx + 1]);
 			return 0;
 		}
-		AdminId.InheritGroup(var3, var12);
+		AdminId.InheritGroup(admin, gid);
 	}
 	else
 	{
-		new var13;
-		var13 = strlen(var11 + var9);
-		new var14 = 0;
-		while (var14 < var13)
+		new len = strlen(flags[flag_idx]);
+		new bool:is_default;
+		new i;
+		while (i < len)
 		{
 			new var1;
-			if (var10 && var9[var14 + var11] == 36)
+			if (level && flags[i + flag_idx] == '$')
 			{
-				AdminId.ImmunityLevel.set(var3, 1);
+				AdminId.ImmunityLevel.set(admin, 1);
 			}
 			else
 			{
-				new var15 = 0;
-				if (FindFlagByChar(var9[var14 + var11], var15))
+				new AdminFlag:flag;
+				if (FindFlagByChar(flags[i + flag_idx], flag))
 				{
-					AdminId.SetFlag(var3, var15, true);
+					AdminId.SetFlag(admin, flag, true);
 				}
-				ParseError("Invalid flag detected: %c", var14 + var11 + var9);
-				var14++;
+				ParseError("Invalid flag detected: %c", flags[i + flag_idx]);
+				i++;
 			}
-			var14++;
+			i++;
 		}
-		if (0/* ERROR unknown load Constant */)
+		if (is_default)
 		{
-			new var16;
-			var16 = FindAdmGroup("Default");
-			if (var16 != -1)
+			new GroupId:gid = FindAdmGroup("Default");
+			if (gid != -1)
 			{
-				AdminId.InheritGroup(var3, var16);
+				AdminId.InheritGroup(admin, gid);
 			}
 		}
 	}
-	if (var7 != -1)
+	if (cur_idx != -1)
 	{
-		new var17 = 0;
-		BreakString(var6 + _arg0[0], var17, 64);
-		AdminId.SetPassword(var3, var17);
+		new String:password[256];
+		BreakString(idx + line[0], password, 64);
+		AdminId.SetPassword(admin, password);
 	}
-	if (!var2)
+	if (!is_bound)
 	{
-		if (!(AdminId.BindIdentity(var3, var5, var8 + var4)))
+		if (!(AdminId.BindIdentity(admin, auth_method, auth[auth_offset])))
 		{
-			RemoveAdmin(var3);
-			ParseError("Failed to bind identity %s (method %s)", var8 + var4, var5);
+			RemoveAdmin(admin);
+			ParseError("Failed to bind identity %s (method %s)", auth[auth_offset], auth_method);
 		}
 	}
 	return 0;
 }
 
-void:ParseError(String:_arg0[], any:_arg1)
+void:ParseError(String:format[], any:_arg1)
 {
-	new var1 = 0;
+	new String:buffer[2048];
 	if (!g_LoggedFileName)
 	{
 		LogError("Error(s) detected parsing %s", 2416);
 		g_LoggedFileName = true;
 	}
-	VFormat(var1, 512, _arg0[0], 2);
-	LogError(" (line %d) %s", g_CurrentLine, var1);
+	VFormat(buffer, 512, format[0], 2);
+	LogError(" (line %d) %s", g_CurrentLine, buffer);
 	g_ErrorCount += 1;
 	return 0;
 }
@@ -233,20 +230,20 @@ void:InitGlobalStates()
 	return 0;
 }
 
-bool:StrEqual(String:_arg0[], String:_arg1[], bool:_arg2)
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
 {
-	return strcmp(_arg0[0], _arg1[0], _arg2) == 0;
+	return strcmp(str1[0], str2[0], caseSensitive) == 0;
 }
 
-void:File.Close(File:_arg0)
+void:File.Close(File:this)
 {
-	CloseHandle(_arg0);
+	CloseHandle(this);
 	return 0;
 }
 
-FlagToBit(AdminFlag:_arg0)
+FlagToBit(AdminFlag:flag)
 {
-	return 1 << _arg0;
+	return 1 << flag;
 }
 
 void:InitializeOverrideParsers()
@@ -270,19 +267,18 @@ void:InitializeOverrideParsers()
 	return 0;
 }
 
-void:InternalReadOverrides(SMCParser:_arg0, String:_arg1[])
+void:InternalReadOverrides(SMCParser:parser, String:file[])
 {
-	BuildPath(0, g_Filename, 256, _arg1[0]);
+	BuildPath(0, g_Filename, 256, file[0]);
 	InitGlobalStates();
 	g_OverrideState = 0;
-	new var1;
-	var1 = SMCParser.ParseFile(_arg0, g_Filename, 0, 0);
-	if (var1)
+	new SMCError:err = SMCParser.ParseFile(parser, g_Filename, 0, 0);
+	if (err)
 	{
-		new var2 = 0;
-		if (SMCParser.GetErrorString(_arg0, var1, var2, 64))
+		new String:buffer[256];
+		if (SMCParser.GetErrorString(parser, err, buffer, 64))
 		{
-			ParseError("%s", var2);
+			ParseError("%s", buffer);
 		}
 		else
 		{
@@ -313,21 +309,20 @@ void:InitializeGroupParser()
 	return 0;
 }
 
-void:InternalReadGroups(String:_arg0[], GroupPass:_arg1)
+void:InternalReadGroups(String:path[], GroupPass:pass)
 {
 	InitGlobalStates();
 	g_GroupState = 0;
 	g_CurGrp = -1;
-	g_GroupPass = _arg1;
+	g_GroupPass = pass;
 	g_NeedReparse = false;
-	new var1;
-	var1 = SMCParser.ParseFile(g_hGroupParser, _arg0[0], 0, 0);
-	if (var1)
+	new SMCError:err = SMCParser.ParseFile(g_hGroupParser, path[0], 0, 0);
+	if (err)
 	{
-		new var2 = 0;
-		if (SMCParser.GetErrorString(g_hGroupParser, var1, var2, 64))
+		new String:buffer[256];
+		if (SMCParser.GetErrorString(g_hGroupParser, err, buffer, 64))
 		{
-			ParseError("%s", var2);
+			ParseError("%s", buffer);
 		}
 		else
 		{
@@ -349,15 +344,15 @@ void:ReadGroups()
 	return 0;
 }
 
-public void:OnRebuildAdminCache(AdminCachePart:_arg0)
+public void:OnRebuildAdminCache(AdminCachePart:part)
 {
-	if (_arg0)
+	if (part)
 	{
-		if (_arg0 == 1)
+		if (part == 1)
 		{
 			ReadGroups();
 		}
-		if (_arg0 == 2)
+		if (part == 2)
 		{
 			ReadUsers();
 			ReadSimpleUsers();
@@ -370,13 +365,13 @@ public void:OnRebuildAdminCache(AdminCachePart:_arg0)
 	return 0;
 }
 
-public SMCResult:ReadGroups_CurrentLine(SMCParser:_arg0, String:_arg1[], _arg2)
+public SMCResult:ReadGroups_CurrentLine(SMCParser:smc, String:line[], lineno)
 {
-	g_CurrentLine = _arg2;
+	g_CurrentLine = lineno;
 	return 0;
 }
 
-public SMCResult:ReadGroups_EndSection(SMCParser:_arg0)
+public SMCResult:ReadGroups_EndSection(SMCParser:smc)
 {
 	if (g_IgnoreLevel)
 	{
@@ -402,35 +397,34 @@ public SMCResult:ReadGroups_EndSection(SMCParser:_arg0)
 	return 0;
 }
 
-public SMCResult:ReadGroups_KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+public SMCResult:ReadGroups_KeyValue(SMCParser:smc, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
 {
 	new var1;
 	if (g_CurGrp == -1 || g_IgnoreLevel)
 	{
 		return 0;
 	}
-	new var3 = 0;
+	new AdminFlag:flag;
 	if (g_GroupPass == 1)
 	{
 		if (g_GroupState == 2)
 		{
-			if (StrEqual(_arg1[0], "flags", true))
+			if (StrEqual(key[0], "flags", true))
 			{
-				new var4;
-				var4 = strlen(_arg2[0]);
-				new var5 = 0;
-				while (var5 < var4)
+				new len = strlen(value[0]);
+				new i;
+				while (i < len)
 				{
-					if (FindFlagByChar(_arg2[0][var5], var3))
+					if (FindFlagByChar(value[0][i], flag))
 					{
-						GroupId.SetFlag(g_CurGrp, var3, true);
+						GroupId.SetFlag(g_CurGrp, flag, true);
 					}
-					var5++;
+					i++;
 				}
 			}
 			else
 			{
-				if (StrEqual(_arg1[0], "immunity", true))
+				if (StrEqual(key[0], "immunity", true))
 				{
 					g_NeedReparse = true;
 				}
@@ -440,18 +434,18 @@ public SMCResult:ReadGroups_KeyValue(SMCParser:_arg0, String:_arg1[], String:_ar
 		{
 			if (g_GroupState == 3)
 			{
-				new var6 = 0;
-				if (StrEqual(_arg2[0], "allow", false))
+				new OverrideRule:rule;
+				if (StrEqual(value[0], "allow", false))
 				{
-					var6 = 1;
+					rule = 1;
 				}
-				if (_arg1[0] == '@')
+				if (key[0] == '@')
 				{
-					GroupId.AddCommandOverride(g_CurGrp, _arg1[0] + 1, 2, var6);
+					GroupId.AddCommandOverride(g_CurGrp, key[0] + 1, 2, rule);
 				}
 				else
 				{
-					GroupId.AddCommandOverride(g_CurGrp, _arg1[0], 1, var6);
+					GroupId.AddCommandOverride(g_CurGrp, key[0], 1, rule);
 				}
 			}
 		}
@@ -461,39 +455,39 @@ public SMCResult:ReadGroups_KeyValue(SMCParser:_arg0, String:_arg1[], String:_ar
 		new var2;
 		if (g_GroupPass == 2 && g_GroupState == 2)
 		{
-			if (StrEqual(_arg1[0], "immunity", true))
+			if (StrEqual(key[0], "immunity", true))
 			{
-				if (StrEqual(_arg2[0], "*", true))
+				if (StrEqual(value[0], "*", true))
 				{
 					GroupId.ImmunityLevel.set(g_CurGrp, 2);
 				}
-				if (StrEqual(_arg2[0], "$", true))
+				if (StrEqual(value[0], "$", true))
 				{
 					GroupId.ImmunityLevel.set(g_CurGrp, 1);
 				}
-				new var7 = 0;
-				if (StringToIntEx(_arg2[0], var7, 10))
+				new level;
+				if (StringToIntEx(value[0], level, 10))
 				{
-					GroupId.ImmunityLevel.set(g_CurGrp, var7);
+					GroupId.ImmunityLevel.set(g_CurGrp, level);
 				}
 				else
 				{
-					new var8 = 0;
-					if (_arg2[0] == '@')
+					new GroupId:id;
+					if (value[0] == '@')
 					{
-						var8 = FindAdmGroup(_arg2[0] + 1);
+						id = FindAdmGroup(value[0] + 1);
 					}
 					else
 					{
-						var8 = FindAdmGroup(_arg2[0]);
+						id = FindAdmGroup(value[0]);
 					}
-					if (var8 != -1)
+					if (id != -1)
 					{
-						GroupId.AddGroupImmunity(g_CurGrp, var8);
+						GroupId.AddGroupImmunity(g_CurGrp, id);
 					}
 					else
 					{
-						ParseError("Unable to find group: \"%s\"", _arg2[0]);
+						ParseError("Unable to find group: \"%s\"", value[0]);
 					}
 				}
 			}
@@ -502,7 +496,7 @@ public SMCResult:ReadGroups_KeyValue(SMCParser:_arg0, String:_arg1[], String:_ar
 	return 0;
 }
 
-public SMCResult:ReadGroups_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:ReadGroups_NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	if (g_IgnoreLevel)
 	{
@@ -513,15 +507,15 @@ public SMCResult:ReadGroups_NewSection(SMCParser:_arg0, String:_arg1[], bool:_ar
 	{
 		if (g_GroupState == 1)
 		{
-			if ((g_CurGrp = CreateAdmGroup(_arg1[0])) == -1)
+			if ((g_CurGrp = CreateAdmGroup(name[0])) == -1)
 			{
-				g_CurGrp = FindAdmGroup(_arg1[0]);
+				g_CurGrp = FindAdmGroup(name[0]);
 			}
 			g_GroupState = 2;
 		}
 		if (g_GroupState == 2)
 		{
-			if (StrEqual(_arg1[0], "Overrides", true))
+			if (StrEqual(name[0], "Overrides", true))
 			{
 				g_GroupState = 3;
 			}
@@ -534,7 +528,7 @@ public SMCResult:ReadGroups_NewSection(SMCParser:_arg0, String:_arg1[], bool:_ar
 	}
 	else
 	{
-		if (StrEqual(_arg1[0], "Groups", true))
+		if (StrEqual(name[0], "Groups", true))
 		{
 			g_GroupState = 1;
 		}
@@ -546,7 +540,7 @@ public SMCResult:ReadGroups_NewSection(SMCParser:_arg0, String:_arg1[], bool:_ar
 	return 0;
 }
 
-public SMCResult:ReadNewOverrides_EndSection(SMCParser:_arg0)
+public SMCResult:ReadNewOverrides_EndSection(SMCParser:smc)
 {
 	if (g_IgnoreLevel)
 	{
@@ -560,7 +554,7 @@ public SMCResult:ReadNewOverrides_EndSection(SMCParser:_arg0)
 	return 0;
 }
 
-public SMCResult:ReadNewOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:ReadNewOverrides_NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	if (g_IgnoreLevel)
 	{
@@ -573,7 +567,7 @@ public SMCResult:ReadNewOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bo
 	}
 	else
 	{
-		if (StrEqual(_arg1[0], "Overrides", true))
+		if (StrEqual(name[0], "Overrides", true))
 		{
 			g_OverrideState = 2;
 		}
@@ -585,7 +579,7 @@ public SMCResult:ReadNewOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bo
 	return 0;
 }
 
-public SMCResult:ReadOldOverrides_EndSection(SMCParser:_arg0)
+public SMCResult:ReadOldOverrides_EndSection(SMCParser:smc)
 {
 	if (g_IgnoreLevel)
 	{
@@ -607,7 +601,7 @@ public SMCResult:ReadOldOverrides_EndSection(SMCParser:_arg0)
 	return 0;
 }
 
-public SMCResult:ReadOldOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:ReadOldOverrides_NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	if (g_IgnoreLevel)
 	{
@@ -618,7 +612,7 @@ public SMCResult:ReadOldOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bo
 	{
 		if (g_OverrideState == 1)
 		{
-			if (StrEqual(_arg1[0], "Overrides", true))
+			if (StrEqual(name[0], "Overrides", true))
 			{
 				g_OverrideState = 2;
 			}
@@ -631,7 +625,7 @@ public SMCResult:ReadOldOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bo
 	}
 	else
 	{
-		if (StrEqual(_arg1[0], "Levels", true))
+		if (StrEqual(name[0], "Levels", true))
 		{
 			g_OverrideState = 1;
 		}
@@ -643,28 +637,27 @@ public SMCResult:ReadOldOverrides_NewSection(SMCParser:_arg0, String:_arg1[], bo
 	return 0;
 }
 
-public SMCResult:ReadOverrides_CurrentLine(SMCParser:_arg0, String:_arg1[], _arg2)
+public SMCResult:ReadOverrides_CurrentLine(SMCParser:smc, String:line[], lineno)
 {
-	g_CurrentLine = _arg2;
+	g_CurrentLine = lineno;
 	return 0;
 }
 
-public SMCResult:ReadOverrides_KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+public SMCResult:ReadOverrides_KeyValue(SMCParser:smc, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
 {
 	new var1;
 	if (g_OverrideState == 2 && g_IgnoreLevel)
 	{
 		return 0;
 	}
-	new var2;
-	var2 = ReadFlagString(_arg2[0], 0);
-	if (_arg1[0] == '@')
+	new flags = ReadFlagString(value[0], 0);
+	if (key[0] == '@')
 	{
-		AddCommandOverride(_arg1[0] + 1, 2, var2);
+		AddCommandOverride(key[0] + 1, 2, flags);
 	}
 	else
 	{
-		AddCommandOverride(_arg1[0], 1, var2);
+		AddCommandOverride(key[0], 1, flags);
 	}
 	return 0;
 }
@@ -673,13 +666,13 @@ public SMCResult:ReadOverrides_KeyValue(SMCParser:_arg0, String:_arg1[], String:
 /* ERROR! null */
  function "ReadSimpleUsers" (number 26)
 
-public SMCResult:ReadUsers_CurrentLine(SMCParser:_arg0, String:_arg1[], _arg2)
+public SMCResult:ReadUsers_CurrentLine(SMCParser:smc, String:line[], lineno)
 {
-	g_CurrentLine = _arg2;
+	g_CurrentLine = lineno;
 	return 0;
 }
 
-public SMCResult:ReadUsers_EndSection(SMCParser:_arg0)
+public SMCResult:ReadUsers_EndSection(SMCParser:smc)
 {
 	if (g_IgnoreLevel)
 	{
@@ -691,39 +684,39 @@ public SMCResult:ReadUsers_EndSection(SMCParser:_arg0)
 		new var1;
 		if (g_CurIdent[0] && g_CurAuth[0])
 		{
-			new var2 = 0;
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			new var6 = 0;
-			if ((var3 = FindAdminByIdentity(g_CurAuth, g_CurIdent)) == -1)
+			new AdminFlag:flags[26];
+			new AdminId:id;
+			new i;
+			new num_groups;
+			new num_flags;
+			if ((id = FindAdminByIdentity(g_CurAuth, g_CurIdent)) == -1)
 			{
-				var3 = CreateAdmin(g_CurName);
-				if (!(AdminId.BindIdentity(var3, g_CurAuth, g_CurIdent)))
+				id = CreateAdmin(g_CurName);
+				if (!(AdminId.BindIdentity(id, g_CurAuth, g_CurIdent)))
 				{
-					RemoveAdmin(var3);
+					RemoveAdmin(id);
 					ParseError("Failed to bind auth \"%s\" to identity \"%s\"", g_CurAuth, g_CurIdent);
 					return 0;
 				}
 			}
-			var5 = ArrayList.Length.get(g_GroupArray);
-			var4 = 0;
-			while (var4 < var5)
+			num_groups = ArrayList.Length.get(g_GroupArray);
+			i = 0;
+			while (i < num_groups)
 			{
-				AdminId.InheritGroup(var3, ArrayList.Get(g_GroupArray, var4, 0, false));
-				var4++;
+				AdminId.InheritGroup(id, ArrayList.Get(g_GroupArray, i, 0, false));
+				i++;
 			}
-			AdminId.SetPassword(var3, g_CurPass);
-			if (AdminId.ImmunityLevel.get(var3) < g_CurImmunity)
+			AdminId.SetPassword(id, g_CurPass);
+			if (AdminId.ImmunityLevel.get(id) < g_CurImmunity)
 			{
-				AdminId.ImmunityLevel.set(var3, g_CurImmunity);
+				AdminId.ImmunityLevel.set(id, g_CurImmunity);
 			}
-			var6 = FlagBitsToArray(g_CurFlags, var2, 26);
-			var4 = 0;
-			while (var4 < var6)
+			num_flags = FlagBitsToArray(g_CurFlags, flags, 26);
+			i = 0;
+			while (i < num_flags)
 			{
-				AdminId.SetFlag(var3, var2[var4], true);
-				var4++;
+				AdminId.SetFlag(id, flags[i], true);
+				i++;
 			}
 		}
 		else
@@ -742,65 +735,63 @@ public SMCResult:ReadUsers_EndSection(SMCParser:_arg0)
 	return 0;
 }
 
-public SMCResult:ReadUsers_KeyValue(SMCParser:_arg0, String:_arg1[], String:_arg2[], bool:_arg3, bool:_arg4)
+public SMCResult:ReadUsers_KeyValue(SMCParser:smc, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
 {
 	new var1;
 	if (g_UserState == 2 && g_IgnoreLevel)
 	{
 		return 0;
 	}
-	if (StrEqual(_arg1[0], "auth", true))
+	if (StrEqual(key[0], "auth", true))
 	{
-		strcopy(g_CurAuth, 64, _arg2[0]);
+		strcopy(g_CurAuth, 64, value[0]);
 	}
 	else
 	{
-		if (StrEqual(_arg1[0], "identity", true))
+		if (StrEqual(key[0], "identity", true))
 		{
-			strcopy(g_CurIdent, 64, _arg2[0]);
+			strcopy(g_CurIdent, 64, value[0]);
 		}
-		if (StrEqual(_arg1[0], "password", true))
+		if (StrEqual(key[0], "password", true))
 		{
-			strcopy(g_CurPass, 64, _arg2[0]);
+			strcopy(g_CurPass, 64, value[0]);
 		}
-		if (StrEqual(_arg1[0], "group", true))
+		if (StrEqual(key[0], "group", true))
 		{
-			new var2;
-			var2 = FindAdmGroup(_arg2[0]);
-			if (var2 == -1)
+			new GroupId:id = FindAdmGroup(value[0]);
+			if (id == -1)
 			{
-				ParseError("Unknown group \"%s\"", _arg2[0]);
+				ParseError("Unknown group \"%s\"", value[0]);
 			}
-			ArrayList.Push(g_GroupArray, var2);
+			ArrayList.Push(g_GroupArray, id);
 		}
-		if (StrEqual(_arg1[0], "flags", true))
+		if (StrEqual(key[0], "flags", true))
 		{
-			new var3;
-			var3 = strlen(_arg2[0]);
-			new var4 = 0;
-			new var5 = 0;
-			while (var5 < var3)
+			new len = strlen(value[0]);
+			new AdminFlag:flag;
+			new i;
+			while (i < len)
 			{
-				if (FindFlagByChar(_arg2[0][var5], var4))
+				if (FindFlagByChar(value[0][i], flag))
 				{
-					g_CurFlags = FlagToBit(var4) | g_CurFlags;
+					g_CurFlags = FlagToBit(flag) | g_CurFlags;
 				}
 				else
 				{
-					ParseError("Invalid flag detected: %c", var5 + _arg2[0]);
+					ParseError("Invalid flag detected: %c", i + value[0]);
 				}
-				var5++;
+				i++;
 			}
 		}
-		if (StrEqual(_arg1[0], "immunity", true))
+		if (StrEqual(key[0], "immunity", true))
 		{
-			g_CurImmunity = StringToInt(_arg2[0], 10);
+			g_CurImmunity = StringToInt(value[0], 10);
 		}
 	}
 	return 0;
 }
 
-public SMCResult:ReadUsers_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg2)
+public SMCResult:ReadUsers_NewSection(SMCParser:smc, String:name[], bool:opt_quotes)
 {
 	if (g_IgnoreLevel)
 	{
@@ -812,7 +803,7 @@ public SMCResult:ReadUsers_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg
 		if (g_UserState == 1)
 		{
 			g_UserState = 2;
-			strcopy(g_CurName, 64, _arg1[0]);
+			strcopy(g_CurName, 64, name[0]);
 			g_CurAuth[0] = 0;
 			g_CurIdent[0] = 0;
 			g_CurPass[0] = 0;
@@ -824,7 +815,7 @@ public SMCResult:ReadUsers_NewSection(SMCParser:_arg0, String:_arg1[], bool:_arg
 	}
 	else
 	{
-		if (StrEqual(_arg1[0], "Admins", true))
+		if (StrEqual(name[0], "Admins", true))
 		{
 			g_UserState = 1;
 		}

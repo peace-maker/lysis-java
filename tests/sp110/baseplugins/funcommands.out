@@ -109,375 +109,365 @@ new Float:g_DrugAngles[20] =
 {
 	0, 1084227584, 1092616192, 1097859072, 1101004800, 1103626240, 1101004800, 1097859072, 1092616192, 1084227584, 0, -1063256064, -1054867456, -1049624576, -1046478848, -1043857408, -1046478848, -1049624576, -1054867456, -1063256064
 };
-new g_var9e0;
-new g_vara28;
-new g_vara70;
-new g_varae8;
-void:DisplayBeaconMenu(_arg0)
+void:DisplayBeaconMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(167, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Beacon player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(167, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Beacon player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:CreateTimeBomb(_arg0)
+void:CreateTimeBomb(client)
 {
 	g_Serial_Gen += 1;
-	g_TimeBombSerial[_arg0] = g_Serial_Gen;
-	CreateTimer(1.0, 207, g_Serial_Gen << 7 | _arg0, 3);
-	g_TimeBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_TimeBombTicks);
+	g_TimeBombSerial[client] = g_Serial_Gen;
+	CreateTimer(1.0, 207, g_Serial_Gen << 7 | client, 3);
+	g_TimeBombTime[client] = ConVar.IntValue.get(g_Cvar_TimeBombTicks);
 	return 0;
 }
 
-void:KillTimeBomb(_arg0)
+void:KillTimeBomb(client)
 {
-	g_TimeBombSerial[_arg0] = 0;
-	if (IsClientInGame(_arg0))
+	g_TimeBombSerial[client] = 0;
+	if (IsClientInGame(client))
 	{
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
 	return 0;
 }
 
 void:KillAllTimeBombs()
 {
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		KillTimeBomb(var1);
-		var1++;
+		KillTimeBomb(i);
+		i++;
 	}
 	return 0;
 }
 
-void:PerformTimeBomb(_arg0, _arg1)
+void:PerformTimeBomb(client, target)
 {
-	if (g_TimeBombSerial[_arg1])
+	if (g_TimeBombSerial[target])
 	{
-		KillTimeBomb(_arg1);
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
-		LogAction(_arg0, _arg1, "\"%L\" removed a TimeBomb on \"%L\"", _arg0, _arg1);
+		KillTimeBomb(target);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+		LogAction(client, target, "\"%L\" removed a TimeBomb on \"%L\"", client, target);
 	}
 	else
 	{
-		CreateTimeBomb(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" set a TimeBomb on \"%L\"", _arg0, _arg1);
+		CreateTimeBomb(target);
+		LogAction(client, target, "\"%L\" set a TimeBomb on \"%L\"", client, target);
 	}
 	return 0;
 }
 
-void:DisplayTimeBombMenu(_arg0)
+void:DisplayTimeBombMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(187, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "TimeBomb player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(187, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "TimeBomb player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:CreateFireBomb(_arg0)
+void:CreateFireBomb(client)
 {
 	g_Serial_Gen += 1;
-	g_FireBombSerial[_arg0] = g_Serial_Gen;
-	CreateTimer(1.0, 201, g_Serial_Gen << 7 | _arg0, 3);
-	g_FireBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_FireBombTicks);
+	g_FireBombSerial[client] = g_Serial_Gen;
+	CreateTimer(1.0, 201, g_Serial_Gen << 7 | client, 3);
+	g_FireBombTime[client] = ConVar.IntValue.get(g_Cvar_FireBombTicks);
 	return 0;
 }
 
-void:KillFireBomb(_arg0)
+void:KillFireBomb(client)
 {
-	g_FireBombSerial[_arg0] = 0;
-	if (IsClientInGame(_arg0))
+	g_FireBombSerial[client] = 0;
+	if (IsClientInGame(client))
 	{
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
 	return 0;
 }
 
 void:KillAllFireBombs()
 {
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		KillFireBomb(var1);
-		var1++;
+		KillFireBomb(i);
+		i++;
 	}
 	return 0;
 }
 
-void:PerformBurn(_arg0, _arg1, Float:_arg2)
+void:PerformBurn(client, target, Float:seconds)
 {
-	IgniteEntity(_arg1, _arg2, false, 0.0, false);
-	LogAction(_arg0, _arg1, "\"%L\" ignited \"%L\" (seconds \"%f\")", _arg0, _arg1, _arg2);
+	IgniteEntity(target, seconds, false, 0.0, false);
+	LogAction(client, target, "\"%L\" ignited \"%L\" (seconds \"%f\")", client, target, seconds);
 	return 0;
 }
 
-void:PerformFireBomb(_arg0, _arg1)
+void:PerformFireBomb(client, target)
 {
-	if (g_FireBombSerial[_arg0])
+	if (g_FireBombSerial[client])
 	{
-		KillFireBomb(_arg1);
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
-		LogAction(_arg0, _arg1, "\"%L\" removed a FireBomb on \"%L\"", _arg0, _arg1);
+		KillFireBomb(target);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+		LogAction(client, target, "\"%L\" removed a FireBomb on \"%L\"", client, target);
 	}
 	else
 	{
-		CreateFireBomb(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" set a FireBomb on \"%L\"", _arg0, _arg1);
+		CreateFireBomb(target);
+		LogAction(client, target, "\"%L\" set a FireBomb on \"%L\"", client, target);
 	}
 	return 0;
 }
 
-void:DisplayBurnMenu(_arg0)
+void:DisplayBurnMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(171, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Burn player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(171, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Burn player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayFireBombMenu(_arg0)
+void:DisplayFireBombMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(175, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "FireBomb player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(175, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "FireBomb player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:FreezeClient(_arg0, _arg1)
+void:FreezeClient(client, time)
 {
-	if (g_FreezeSerial[_arg0])
+	if (g_FreezeSerial[client])
 	{
-		UnfreezeClient(_arg0);
+		UnfreezeClient(client);
 		return 0;
 	}
-	SetEntityMoveType(_arg0, 0);
-	SetEntityRenderColor(_arg0, 0, 128, 255, 192);
+	SetEntityMoveType(client, 0);
+	SetEntityRenderColor(client, 0, 128, 255, 192);
 	if (g_FreezeSound[0])
 	{
-		new var1 = 0;
-		GetClientEyePosition(_arg0, var1);
-		EmitAmbientSound(g_FreezeSound, var1, _arg0, 130, 0, 1.0, 100, 0.0);
+		new Float:vec[3] = 0.0;
+		GetClientEyePosition(client, vec);
+		EmitAmbientSound(g_FreezeSound, vec, client, 130, 0, 1.0, 100, 0.0);
 	}
-	g_FreezeTime[_arg0] = _arg1;
+	g_FreezeTime[client] = time;
 	g_Serial_Gen += 1;
-	g_FreezeSerial[_arg0] = g_Serial_Gen;
-	CreateTimer(1.0, 203, g_Serial_Gen << 7 | _arg0, 3);
+	g_FreezeSerial[client] = g_Serial_Gen;
+	CreateTimer(1.0, 203, g_Serial_Gen << 7 | client, 3);
 	return 0;
 }
 
-void:UnfreezeClient(_arg0)
+void:UnfreezeClient(client)
 {
-	g_FreezeSerial[_arg0] = 0;
-	g_FreezeTime[_arg0] = 0;
-	if (IsClientInGame(_arg0))
+	g_FreezeSerial[client] = 0;
+	g_FreezeTime[client] = 0;
+	if (IsClientInGame(client))
 	{
 		if (g_FreezeSound[0])
 		{
-			new var1 = 0;
-			GetClientAbsOrigin(_arg0, var1);
-			new var2 = var1 + 8;
-			var2 = 5+0(var2, 10);
-			GetClientEyePosition(_arg0, var1);
-			EmitAmbientSound(g_FreezeSound, var1, _arg0, 130, 0, 1.0, 100, 0.0);
+			new Float:vec[3] = 0.0;
+			GetClientAbsOrigin(client, vec);
+			new var1 = vec[2];
+			var1 = 5+0(var1, 10);
+			GetClientEyePosition(client, vec);
+			EmitAmbientSound(g_FreezeSound, vec, client, 130, 0, 1.0, 100, 0.0);
 		}
-		SetEntityMoveType(_arg0, 2);
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
+		SetEntityMoveType(client, 2);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
 	return 0;
 }
 
-void:CreateFreezeBomb(_arg0)
+void:CreateFreezeBomb(client)
 {
-	if (g_FreezeBombSerial[_arg0])
+	if (g_FreezeBombSerial[client])
 	{
-		KillFreezeBomb(_arg0);
+		KillFreezeBomb(client);
 		return 0;
 	}
-	g_FreezeBombTime[_arg0] = ConVar.IntValue.get(g_Cvar_FreezeBombTicks);
+	g_FreezeBombTime[client] = ConVar.IntValue.get(g_Cvar_FreezeBombTicks);
 	g_Serial_Gen += 1;
-	g_FreezeBombSerial[_arg0] = g_Serial_Gen;
-	CreateTimer(1.0, 205, g_Serial_Gen << 7 | _arg0, 3);
+	g_FreezeBombSerial[client] = g_Serial_Gen;
+	CreateTimer(1.0, 205, g_Serial_Gen << 7 | client, 3);
 	return 0;
 }
 
-void:KillFreezeBomb(_arg0)
+void:KillFreezeBomb(client)
 {
-	g_FreezeBombSerial[_arg0] = 0;
-	g_FreezeBombTime[_arg0] = 0;
-	if (IsClientInGame(_arg0))
+	g_FreezeBombSerial[client] = 0;
+	g_FreezeBombTime[client] = 0;
+	if (IsClientInGame(client))
 	{
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
 	return 0;
 }
 
 void:KillAllFreezes()
 {
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (g_FreezeSerial[var1])
+		if (g_FreezeSerial[i])
 		{
-			UnfreezeClient(var1);
+			UnfreezeClient(i);
 		}
-		if (g_FreezeBombSerial[var1])
+		if (g_FreezeBombSerial[i])
 		{
-			KillFreezeBomb(var1);
+			KillFreezeBomb(i);
 		}
-		var1++;
+		i++;
 	}
 	return 0;
 }
 
-void:PerformFreeze(_arg0, _arg1, _arg2)
+void:PerformFreeze(client, target, time)
 {
-	FreezeClient(_arg1, _arg2);
-	LogAction(_arg0, _arg1, "\"%L\" froze \"%L\"", _arg0, _arg1);
+	FreezeClient(target, time);
+	LogAction(client, target, "\"%L\" froze \"%L\"", client, target);
 	return 0;
 }
 
-void:PerformFreezeBomb(_arg0, _arg1)
+void:PerformFreezeBomb(client, target)
 {
-	if (g_FreezeBombSerial[_arg1])
+	if (g_FreezeBombSerial[target])
 	{
-		KillFreezeBomb(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" removed a FreezeBomb on \"%L\"", _arg0, _arg1);
+		KillFreezeBomb(target);
+		LogAction(client, target, "\"%L\" removed a FreezeBomb on \"%L\"", client, target);
 	}
 	else
 	{
-		CreateFreezeBomb(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" set a FreezeBomb on \"%L\"", _arg0, _arg1);
+		CreateFreezeBomb(target);
+		LogAction(client, target, "\"%L\" set a FreezeBomb on \"%L\"", client, target);
 	}
 	return 0;
 }
 
-Float:5*0(Float:_arg0, _arg1)
+Float:5*0(Float:oper1, oper2)
 {
-	return _arg0 * float(_arg1);
+	return oper1 * float(oper2);
 }
 
-Float:5+0(Float:_arg0, _arg1)
+Float:5+0(Float:oper1, oper2)
 {
-	return _arg0 + float(_arg1);
+	return oper1 + float(oper2);
 }
 
-Protobuf:UserMessageToProtobuf(Handle:_arg0)
+Protobuf:UserMessageToProtobuf(Handle:msg)
 {
 	if (GetUserMessageType() != 1)
 	{
 		return 0;
 	}
-	return _arg0;
+	return msg;
 }
 
-BfWrite:UserMessageToBfWrite(Handle:_arg0)
+BfWrite:UserMessageToBfWrite(Handle:msg)
 {
 	if (GetUserMessageType() == 1)
 	{
 		return 0;
 	}
-	return _arg0;
+	return msg;
 }
 
-void:PrintCenterTextAll(String:_arg0[], any:_arg1)
+void:PrintCenterTextAll(String:format[], any:_arg1)
 {
-	new var1 = 0;
-	new var2 = 1;
-	while (var2 <= MaxClients)
+	new String:buffer[1024];
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (IsClientInGame(var2))
+		if (IsClientInGame(i))
 		{
-			SetGlobalTransTarget(var2);
-			VFormat(var1, 254, _arg0[0], 2);
-			PrintCenterText(var2, "%s", var1);
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 254, format[0], 2);
+			PrintCenterText(i, "%s", buffer);
 		}
-		var2++;
+		i++;
 	}
 	return 0;
 }
 
-void:DisplayFreezeMenu(_arg0)
+void:DisplayFreezeMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(177, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Freeze player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(177, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Freeze player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayFreezeBombMenu(_arg0)
+void:DisplayFreezeBombMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(179, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "FreezeBomb player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(179, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "FreezeBomb player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:ReplyToTargetError(_arg0, _arg1)
+void:ReplyToTargetError(client, reason)
 {
-	switch (_arg1)
+	switch (reason)
 	{
 		case -7:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2496);
+			ReplyToCommand(client, "[SM] %t", 2496);
 		}
 		case -6:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2468);
+			ReplyToCommand(client, "[SM] %t", 2468);
 		}
 		case -5:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2440);
+			ReplyToCommand(client, "[SM] %t", 2440);
 		}
 		case -4:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2412);
+			ReplyToCommand(client, "[SM] %t", 2412);
 		}
 		case -3:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2380);
+			ReplyToCommand(client, "[SM] %t", 2380);
 		}
 		case -2:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2352);
+			ReplyToCommand(client, "[SM] %t", 2352);
 		}
 		case -1:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2320);
+			ReplyToCommand(client, "[SM] %t", 2320);
 		}
 		case 0:
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 2292);
+			ReplyToCommand(client, "[SM] %t", 2292);
 		}
 		default:
 		{
@@ -486,326 +476,312 @@ void:ReplyToTargetError(_arg0, _arg1)
 	return 0;
 }
 
-void:PerformGravity(_arg0, _arg1, Float:_arg2)
+void:PerformGravity(client, target, Float:amount)
 {
-	SetEntityGravity(_arg1, _arg2);
-	LogAction(_arg0, _arg1, "\"%L\" set gravity on \"%L\" (amount \"%f\")", _arg0, _arg1, _arg2);
+	SetEntityGravity(target, amount);
+	LogAction(client, target, "\"%L\" set gravity on \"%L\" (amount \"%f\")", client, target, amount);
 	return 0;
 }
 
-void:DisplayGravityMenu(_arg0)
+void:DisplayGravityMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(181, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Gravity player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(181, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Gravity player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayGravityAmountMenu(_arg0)
+void:DisplayGravityAmountMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(183, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Gravity amount", _arg0, GetClientOfUserId(g_GravityTarget[_arg0]));
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTranslatedMenuItem(var1, "4.0", "Gravity Very High", _arg0);
-	AddTranslatedMenuItem(var1, "2.0", "Gravity High", _arg0);
-	AddTranslatedMenuItem(var1, "1.0", "Gravity Normal", _arg0);
-	AddTranslatedMenuItem(var1, "0.5", "Gravity Low", _arg0);
-	AddTranslatedMenuItem(var1, "0.1", "Gravity Very Low", _arg0);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(183, 28);
+	new String:title[400];
+	Format(title, 100, "%T: %N", "Gravity amount", client, GetClientOfUserId(g_GravityTarget[client]));
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTranslatedMenuItem(menu, "4.0", "Gravity Very High", client);
+	AddTranslatedMenuItem(menu, "2.0", "Gravity High", client);
+	AddTranslatedMenuItem(menu, "1.0", "Gravity Normal", client);
+	AddTranslatedMenuItem(menu, "0.5", "Gravity Low", client);
+	AddTranslatedMenuItem(menu, "0.1", "Gravity Very Low", client);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-Handle:FindPluginByFile(String:_arg0[])
+Handle:FindPluginByFile(String:filename[])
 {
-	new var1 = 0;
-	new var2;
-	var2 = GetPluginIterator();
-	new var3 = 0;
-	while (MorePlugins(var2))
+	new String:buffer[1024];
+	new Handle:iter = GetPluginIterator();
+	new Handle:pl;
+	while (MorePlugins(iter))
 	{
-		var3 = ReadPlugin(var2);
-		GetPluginFilename(var3, var1, 256);
-		if (!(strcmp(var1, _arg0[0], false)))
+		pl = ReadPlugin(iter);
+		GetPluginFilename(pl, buffer, 256);
+		if (!(strcmp(buffer, filename[0], false)))
 		{
-			CloseHandle(var2);
-			return var3;
+			CloseHandle(iter);
+			return pl;
 		}
 	}
-	CloseHandle(var2);
+	CloseHandle(iter);
 	return 0;
 }
 
-void:PerformBlind(_arg0, _arg1, _arg2)
+void:PerformBlind(client, target, amount)
 {
-	new var1 = 0;
-	var1 = _arg1;
-	new var2 = 1536;
-	new var3 = 1536;
-	new var4 = 0;
-	if (_arg2)
+	new targets[2];
+	targets[0] = target;
+	new duration = 1536;
+	new holdtime = 1536;
+	new flags;
+	if (amount)
 	{
-		var4 = 10;
+		flags = 10;
 	}
 	else
 	{
-		var4 = 17;
+		flags = 17;
 	}
-	new var5 = 0;
-	var5 + 12/* ERROR unknown load Binary */ = _arg2;
-	new var6;
-	var6 = StartMessageEx(g_FadeUserMsgId, var1, 1, 0);
+	new color[4];
+	color[3] = amount;
+	new Handle:message = StartMessageEx(g_FadeUserMsgId, targets, 1, 0);
 	if (GetUserMessageType() == 1)
 	{
-		new var7;
-		var7 = UserMessageToProtobuf(var6);
-		Protobuf.SetInt(var7, "duration", var2, -1);
-		Protobuf.SetInt(var7, "hold_time", var3, -1);
-		Protobuf.SetInt(var7, "flags", var4, -1);
-		Protobuf.SetColor(var7, "clr", var5, -1);
+		new Protobuf:pb = UserMessageToProtobuf(message);
+		Protobuf.SetInt(pb, "duration", duration, -1);
+		Protobuf.SetInt(pb, "hold_time", holdtime, -1);
+		Protobuf.SetInt(pb, "flags", flags, -1);
+		Protobuf.SetColor(pb, "clr", color, -1);
 	}
 	else
 	{
-		new var8;
-		var8 = UserMessageToBfWrite(var6);
-		BfWrite.WriteShort(var8, var2);
-		BfWrite.WriteShort(var8, var3);
-		BfWrite.WriteShort(var8, var4);
-		BfWrite.WriteByte(var8, var5);
-		BfWrite.WriteByte(var8, var5 + 4/* ERROR unknown load Binary */);
-		BfWrite.WriteByte(var8, var5 + 8/* ERROR unknown load Binary */);
-		BfWrite.WriteByte(var8, var5 + 12/* ERROR unknown load Binary */);
+		new BfWrite:bf = UserMessageToBfWrite(message);
+		BfWrite.WriteShort(bf, duration);
+		BfWrite.WriteShort(bf, holdtime);
+		BfWrite.WriteShort(bf, flags);
+		BfWrite.WriteByte(bf, color[0]);
+		BfWrite.WriteByte(bf, color[1]);
+		BfWrite.WriteByte(bf, color[2]);
+		BfWrite.WriteByte(bf, color[3]);
 	}
 	EndMessage();
-	LogAction(_arg0, _arg1, "\"%L\" set blind on \"%L\" (amount \"%d\")", _arg0, _arg1, _arg2);
+	LogAction(client, target, "\"%L\" set blind on \"%L\" (amount \"%d\")", client, target, amount);
 	return 0;
 }
 
-GetEntSendPropOffs(_arg0, String:_arg1[], bool:_arg2)
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
 {
-	new var1 = 0;
-	if (GetEntityNetClass(_arg0, var1, 64))
+	new String:cls[256];
+	if (GetEntityNetClass(ent, cls, 64))
 	{
-		new var2 = -1;
-		new var3;
-		var3 = FindSendPropInfo(var1, _arg1[0], 0, 0, var2);
-		if (_arg2)
+		new local = -1;
+		new offset = FindSendPropInfo(cls, prop[0], 0, 0, local);
+		if (actual)
 		{
-			return var3;
+			return offset;
 		}
-		return var2;
+		return local;
 	}
 	return -1;
 }
 
-void:DisplayBlindMenu(_arg0)
+void:DisplayBlindMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(169, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Blind player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(169, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Blind player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:DisplayAmountMenu(_arg0)
+void:DisplayAmountMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(165, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T: %N", "Blind amount", _arg0, GetClientOfUserId(g_BlindTarget[_arg0]));
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTranslatedMenuItem(var1, "255", "Fully blind", _arg0);
-	AddTranslatedMenuItem(var1, "240", "Half blind", _arg0);
-	AddTranslatedMenuItem(var1, "0", "No blind", _arg0);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(165, 28);
+	new String:title[400];
+	Format(title, 100, "%T: %N", "Blind amount", client, GetClientOfUserId(g_BlindTarget[client]));
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTranslatedMenuItem(menu, "255", "Fully blind", client);
+	AddTranslatedMenuItem(menu, "240", "Half blind", client);
+	AddTranslatedMenuItem(menu, "0", "No blind", client);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-MoveType:GetEntityMoveType(_arg0)
+MoveType:GetEntityMoveType(entity)
 {
-	if (!g_var9e0)
+	static bool:gotconfig;
+	static String:datamap[128];
+	if (!gotconfig)
 	{
-		new var1;
-		var1 = GameData.GameData("core.games");
-		new var2;
-		var2 = GameData.GetKeyValue(var1, "m_MoveType", "", 32);
-		CloseHandle(var1);
-		var1 = 0;
-		if (!var2)
+		new GameData:gc = GameData.GameData("core.games");
+		new bool:exists = GameData.GetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		gc = 0;
+		if (!exists)
 		{
-			strcopy("", 32, "m_MoveType");
+			strcopy(datamap, 32, "m_MoveType");
 		}
-		g_var9e0 = 1;
+		gotconfig = true;
 	}
-	return GetEntProp(_arg0, 1, "", 4, 0);
+	return GetEntProp(entity, 1, datamap, 4, 0);
 }
 
-void:PerformNoClip(_arg0, _arg1)
+void:PerformNoClip(client, target)
 {
-	new var1;
-	var1 = GetEntityMoveType(_arg1);
-	if (var1 != 8)
+	new MoveType:movetype = GetEntityMoveType(target);
+	if (movetype != 8)
 	{
-		SetEntityMoveType(_arg1, 8);
+		SetEntityMoveType(target, 8);
 	}
 	else
 	{
-		SetEntityMoveType(_arg1, 2);
+		SetEntityMoveType(target, 2);
 	}
-	LogAction(_arg0, _arg1, "\"%L\" toggled noclip on \"%L\"", _arg0, _arg1);
+	LogAction(client, target, "\"%L\" toggled noclip on \"%L\"", client, target);
 	return 0;
 }
 
-void:DisplayNoClipMenu(_arg0)
+void:DisplayNoClipMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(185, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "NoClip player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(185, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "NoClip player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
-void:SetEntityMoveType(_arg0, MoveType:_arg1)
+void:SetEntityMoveType(entity, MoveType:mt)
 {
-	if (!g_vara28)
+	static bool:gotconfig;
+	static String:datamap[128];
+	if (!gotconfig)
 	{
-		new var1;
-		var1 = GameData.GameData("core.games");
-		new var2;
-		var2 = GameData.GetKeyValue(var1, "m_MoveType", "", 32);
-		CloseHandle(var1);
-		var1 = 0;
-		if (!var2)
+		new GameData:gc = GameData.GameData("core.games");
+		new bool:exists = GameData.GetKeyValue(gc, "m_MoveType", datamap, 32);
+		CloseHandle(gc);
+		gc = 0;
+		if (!exists)
 		{
-			strcopy("", 32, "m_MoveType");
+			strcopy(datamap, 32, "m_MoveType");
 		}
-		g_vara28 = 1;
+		gotconfig = true;
 	}
-	SetEntProp(_arg0, 1, "", _arg1, 4, 0);
+	SetEntProp(entity, 1, datamap, mt, 4, 0);
 	return 0;
 }
 
-void:CreateDrug(_arg0)
+void:CreateDrug(client)
 {
-	g_DrugTimers[_arg0] = CreateTimer(1.0, 199, _arg0, 1);
+	g_DrugTimers[client] = CreateTimer(1.0, 199, client, 1);
 	return 0;
 }
 
-void:KillDrug(_arg0)
+void:KillDrug(client)
 {
-	KillDrugTimer(_arg0);
-	new var1 = 0;
-	GetClientEyeAngles(_arg0, var1);
-	var1 + 8/* ERROR unknown load Binary */ = 0;
-	TeleportEntity(_arg0, NULL_VECTOR, var1, NULL_VECTOR);
-	new var2 = 0;
-	var2 = _arg0;
-	new var3 = 1536;
-	new var4 = 1536;
-	new var5 = 17;
-	new var6 = 0;
-	new var7;
-	var7 = StartMessageEx(g_FadeUserMsgId, var2, 1, 0);
+	KillDrugTimer(client);
+	new Float:angs[3] = 0.0;
+	GetClientEyeAngles(client, angs);
+	angs[2] = 0.0;
+	TeleportEntity(client, NULL_VECTOR, angs, NULL_VECTOR);
+	new clients[2];
+	clients[0] = client;
+	new duration = 1536;
+	new holdtime = 1536;
+	new flags = 17;
+	new color[4];
+	new Handle:message = StartMessageEx(g_FadeUserMsgId, clients, 1, 0);
 	if (GetUserMessageType() == 1)
 	{
-		new var8;
-		var8 = UserMessageToProtobuf(var7);
-		Protobuf.SetInt(var8, "duration", var3, -1);
-		Protobuf.SetInt(var8, "hold_time", var4, -1);
-		Protobuf.SetInt(var8, "flags", var5, -1);
-		Protobuf.SetColor(var8, "clr", var6, -1);
+		new Protobuf:pb = UserMessageToProtobuf(message);
+		Protobuf.SetInt(pb, "duration", duration, -1);
+		Protobuf.SetInt(pb, "hold_time", holdtime, -1);
+		Protobuf.SetInt(pb, "flags", flags, -1);
+		Protobuf.SetColor(pb, "clr", color, -1);
 	}
 	else
 	{
-		new var9;
-		var9 = UserMessageToBfWrite(var7);
-		BfWrite.WriteShort(var9, var3);
-		BfWrite.WriteShort(var9, var4);
-		BfWrite.WriteShort(var9, var5);
-		BfWrite.WriteByte(var9, var6);
-		BfWrite.WriteByte(var9, var6 + 4/* ERROR unknown load Binary */);
-		BfWrite.WriteByte(var9, var6 + 8/* ERROR unknown load Binary */);
-		BfWrite.WriteByte(var9, var6 + 12/* ERROR unknown load Binary */);
+		new BfWrite:bf = UserMessageToBfWrite(message);
+		BfWrite.WriteShort(bf, duration);
+		BfWrite.WriteShort(bf, holdtime);
+		BfWrite.WriteShort(bf, flags);
+		BfWrite.WriteByte(bf, color[0]);
+		BfWrite.WriteByte(bf, color[1]);
+		BfWrite.WriteByte(bf, color[2]);
+		BfWrite.WriteByte(bf, color[3]);
 	}
 	EndMessage();
 	return 0;
 }
 
-void:KillDrugTimer(_arg0)
+void:KillDrugTimer(client)
 {
-	KillTimer(g_DrugTimers[_arg0], false);
-	g_DrugTimers[_arg0] = 0;
+	KillTimer(g_DrugTimers[client], false);
+	g_DrugTimers[client] = 0;
 	return 0;
 }
 
 void:KillAllDrugs()
 {
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		if (g_DrugTimers[var1])
+		if (g_DrugTimers[i])
 		{
-			if (IsClientInGame(var1))
+			if (IsClientInGame(i))
 			{
-				KillDrug(var1);
+				KillDrug(i);
 			}
-			KillDrugTimer(var1);
+			KillDrugTimer(i);
 		}
-		var1++;
+		i++;
 	}
 	return 0;
 }
 
-void:PerformDrug(_arg0, _arg1, _arg2)
+void:PerformDrug(client, target, toggle)
 {
-	switch (_arg2)
+	switch (toggle)
 	{
 		case 0:
 		{
-			if (g_DrugTimers[_arg1])
+			if (g_DrugTimers[target])
 			{
-				KillDrug(_arg1);
-				LogAction(_arg0, _arg1, "\"%L\" undrugged \"%L\"", _arg0, _arg1);
+				KillDrug(target);
+				LogAction(client, target, "\"%L\" undrugged \"%L\"", client, target);
 			}
 		}
 		case 1:
 		{
-			if (g_DrugTimers[_arg1])
+			if (g_DrugTimers[target])
 			{
 			}
 			else
 			{
-				CreateDrug(_arg1);
-				LogAction(_arg0, _arg1, "\"%L\" drugged \"%L\"", _arg0, _arg1);
+				CreateDrug(target);
+				LogAction(client, target, "\"%L\" drugged \"%L\"", client, target);
 			}
 		}
 		case 2:
 		{
-			if (g_DrugTimers[_arg1])
+			if (g_DrugTimers[target])
 			{
-				KillDrug(_arg1);
-				LogAction(_arg0, _arg1, "\"%L\" undrugged \"%L\"", _arg0, _arg1);
+				KillDrug(target);
+				LogAction(client, target, "\"%L\" undrugged \"%L\"", client, target);
 			}
 			else
 			{
-				CreateDrug(_arg1);
-				LogAction(_arg0, _arg1, "\"%L\" drugged \"%L\"", _arg0, _arg1);
+				CreateDrug(target);
+				LogAction(client, target, "\"%L\" drugged \"%L\"", client, target);
 			}
 		}
 		default:
@@ -815,45 +791,43 @@ void:PerformDrug(_arg0, _arg1, _arg2)
 	return 0;
 }
 
-void:SetEntityRenderColor(_arg0, _arg1, _arg2, _arg3, _arg4)
+void:SetEntityRenderColor(entity, r, g, b, a)
 {
-	if (!g_vara70)
+	static bool:gotconfig;
+	static String:prop[128];
+	if (!gotconfig)
 	{
-		new var1;
-		var1 = GameData.GameData("core.games");
-		new var2;
-		var2 = GameData.GetKeyValue(var1, "m_clrRender", "", 32);
-		CloseHandle(var1);
-		var1 = 0;
-		if (!var2)
+		new GameData:gc = GameData.GameData("core.games");
+		new bool:exists = GameData.GetKeyValue(gc, "m_clrRender", prop, 32);
+		CloseHandle(gc);
+		gc = 0;
+		if (!exists)
 		{
-			strcopy("", 32, "m_clrRender");
+			strcopy(prop, 32, "m_clrRender");
 		}
-		g_vara70 = 1;
+		gotconfig = true;
 	}
-	new var3;
-	var3 = GetEntSendPropOffs(_arg0, "", false);
-	if (0 >= var3)
+	new offset = GetEntSendPropOffs(entity, prop, false);
+	if (0 >= offset)
 	{
 		ThrowError("SetEntityRenderColor not supported by this mod");
 	}
-	SetEntData(_arg0, var3, _arg1, 1, true);
-	SetEntData(_arg0, var3 + 1, _arg2, 1, true);
-	SetEntData(_arg0, var3 + 2, _arg3, 1, true);
-	SetEntData(_arg0, var3 + 3, _arg4, 1, true);
+	SetEntData(entity, offset, r, 1, true);
+	SetEntData(entity, offset + 1, g, 1, true);
+	SetEntData(entity, offset + 2, b, 1, true);
+	SetEntData(entity, offset + 3, a, 1, true);
 	return 0;
 }
 
-void:DisplayDrugMenu(_arg0)
+void:DisplayDrugMenu(client)
 {
-	new var1;
-	var1 = Menu.Menu(173, 28);
-	new var2 = 0;
-	Format(var2, 100, "%T:", "Drug player", _arg0);
-	Menu.SetTitle(var1, var2);
-	Menu.ExitBackButton.set(var1, true);
-	AddTargetsToMenu(var1, _arg0, true, true);
-	Menu.Display(var1, _arg0, 0);
+	new Menu:menu = Menu.Menu(173, 28);
+	new String:title[400];
+	Format(title, 100, "%T:", "Drug player", client);
+	Menu.SetTitle(menu, title);
+	Menu.ExitBackButton.set(menu, true);
+	AddTargetsToMenu(menu, client, true, true);
+	Menu.Display(menu, client, 0);
 	return 0;
 }
 
@@ -892,11 +866,11 @@ void:RegisterCmds()
 
 void:HookEvents()
 {
-	new var1 = 0;
-	GetGameFolderName(var1, 64);
-	if (strcmp(var1, "tf", true))
+	new String:folder[256];
+	GetGameFolderName(folder, 64);
+	if (strcmp(folder, "tf", true))
 	{
-		if (strcmp(var1, "nucleardawn", true))
+		if (strcmp(folder, "nucleardawn", true))
 		{
 			HookEvent("round_end", 163, 2);
 		}
@@ -911,182 +885,193 @@ void:HookEvents()
 	return 0;
 }
 
-void:SetEntityGravity(_arg0, Float:_arg1)
+void:SetEntityGravity(entity, Float:amount)
 {
-	if (!g_varae8)
+	static bool:gotconfig;
+	static String:datamap[128];
+	if (!gotconfig)
 	{
-		new var1;
-		var1 = GameData.GameData("core.games");
-		new var2;
-		var2 = GameData.GetKeyValue(var1, "m_flGravity", "", 32);
-		CloseHandle(var1);
-		var1 = 0;
-		if (!var2)
+		new GameData:gc = GameData.GameData("core.games");
+		new bool:exists = GameData.GetKeyValue(gc, "m_flGravity", datamap, 32);
+		CloseHandle(gc);
+		gc = 0;
+		if (!exists)
 		{
-			strcopy("", 32, "m_flGravity");
+			strcopy(datamap, 32, "m_flGravity");
 		}
-		g_varae8 = 1;
+		gotconfig = true;
 	}
-	SetEntPropFloat(_arg0, 1, "", _arg1, 0);
+	SetEntPropFloat(entity, 1, datamap, amount, 0);
 	return 0;
 }
 
-void:AddTranslatedMenuItem(Menu:_arg0, String:_arg1[], String:_arg2[], _arg3)
+void:AddTranslatedMenuItem(Menu:menu, String:opt[], String:phrase[], client)
 {
-	new var1 = 0;
-	Format(var1, 128, "%T", _arg2[0], _arg3);
-	Menu.AddItem(_arg0, _arg1[0], var1, 0);
+	new String:buffer[512];
+	Format(buffer, 128, "%T", phrase[0], client);
+	Menu.AddItem(menu, opt[0], buffer, 0);
 	return 0;
 }
 
-void:TE_SendToAll(Float:_arg0)
+void:TE_SendToAll(Float:delay)
 {
-	new var1 = 0;
+	new total;
+	new clients[MaxClients];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			total++;
+			clients[0][total] = i;
+		}
+		i++;
+	}
+	TE_Send(clients[0], total, delay);
+	return 0;
+}
 
-/* ERROR! null */
- function "TE_SendToAll" (number 52)
-
-void:TE_SetupGlowSprite(Float:_arg0[3], _arg1, Float:_arg2, Float:_arg3, _arg4)
+void:TE_SetupGlowSprite(Float:pos[3], Model, Float:Life, Float:Size, Brightness)
 {
 	TE_Start("GlowSprite");
-	TE_WriteVector("m_vecOrigin", _arg0[0]);
-	TE_WriteNum("m_nModelIndex", _arg1);
-	TE_WriteFloat("m_fScale", _arg3);
-	TE_WriteFloat("m_fLife", _arg2);
-	TE_WriteNum("m_nBrightness", _arg4);
+	TE_WriteVector("m_vecOrigin", pos[0]);
+	TE_WriteNum("m_nModelIndex", Model);
+	TE_WriteFloat("m_fScale", Size);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteNum("m_nBrightness", Brightness);
 	return 0;
 }
 
-void:TE_SetupExplosion(Float:_arg0[3], _arg1, Float:_arg2, _arg3, _arg4, _arg5, _arg6, Float:_arg7[3], _arg8)
+void:TE_SetupExplosion(Float:pos[3], Model, Float:Scale, Framerate, Flags, Radius, Magnitude, Float:normal[3], MaterialType)
 {
 	TE_Start("Explosion");
-	TE_WriteVector("m_vecOrigin[0]", _arg0[0]);
-	TE_WriteVector("m_vecNormal", _arg7[0]);
-	TE_WriteNum("m_nModelIndex", _arg1);
-	TE_WriteFloat("m_fScale", _arg2);
-	TE_WriteNum("m_nFrameRate", _arg3);
-	TE_WriteNum("m_nFlags", _arg4);
-	TE_WriteNum("m_nRadius", _arg5);
-	TE_WriteNum("m_nMagnitude", _arg6);
-	TE_WriteNum("m_chMaterialType", _arg8);
+	TE_WriteVector("m_vecOrigin[0]", pos[0]);
+	TE_WriteVector("m_vecNormal", normal[0]);
+	TE_WriteNum("m_nModelIndex", Model);
+	TE_WriteFloat("m_fScale", Scale);
+	TE_WriteNum("m_nFrameRate", Framerate);
+	TE_WriteNum("m_nFlags", Flags);
+	TE_WriteNum("m_nRadius", Radius);
+	TE_WriteNum("m_nMagnitude", Magnitude);
+	TE_WriteNum("m_chMaterialType", MaterialType);
 	return 0;
 }
 
-void:TE_SetupBeamRingPoint(Float:_arg0[3], Float:_arg1, Float:_arg2, _arg3, _arg4, _arg5, _arg6, Float:_arg7, Float:_arg8, Float:_arg9, _arg10[4], _arg11, _arg12)
+void:TE_SetupBeamRingPoint(Float:center[3], Float:Start_Radius, Float:End_Radius, ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:Amplitude, Color[4], Speed, Flags)
 {
 	TE_Start("BeamRingPoint");
-	TE_WriteVector("m_vecCenter", _arg0[0]);
-	TE_WriteFloat("m_flStartRadius", _arg1);
-	TE_WriteFloat("m_flEndRadius", _arg2);
-	TE_WriteNum("m_nModelIndex", _arg3);
-	TE_WriteNum("m_nHaloIndex", _arg4);
-	TE_WriteNum("m_nStartFrame", _arg5);
-	TE_WriteNum("m_nFrameRate", _arg6);
-	TE_WriteFloat("m_fLife", _arg7);
-	TE_WriteFloat("m_fWidth", _arg8);
-	TE_WriteFloat("m_fEndWidth", _arg8);
-	TE_WriteFloat("m_fAmplitude", _arg9);
-	TE_WriteNum("r", _arg10[0]);
-	TE_WriteNum("g", _arg10[0] + 4/* ERROR unknown load Binary */);
-	TE_WriteNum("b", _arg10[0] + 8/* ERROR unknown load Binary */);
-	TE_WriteNum("a", _arg10[0] + 12/* ERROR unknown load Binary */);
-	TE_WriteNum("m_nSpeed", _arg11);
-	TE_WriteNum("m_nFlags", _arg12);
+	TE_WriteVector("m_vecCenter", center[0]);
+	TE_WriteFloat("m_flStartRadius", Start_Radius);
+	TE_WriteFloat("m_flEndRadius", End_Radius);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", Width);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[0] + 4/* ERROR unknown load Binary */);
+	TE_WriteNum("b", Color[0] + 8/* ERROR unknown load Binary */);
+	TE_WriteNum("a", Color[0] + 12/* ERROR unknown load Binary */);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFlags", Flags);
 	TE_WriteNum("m_nFadeLength", 0);
 	return 0;
 }
 
-void:TE_SetupBeamPoints(Float:_arg0[3], Float:_arg1[3], _arg2, _arg3, _arg4, _arg5, Float:_arg6, Float:_arg7, Float:_arg8, _arg9, Float:_arg10, _arg11[4], _arg12)
+void:TE_SetupBeamPoints(Float:start[3], Float:end[3], ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life, Float:Width, Float:EndWidth, FadeLength, Float:Amplitude, Color[4], Speed)
 {
 	TE_Start("BeamPoints");
-	TE_WriteVector("m_vecStartPoint", _arg0[0]);
-	TE_WriteVector("m_vecEndPoint", _arg1[0]);
-	TE_WriteNum("m_nModelIndex", _arg2);
-	TE_WriteNum("m_nHaloIndex", _arg3);
-	TE_WriteNum("m_nStartFrame", _arg4);
-	TE_WriteNum("m_nFrameRate", _arg5);
-	TE_WriteFloat("m_fLife", _arg6);
-	TE_WriteFloat("m_fWidth", _arg7);
-	TE_WriteFloat("m_fEndWidth", _arg8);
-	TE_WriteFloat("m_fAmplitude", _arg10);
-	TE_WriteNum("r", _arg11[0]);
-	TE_WriteNum("g", _arg11[0] + 4/* ERROR unknown load Binary */);
-	TE_WriteNum("b", _arg11[0] + 8/* ERROR unknown load Binary */);
-	TE_WriteNum("a", _arg11[0] + 12/* ERROR unknown load Binary */);
-	TE_WriteNum("m_nSpeed", _arg12);
-	TE_WriteNum("m_nFadeLength", _arg9);
+	TE_WriteVector("m_vecStartPoint", start[0]);
+	TE_WriteVector("m_vecEndPoint", end[0]);
+	TE_WriteNum("m_nModelIndex", ModelIndex);
+	TE_WriteNum("m_nHaloIndex", HaloIndex);
+	TE_WriteNum("m_nStartFrame", StartFrame);
+	TE_WriteNum("m_nFrameRate", FrameRate);
+	TE_WriteFloat("m_fLife", Life);
+	TE_WriteFloat("m_fWidth", Width);
+	TE_WriteFloat("m_fEndWidth", EndWidth);
+	TE_WriteFloat("m_fAmplitude", Amplitude);
+	TE_WriteNum("r", Color[0]);
+	TE_WriteNum("g", Color[0] + 4/* ERROR unknown load Binary */);
+	TE_WriteNum("b", Color[0] + 8/* ERROR unknown load Binary */);
+	TE_WriteNum("a", Color[0] + 12/* ERROR unknown load Binary */);
+	TE_WriteNum("m_nSpeed", Speed);
+	TE_WriteNum("m_nFadeLength", FadeLength);
 	return 0;
 }
 
-void:CreateBeacon(_arg0)
+void:CreateBeacon(client)
 {
 	g_Serial_Gen += 1;
-	g_BeaconSerial[_arg0] = g_Serial_Gen;
-	CreateTimer(1.0, 197, g_Serial_Gen << 7 | _arg0, 3);
+	g_BeaconSerial[client] = g_Serial_Gen;
+	CreateTimer(1.0, 197, g_Serial_Gen << 7 | client, 3);
 	return 0;
 }
 
-void:KillBeacon(_arg0)
+void:KillBeacon(client)
 {
-	g_BeaconSerial[_arg0] = 0;
-	if (IsClientInGame(_arg0))
+	g_BeaconSerial[client] = 0;
+	if (IsClientInGame(client))
 	{
-		SetEntityRenderColor(_arg0, 255, 255, 255, 255);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
 	}
 	return 0;
 }
 
 void:KillAllBeacons()
 {
-	new var1 = 1;
-	while (var1 <= MaxClients)
+	new i = 1;
+	while (i <= MaxClients)
 	{
-		KillBeacon(var1);
-		var1++;
+		KillBeacon(i);
+		i++;
 	}
 	return 0;
 }
 
-void:PerformBeacon(_arg0, _arg1)
+void:PerformBeacon(client, target)
 {
-	if (g_BeaconSerial[_arg1])
+	if (g_BeaconSerial[target])
 	{
-		KillBeacon(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" removed a beacon on \"%L\"", _arg0, _arg1);
+		KillBeacon(target);
+		LogAction(client, target, "\"%L\" removed a beacon on \"%L\"", client, target);
 	}
 	else
 	{
-		CreateBeacon(_arg1);
-		LogAction(_arg0, _arg1, "\"%L\" set a beacon on \"%L\"", _arg0, _arg1);
+		CreateBeacon(target);
+		LogAction(client, target, "\"%L\" set a beacon on \"%L\"", client, target);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Beacon(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Beacon(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayBeaconMenu(_arg3);
+			DisplayBeaconMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Beacon player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Beacon player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Blind(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Blind(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayBlindMenu(_arg3);
+			DisplayBlindMenu(param);
 		}
-		if (_arg1 == 3)
+		if (action == 3)
 		{
 			new var1;
 			if (g_FadeUserMsgId == -1)
@@ -1097,567 +1082,565 @@ public void:AdminMenu_Blind(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_a
 			{
 				var1 = 0;
 			}
-			_arg4[0] = var1;
+			buffer[0] = var1;
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Blind player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Blind player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Burn(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Burn(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayBurnMenu(_arg3);
+			DisplayBurnMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Burn player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Burn player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Drug(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Drug(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayDrugMenu(_arg3);
+			DisplayDrugMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Drug player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Drug player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_FireBomb(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_FireBomb(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayFireBombMenu(_arg3);
+			DisplayFireBombMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "FireBomb player", _arg3);
+		Format(buffer[0], maxlength, "%T", "FireBomb player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Freeze(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Freeze(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayFreezeMenu(_arg3);
+			DisplayFreezeMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Freeze player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Freeze player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_FreezeBomb(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_FreezeBomb(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayFreezeBombMenu(_arg3);
+			DisplayFreezeBombMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "FreezeBomb player", _arg3);
+		Format(buffer[0], maxlength, "%T", "FreezeBomb player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_Gravity(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_Gravity(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayGravityMenu(_arg3);
+			DisplayGravityMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "Gravity player", _arg3);
+		Format(buffer[0], maxlength, "%T", "Gravity player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_NoClip(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_NoClip(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayNoClipMenu(_arg3);
+			DisplayNoClipMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "NoClip player", _arg3);
+		Format(buffer[0], maxlength, "%T", "NoClip player", param);
 	}
 	return 0;
 }
 
-public void:AdminMenu_TimeBomb(TopMenu:_arg0, TopMenuAction:_arg1, TopMenuObject:_arg2, _arg3, String:_arg4[], _arg5)
+public void:AdminMenu_TimeBomb(TopMenu:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
-	if (_arg1)
+	if (action)
 	{
-		if (_arg1 == 2)
+		if (action == 2)
 		{
-			DisplayTimeBombMenu(_arg3);
+			DisplayTimeBombMenu(param);
 		}
 	}
 	else
 	{
-		Format(_arg4[0], _arg5, "%T", "TimeBomb player", _arg3);
+		Format(buffer[0], maxlength, "%T", "TimeBomb player", param);
 	}
 	return 0;
 }
 
-public Action:Command_Beacon(_arg0, _arg1)
+public Action:Command_Beacon(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_beacon <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_beacon <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformBeacon(_arg0, var3[var6]);
-		var6++;
+		PerformBeacon(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled beacon on target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled beacon on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled beacon on target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled beacon on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Blind(_arg0, _arg1)
+public Action:Command_Blind(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_blind <#userid|name> [amount]");
+		ReplyToCommand(client, "[SM] Usage: sm_blind <#userid|name> [amount]");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new amount;
+	if (args > 1)
 	{
-		new var3 = 0;
-		GetCmdArg(2, var3, 20);
-		if (StringToIntEx(var3, var2, 10))
+		new String:arg2[80];
+		GetCmdArg(2, arg2, 20);
+		if (StringToIntEx(arg2, amount, 10))
 		{
-			if (0 > var2)
+			if (0 > amount)
 			{
-				var2 = 0;
+				amount = 0;
 			}
-			if (var2 > 255)
+			if (amount > 255)
 			{
-				var2 = 255;
+				amount = 255;
 			}
 		}
-		ReplyToCommand(_arg0, "[SM] %t", 11608);
+		ReplyToCommand(client, "[SM] %t", 11608);
 		return 3;
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 >= (var6 = ProcessTargetString(var1, _arg0, var5, 65, 1, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var8 = 0;
-	while (var8 < var6)
+	new i;
+	while (i < target_count)
 	{
-		PerformBlind(_arg0, var5[var8], var2);
-		var8++;
+		PerformBlind(client, target_list[i], amount);
+		i++;
 	}
-	if (var7)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set blind on target", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set blind on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set blind on target", "_s", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set blind on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Burn(_arg0, _arg1)
+public Action:Command_Burn(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_burn <#userid|name> [time]");
+		ReplyToCommand(client, "[SM] Usage: sm_burn <#userid|name> [time]");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2;
-	var2 = ConVar.FloatValue.get(g_Cvar_BurnDuration);
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new Float:seconds = ConVar.FloatValue.get(g_Cvar_BurnDuration);
+	if (args > 1)
 	{
-		new var3 = 0;
-		GetCmdArg(2, var3, 20);
-		if (!(StringToFloatEx(var3, var2)))
+		new String:time[80];
+		GetCmdArg(2, time, 20);
+		if (!(StringToFloatEx(time, seconds)))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 8116);
+			ReplyToCommand(client, "[SM] %t", 8116);
 			return 3;
 		}
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 >= (var6 = ProcessTargetString(var1, _arg0, var5, 65, 1, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var8 = 0;
-	while (var8 < var6)
+	new i;
+	while (i < target_count)
 	{
-		PerformBurn(_arg0, var5[var8], var2);
-		var8++;
+		PerformBurn(client, target_list[i], seconds);
+		i++;
 	}
-	if (var7)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set target on fire", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set target on fire", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set target on fire", "_s", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set target on fire", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Drug(_arg0, _arg1)
+public Action:Command_Drug(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_drug <#userid|name> [0/1]");
+		ReplyToCommand(client, "[SM] Usage: sm_drug <#userid|name> [0/1]");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 2;
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new toggle = 2;
+	if (args > 1)
 	{
-		new var3 = 0;
-		GetCmdArg(2, var3, 2);
-		if (StringToInt(var3, 10))
+		new String:arg2[16];
+		GetCmdArg(2, arg2, 2);
+		if (StringToInt(arg2, 10))
 		{
-			var2 = 1;
+			toggle = 1;
 		}
 		else
 		{
-			var2 = 0;
+			toggle = 0;
 		}
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 >= (var6 = ProcessTargetString(var1, _arg0, var5, 65, 1, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var8 = 0;
-	while (var8 < var6)
+	new i;
+	while (i < target_count)
 	{
-		PerformDrug(_arg0, var5[var8], var2);
-		var8++;
+		PerformDrug(client, target_list[i], toggle);
+		i++;
 	}
-	if (var7)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled drug on target", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled drug on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled drug on target", "_s", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled drug on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_FireBomb(_arg0, _arg1)
+public Action:Command_FireBomb(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_firebomb <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_firebomb <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformFireBomb(_arg0, var3[var6]);
-		var6++;
+		PerformFireBomb(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled FireBomb on target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled FireBomb on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled FireBomb on target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled FireBomb on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Freeze(_arg0, _arg1)
+public Action:Command_Freeze(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_freeze <#userid|name> [time]");
+		ReplyToCommand(client, "[SM] Usage: sm_freeze <#userid|name> [time]");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2;
-	var2 = ConVar.IntValue.get(g_Cvar_FreezeDuration);
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new seconds = ConVar.IntValue.get(g_Cvar_FreezeDuration);
+	if (args > 1)
 	{
-		new var3 = 0;
-		GetCmdArg(2, var3, 20);
-		if (!(StringToIntEx(var3, var2, 10)))
+		new String:time[80];
+		GetCmdArg(2, time, 20);
+		if (!(StringToIntEx(time, seconds, 10)))
 		{
-			ReplyToCommand(_arg0, "[SM] %t", 9936);
+			ReplyToCommand(client, "[SM] %t", 9936);
 			return 3;
 		}
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 >= (var6 = ProcessTargetString(var1, _arg0, var5, 65, 1, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var8 = 0;
-	while (var8 < var6)
+	new i;
+	while (i < target_count)
 	{
-		PerformFreeze(_arg0, var5[var8], var2);
-		var8++;
+		PerformFreeze(client, target_list[i], seconds);
+		i++;
 	}
-	if (var7)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Froze target", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Froze target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Froze target", "_s", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Froze target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_FreezeBomb(_arg0, _arg1)
+public Action:Command_FreezeBomb(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_freezebomb <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_freezebomb <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformFreezeBomb(_arg0, var3[var6]);
-		var6++;
+		PerformFreezeBomb(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled FreezeBomb on target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled FreezeBomb on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled FreezeBomb on target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled FreezeBomb on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_Gravity(_arg0, _arg1)
+public Action:Command_Gravity(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_gravity <#userid|name> [amount]");
+		ReplyToCommand(client, "[SM] Usage: sm_gravity <#userid|name> [amount]");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 1065353216;
-	if (_arg1 > 1)
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new Float:amount = 1.0;
+	if (args > 1)
 	{
-		new var3 = 0;
-		GetCmdArg(2, var3, 20);
-		if (StringToFloatEx(var3, var2))
+		new String:arg2[80];
+		GetCmdArg(2, arg2, 20);
+		if (StringToFloatEx(arg2, amount))
 		{
-			if (var2 < 0.0)
+			if (amount < 0.0)
 			{
-				var2 = 0;
+				amount = 0.0;
 			}
 		}
-		ReplyToCommand(_arg0, "[SM] %t", 10844);
+		ReplyToCommand(client, "[SM] %t", 10844);
 		return 3;
 	}
-	new var4 = 0;
-	new var5 = 0;
-	new var6 = 0;
-	new var7 = 0;
-	if (0 >= (var6 = ProcessTargetString(var1, _arg0, var5, 65, 1, var4, 64, var7)))
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var6);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var8 = 0;
-	while (var8 < var6)
+	new i;
+	while (i < target_count)
 	{
-		PerformGravity(_arg0, var5[var8], var2);
-		var8++;
+		PerformGravity(client, target_list[i], amount);
+		i++;
 	}
-	if (var7)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set gravity on target", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set gravity on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Set gravity on target", "_s", var4);
+		ShowActivity2(client, "[SM] ", "%t", "Set gravity on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_NoClip(_arg0, _arg1)
+public Action:Command_NoClip(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_noclip <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_noclip <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformNoClip(_arg0, var3[var6]);
-		var6++;
+		PerformNoClip(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled noclip on target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled noclip on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled noclip on target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled noclip on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Command_TimeBomb(_arg0, _arg1)
+public Action:Command_TimeBomb(client, args)
 {
-	if (_arg1 < 1)
+	if (args < 1)
 	{
-		ReplyToCommand(_arg0, "[SM] Usage: sm_timebomb <#userid|name>");
+		ReplyToCommand(client, "[SM] Usage: sm_timebomb <#userid|name>");
 		return 3;
 	}
-	new var1 = 0;
-	GetCmdArg(1, var1, 65);
-	new var2 = 0;
-	new var3 = 0;
-	new var4 = 0;
-	new var5 = 0;
-	if (0 >= (var4 = ProcessTargetString(var1, _arg0, var3, 65, 1, var2, 64, var5)))
+	new String:arg[272];
+	GetCmdArg(1, arg, 65);
+	new String:target_name[256];
+	new target_list[65];
+	new target_count;
+	new bool:tn_is_ml;
+	if (0 >= (target_count = ProcessTargetString(arg, client, target_list, 65, 1, target_name, 64, tn_is_ml)))
 	{
-		ReplyToTargetError(_arg0, var4);
+		ReplyToTargetError(client, target_count);
 		return 3;
 	}
-	new var6 = 0;
-	while (var6 < var4)
+	new i;
+	while (i < target_count)
 	{
-		PerformTimeBomb(_arg0, var3[var6]);
-		var6++;
+		PerformTimeBomb(client, target_list[i]);
+		i++;
 	}
-	if (var5)
+	if (tn_is_ml)
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled TimeBomb on target", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled TimeBomb on target", target_name);
 	}
 	else
 	{
-		ShowActivity2(_arg0, "[SM] ", "%t", "Toggled TimeBomb on target", "_s", var2);
+		ShowActivity2(client, "[SM] ", "%t", "Toggled TimeBomb on target", "_s", target_name);
 	}
 	return 3;
 }
 
-public Action:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
+public Action:Event_RoundEnd(Event:event, String:name[], bool:dontBroadcast)
 {
 	KillAllBeacons();
 	KillAllTimeBombs();
@@ -1667,615 +1650,613 @@ public Action:Event_RoundEnd(Event:_arg0, String:_arg1[], bool:_arg2)
 	return 0;
 }
 
-public MenuHandler_Amount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Amount(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(g_BlindTarget[_arg2])))
+			new String:info[128];
+			new amount;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			amount = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(g_BlindTarget[param1])))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformBlind(_arg2, var5, var4);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Set blind on target", "_s", var6, var4);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformBlind(param1, target, amount);
+					ShowActivity2(param1, "[SM] ", "%t", "Set blind on target", "_s", name, amount);
 				}
-				PrintToChat(_arg2, "[SM] %t", 11496);
+				PrintToChat(param1, "[SM] %t", 11496);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 11460);
+				PrintToChat(param1, "[SM] %t", 11460);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayBlindMenu(_arg2);
+				DisplayBlindMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Beacon(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Beacon(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformBeacon(_arg2, var5);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled beacon on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformBeacon(param1, target);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled beacon on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 6032);
+				PrintToChat(param1, "[SM] %t", 6032);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 5996);
+				PrintToChat(param1, "[SM] %t", 5996);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayBeaconMenu(_arg2);
+				DisplayBeaconMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Blind(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Blind(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					g_BlindTarget[_arg2] = var4;
-					DisplayAmountMenu(_arg2);
+					g_BlindTarget[param1] = userid;
+					DisplayAmountMenu(param1);
 					return 0;
 				}
-				PrintToChat(_arg2, "[SM] %t", 11432);
+				PrintToChat(param1, "[SM] %t", 11432);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 11396);
+				PrintToChat(param1, "[SM] %t", 11396);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayBlindMenu(_arg2);
+				DisplayBlindMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Burn(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Burn(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformBurn(_arg2, var5, 20.0);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Set target on fire", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformBurn(param1, target, 20.0);
+					ShowActivity2(param1, "[SM] ", "%t", "Set target on fire", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 7900);
+				PrintToChat(param1, "[SM] %t", 7900);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 7864);
+				PrintToChat(param1, "[SM] %t", 7864);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayBurnMenu(_arg2);
+				DisplayBurnMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Drug(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Drug(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformDrug(_arg2, var5, 2);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled drug on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformDrug(param1, target, 2);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled drug on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 12580);
+				PrintToChat(param1, "[SM] %t", 12580);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 12544);
+				PrintToChat(param1, "[SM] %t", 12544);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayDrugMenu(_arg2);
+				DisplayDrugMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_FireBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_FireBomb(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformFireBomb(_arg2, var5);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled FireBomb on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformFireBomb(param1, target);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled FireBomb on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 8000);
+				PrintToChat(param1, "[SM] %t", 8000);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 7964);
+				PrintToChat(param1, "[SM] %t", 7964);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayFireBombMenu(_arg2);
+				DisplayFireBombMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Freeze(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Freeze(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformFreeze(_arg2, var5, ConVar.IntValue.get(g_Cvar_FreezeDuration));
-					ShowActivity2(_arg2, "[SM] ", "%t", "Froze target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformFreeze(param1, target, ConVar.IntValue.get(g_Cvar_FreezeDuration));
+					ShowActivity2(param1, "[SM] ", "%t", "Froze target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 9720);
+				PrintToChat(param1, "[SM] %t", 9720);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 9684);
+				PrintToChat(param1, "[SM] %t", 9684);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayFreezeMenu(_arg2);
+				DisplayFreezeMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_FreezeBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_FreezeBomb(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformFreezeBomb(_arg2, var5);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled FreezeBomb on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformFreezeBomb(param1, target);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled FreezeBomb on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 9816);
+				PrintToChat(param1, "[SM] %t", 9816);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 9780);
+				PrintToChat(param1, "[SM] %t", 9780);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayFreezeBombMenu(_arg2);
+				DisplayFreezeBombMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_Gravity(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_Gravity(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					g_GravityTarget[_arg2] = var4;
-					DisplayGravityAmountMenu(_arg2);
+					g_GravityTarget[param1] = userid;
+					DisplayGravityAmountMenu(param1);
 					return 0;
 				}
-				PrintToChat(_arg2, "[SM] %t", 10664);
+				PrintToChat(param1, "[SM] %t", 10664);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 10628);
+				PrintToChat(param1, "[SM] %t", 10628);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayGravityMenu(_arg2);
+				DisplayGravityMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_GravityAmount(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_GravityAmount(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToFloat(var3);
-			if ((var5 = GetClientOfUserId(g_GravityTarget[_arg2])))
+			new String:info[128];
+			new Float:amount = 0.0;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			amount = StringToFloat(info);
+			if ((target = GetClientOfUserId(g_GravityTarget[param1])))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformGravity(_arg2, var5, var4);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Set gravity on target", "_s", var6, var4);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformGravity(param1, target, amount);
+					ShowActivity2(param1, "[SM] ", "%t", "Set gravity on target", "_s", name, amount);
 				}
-				PrintToChat(_arg2, "[SM] %t", 10728);
+				PrintToChat(param1, "[SM] %t", 10728);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 10692);
+				PrintToChat(param1, "[SM] %t", 10692);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayGravityMenu(_arg2);
+				DisplayGravityMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_NoClip(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_NoClip(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformNoClip(_arg2, var5);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled noclip on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformNoClip(param1, target);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled noclip on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 11804);
+				PrintToChat(param1, "[SM] %t", 11804);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 11768);
+				PrintToChat(param1, "[SM] %t", 11768);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayNoClipMenu(_arg2);
+				DisplayNoClipMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public MenuHandler_TimeBomb(Menu:_arg0, MenuAction:_arg1, _arg2, _arg3)
+public MenuHandler_TimeBomb(Menu:menu, MenuAction:action, param1, param2)
 {
-	if (_arg1 == 16)
+	if (action == 16)
 	{
-		CloseHandle(_arg0);
-		_arg0 = 0;
+		CloseHandle(menu);
+		menu = 0;
 	}
 	else
 	{
-		if (_arg1 == 8)
+		if (action == 8)
 		{
 			new var1;
-			if (_arg3 == -6 && hTopMenu)
+			if (param2 == -6 && hTopMenu)
 			{
-				TopMenu.Display(hTopMenu, _arg2, 3);
+				TopMenu.Display(hTopMenu, param1, 3);
 			}
 		}
-		if (_arg1 == 4)
+		if (action == 4)
 		{
-			new var3 = 0;
-			new var4 = 0;
-			new var5 = 0;
-			Menu.GetItem(_arg0, _arg3, var3, 32, 0, "", 0);
-			var4 = StringToInt(var3, 10);
-			if ((var5 = GetClientOfUserId(var4)))
+			new String:info[128];
+			new userid;
+			new target;
+			Menu.GetItem(menu, param2, info, 32, 0, "", 0);
+			userid = StringToInt(info, 10);
+			if ((target = GetClientOfUserId(userid)))
 			{
-				if (CanUserTarget(_arg2, var5))
+				if (CanUserTarget(param1, target))
 				{
-					new var6 = 0;
-					GetClientName(var5, var6, 128);
-					PerformTimeBomb(_arg2, var5);
-					ShowActivity2(_arg2, "[SM] ", "%t", "Toggled TimeBomb on target", "_s", var6);
+					new String:name[512];
+					GetClientName(target, name, 128);
+					PerformTimeBomb(param1, target);
+					ShowActivity2(param1, "[SM] ", "%t", "Toggled TimeBomb on target", "_s", name);
 				}
-				PrintToChat(_arg2, "[SM] %t", 6936);
+				PrintToChat(param1, "[SM] %t", 6936);
 			}
 			else
 			{
-				PrintToChat(_arg2, "[SM] %t", 6900);
+				PrintToChat(param1, "[SM] %t", 6900);
 			}
 			new var2;
-			if (IsClientInGame(_arg2) && IsClientInKickQueue(_arg2))
+			if (IsClientInGame(param1) && IsClientInKickQueue(param1))
 			{
-				DisplayTimeBombMenu(_arg2);
+				DisplayTimeBombMenu(param1);
 			}
 		}
 	}
 	return 0;
 }
 
-public void:OnAdminMenuReady(Handle:_arg0)
+public void:OnAdminMenuReady(Handle:aTopMenu)
 {
-	new var1;
-	var1 = TopMenu.FromHandle(_arg0);
-	if (hTopMenu == var1)
+	new TopMenu:topmenu = TopMenu.FromHandle(aTopMenu);
+	if (hTopMenu == topmenu)
 	{
 		return 0;
 	}
-	hTopMenu = var1;
-	new var2;
-	var2 = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
-	if (var2)
+	hTopMenu = topmenu;
+	new TopMenuObject:player_commands = TopMenu.FindCategory(hTopMenu, "PlayerCommands");
+	if (player_commands)
 	{
-		TopMenu.AddItem(hTopMenu, "sm_beacon", 123, var2, "sm_beacon", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_timebomb", 141, var2, "sm_timebomb", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_burn", 127, var2, "sm_burn", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_firebomb", 131, var2, "sm_firebomb", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_freeze", 133, var2, "sm_freeze", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_freezebomb", 135, var2, "sm_freezebomb", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_gravity", 137, var2, "sm_gravity", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_blind", 125, var2, "sm_blind", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_noclip", 139, var2, "sm_noclip", 32, "");
-		TopMenu.AddItem(hTopMenu, "sm_drug", 129, var2, "sm_drug", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_beacon", 123, player_commands, "sm_beacon", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_timebomb", 141, player_commands, "sm_timebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_burn", 127, player_commands, "sm_burn", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_firebomb", 131, player_commands, "sm_firebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_freeze", 133, player_commands, "sm_freeze", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_freezebomb", 135, player_commands, "sm_freezebomb", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_gravity", 137, player_commands, "sm_gravity", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_blind", 125, player_commands, "sm_blind", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_noclip", 139, player_commands, "sm_noclip", 32, "");
+		TopMenu.AddItem(hTopMenu, "sm_drug", 129, player_commands, "sm_drug", 32, "");
 	}
 	return 0;
 }
@@ -2292,63 +2273,62 @@ public void:OnMapEnd()
 
 public void:OnMapStart()
 {
-	new var11;
-	var11 = GameData.GameData("funcommands.games");
-	if (var11)
+	new GameData:gameConfig = GameData.GameData("funcommands.games");
+	if (gameConfig)
 	{
 		new var1;
-		if (GameData.GetKeyValue(var11, "SoundBlip", g_BlipSound, 256) && g_BlipSound[0])
+		if (GameData.GetKeyValue(gameConfig, "SoundBlip", g_BlipSound, 256) && g_BlipSound[0])
 		{
 			PrecacheSound(g_BlipSound, true);
 		}
 		new var2;
-		if (GameData.GetKeyValue(var11, "SoundBeep", g_BeepSound, 256) && g_BeepSound[0])
+		if (GameData.GetKeyValue(gameConfig, "SoundBeep", g_BeepSound, 256) && g_BeepSound[0])
 		{
 			PrecacheSound(g_BeepSound, true);
 		}
 		new var3;
-		if (GameData.GetKeyValue(var11, "SoundFinal", g_FinalSound, 256) && g_FinalSound[0])
+		if (GameData.GetKeyValue(gameConfig, "SoundFinal", g_FinalSound, 256) && g_FinalSound[0])
 		{
 			PrecacheSound(g_FinalSound, true);
 		}
 		new var4;
-		if (GameData.GetKeyValue(var11, "SoundBoom", g_BoomSound, 256) && g_BoomSound[0])
+		if (GameData.GetKeyValue(gameConfig, "SoundBoom", g_BoomSound, 256) && g_BoomSound[0])
 		{
 			PrecacheSound(g_BoomSound, true);
 		}
 		new var5;
-		if (GameData.GetKeyValue(var11, "SoundFreeze", g_FreezeSound, 256) && g_FreezeSound[0])
+		if (GameData.GetKeyValue(gameConfig, "SoundFreeze", g_FreezeSound, 256) && g_FreezeSound[0])
 		{
 			PrecacheSound(g_FreezeSound, true);
 		}
-		new var12 = 0;
+		new String:buffer[1024];
 		new var6;
-		if (GameData.GetKeyValue(var11, "SpriteBeam", var12, 256) && var12)
+		if (GameData.GetKeyValue(gameConfig, "SpriteBeam", buffer, 256) && buffer[0])
 		{
-			g_BeamSprite = PrecacheModel(var12, false);
+			g_BeamSprite = PrecacheModel(buffer, false);
 		}
 		new var7;
-		if (GameData.GetKeyValue(var11, "SpriteBeam2", var12, 256) && var12)
+		if (GameData.GetKeyValue(gameConfig, "SpriteBeam2", buffer, 256) && buffer[0])
 		{
-			g_BeamSprite2 = PrecacheModel(var12, false);
+			g_BeamSprite2 = PrecacheModel(buffer, false);
 		}
 		new var8;
-		if (GameData.GetKeyValue(var11, "SpriteExplosion", var12, 256) && var12)
+		if (GameData.GetKeyValue(gameConfig, "SpriteExplosion", buffer, 256) && buffer[0])
 		{
-			g_ExplosionSprite = PrecacheModel(var12, false);
+			g_ExplosionSprite = PrecacheModel(buffer, false);
 		}
 		new var9;
-		if (GameData.GetKeyValue(var11, "SpriteGlow", var12, 256) && var12)
+		if (GameData.GetKeyValue(gameConfig, "SpriteGlow", buffer, 256) && buffer[0])
 		{
-			g_GlowSprite = PrecacheModel(var12, false);
+			g_GlowSprite = PrecacheModel(buffer, false);
 		}
 		new var10;
-		if (GameData.GetKeyValue(var11, "SpriteHalo", var12, 256) && var12)
+		if (GameData.GetKeyValue(gameConfig, "SpriteHalo", buffer, 256) && buffer[0])
 		{
-			g_HaloSprite = PrecacheModel(var12, false);
+			g_HaloSprite = PrecacheModel(buffer, false);
 		}
-		CloseHandle(var11);
-		var11 = 0;
+		CloseHandle(gameConfig);
+		gameConfig = 0;
 		return 0;
 	}
 	SetFailState("Unable to load game config funcommands.games");
@@ -2368,197 +2348,190 @@ public void:OnPluginStart()
 	RegisterCvars();
 	RegisterCmds();
 	HookEvents();
-	new var2 = 0;
+	new TopMenu:topmenu;
 	new var1;
-	if (LibraryExists("adminmenu") && (var2 = GetAdminTopMenu()))
+	if (LibraryExists("adminmenu") && (topmenu = GetAdminTopMenu()))
 	{
-		OnAdminMenuReady(var2);
+		OnAdminMenuReady(topmenu);
 	}
 	return 0;
 }
 
-public Action:Timer_Beacon(Handle:_arg0, any:_arg1)
+public Action:Timer_Beacon(Handle:timer, any:value)
 {
-	new var3;
-	var3 = _arg1 & 127;
-	new var4;
-	var4 = _arg1 >>> 7;
+	new client = value & 127;
+	new serial = value >>> 7;
 	new var1;
-	if (IsClientInGame(var3) && IsPlayerAlive(var3) && var4 == g_BeaconSerial[var3])
+	if (IsClientInGame(client) && IsPlayerAlive(client) && serial == g_BeaconSerial[client])
 	{
-		KillBeacon(var3);
+		KillBeacon(client);
 		return 4;
 	}
-	new var5;
-	var5 = GetClientTeam(var3);
-	new var6 = 0;
-	GetClientAbsOrigin(var3, var6);
-	new var7 = var6 + 8;
-	var7 = 5+0(var7, 10);
+	new team = GetClientTeam(client);
+	new Float:vec[3] = 0.0;
+	GetClientAbsOrigin(client, vec);
+	new var3 = vec[2];
+	var3 = 5+0(var3, 10);
 	new var2;
 	if (g_BeamSprite > -1 && g_HaloSprite > -1)
 	{
-		TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
+		TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 		TE_SendToAll(0.0);
-		if (var5 == 2)
+		if (team == 2)
 		{
-			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, redColor, 10, 0);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, redColor, 10, 0);
 		}
 		else
 		{
-			if (var5 == 3)
+			if (team == 3)
 			{
-				TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, blueColor, 10, 0);
+				TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, blueColor, 10, 0);
 			}
-			TE_SetupBeamRingPoint(var6, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, greenColor, 10, 0);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_BeaconRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, greenColor, 10, 0);
 		}
 		TE_SendToAll(0.0);
 	}
 	if (g_BlipSound[0])
 	{
-		GetClientEyePosition(var3, var6);
-		EmitAmbientSound(g_BlipSound, var6, var3, 130, 0, 1.0, 100, 0.0);
+		GetClientEyePosition(client, vec);
+		EmitAmbientSound(g_BlipSound, vec, client, 130, 0, 1.0, 100, 0.0);
 	}
 	return 0;
 }
 
-public Action:Timer_Drug(Handle:_arg0, any:_arg1)
+public Action:Timer_Drug(Handle:timer, any:client)
 {
-	if (IsClientInGame(_arg1))
+	if (IsClientInGame(client))
 	{
-		if (IsPlayerAlive(_arg1))
+		if (IsPlayerAlive(client))
 		{
-			new var1 = 0;
-			GetClientEyeAngles(_arg1, var1);
-			var1 + 8/* ERROR unknown load Binary */ = g_DrugAngles[GetRandomInt(0, 100) % 20];
-			TeleportEntity(_arg1, NULL_VECTOR, var1, NULL_VECTOR);
-			new var2 = 0;
-			var2 = _arg1;
-			new var3 = 255;
-			new var4 = 255;
-			new var5 = 2;
-			new var6;
-			var6 = GetRandomInt(0, 255);
-			var6 + 4/* ERROR unknown load Binary */ = GetRandomInt(0, 255);
-			var6 + 8/* ERROR unknown load Binary */ = GetRandomInt(0, 255);
-			new var7;
-			var7 = StartMessageEx(g_FadeUserMsgId, var2, 1, 0);
+			new Float:angs[3] = 0.0;
+			GetClientEyeAngles(client, angs);
+			angs[2] = g_DrugAngles[GetRandomInt(0, 100) % 20];
+			TeleportEntity(client, NULL_VECTOR, angs, NULL_VECTOR);
+			new clients[2];
+			clients[0] = client;
+			new duration = 255;
+			new holdtime = 255;
+			new flags = 2;
+			new color[4] = {0,0,0,128};
+			color[0] = GetRandomInt(0, 255);
+			color[1] = GetRandomInt(0, 255);
+			color[2] = GetRandomInt(0, 255);
+			new Handle:message = StartMessageEx(g_FadeUserMsgId, clients, 1, 0);
 			if (GetUserMessageType() == 1)
 			{
-				new var8;
-				var8 = UserMessageToProtobuf(var7);
-				Protobuf.SetInt(var8, "duration", var3, -1);
-				Protobuf.SetInt(var8, "hold_time", var4, -1);
-				Protobuf.SetInt(var8, "flags", var5, -1);
-				Protobuf.SetColor(var8, "clr", var6, -1);
+				new Protobuf:pb = UserMessageToProtobuf(message);
+				Protobuf.SetInt(pb, "duration", duration, -1);
+				Protobuf.SetInt(pb, "hold_time", holdtime, -1);
+				Protobuf.SetInt(pb, "flags", flags, -1);
+				Protobuf.SetColor(pb, "clr", color, -1);
 			}
 			else
 			{
-				BfWriteShort(var7, var3);
-				BfWriteShort(var7, var4);
-				BfWriteShort(var7, var5);
-				BfWriteByte(var7, var6);
-				BfWriteByte(var7, var6 + 4/* ERROR unknown load Binary */);
-				BfWriteByte(var7, var6 + 8/* ERROR unknown load Binary */);
-				BfWriteByte(var7, var6 + 12/* ERROR unknown load Binary */);
+				BfWriteShort(message, duration);
+				BfWriteShort(message, holdtime);
+				BfWriteShort(message, flags);
+				BfWriteByte(message, color[0]);
+				BfWriteByte(message, color[1]);
+				BfWriteByte(message, color[2]);
+				BfWriteByte(message, color[3]);
 			}
 			EndMessage();
 			return 3;
 		}
-		KillDrug(_arg1);
+		KillDrug(client);
 		return 3;
 	}
-	KillDrugTimer(_arg1);
+	KillDrugTimer(client);
 	return 3;
 }
 
-public Action:Timer_FireBomb(Handle:_arg0, any:_arg1)
+public Action:Timer_FireBomb(Handle:timer, any:value)
 {
-	new var7;
-	var7 = _arg1 & 127;
-	new var8;
-	var8 = _arg1 >>> 7;
+	new client = value & 127;
+	new serial = value >>> 7;
 	new var1;
-	if (IsClientInGame(var7) && IsPlayerAlive(var7) && var8 == g_FireBombSerial[var7])
+	if (IsClientInGame(client) && IsPlayerAlive(client) && serial == g_FireBombSerial[client])
 	{
-		KillFireBomb(var7);
+		KillFireBomb(client);
 		return 4;
 	}
-	g_FireBombTime[var7]--;
-	new var9 = 0;
-	GetClientEyePosition(var7, var9);
-	if (0 < g_FireBombTime[var7])
+	g_FireBombTime[client]--;
+	new Float:vec[3] = 0.0;
+	GetClientEyePosition(client, vec);
+	if (0 < g_FireBombTime[client])
 	{
-		new var10 = 0;
-		if (g_FireBombTime[var7] > 1)
+		new color;
+		if (g_FireBombTime[client] > 1)
 		{
-			var10 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FireBombTicks), g_FireBombTime[var7]));
+			color = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FireBombTicks), g_FireBombTime[client]));
 			if (g_BeepSound[0])
 			{
-				EmitAmbientSound(g_BeepSound, var9, var7, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
-			var10 = 0;
+			color = 0;
 			if (g_FinalSound[0])
 			{
-				EmitAmbientSound(g_FinalSound, var9, var7, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
-		SetEntityRenderColor(var7, 255, var10, var10, 255);
-		new var11 = 0;
-		GetClientName(var7, var11, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var11, g_FireBombTime[var7]);
+		SetEntityRenderColor(client, 255, color, color, 255);
+		new String:name[512];
+		GetClientName(client, name, 128);
+		PrintCenterTextAll("%t", "Till Explodes", name, g_FireBombTime[client]);
 		new var2;
 		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
-			GetClientAbsOrigin(var7, var9);
-			new var12 = var9 + 8;
-			var12 = 5+0(var12, 10);
-			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
+			GetClientAbsOrigin(client, vec);
+			new var7 = vec[2];
+			var7 = 5+0(var7, 10);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var9, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
 	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var9, g_ExplosionSprite, 0.1, 1, 0, ConVar.IntValue.get(g_Cvar_FireBombRadius), 5000, 6840, 67);
+		TE_SetupExplosion(vec, g_ExplosionSprite, 0.1, 1, 0, ConVar.IntValue.get(g_Cvar_FireBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
 	new var3;
 	if (g_BeamSprite > -1 && g_HaloSprite > -1)
 	{
-		GetClientAbsOrigin(var7, var9);
-		new var13 = var9 + 8;
-		var13 = 5+0(var13, 10);
-		TE_SetupBeamRingPoint(var9, 50.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.5, 30.0, 1.5, orangeColor, 5, 0);
+		GetClientAbsOrigin(client, vec);
+		new var8 = vec[2];
+		var8 = 5+0(var8, 10);
+		TE_SetupBeamRingPoint(vec, 50.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.5, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
-		new var14 = var9 + 8;
-		var14 = 5+0(var14, 15);
-		TE_SetupBeamRingPoint(var9, 40.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 30.0, 1.5, orangeColor, 5, 0);
+		new var9 = vec[2];
+		var9 = 5+0(var9, 15);
+		TE_SetupBeamRingPoint(vec, 40.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
-		new var15 = var9 + 8;
-		var15 = 5+0(var15, 15);
-		TE_SetupBeamRingPoint(var9, 30.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.7, 30.0, 1.5, orangeColor, 5, 0);
+		new var10 = vec[2];
+		var10 = 5+0(var10, 15);
+		TE_SetupBeamRingPoint(vec, 30.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.7, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
-		new var16 = var9 + 8;
-		var16 = 5+0(var16, 15);
-		TE_SetupBeamRingPoint(var9, 20.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.8, 30.0, 1.5, orangeColor, 5, 0);
+		new var11 = vec[2];
+		var11 = 5+0(var11, 15);
+		TE_SetupBeamRingPoint(vec, 20.0, ConVar.FloatValue.get(g_Cvar_FireBombRadius), g_BeamSprite, g_HaloSprite, 0, 10, 0.8, 30.0, 1.5, orangeColor, 5, 0);
 		TE_SendToAll(0.0);
 	}
 	if (g_BoomSound[0])
 	{
-		EmitAmbientSound(g_BoomSound, var9, var7, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, vec, client, 130, 0, 1.0, 100, 0.0);
 	}
-	IgniteEntity(var7, ConVar.FloatValue.get(g_Cvar_BurnDuration), false, 0.0, false);
-	KillFireBomb(var7);
-	SetEntityRenderColor(var7, 255, 255, 255, 255);
+	IgniteEntity(client, ConVar.FloatValue.get(g_Cvar_BurnDuration), false, 0.0, false);
+	KillFireBomb(client);
+	SetEntityRenderColor(client, 255, 255, 255, 255);
 	if (0 < ConVar.IntValue.get(g_Cvar_FireBombMode))
 	{
-		new var17;
+		decl teamOnly;
 		new var4;
 		if (ConVar.IntValue.get(g_Cvar_FireBombMode) == 1)
 		{
@@ -2568,159 +2541,153 @@ public Action:Timer_FireBomb(Handle:_arg0, any:_arg1)
 		{
 			var4 = 0;
 		}
-		var17 = var4;
-		new var18 = 1;
-		while (var18 <= MaxClients)
+		teamOnly = var4;
+		new i = 1;
+		while (i <= MaxClients)
 		{
 			new var5;
-			if (IsClientInGame(var18) && IsPlayerAlive(var18) && var7 != var18)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && client != i)
 			{
 			}
 			else
 			{
 				new var6;
-				if (!(var17 && GetClientTeam(var7) != GetClientTeam(var18)))
+				if (!(teamOnly && GetClientTeam(client) != GetClientTeam(i)))
 				{
-					new var19 = 0;
-					GetClientAbsOrigin(var18, var19);
-					new var20;
-					var20 = GetVectorDistance(var9, var19, false);
-					if (!(var20 > ConVar.FloatValue.get(g_Cvar_FireBombRadius)))
+					new Float:pos[3] = 0.0;
+					GetClientAbsOrigin(i, pos);
+					new Float:distance = GetVectorDistance(vec, pos, false);
+					if (!(distance > ConVar.FloatValue.get(g_Cvar_FireBombRadius)))
 					{
-						new var21;
-						var21 = ConVar.FloatValue.get(g_Cvar_BurnDuration);
-						var21 *= ConVar.FloatValue.get(g_Cvar_FireBombRadius) - var20 / ConVar.FloatValue.get(g_Cvar_FireBombRadius);
-						IgniteEntity(var18, var21, false, 0.0, false);
+						new Float:duration = ConVar.FloatValue.get(g_Cvar_BurnDuration);
+						duration *= ConVar.FloatValue.get(g_Cvar_FireBombRadius) - distance / ConVar.FloatValue.get(g_Cvar_FireBombRadius);
+						IgniteEntity(i, duration, false, 0.0, false);
 					}
 				}
 			}
-			var18++;
+			i++;
 		}
 	}
 	return 4;
 }
 
-public Action:Timer_Freeze(Handle:_arg0, any:_arg1)
+public Action:Timer_Freeze(Handle:timer, any:value)
 {
-	new var2;
-	var2 = _arg1 & 127;
-	new var3;
-	var3 = _arg1 >>> 7;
+	new client = value & 127;
+	new serial = value >>> 7;
 	new var1;
-	if (IsClientInGame(var2) && IsPlayerAlive(var2) && var3 == g_FreezeSerial[var2])
+	if (IsClientInGame(client) && IsPlayerAlive(client) && serial == g_FreezeSerial[client])
 	{
-		UnfreezeClient(var2);
+		UnfreezeClient(client);
 		return 4;
 	}
-	if (g_FreezeTime[var2])
+	if (g_FreezeTime[client])
 	{
 		if (g_GameEngine != 5)
 		{
-			PrintHintText(var2, "%t", "You will be unfrozen", g_FreezeTime[var2]);
+			PrintHintText(client, "%t", "You will be unfrozen", g_FreezeTime[client]);
 		}
 		else
 		{
-			PrintCenterText(var2, "%t", "You will be unfrozen", g_FreezeTime[var2]);
+			PrintCenterText(client, "%t", "You will be unfrozen", g_FreezeTime[client]);
 		}
-		g_FreezeTime[var2]--;
-		SetEntityMoveType(var2, 0);
-		SetEntityRenderColor(var2, 0, 128, 255, 135);
-		new var4 = 0;
-		GetClientAbsOrigin(var2, var4);
-		new var5 = var4 + 8;
-		var5 = 5+0(var5, 10);
+		g_FreezeTime[client]--;
+		SetEntityMoveType(client, 0);
+		SetEntityRenderColor(client, 0, 128, 255, 135);
+		new Float:vec[3] = 0.0;
+		GetClientAbsOrigin(client, vec);
+		new var2 = vec[2];
+		var2 = 5+0(var2, 10);
 		if (g_GlowSprite > -1)
 		{
-			TE_SetupGlowSprite(var4, g_GlowSprite, 0.95, 1.5, 50);
+			TE_SetupGlowSprite(vec, g_GlowSprite, 0.95, 1.5, 50);
 			TE_SendToAll(0.0);
 		}
 		else
 		{
 			if (g_HaloSprite > -1)
 			{
-				TE_SetupGlowSprite(var4, g_HaloSprite, 0.95, 1.5, 50);
+				TE_SetupGlowSprite(vec, g_HaloSprite, 0.95, 1.5, 50);
 				TE_SendToAll(0.0);
 			}
 		}
 		return 0;
 	}
-	UnfreezeClient(var2);
+	UnfreezeClient(client);
 	if (g_GameEngine != 5)
 	{
-		PrintHintText(var2, "%t", 9484);
+		PrintHintText(client, "%t", 9484);
 	}
 	else
 	{
-		PrintCenterText(var2, "%t", 9500);
+		PrintCenterText(client, "%t", 9500);
 	}
 	return 4;
 }
 
-public Action:Timer_FreezeBomb(Handle:_arg0, any:_arg1)
+public Action:Timer_FreezeBomb(Handle:timer, any:value)
 {
-	new var6;
-	var6 = _arg1 & 127;
-	new var7;
-	var7 = _arg1 >>> 7;
+	new client = value & 127;
+	new serial = value >>> 7;
 	new var1;
-	if (IsClientInGame(var6) && IsPlayerAlive(var6) && var7 == g_FreezeBombSerial[var6])
+	if (IsClientInGame(client) && IsPlayerAlive(client) && serial == g_FreezeBombSerial[client])
 	{
-		KillFreezeBomb(var6);
+		KillFreezeBomb(client);
 		return 4;
 	}
-	new var8 = 0;
-	GetClientEyePosition(var6, var8);
-	g_FreezeBombTime[var6]--;
-	if (0 < g_FreezeBombTime[var6])
+	new Float:vec[3] = 0.0;
+	GetClientEyePosition(client, vec);
+	g_FreezeBombTime[client]--;
+	if (0 < g_FreezeBombTime[client])
 	{
-		new var9 = 0;
-		if (g_FreezeBombTime[var6] > 1)
+		new color;
+		if (g_FreezeBombTime[client] > 1)
 		{
-			var9 = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FreezeBombTicks), g_FreezeBombTime[var6]));
+			color = RoundToFloor(5*0(255.0 / ConVar.FloatValue.get(g_Cvar_FreezeBombTicks), g_FreezeBombTime[client]));
 			if (g_BeepSound[0])
 			{
-				EmitAmbientSound(g_BeepSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
-			var9 = 0;
+			color = 0;
 			if (g_FinalSound[0])
 			{
-				EmitAmbientSound(g_FinalSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
-		SetEntityRenderColor(var6, var9, var9, 255, 255);
-		new var10 = 0;
-		GetClientName(var6, var10, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var10, g_FreezeBombTime[var6]);
+		SetEntityRenderColor(client, color, color, 255, 255);
+		new String:name[512];
+		GetClientName(client, name, 128);
+		PrintCenterTextAll("%t", "Till Explodes", name, g_FreezeBombTime[client]);
 		new var2;
 		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
-			GetClientAbsOrigin(var6, var8);
-			new var11 = var8 + 8;
-			var11 = 5+0(var11, 10);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
+			GetClientAbsOrigin(client, vec);
+			new var6 = vec[2];
+			var6 = 5+0(var6, 10);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_FreezeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
 	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var8, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_FreezeBombRadius), 5000, 6840, 67);
+		TE_SetupExplosion(vec, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_FreezeBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
 	if (g_BoomSound[0])
 	{
-		EmitAmbientSound(g_BoomSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, vec, client, 130, 0, 1.0, 100, 0.0);
 	}
-	KillFreezeBomb(var6);
-	FreezeClient(var6, ConVar.IntValue.get(g_Cvar_FreezeDuration));
+	KillFreezeBomb(client);
+	FreezeClient(client, ConVar.IntValue.get(g_Cvar_FreezeDuration));
 	if (0 < ConVar.IntValue.get(g_Cvar_FreezeBombMode))
 	{
-		new var12;
+		decl bool:teamOnly;
 		new var3;
 		if (ConVar.IntValue.get(g_Cvar_FreezeBombMode) == 1)
 		{
@@ -2730,114 +2697,111 @@ public Action:Timer_FreezeBomb(Handle:_arg0, any:_arg1)
 		{
 			var3 = 0;
 		}
-		var12 = var3;
-		new var13 = 1;
-		while (var13 <= MaxClients)
+		teamOnly = var3;
+		new i = 1;
+		while (i <= MaxClients)
 		{
 			new var4;
-			if (IsClientInGame(var13) && IsPlayerAlive(var13) && var6 != var13)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && client != i)
 			{
 			}
 			else
 			{
 				new var5;
-				if (!(var12 && GetClientTeam(var6) != GetClientTeam(var13)))
+				if (!(teamOnly && GetClientTeam(client) != GetClientTeam(i)))
 				{
-					new var14 = 0;
-					GetClientEyePosition(var13, var14);
-					new var15;
-					var15 = GetVectorDistance(var8, var14, false);
-					if (!(var15 > ConVar.FloatValue.get(g_Cvar_FreezeBombRadius)))
+					new Float:pos[3] = 0.0;
+					GetClientEyePosition(i, pos);
+					new Float:distance = GetVectorDistance(vec, pos, false);
+					if (!(distance > ConVar.FloatValue.get(g_Cvar_FreezeBombRadius)))
 					{
 						if (g_HaloSprite > -1)
 						{
 							if (g_BeamSprite2 > -1)
 							{
-								TE_SetupBeamPoints(var8, var14, g_BeamSprite2, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
+								TE_SetupBeamPoints(vec, pos, g_BeamSprite2, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
 								TE_SendToAll(0.0);
 							}
 							if (g_BeamSprite > -1)
 							{
-								TE_SetupBeamPoints(var8, var14, g_BeamSprite, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
+								TE_SetupBeamPoints(vec, pos, g_BeamSprite, g_HaloSprite, 0, 1, 0.7, 20.0, 50.0, 1, 1.5, blueColor, 10);
 								TE_SendToAll(0.0);
 							}
 						}
-						FreezeClient(var13, ConVar.IntValue.get(g_Cvar_FreezeDuration));
+						FreezeClient(i, ConVar.IntValue.get(g_Cvar_FreezeDuration));
 					}
 				}
 			}
-			var13++;
+			i++;
 		}
 	}
 	return 4;
 }
 
-public Action:Timer_TimeBomb(Handle:_arg0, any:_arg1)
+public Action:Timer_TimeBomb(Handle:timer, any:value)
 {
-	new var6;
-	var6 = _arg1 & 127;
-	new var7;
-	var7 = _arg1 >>> 7;
+	new client = value & 127;
+	new serial = value >>> 7;
 	new var1;
-	if (IsClientInGame(var6) && IsPlayerAlive(var6) && g_TimeBombSerial[var6] == var7)
+	if (IsClientInGame(client) && IsPlayerAlive(client) && g_TimeBombSerial[client] == serial)
 	{
-		KillTimeBomb(var6);
+		KillTimeBomb(client);
 		return 4;
 	}
-	g_TimeBombTime[var6]--;
-	new var8 = 0;
-	GetClientEyePosition(var6, var8);
-	if (0 < g_TimeBombTime[var6])
+	g_TimeBombTime[client]--;
+	new Float:vec[3] = 0.0;
+	GetClientEyePosition(client, vec);
+	if (0 < g_TimeBombTime[client])
 	{
-		new var9 = 0;
-		if (g_TimeBombTime[var6] > 1)
+		new color;
+		if (g_TimeBombTime[client] > 1)
 		{
-			var9 = RoundToFloor(5*0(128.0 / ConVar.FloatValue.get(g_Cvar_TimeBombTicks), g_TimeBombTime[var6]));
+			color = RoundToFloor(5*0(128.0 / ConVar.FloatValue.get(g_Cvar_TimeBombTicks), g_TimeBombTime[client]));
 			if (g_BeepSound[0])
 			{
-				EmitAmbientSound(g_BeepSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_BeepSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
 		else
 		{
-			var9 = 0;
+			color = 0;
 			if (g_FinalSound[0])
 			{
-				EmitAmbientSound(g_FinalSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+				EmitAmbientSound(g_FinalSound, vec, client, 130, 0, 1.0, 100, 0.0);
 			}
 		}
-		SetEntityRenderColor(var6, 255, 128, var9, 255);
-		new var10 = 0;
-		GetClientName(var6, var10, 128);
-		PrintCenterTextAll("%t", "Till Explodes", var10, g_TimeBombTime[var6]);
+		SetEntityRenderColor(client, 255, 128, color, 255);
+		new String:name[512];
+		GetClientName(client, name, 128);
+		PrintCenterTextAll("%t", "Till Explodes", name, g_TimeBombTime[client]);
 		new var2;
 		if (g_BeamSprite > -1 && g_HaloSprite > -1)
 		{
-			GetClientAbsOrigin(var6, var8);
-			new var11 = var8 + 8;
-			var11 = 5+0(var11, 10);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
+			GetClientAbsOrigin(client, vec);
+			new var6 = vec[2];
+			var6 = 5+0(var6, 10);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 15, 0.5, 5.0, 0.0, greyColor, 10, 0);
 			TE_SendToAll(0.0);
-			TE_SetupBeamRingPoint(var8, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
+			TE_SetupBeamRingPoint(vec, 10.0, ConVar.FloatValue.get(g_Cvar_TimeBombRadius) / 3.0, g_BeamSprite, g_HaloSprite, 0, 10, 0.6, 10.0, 0.5, whiteColor, 10, 0);
 			TE_SendToAll(0.0);
 		}
 		return 0;
 	}
 	if (g_ExplosionSprite > -1)
 	{
-		TE_SetupExplosion(var8, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_TimeBombRadius), 5000, 6840, 67);
+		TE_SetupExplosion(vec, g_ExplosionSprite, 5.0, 1, 0, ConVar.IntValue.get(g_Cvar_TimeBombRadius), 5000, 6840, 67);
 		TE_SendToAll(0.0);
 	}
 	if (g_BoomSound[0])
 	{
-		EmitAmbientSound(g_BoomSound, var8, var6, 130, 0, 1.0, 100, 0.0);
+		EmitAmbientSound(g_BoomSound, vec, client, 130, 0, 1.0, 100, 0.0);
 	}
-	ForcePlayerSuicide(var6);
-	KillTimeBomb(var6);
-	SetEntityRenderColor(var6, 255, 255, 255, 255);
+	ForcePlayerSuicide(client);
+	KillTimeBomb(client);
+	SetEntityRenderColor(client, 255, 255, 255, 255);
 	if (0 < ConVar.IntValue.get(g_Cvar_TimeBombMode))
 	{
-		new var12;
+		decl teamOnly;
 		new var3;
 		if (ConVar.IntValue.get(g_Cvar_TimeBombMode) == 1)
 		{
@@ -2847,37 +2811,35 @@ public Action:Timer_TimeBomb(Handle:_arg0, any:_arg1)
 		{
 			var3 = 0;
 		}
-		var12 = var3;
-		new var13 = 1;
-		while (var13 <= MaxClients)
+		teamOnly = var3;
+		new i = 1;
+		while (i <= MaxClients)
 		{
 			new var4;
-			if (IsClientInGame(var13) && IsPlayerAlive(var13) && var6 != var13)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && client != i)
 			{
 			}
 			else
 			{
 				new var5;
-				if (!(var12 && GetClientTeam(var6) != GetClientTeam(var13)))
+				if (!(teamOnly && GetClientTeam(client) != GetClientTeam(i)))
 				{
-					new var14 = 0;
-					GetClientEyePosition(var13, var14);
-					new var15;
-					var15 = GetVectorDistance(var8, var14, false);
-					if (!(var15 > ConVar.FloatValue.get(g_Cvar_TimeBombRadius)))
+					new Float:pos[3] = 0.0;
+					GetClientEyePosition(i, pos);
+					new Float:distance = GetVectorDistance(vec, pos, false);
+					if (!(distance > ConVar.FloatValue.get(g_Cvar_TimeBombRadius)))
 					{
-						new var16 = 220;
-						var16 = RoundToFloor(5*0(ConVar.FloatValue.get(g_Cvar_TimeBombRadius) - var15 / ConVar.FloatValue.get(g_Cvar_TimeBombRadius), var16));
-						SlapPlayer(var13, var16, false);
+						new damage = RoundToFloor(5*0(ConVar.FloatValue.get(g_Cvar_TimeBombRadius) - distance / ConVar.FloatValue.get(g_Cvar_TimeBombRadius), damage));
+						SlapPlayer(i, damage, false);
 						if (g_ExplosionSprite > -1)
 						{
-							TE_SetupExplosion(var14, g_ExplosionSprite, 0.05, 1, 0, 1, 1, 6840, 67);
+							TE_SetupExplosion(pos, g_ExplosionSprite, 0.05, 1, 0, 1, 1, 6840, 67);
 							TE_SendToAll(0.0);
 						}
 					}
 				}
 			}
-			var13++;
+			i++;
 		}
 	}
 	return 4;
