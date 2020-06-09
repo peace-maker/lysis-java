@@ -395,6 +395,14 @@ public class SourceBuilder {
 		case GenArray: {
 			return ((DGenArray) node).var().name();
 		}
+		
+		case Call: {
+			return buildCall((DCall) node) + "/* ERROR unknown load Call */";
+		}
+		
+		case Unary: {
+			return buildUnary((DUnary) node) + "/* ERROR unknown load Unary */";
+		}
 
 		default:
 			throw new Exception("unknown load " + node.type());
