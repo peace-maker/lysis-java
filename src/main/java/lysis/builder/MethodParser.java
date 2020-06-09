@@ -872,10 +872,7 @@ public class MethodParser {
 		LGraph graph = new LGraph();
 		graph.blocks = blocks;
 		graph.entry = blocks[0];
-		if (lir_.argDepth > 0)
-			graph.nargs = ((lir_.argDepth - 12) / 4) + 1;
-		else
-			graph.nargs = 0;
+		graph.nargs = getNumArgs();
 
 		return graph;
 	}
@@ -894,21 +891,33 @@ public class MethodParser {
 		need_proc_ = true;
 	}
 
-	public LGraph parse() throws Exception {
-		// assert(BitConverter.IsLittleEndian);
-
+	public boolean preprocess() throws Exception {
 		SPOpcode op = peekOp();
 		if (op == SPOpcode.load_pri) {
 			readStateTable();
 			func_.setCodeEnd(getExitPC());
-			return null;
+			return false;
 		}
 
 		readAll();
+		return true;
+	}
+	
+	public LGraph parse() throws Exception {
+		// assert(BitConverter.IsLittleEndian);
+
+		if (!preprocess())
+			return null;
 		return buildBlocks();
 	}
 
 	public long getExitPC() {
 		return lir_.exit_pc;
+	}
+	
+	public int getNumArgs() {
+		if (lir_.argDepth > 0)
+			return ((lir_.argDepth - 12) / 4) + 1;
+		return 0;
 	}
 }
