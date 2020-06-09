@@ -293,6 +293,7 @@ public class MethodParser {
 		case and:
 		case or:
 		case smul:
+		case sdiv:
 		case shr:
 		case shl:
 		case sub:

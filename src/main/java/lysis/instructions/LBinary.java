@@ -68,6 +68,9 @@ public class LBinary extends LInstruction {
 		case smul:
 			tw.writeBytes("smul");
 			break;
+		case sdiv:
+			tw.writeBytes("sdiv");
+			break;
 		case sdiv_alt:
 			tw.writeBytes("sdiv.alt");
 			break;

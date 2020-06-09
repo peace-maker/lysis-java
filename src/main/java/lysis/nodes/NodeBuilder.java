@@ -500,7 +500,7 @@ public class NodeBuilder {
 				block.add(binary);
 
 				// sdiv: PRI = ALT / PRI; ALT = ALT mod PRI
-				if (ins.spop() == SPOpcode.sdiv_alt) {
+				if (ins.spop() == SPOpcode.sdiv_alt || ins.spop() == SPOpcode.sdiv) {
 					binary = new DBinary(SPOpcode.sdiv_alt_mod, nodeLHS, nodeRHS);
 					block.stack().set(Register.Alt, binary);
 					block.add(binary);

@@ -130,6 +130,7 @@ public class SourceBuilder {
 			return "!";
 		case or:
 			return "|";
+		case sdiv:
 		case sdiv_alt:
 			return "/";
 		case sdiv_alt_mod:
