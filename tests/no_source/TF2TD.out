@@ -37,7 +37,7 @@ public Extension:__ext_sdktools =
 	required = 1,
 };
 new String:TFResourceNames[18][];
-new TowerDefense = 576;
+new Plugin:TowerDefense = 576;
 new MULTIPLY_BASECOST_CRIT = 200;
 new MULTIPLY_BASECOST_OTHERS = 400;
 new MULTIPLY_ADDITION_CRIT = 200;

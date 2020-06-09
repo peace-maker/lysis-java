@@ -1,24 +1,3 @@
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOO5" (number 7)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOO1" (number 8)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOOC" (number 9)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOO8" (number 10)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOF4" (number 12)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOOFB" (number 13)
-
-/* ERROR PREPROCESSING! null */
- function "OxOOOOOO5C" (number 20)
 public PlVers:__version =
 {
 	version = 5,

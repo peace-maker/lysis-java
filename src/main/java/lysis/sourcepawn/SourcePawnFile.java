@@ -42,6 +42,7 @@ public class SourcePawnFile extends PawnFile {
 	private final static byte IDENT_VARARGS = 11;
 
 	private final static byte DIMEN_MAX = 4;
+	private final static byte SP_MAX_EXEC_PARAMS = 32;
 
 	public enum Compression {
 		None, Gzip
@@ -381,23 +382,17 @@ public class SourcePawnFile extends PawnFile {
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
 
-			// Maybe the .dbg.symbols section was inserted before this one?
-			// Merge the lists.
-			LinkedList<Function> functions = new LinkedList<Function>();
-
 			int numPublics = sc.size / 8;
 			publics_ = new Public[numPublics];
+			functions_ = new Function[numPublics];
 			for (int i = 0; i < numPublics; i++) {
 				long address = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
 				String name = ReadString(binary, sections_.get(".names").dataoffs + (int) nameOffset);
 				publics_[i] = new Public(name, address);
 
-				Function f = new Function(address, address, code().bytes().length + 1, name);
-				functions.add(f);
+				functions_[i] = new Function(address, address, code().bytes().length + 1, name);
 			}
-			// Add the public functions to the list right away.
-			functions_ = functions.toArray(new Function[0]);
 			br.close();
 		}
 
@@ -533,14 +528,23 @@ public class SourcePawnFile extends PawnFile {
 					name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
 
 				// Someone tampered with the .dbg.symbols table :(
-				if (addr == 0 || codeend == 0 || codestart > codeend || tagid < 0 || ident < 0 || vclassByte < 0
+				if (addr == 0 || codeend == 0 || tagid < 0 || ident < 0 || vclassByte < 0
 						|| vclassByte >= Scope.values().length || dimcount < 0 || dimcount > DIMEN_MAX
 						|| nameOffset >= debugStringsSection.size) {
-					continue;
+					System.err.printf(
+							"// Error reading .dbg.symbols section. Symbol %d has invalid properties.%n",
+							i);
+					break;
 				}
 
 				if (ident == IDENT_FUNCTION) {
 					Tag tag = tagid >= tags_.length ? null : tags_[tagid];
+					if (addr != codestart) {
+						System.err.printf(
+								"// Error reading .dbg.symbols section. Function %d (%s) has mismatching address and codestart properties (%x != %x).%n",
+								i, name, addr, codestart);
+						break;
+					}
 
 					// Been in .publics as well?
 					Function func = new Function((long) addr, codestart, codeend, name, tag);
@@ -548,7 +552,7 @@ public class SourcePawnFile extends PawnFile {
 						findDuplicateFunction(name, func, functions);
 					} catch (Exception e) {
 						System.err.println(e.getMessage());
-						continue;
+						break;
 					}
 
 					functions.add(func);
@@ -560,9 +564,9 @@ public class SourcePawnFile extends PawnFile {
 						for (int dim = 0; dim < dimcount; dim++) {
 							if (debugUnpacked_)
 								br.skip(2);
-							short dim_tagid = br.ReadInt16();
+							int dim_tagid = br.ReadUInt16();
 
-							Tag dim_tag = dim_tagid < 0 || dim_tagid >= tags_.length ? null : tags_[dim_tagid];
+							Tag dim_tag = dim_tagid >= tags_.length ? null : tags_[dim_tagid];
 							long size = br.ReadUInt32();
 
 							dims[dim] = new Dimension(dim_tagid, dim_tag, (int) size);
@@ -585,9 +589,9 @@ public class SourcePawnFile extends PawnFile {
 						if (existingGlobal != null) {
 							if (existingGlobal.address() != addr) {
 								System.err.printf(
-										"// Duplicate information for symbol \"%s\" with different addresses. Keeping the existing at %x.%n",
-										name, existingGlobal.address());
-								continue;
+										"// Error reading .dbg.symbols section. Duplicate information for symbol \"%s\" with differing address %x from already known address %x.%n",
+										name, addr, existingGlobal.address());
+								break;
 							}
 							// Remove the old one from the list as this might have more info.
 							globals.remove(existingGlobal);
@@ -673,21 +677,43 @@ public class SourcePawnFile extends PawnFile {
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
 			long nentries = br.ReadUInt32();
-			for (int i = 0; i < (int) nentries; i++) {
+			nativeLoop: for (int i = 0; i < (int) nentries; i++) {
 				long index = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
-				String name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
-				short tagid = br.ReadInt16();
-				Tag tag = tagid >= tags_.length ? null : tags_[tagid];
+				String name = "";
+				if (debugStringsSection.size > nameOffset)
+					name = ReadString(binary, debugStringsSection.dataoffs + (int) nameOffset);
+				int tagid = br.ReadInt16();
 				int nargs = br.ReadInt16();
-
+				
+				// Someone tampered with this section. Skip it.
+				if (tagid < 0 || nargs < 0 || nargs > SP_MAX_EXEC_PARAMS
+						|| nameOffset >= debugStringsSection.size) {
+					System.err.printf(
+							"// Error reading .dbg.natives section. Entry %d has invalid properties.\n",
+							i);
+					break;
+				}
+				
+				Tag tag = tagid >= tags_.length ? null : tags_[tagid];
 				Argument[] args = new Argument[nargs];
 				for (int arg = 0; arg < nargs; arg++) {
 					byte ident = br.readByte();
 					int arg_tagid = br.ReadInt16();
-					int dimcount = br.ReadInt16();
+					short dimcount = br.ReadInt16();
 					long argNameOffset = br.ReadUInt32();
-					String argName = ReadString(binary, debugStringsSection.dataoffs + (int) argNameOffset);
+					String argName = "";
+					if (debugStringsSection.size > argNameOffset)
+						argName = ReadString(binary, debugStringsSection.dataoffs + (int) argNameOffset);
+					
+					if (arg_tagid < 0 || ident < 0 || dimcount < 0 || dimcount > DIMEN_MAX
+							|| argNameOffset >= debugStringsSection.size) {
+						System.err.printf(
+								"// Error reading .dbg.natives section. Argument %d of entry %d has invalid properties.\n",
+								arg, i);
+						break nativeLoop;
+					}
+					
 					Tag argTag = arg_tagid >= tags_.length ? null : tags_[arg_tagid];
 					VariableType type = FromIdent(ident);
 
@@ -695,7 +721,7 @@ public class SourcePawnFile extends PawnFile {
 					if (dimcount > 0) {
 						dims = new Dimension[dimcount];
 						for (int dim = 0; dim < dimcount; dim++) {
-							short dim_tagid = br.ReadInt16();
+							int dim_tagid = br.ReadUInt16();
 							Tag dim_tag = dim_tagid >= tags_.length ? null : tags_[dim_tagid];
 							long size = br.ReadUInt32();
 							dims[dim] = new Dimension(dim_tagid, dim_tag, (int) size);
@@ -709,10 +735,12 @@ public class SourcePawnFile extends PawnFile {
 					continue;
 
 				if (!natives_[(int) index].name().equals("@") && name != null
-						&& !name.equals(natives_[(int) index].name()))
+						&& !name.equals(natives_[(int) index].name())) {
 					System.err.printf(
 							"// Error reading .dbg.natives section. Native %d has different names. (\"%s\" != \"%s\")\n",
 							index, natives_[(int) index].name(), name);
+					break;
+				}
 
 				natives_[(int) index].setDebugInfo(tagid, tag, args);
 			}

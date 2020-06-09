@@ -1,9 +1,3 @@
-
-/* ERROR PREPROCESSING! null */
- function "Command_encrypt" (number 2)
-
-/* ERROR PREPROCESSING! null */
- function "Command_decrypt" (number 3)
 public PlVers:__version =
 {
 	version = 5,

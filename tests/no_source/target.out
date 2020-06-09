@@ -1,6 +1,3 @@
-
-/* ERROR PREPROCESSING! null */
- function "EventWeaponFire" (number 42)
 public PlVers:__version =
 {
 	version = 5,

@@ -1,6 +1,3 @@
-
-/* ERROR PREPROCESSING! null */
- function "Timer_SmokeCheck" (number 215)
 public PlVers:__version =
 {
 	version = 5,

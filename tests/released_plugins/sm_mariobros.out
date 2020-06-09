@@ -1,9 +1,3 @@
-
-/* ERROR PREPROCESSING! null */
- function "SpawnFixedPowerUps" (number 72)
-
-/* ERROR PREPROCESSING! null */
- function "t_ShufflePowers" (number 76)
 public PlVers:__version =
 {
 	version = 5,
