@@ -87,7 +87,7 @@ public class AMXModXFile extends PawnFile {
 		public short automatons; /* number of entries in the "automaton" table */
 		public short states; /* number of entries in the "state" table */
 
-		public final static int SIZE = 4 + 2 + (1 * 2) + (4 * 7);
+		public final static int SIZE = 4 + 2 + (1 * 2) + (2 * 7);
 	}
 
 	private Variable[] allvars_;
