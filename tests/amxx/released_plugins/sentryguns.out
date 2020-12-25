@@ -1,15 +1,6 @@
-new PLUGINNAME[12] =
-{
-	83, 101, 110, 116, 114, 121, 32, 103, 117, 110, 115, 0
-};
-new VERSION[13] =
-{
-	48, 46, 53, 46, 52, 32, 98, 101, 116, 97, 32, 52, 0
-};
-new AUTHOR[5] =
-{
-	74, 71, 72, 71, 0
-};
+new String:PLUGINNAME[48] = "Sentry guns";
+new String:VERSION[52] = "0.5.4 beta 4";
+new String:AUTHOR[20] = "JGHG";
 new g_SENTRYFRAGREWARDS[3] =
 {
 	300, 150, 150

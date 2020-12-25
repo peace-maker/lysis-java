@@ -527,7 +527,7 @@ public class AMXModXFile extends PawnFile {
 	private Tag findTag(long tag_id, Variable var) {
 		Tag tag = findTag(tag_id);
 
-		if ("_".equals(tag.name()))
+		if (!"_".equals(tag.name()))
 			return tag;
 
 		Tag maybe = findTagString(var);
@@ -547,28 +547,36 @@ public class AMXModXFile extends PawnFile {
 		if (var.dims().length == 1 && (var.type() == VariableType.ArrayReference || var.type() == VariableType.Array
 				|| var.type() == VariableType.Reference)) {
 
+			// Find length of the variable.
+			boolean isPastVar = false;
 			long size = 0;
-			for (int i = 0; i < allvars_.length - 1; i++) {
-				if (allvars_[i] != var)
+			for (int i = 0; i < allvars_.length; i++) {
+				if (allvars_[i] == var) {
+					isPastVar = true;
 					continue;
-
-				size = allvars_[i + 1].address() - var.address();
+				}
+				
+				// Find the next global/static variable
+				if (isPastVar && allvars_[i].scope() != Scope.Local) {
+					size = allvars_[i].address() - var.address();
+					break;
+				}
 			}
 
 			// last string not detected
 			if (size <= 0)
 				return null;
 
-			int end = (int) (var.address() + size - 1);
+			int end = (int) (var.address() + size - 4);
 
-			if (DAT()[end] != 0)
+			if (BitConverter.ToInt32(DAT(), end) != 0)
 				return null;
 
 			// See if it contains only valid characters.
 			int addr = (int) var.address();
-			for (; addr < DAT().length && addr < end && DAT()[addr] != 0; addr += 4) {
+			for (; addr < DAT().length && addr < end; addr += 4) {
 				int cell = BitConverter.ToInt32(DAT(), addr);
-				if (!Character.isValidCodePoint(cell))
+				if (cell == 0 || !Character.isValidCodePoint(cell))
 					return null;
 			}
 
@@ -588,7 +596,7 @@ public class AMXModXFile extends PawnFile {
 			return false;
 
 		// See if we're in the middle of a string.
-		// Don't allow addressing of strings other than the from the beginning.
+		// Don't allow addressing of strings other than from the beginning.
 		// Better to miss some strings than to have too many false positives.
 		if (address >= 4) {
 			int cell = BitConverter.ToInt32(DAT(), (int) (address - 4));

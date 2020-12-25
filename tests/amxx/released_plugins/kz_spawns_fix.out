@@ -1,5 +1,5 @@
 new MaxClients;
-new NULL_STRING[1];
+new String:NULL_STRING[4];
 new Float:NULL_VECTOR[3];
 new Array:gSpawnPoints;
 public plugin_init()

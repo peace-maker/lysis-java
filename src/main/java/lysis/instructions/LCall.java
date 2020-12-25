@@ -22,7 +22,7 @@ public class LCall extends LInstruction {
 
 	@Override
 	public void print(DataOutputStream tw) throws IOException, Exception {
-		tw.writeBytes("call");
+		tw.writeBytes(String.format("call 0x%x", address_));
 	}
 
 }

@@ -1,15 +1,6 @@
-new pluginName[22] =
-{
-	83, 101, 114, 118, 101, 114, 32, 67, 118, 97, 114, 115, 32, 85, 110, 108, 111, 99, 107, 101, 114, 0
-};
-new pluginVersion[6] =
-{
-	49, 46, 48, 46, 49, 0
-};
-new pluginAuhtor[9] =
-{
-	65, 114, 107, 115, 104, 105, 110, 101, 0
-};
+new String:pluginName[88] = "Server Cvars Unlocker";
+new String:pluginVersion[24] = "1.0.1";
+new String:pluginAuhtor[36] = "Arkshine";
 new OrpheuHook:handleHookReadMultiplayCvars;
 new OrpheuHook:handleHookCVarSetFloat;
 new currentPluginState;

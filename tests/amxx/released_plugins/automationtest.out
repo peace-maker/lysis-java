@@ -1,5 +1,5 @@
 new MaxClients;
-new NULL_STRING[1];
+new String:NULL_STRING[4];
 new Float:NULL_VECTOR[3];
 new HamHook:HamHookSpawn;
 new g_statevar_0; // Internal state variable for default automation
