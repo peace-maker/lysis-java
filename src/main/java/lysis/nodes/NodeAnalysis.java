@@ -441,7 +441,7 @@ public class NodeAnalysis {
 
 				if (node.type() == NodeType.MemCopy) {
 					DMemCopy mcpy = (DMemCopy) node;
-					// This is a multidimensional array copied to an array
+					// This is a slice of a multidimensional array copied to an array
 					// new arr1[2][10], arr2[10];
 					// arr2 = arr1[0];
 					if (mcpy.from().type() == NodeType.Load && mcpy.to().type() == NodeType.DeclareLocal) {
@@ -459,6 +459,14 @@ public class NodeAnalysis {
 						DArrayRef arrayref = (DArrayRef) mcpy.from();
 						DLoad load = (DLoad) mcpy.to();
 						DStore store = new DStore(load, arrayref);
+						block.nodes().insertAfter(node, store);
+					// This is an array copied to a slice of a multidimensional array.
+					// new arr1[10], arr2[1][10];
+					// arr2[0] = arr1;
+					} else if (mcpy.from().type() == NodeType.DeclareLocal && mcpy.to().type() == NodeType.ArrayRef) {
+						DDeclareLocal local = (DDeclareLocal) mcpy.from();
+						DArrayRef arrayref = (DArrayRef) mcpy.to();
+						DStore store = new DStore(local, arrayref);
 						block.nodes().insertAfter(node, store);
 					// Copy one local array into another local array.
 					// new arr1[64], arr2[64];

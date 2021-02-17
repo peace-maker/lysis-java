@@ -1,0 +1,3093 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.3",
+	date = "01/31/2021",
+	time = "12:30:03"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+new String:SOCKET_URL[1][48] =
+{
+	"localhost"
+};
+new String:SOCKET_HOME[1][16] =
+{
+	"/tf"
+};
+public Plugin:myinfo =
+{
+	name = "Efekt Manager",
+	description = "",
+	author = "Cypis",
+	version = "0.0.1",
+	url = "http://steamcommunity.com/id/cypiss/"
+};
+new gServerData[52];
+new gPlayerData[66][69];
+new gEfekty;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+new Handle:hSDKSchema;
+new Handle:hSDKSetRuntimeValue;
+new Handle:hSDKRemoveAttribute;
+new Handle:hSDKGetAttributeDef;
+public Extension:__ext_smsock =
+{
+	name = "Socket",
+	file = "socket.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_regex =
+{
+	name = "Regex Extension",
+	file = "regex.ext",
+	autoload = 1,
+	required = 1,
+};
+new bool:CSkipList[66] =
+{
+	0, 4, 13421772, 5077314, 16728128, 1635151433, 543451500, 1701407843, 1763734638, 2019910766, 6890784, 1701407811, 622883950, 1936269417, 1953459744, 544106784, 1701667175, 0, 7546113, 1417240915, 846493797, 0, 6582116, 3, 4, 909124871, 88, 3, 29477, 1417240915, 846493797, 0, 1433691463, 1299342707, 1634956133, 2035574119, 25968, 1601465957, 7890025, 1952540771, 0, 1600615277, 1701667182, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1634886000, 29549, 0, 1717920891, 1953264993, 125, 1, 1717920891, 1953264993, 125, 0, 1634038907, 1819239277
+};
+new Handle:CTrie;
+new CTeamColors[1][3] =
+{
+	{
+		13421772, 5077314, 16728128
+	}
+};
+new ___const_SHA1K[4] =
+{
+	1518500249, 1859775393, -1894007588, -899497514
+};
+new index_socket;
+public Extension:__ext_tf2 =
+{
+	name = "TF2 Tools",
+	file = "game.tf2.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_tf2items =
+{
+	name = "TF2Items",
+	file = "tf2items.ext.2.ep2v",
+	autoload = 0,
+	required = 1,
+};
+new String:TFResourceNames[18][];
+new attributs_index[3] =
+{
+	134, 142, 261
+};
+new attributs_ks_index[3] =
+{
+	2013, 2014, 2025
+};
+new String:NazwyPostaci[10][] =
+{
+	"All",
+	"Skaut",
+	"Snajper",
+	"Żołnierz",
+	"Demoman",
+	"Medyk",
+	"Gruby",
+	"Pyro",
+	"Szpieg",
+	"Inżynier"
+};
+new Handle:hTrieSocket;
+new bool:update;
+new ktory_plik;
+new String:szUpdatePliki[2][64] =
+{
+	"hats_info_pl.txt",
+	"efekt_info.txt"
+};
+new gSMCdata[6];
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+CharToLower(chr)
+{
+	if (IsCharUpper(chr))
+	{
+		return chr | 32;
+	}
+	return chr;
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+bool:WriteFileCell(Handle:hndl, data, size)
+{
+	new array[1];
+	array[0] = data;
+	return WriteFile(hndl, array, 1, size);
+}
+
+Handle:StartMessageOne(String:msgname[], client, flags)
+{
+	new players[1];
+	players[0] = client;
+	return StartMessage(msgname, players, 1, flags);
+}
+
+ByteCountToCells(size)
+{
+	if (!size)
+	{
+		return 1;
+	}
+	return size + 3 / 4;
+}
+
+GetEntSendPropOffs(ent, String:prop[], bool:actual)
+{
+	decl String:cls[64];
+	if (!GetEntityNetClass(ent, cls, 64))
+	{
+		return -1;
+	}
+	if (actual)
+	{
+		return FindSendPropInfo(cls, prop, 0, 0, 0);
+	}
+	return FindSendPropOffs(cls, prop);
+}
+
+public OnPluginStart_Attributes()
+{
+	new Handle:hGameConf = LoadGameConfigFile("tf2.attributes");
+	if (!hGameConf)
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 64, false, false);
+		SetFailState("Could not locate gamedata file tf2.attributes.txt for TF2Attributes, pausing plugin");
+	}
+	StartPrepSDKCall(SDKCallType:0);
+	PrepSDKCall_SetFromConf(hGameConf, SDKFuncConfSource:1, "GEconItemSchema");
+	PrepSDKCall_SetReturnInfo(SDKType:4, SDKPassMethod:1, 0, 0);
+	hSDKSchema = EndPrepSDKCall();
+	if (!hSDKSchema)
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 64, false, false);
+		SetFailState("Could not initialize call to GEconItemSchema");
+	}
+	StartPrepSDKCall(SDKCallType:5);
+	PrepSDKCall_SetFromConf(hGameConf, SDKFuncConfSource:1, "CEconItemSchema::GetAttributeDefinition");
+	PrepSDKCall_AddParameter(SDKType:4, SDKPassMethod:1, 0, 0);
+	PrepSDKCall_SetReturnInfo(SDKType:4, SDKPassMethod:1, 0, 0);
+	hSDKGetAttributeDef = EndPrepSDKCall();
+	if (!hSDKGetAttributeDef)
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 64, false, false);
+		SetFailState("Could not initialize call to CEconItemSchema::GetAttributeDefinition");
+	}
+	StartPrepSDKCall(SDKCallType:5);
+	PrepSDKCall_SetFromConf(hGameConf, SDKFuncConfSource:1, "CAttributeList::RemoveAttribute");
+	PrepSDKCall_AddParameter(SDKType:4, SDKPassMethod:1, 0, 0);
+	PrepSDKCall_SetReturnInfo(SDKType:4, SDKPassMethod:1, 0, 0);
+	hSDKRemoveAttribute = EndPrepSDKCall();
+	if (!hSDKRemoveAttribute)
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 64, false, false);
+		SetFailState("Could not initialize call to CAttributeList::RemoveAttribute");
+	}
+	StartPrepSDKCall(SDKCallType:5);
+	PrepSDKCall_SetFromConf(hGameConf, SDKFuncConfSource:1, "CAttributeList::SetRuntimeAttributeValue");
+	PrepSDKCall_AddParameter(SDKType:4, SDKPassMethod:1, 0, 0);
+	PrepSDKCall_AddParameter(SDKType:5, SDKPassMethod:1, 0, 0);
+	PrepSDKCall_SetReturnInfo(SDKType:4, SDKPassMethod:1, 0, 0);
+	hSDKSetRuntimeValue = EndPrepSDKCall();
+	if (!hSDKSetRuntimeValue)
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 64, false, false);
+		SetFailState("Could not initialize call to CAttributeList::SetRuntimeAttributeValue");
+	}
+	return 0;
+}
+
+public TF2Attrib_SetByDefIndex(entity, iAttrib, Float:flVal)
+{
+	if (!IsValidEntity(entity))
+	{
+		return ThrowNativeError(23, "TF2Attrib_SetByDefIndex: Invalid entity index %d passed", entity);
+	}
+	new offs = GetEntSendPropOffs(entity, "m_AttributeList", true);
+	if (0 >= offs)
+	{
+		return 0;
+	}
+	new Address:pEntity = GetEntityAddress(entity);
+	if (pEntity)
+	{
+		new Address:pSchema = SDKCall(hSDKSchema);
+		if (pSchema)
+		{
+			new Address:pAttribDef = SDKCall(hSDKGetAttributeDef, pSchema, iAttrib);
+			if (pAttribDef < Address:65536)
+			{
+				return ThrowNativeError(23, "TF2Attrib_SetByDefIndex: Attribute %d not valid", iAttrib);
+			}
+			decl bool:bSuccess;
+			bSuccess = !!SDKCall(hSDKSetRuntimeValue, offs + pEntity, pAttribDef, flVal);
+			return bSuccess;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public TF2Attrib_RemoveByDefIndex(entity, iAttrib)
+{
+	if (!IsValidEntity(entity))
+	{
+		ThrowNativeError(23, "TF2Attrib_RemoveByDefIndex: Invalid entity index %d passed", entity);
+		return 0;
+	}
+	new offs = GetEntSendPropOffs(entity, "m_AttributeList", true);
+	if (0 >= offs)
+	{
+		return 0;
+	}
+	new Address:pEntity = GetEntityAddress(entity);
+	if (pEntity)
+	{
+		if (pEntity)
+		{
+			new Address:pSchema = SDKCall(hSDKSchema);
+			if (pSchema)
+			{
+				new Address:pAttribDef = SDKCall(hSDKGetAttributeDef, pSchema, iAttrib);
+				if (pAttribDef < Address:65536)
+				{
+					return ThrowNativeError(23, "TF2Attrib_RemoveByDefIndex: Attribute %d not valid", iAttrib);
+				}
+				SDKCall(hSDKRemoveAttribute, offs + pEntity, pAttribDef);
+				return 1;
+			}
+			return 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+CPrintToChat(client, String:message[])
+{
+	CCheckTrie();
+	new var1;
+	if (client <= 0 || client > MaxClients)
+	{
+		ThrowError("Invalid client index %i", client);
+	}
+	if (!IsClientInGame(client))
+	{
+		ThrowError("Client %i is not in game", client);
+	}
+	decl String:buffer[1024];
+	decl String:buffer2[1024];
+	SetGlobalTransTarget(client);
+	Format(buffer, 1024, "\x01%s", message);
+	VFormat(buffer2, 1024, buffer, 3);
+	CReplaceColorCodes(buffer2, 0, false, 1024);
+	CSendMessage(client, buffer2, 0);
+	return 0;
+}
+
+CSendMessage(client, String:message[], author)
+{
+	if (!author)
+	{
+		author = client;
+	}
+	decl String:buffer[256];
+	decl String:game[16];
+	GetGameFolderName(game, 16);
+	strcopy(buffer, 256, message);
+	new UserMsg:index = GetUserMessageId("SayText2");
+	if (index == UserMsg:-1)
+	{
+		if (StrEqual(game, "dod", true))
+		{
+			new team = GetClientTeam(author);
+			if (team)
+			{
+				decl String:temp[16];
+				new var2 = CTeamColors;
+				Format(temp, 16, "\x07%06X", var2[0][var2][team + -1]);
+				ReplaceString(buffer, 256, "\x03", temp, false);
+			}
+			else
+			{
+				ReplaceString(buffer, 256, "\x03", "\x04", false);
+			}
+		}
+		PrintToChat(client, "%s", buffer);
+		return 0;
+	}
+	new Handle:buf = StartMessageOne("SayText2", client, 132);
+	new var1;
+	if (GetFeatureStatus(FeatureType:0, "GetUserMessageType") && GetUserMessageType() == 1)
+	{
+		PbSetInt(buf, "ent_idx", author, -1);
+		PbSetBool(buf, "chat", true, -1);
+		PbSetString(buf, "msg_name", buffer, -1);
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+		PbAddString(buf, "params", "");
+	}
+	else
+	{
+		BfWriteByte(buf, author);
+		BfWriteByte(buf, 1);
+		BfWriteString(buf, buffer);
+	}
+	EndMessage();
+	return 0;
+}
+
+CCheckTrie()
+{
+	if (!CSkipList[0])
+	{
+		CSkipList[0] = InitColorTrie();
+	}
+	return 0;
+}
+
+CReplaceColorCodes(String:buffer[], author, bool:removeTags, maxlen)
+{
+	CCheckTrie();
+	if (!removeTags)
+	{
+		ReplaceString(buffer, maxlen, "{default}", "\x01", false);
+	}
+	else
+	{
+		ReplaceString(buffer, maxlen, "{default}", "", false);
+		ReplaceString(buffer, maxlen, "{teamcolor}", "", false);
+	}
+	new var1;
+	if (author && !removeTags)
+	{
+		new var2;
+		if (author < 0 || author > MaxClients)
+		{
+			ThrowError("Invalid client index %i", author);
+		}
+		if (!IsClientInGame(author))
+		{
+			ThrowError("Client %i is not in game", author);
+		}
+		ReplaceString(buffer, maxlen, "{teamcolor}", "\x03", false);
+	}
+	new cursor;
+	new value;
+	decl String:tag[32];
+	decl String:buff[32];
+	decl output[maxlen];
+	strcopy(output, maxlen, buffer);
+	new Handle:regex = CompileRegex("{[a-zA-Z0-9]+}", 0, "", 0, 0);
+	new i;
+	while (i < 1000)
+	{
+		if (MatchRegex(regex, buffer[cursor], 0) < 1)
+		{
+			CloseHandle(regex);
+			strcopy(buffer, maxlen, output);
+			return 0;
+		}
+		GetRegexSubString(regex, 0, tag, 32);
+		CStrToLower(tag);
+		cursor = StrContains(buffer[cursor], tag, false) + cursor + 1;
+		strcopy(buff, 32, tag);
+		ReplaceString(buff, 32, "{", "", true);
+		ReplaceString(buff, 32, "}", "", true);
+		if (GetTrieValue(CSkipList[0], buff, value))
+		{
+			if (removeTags)
+			{
+				ReplaceString(output, maxlen, tag, "", false);
+			}
+			else
+			{
+				Format(buff, 32, "\x07%06X", value);
+				ReplaceString(output, maxlen, tag, buff, false);
+			}
+		}
+		i++;
+	}
+	LogError("[MORE COLORS] Infinite loop broken.");
+	return 0;
+}
+
+CStrToLower(String:buffer[])
+{
+	new len = strlen(buffer);
+	new i;
+	while (i < len)
+	{
+		buffer[i] = CharToLower(buffer[i]);
+		i++;
+	}
+	return 0;
+}
+
+Handle:InitColorTrie()
+{
+	new Handle:hTrie = CreateTrie();
+	SetTrieValue(hTrie, "aliceblue", any:15792383, true);
+	SetTrieValue(hTrie, "allies", any:5077314, true);
+	SetTrieValue(hTrie, "ancient", any:15420235, true);
+	SetTrieValue(hTrie, "antiquewhite", any:16444375, true);
+	SetTrieValue(hTrie, "aqua", any:65535, true);
+	SetTrieValue(hTrie, "aquamarine", any:8388564, true);
+	SetTrieValue(hTrie, "arcana", any:11396444, true);
+	SetTrieValue(hTrie, "axis", any:16728128, true);
+	SetTrieValue(hTrie, "azure", any:32767, true);
+	SetTrieValue(hTrie, "beige", any:16119260, true);
+	SetTrieValue(hTrie, "bisque", any:16770244, true);
+	SetTrieValue(hTrie, "black", any:0, true);
+	SetTrieValue(hTrie, "blanchedalmond", any:16772045, true);
+	SetTrieValue(hTrie, "blue", any:10079487, true);
+	SetTrieValue(hTrie, "blueviolet", any:9055202, true);
+	SetTrieValue(hTrie, "brown", any:10824234, true);
+	SetTrieValue(hTrie, "burlywood", any:14596231, true);
+	SetTrieValue(hTrie, "cadetblue", any:6266528, true);
+	SetTrieValue(hTrie, "chartreuse", any:8388352, true);
+	SetTrieValue(hTrie, "chocolate", any:13789470, true);
+	SetTrieValue(hTrie, "collectors", any:11141120, true);
+	SetTrieValue(hTrie, "common", any:11584473, true);
+	SetTrieValue(hTrie, "community", any:7385162, true);
+	SetTrieValue(hTrie, "coral", any:16744272, true);
+	SetTrieValue(hTrie, "cornflowerblue", any:6591981, true);
+	SetTrieValue(hTrie, "cornsilk", any:16775388, true);
+	SetTrieValue(hTrie, "corrupted", any:10693678, true);
+	SetTrieValue(hTrie, "crimson", any:14423100, true);
+	SetTrieValue(hTrie, "cyan", any:65535, true);
+	SetTrieValue(hTrie, "darkblue", any:139, true);
+	SetTrieValue(hTrie, "darkcyan", any:35723, true);
+	SetTrieValue(hTrie, "darkgoldenrod", any:12092939, true);
+	SetTrieValue(hTrie, "darkgray", any:11119017, true);
+	SetTrieValue(hTrie, "darkgrey", any:11119017, true);
+	SetTrieValue(hTrie, "darkgreen", any:25600, true);
+	SetTrieValue(hTrie, "darkkhaki", any:12433259, true);
+	SetTrieValue(hTrie, "darkmagenta", any:9109643, true);
+	SetTrieValue(hTrie, "darkolivegreen", any:5597999, true);
+	SetTrieValue(hTrie, "darkorange", any:16747520, true);
+	SetTrieValue(hTrie, "darkorchid", any:10040012, true);
+	SetTrieValue(hTrie, "darkred", any:9109504, true);
+	SetTrieValue(hTrie, "darksalmon", any:15308410, true);
+	SetTrieValue(hTrie, "darkseagreen", any:9419919, true);
+	SetTrieValue(hTrie, "darkslateblue", any:4734347, true);
+	SetTrieValue(hTrie, "darkslategray", any:3100495, true);
+	SetTrieValue(hTrie, "darkslategrey", any:3100495, true);
+	SetTrieValue(hTrie, "darkturquoise", any:52945, true);
+	SetTrieValue(hTrie, "darkviolet", any:9699539, true);
+	SetTrieValue(hTrie, "deeppink", any:16716947, true);
+	SetTrieValue(hTrie, "deepskyblue", any:49151, true);
+	SetTrieValue(hTrie, "dimgray", any:6908265, true);
+	SetTrieValue(hTrie, "dimgrey", any:6908265, true);
+	SetTrieValue(hTrie, "dodgerblue", any:2003199, true);
+	SetTrieValue(hTrie, "exalted", any:13421773, true);
+	SetTrieValue(hTrie, "firebrick", any:11674146, true);
+	SetTrieValue(hTrie, "floralwhite", any:16775920, true);
+	SetTrieValue(hTrie, "forestgreen", any:2263842, true);
+	SetTrieValue(hTrie, "frozen", any:4817843, true);
+	SetTrieValue(hTrie, "fuchsia", any:16711935, true);
+	SetTrieValue(hTrie, "fullblue", any:255, true);
+	SetTrieValue(hTrie, "fullred", any:16711680, true);
+	SetTrieValue(hTrie, "gainsboro", any:14474460, true);
+	SetTrieValue(hTrie, "genuine", any:5076053, true);
+	SetTrieValue(hTrie, "ghostwhite", any:16316671, true);
+	SetTrieValue(hTrie, "gold", any:16766720, true);
+	SetTrieValue(hTrie, "goldenrod", any:14329120, true);
+	SetTrieValue(hTrie, "gray", any:13421772, true);
+	SetTrieValue(hTrie, "grey", any:13421772, true);
+	SetTrieValue(hTrie, "green", any:4128574, true);
+	SetTrieValue(hTrie, "greenyellow", any:11403055, true);
+	SetTrieValue(hTrie, "haunted", any:3732395, true);
+	SetTrieValue(hTrie, "honeydew", any:15794160, true);
+	SetTrieValue(hTrie, "hotpink", any:16738740, true);
+	SetTrieValue(hTrie, "immortal", any:14986803, true);
+	SetTrieValue(hTrie, "indianred", any:13458524, true);
+	SetTrieValue(hTrie, "indigo", any:4915330, true);
+	SetTrieValue(hTrie, "ivory", any:16777200, true);
+	SetTrieValue(hTrie, "khaki", any:15787660, true);
+	SetTrieValue(hTrie, "lavender", any:15132410, true);
+	SetTrieValue(hTrie, "lavenderblush", any:16773365, true);
+	SetTrieValue(hTrie, "lawngreen", any:8190976, true);
+	SetTrieValue(hTrie, "legendary", any:13839590, true);
+	SetTrieValue(hTrie, "lemonchiffon", any:16775885, true);
+	SetTrieValue(hTrie, "lightblue", any:11393254, true);
+	SetTrieValue(hTrie, "lightcoral", any:15761536, true);
+	SetTrieValue(hTrie, "lightcyan", any:14745599, true);
+	SetTrieValue(hTrie, "lightgoldenrodyellow", any:16448210, true);
+	SetTrieValue(hTrie, "lightgray", any:13882323, true);
+	SetTrieValue(hTrie, "lightgrey", any:13882323, true);
+	SetTrieValue(hTrie, "lightgreen", any:10092441, true);
+	SetTrieValue(hTrie, "lightpink", any:16758465, true);
+	SetTrieValue(hTrie, "lightsalmon", any:16752762, true);
+	SetTrieValue(hTrie, "lightseagreen", any:2142890, true);
+	SetTrieValue(hTrie, "lightskyblue", any:8900346, true);
+	SetTrieValue(hTrie, "lightslategray", any:7833753, true);
+	SetTrieValue(hTrie, "lightslategrey", any:7833753, true);
+	SetTrieValue(hTrie, "lightsteelblue", any:11584734, true);
+	SetTrieValue(hTrie, "lightyellow", any:16777184, true);
+	SetTrieValue(hTrie, "lime", any:65280, true);
+	SetTrieValue(hTrie, "limegreen", any:3329330, true);
+	SetTrieValue(hTrie, "linen", any:16445670, true);
+	SetTrieValue(hTrie, "magenta", any:16711935, true);
+	SetTrieValue(hTrie, "maroon", any:8388608, true);
+	SetTrieValue(hTrie, "mediumaquamarine", any:6737322, true);
+	SetTrieValue(hTrie, "mediumblue", any:205, true);
+	SetTrieValue(hTrie, "mediumorchid", any:12211667, true);
+	SetTrieValue(hTrie, "mediumpurple", any:9662680, true);
+	SetTrieValue(hTrie, "mediumseagreen", any:3978097, true);
+	SetTrieValue(hTrie, "mediumslateblue", any:8087790, true);
+	SetTrieValue(hTrie, "mediumspringgreen", any:64154, true);
+	SetTrieValue(hTrie, "mediumturquoise", any:4772300, true);
+	SetTrieValue(hTrie, "mediumvioletred", any:13047173, true);
+	SetTrieValue(hTrie, "midnightblue", any:1644912, true);
+	SetTrieValue(hTrie, "mintcream", any:16121850, true);
+	SetTrieValue(hTrie, "mistyrose", any:16770273, true);
+	SetTrieValue(hTrie, "moccasin", any:16770229, true);
+	SetTrieValue(hTrie, "mythical", any:8931327, true);
+	SetTrieValue(hTrie, "navajowhite", any:16768685, true);
+	SetTrieValue(hTrie, "navy", any:128, true);
+	SetTrieValue(hTrie, "normal", any:11711154, true);
+	SetTrieValue(hTrie, "oldlace", any:16643558, true);
+	SetTrieValue(hTrie, "olive", any:10404687, true);
+	SetTrieValue(hTrie, "olivedrab", any:7048739, true);
+	SetTrieValue(hTrie, "orange", any:16753920, true);
+	SetTrieValue(hTrie, "orangered", any:16729344, true);
+	SetTrieValue(hTrie, "orchid", any:14315734, true);
+	SetTrieValue(hTrie, "palegoldenrod", any:15657130, true);
+	SetTrieValue(hTrie, "palegreen", any:10025880, true);
+	SetTrieValue(hTrie, "paleturquoise", any:11529966, true);
+	SetTrieValue(hTrie, "palevioletred", any:14184595, true);
+	SetTrieValue(hTrie, "papayawhip", any:16773077, true);
+	SetTrieValue(hTrie, "peachpuff", any:16767673, true);
+	SetTrieValue(hTrie, "peru", any:13468991, true);
+	SetTrieValue(hTrie, "pink", any:16761035, true);
+	SetTrieValue(hTrie, "plum", any:14524637, true);
+	SetTrieValue(hTrie, "powderblue", any:11591910, true);
+	SetTrieValue(hTrie, "purple", any:8388736, true);
+	SetTrieValue(hTrie, "rare", any:4942335, true);
+	SetTrieValue(hTrie, "red", any:16728128, true);
+	SetTrieValue(hTrie, "rosybrown", any:12357519, true);
+	SetTrieValue(hTrie, "royalblue", any:4286945, true);
+	SetTrieValue(hTrie, "saddlebrown", any:9127187, true);
+	SetTrieValue(hTrie, "salmon", any:16416882, true);
+	SetTrieValue(hTrie, "sandybrown", any:16032864, true);
+	SetTrieValue(hTrie, "seagreen", any:3050327, true);
+	SetTrieValue(hTrie, "seashell", any:16774638, true);
+	SetTrieValue(hTrie, "selfmade", any:7385162, true);
+	SetTrieValue(hTrie, "sienna", any:10506797, true);
+	SetTrieValue(hTrie, "silver", any:12632256, true);
+	SetTrieValue(hTrie, "skyblue", any:8900331, true);
+	SetTrieValue(hTrie, "slateblue", any:6970061, true);
+	SetTrieValue(hTrie, "slategray", any:7372944, true);
+	SetTrieValue(hTrie, "slategrey", any:7372944, true);
+	SetTrieValue(hTrie, "snow", any:16775930, true);
+	SetTrieValue(hTrie, "springgreen", any:65407, true);
+	SetTrieValue(hTrie, "steelblue", any:4620980, true);
+	SetTrieValue(hTrie, "strange", any:13593138, true);
+	SetTrieValue(hTrie, "tan", any:13808780, true);
+	SetTrieValue(hTrie, "teal", any:32896, true);
+	SetTrieValue(hTrie, "thistle", any:14204888, true);
+	SetTrieValue(hTrie, "tomato", any:16737095, true);
+	SetTrieValue(hTrie, "turquoise", any:4251856, true);
+	SetTrieValue(hTrie, "uncommon", any:11584473, true);
+	SetTrieValue(hTrie, "unique", any:16766720, true);
+	SetTrieValue(hTrie, "unusual", any:8802476, true);
+	SetTrieValue(hTrie, "valve", any:10817401, true);
+	SetTrieValue(hTrie, "vintage", any:4678289, true);
+	SetTrieValue(hTrie, "violet", any:15631086, true);
+	SetTrieValue(hTrie, "wheat", any:16113331, true);
+	SetTrieValue(hTrie, "white", any:16777215, true);
+	SetTrieValue(hTrie, "whitesmoke", any:16119285, true);
+	SetTrieValue(hTrie, "yellow", any:16776960, true);
+	SetTrieValue(hTrie, "yellowgreen", any:10145074, true);
+	return hTrie;
+}
+
+bool:SHA1String(String:str[], String:output[], bool:bHex)
+{
+	output[0] = MissingTAG:0;
+	new Context[74];
+	SHA1Reset(Context);
+	new len = strlen(str);
+	new msg[len];
+	new i;
+	while (i < len)
+	{
+		msg[i] = str[i];
+		i++;
+	}
+	SHA1Input(Context, msg, len);
+	if (!SHA1Result(Context))
+	{
+		return false;
+	}
+	SHA1Finalize(Context, output, bHex);
+	new a = output[1];
+	new b = output[3];
+	output[1] = b;
+	output[3] = a;
+	return true;
+}
+
+SHA1Reset(Context[74])
+{
+	Context[5] = 0;
+	Context[6] = 0;
+	Context[0] = 1732584193;
+	Context[1] = -271733879;
+	Context[2] = -1732584194;
+	Context[3] = 271733878;
+	Context[4] = -1009589776;
+	Context[71] = 0;
+	return 0;
+}
+
+SHA1Finalize(Context[74], String:output[], bool:bHex)
+{
+	if (bHex)
+	{
+		new i;
+		while (i < 5)
+		{
+			Format(output, 41, "%s%x", output, Context[i]);
+			i++;
+		}
+	}
+	else
+	{
+		new i;
+		new j;
+		while (j < 20)
+		{
+			output[j] = Context[i] >>> 24 & 255;
+			output[j + 1] = Context[i] >>> 16 & 255;
+			output[j + 2] = Context[i] >>> 8 & 255;
+			output[j + 3] = Context[i] & 255;
+			i++;
+			j += 4;
+		}
+	}
+	return 0;
+}
+
+SHA1Input(Context[74], message_array[], length)
+{
+	if (!length)
+	{
+		return 0;
+	}
+	new var1;
+	if (Context[72] || Context[73])
+	{
+		Context[73] = 1;
+		return 0;
+	}
+	new i;
+	while (length && !Context[73])
+	{
+		new var3 = Context[71];
+		var3++;
+		Context[7][var3] = message_array[i] & 255;
+		Context[5] += 8;
+		Context[5] &= -1;
+		if (!Context[5])
+		{
+			Context[6]++;
+			Context[6] &= -1;
+			if (!Context[6])
+			{
+				Context[73] = 1;
+			}
+		}
+		if (Context[71] == 64)
+		{
+			SHA1ProcessMessageBlock(Context);
+		}
+		i++;
+	}
+	return 0;
+}
+
+SHA1Result(Context[74])
+{
+	if (Context[73])
+	{
+		return 0;
+	}
+	if (!Context[72])
+	{
+		SHA1PadMessage(Context);
+		Context[72] = 1;
+	}
+	return 1;
+}
+
+SHA1ProcessMessageBlock(Context[74])
+{
+	new t;
+	new temp;
+	new W[80];
+	new A;
+	new B;
+	new C;
+	new D;
+	new E;
+	t = 0;
+	while (t < 16)
+	{
+		W[t] = Context[7][t * 4] << 24;
+		new var1 = W[t];
+		var1 = Context[7][t * 4 + 1] << 16 | var1;
+		new var2 = W[t];
+		var2 = Context[7][t * 4 + 2] << 8 | var2;
+		new var3 = W[t];
+		var3 = Context[7][t * 4 + 3] | var3;
+		t++;
+	}
+	t = 16;
+	while (t < 80)
+	{
+		W[t] = SHA1CircularShift(1, W[t + -16] ^ W[t + -14] ^ W[t + -8] ^ W[t + -3]);
+		t++;
+	}
+	A = Context[0];
+	B = Context[1];
+	C = Context[2];
+	D = Context[3];
+	E = Context[4];
+	t = 0;
+	while (t < 20)
+	{
+		temp = W[t][D & ~B | C & B + SHA1CircularShift(5, A) + E][___const_SHA1K[0]];
+		temp &= -1;
+		E = D;
+		D = C;
+		C = SHA1CircularShift(30, B);
+		B = A;
+		A = temp;
+		t++;
+	}
+	t = 20;
+	while (t < 40)
+	{
+		temp = W[t][D ^ C ^ B + SHA1CircularShift(5, A) + E][___const_SHA1K[1]];
+		temp &= -1;
+		E = D;
+		D = C;
+		C = SHA1CircularShift(30, B);
+		B = A;
+		A = temp;
+		t++;
+	}
+	t = 40;
+	while (t < 60)
+	{
+		temp = W[t][D & C | D & B | C & B + SHA1CircularShift(5, A) + E][___const_SHA1K[2]];
+		temp &= -1;
+		E = D;
+		D = C;
+		C = SHA1CircularShift(30, B);
+		B = A;
+		A = temp;
+		t++;
+	}
+	t = 60;
+	while (t < 80)
+	{
+		temp = W[t][D ^ C ^ B + SHA1CircularShift(5, A) + E][___const_SHA1K[3]];
+		temp &= -1;
+		E = D;
+		D = C;
+		C = SHA1CircularShift(30, B);
+		B = A;
+		A = temp;
+		t++;
+	}
+	Context[0] = Context[0] + A & -1;
+	Context[1] = Context[1] + B & -1;
+	Context[2] = Context[2] + C & -1;
+	Context[3] = Context[3] + D & -1;
+	Context[4] = Context[4] + E & -1;
+	Context[71] = 0;
+	return 0;
+}
+
+SHA1PadMessage(Context[74])
+{
+	if (Context[71] > 55)
+	{
+		new var1 = Context[71];
+		var1++;
+		Context[7][var1] = 128;
+		while (Context[71] < 64)
+		{
+			new var2 = Context[71];
+			var2++;
+			Context[7][var2] = 0;
+		}
+		SHA1ProcessMessageBlock(Context);
+		while (Context[71] < 56)
+		{
+			new var3 = Context[71];
+			var3++;
+			Context[7][var3] = 0;
+		}
+	}
+	else
+	{
+		new var4 = Context[71];
+		var4++;
+		Context[7][var4] = 128;
+		while (Context[71] < 56)
+		{
+			new var5 = Context[71];
+			var5++;
+			Context[7][var5] = 0;
+		}
+	}
+	Context[63] = Context[6] >>> 24 & 255;
+	Context[64] = Context[6] >>> 16 & 255;
+	Context[65] = Context[6] >>> 8 & 255;
+	Context[66] = Context[6] & 255;
+	Context[67] = Context[5] >>> 24 & 255;
+	Context[68] = Context[5] >>> 16 & 255;
+	Context[69] = Context[5] >>> 8 & 255;
+	Context[70] = Context[5] & 255;
+	SHA1ProcessMessageBlock(Context);
+	return 0;
+}
+
+SHA1CircularShift(bits, word)
+{
+	return word >> 32 - bits | word << bits;
+}
+
+public StworzSocket(client)
+{
+	if (gPlayerData[client][2])
+	{
+		CPrintToChat(client, "%t", "Waiting");
+		return 0;
+	}
+	gPlayerData[client][2] = 1;
+	decl String:requestStr[256];
+	Format(requestStr, 256, "GET %s/hats/?sid=%s&port=%i HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", SOCKET_HOME[index_socket], gPlayerData[client][5], 1132 + 8, SOCKET_URL[index_socket]);
+	new Handle:hPack = CreateDataPack();
+	new Handle:hArray = CreateArray(1, 0);
+	WritePackCell(hPack, client);
+	WritePackCell(hPack, hArray);
+	WritePackString(hPack, requestStr);
+	new Handle:socket = SocketCreate(SocketType:1, OnOneSocketError);
+	SocketSetArg(socket, hPack);
+	SocketConnect(socket, OnOneSocketConnected, OnOneSocketReceive, OnOneSocketDisconnected, SOCKET_URL[index_socket], 80);
+	return 0;
+}
+
+public OnOneSocketConnected(Handle:socket, any:hPack)
+{
+	ResetPack(hPack, false);
+	new client = ReadPackCell(hPack);
+	gPlayerData[client][2] = 1;
+	ReadPackCell(hPack);
+	new String:requestStr[256];
+	ReadPackString(hPack, requestStr, 256);
+	SocketSend(socket, requestStr, -1);
+	return 0;
+}
+
+public OnOneSocketReceive(Handle:socket, String:receiveData[], dataSize, any:hPack)
+{
+	ResetPack(hPack, false);
+	new client = ReadPackCell(hPack);
+	if (!gPlayerData[client][2])
+	{
+		return 0;
+	}
+	new idx = get_pointer_pos(receiveData);
+	if (!CorrectSteamApi(client, receiveData[idx], receiveData[idx + 1]))
+	{
+		return 0;
+	}
+	new Handle:hArray = ReadPackCell(hPack);
+	ArrayExplodeString(hArray, receiveData, dataSize, idx + 2, 32, true);
+	return 0;
+}
+
+ArrayExplodeString(Handle:array, String:data[], dataSize, dataStart, strip, bool:cell)
+{
+	static String:napis[32];
+	static num;
+	new idx = dataStart;
+	while (idx < dataSize)
+	{
+		new var1;
+		if (strip != data[idx] && num >= 31)
+		{
+			if (napis[0])
+			{
+				if (cell)
+				{
+					PushArrayCell(array, StringToInt(napis, 10));
+				}
+				PushArrayString(array, napis);
+			}
+			napis[0] = 0;
+			num = 0;
+		}
+		else
+		{
+			napis[num] = data[idx];
+			napis[num + 1] = 0;
+			num += 1;
+		}
+		idx++;
+	}
+	return 0;
+}
+
+public OnOneSocketDisconnected(Handle:socket, any:hPack)
+{
+	ResetPack(hPack, false);
+	new client = ReadPackCell(hPack);
+	gPlayerData[client][2] = 0;
+	CreateClientHats(client, ReadPackCell(hPack));
+	CloseHandle(hPack);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnOneSocketError(Handle:socket, errorType, errorNum, any:hPack)
+{
+	ResetPack(hPack, false);
+	new client = ReadPackCell(hPack);
+	gPlayerData[client][2] = 0;
+	ChangeToNextHost(errorType);
+	LogError("OnSocketError error %d (errno %d)", errorType, errorNum);
+	CloseHandle(hPack);
+	CloseHandle(socket);
+	return 0;
+}
+
+public CorrectSteamApi(client, num, przecinek)
+{
+	if (przecinek != 44)
+	{
+		return 1;
+	}
+	switch (num)
+	{
+		case 49:
+		{
+			CPrintToChat(client, "%t", "InfoSteamApi1");
+			return 1;
+		}
+		case 50:
+		{
+			CPrintToChat(client, "%t", "InfoSteamApi2");
+		}
+		case 51:
+		{
+			CPrintToChat(client, "%t", "InfoSteamApi3");
+		}
+		case 52:
+		{
+			CPrintToChat(client, "%t", "InfoSteamApi4");
+		}
+		case 73:
+		{
+			CPrintToChat(client, "Brak aktywnej licencji!");
+			SetFailState("Brak aktywnej licencji!");
+		}
+		default:
+		{
+			CPrintToChat(client, "%t", "InfoSteamApi5");
+		}
+	}
+	return 0;
+}
+
+public SendSocketOnce(client)
+{
+	new String:requestStr[256];
+	new String:szIP[20];
+	if (client)
+	{
+		GetClientIP(client, szIP, 17, true);
+	}
+	Format(requestStr, 256, "GET %s/colors/?sid=%s&port=%i&ip=%s HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", SOCKET_HOME[index_socket], gPlayerData[client][5], 1132 + 8, szIP, SOCKET_URL[index_socket]);
+	new Handle:hPack = CreateDataPack();
+	WritePackCell(hPack, client);
+	WritePackString(hPack, requestStr);
+	new Handle:socket = SocketCreate(SocketType:1, OnSendSocketError);
+	SocketSetArg(socket, hPack);
+	SocketConnect(socket, OnSendSocketConnected, OnSendSocketReceive, OnSendSocketDisconnected, SOCKET_URL[index_socket], 80);
+	return 0;
+}
+
+public OnSendSocketConnected(Handle:socket, any:hPack)
+{
+	new String:requestStr[256];
+	ResetPack(hPack, false);
+	ReadPackCell(hPack);
+	ReadPackString(hPack, requestStr, 256);
+	SocketSend(socket, requestStr, -1);
+	return 0;
+}
+
+public OnSendSocketReceive(Handle:socket, String:receiveData[], dataSize, any:hPack)
+{
+	ResetPack(hPack, false);
+	new idx = get_pointer_pos(receiveData);
+	new var1;
+	if (receiveData[idx] == 'I')
+	{
+		var1 = 2;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	gEfekty = var1;
+	new var2;
+	if (gEfekty && ReadPackCell(hPack))
+	{
+		return 0;
+	}
+	new String:str[84];
+	FormatEx(str, 82, "c17e7d02ef1bbd2f87d269143bfeef7983e33124%s", receiveData[idx]);
+	SHA1String(str, 1132 + 44, true);
+	return 0;
+}
+
+public OnSendSocketDisconnected(Handle:socket, any:hPack)
+{
+	CloseHandle(hPack);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSendSocketError(Handle:socket, errorType, errorNum, any:hPack)
+{
+	LogError("OnSendSocketError error %d (errno %d)", errorType, errorNum);
+	ChangeToNextHost(errorType);
+	CloseHandle(hPack);
+	CloseHandle(socket);
+	return 0;
+}
+
+public get_pointer_pos(String:szData[])
+{
+	new var1;
+	if (StrContains(szData, "<header>", true) == -1)
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = StrContains(szData, "<header>", true) + 8;
+	}
+	return var1;
+}
+
+public ChangeToNextHost(errorType)
+{
+	if (errorType != 3)
+	{
+		return 0;
+	}
+	index_socket += 1;
+	if (index_socket >= 1)
+	{
+		index_socket = 0;
+	}
+	return 0;
+}
+
+TFClassType:TF2_GetPlayerClass(client)
+{
+	return GetEntProp(client, PropType:0, TFResourceNames, 4, 0);
+}
+
+bool:TF2_IsPlayerInCondition(client, TFCond:cond)
+{
+	if (cond < TFCond:32)
+	{
+		new bit = 1 << cond;
+		if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCond", 4, 0))
+		{
+			return true;
+		}
+		if (bit == bit & GetEntProp(client, PropType:0, "_condition_bits", 4, 0))
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (cond < TFCond:64)
+		{
+			new bit = 1 << cond + -32;
+			if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCondEx", 4, 0))
+			{
+				return true;
+			}
+		}
+		new bit = 1 << cond + -64;
+		if (bit == bit & GetEntProp(client, PropType:0, "m_nPlayerCondEx2", 4, 0))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+public OnPluginStart_Menu()
+{
+	RegConsoleCmd("sm_bron", CmdWeapons, "", 0);
+	RegConsoleCmd("sm_bronie", CmdWeapons, "", 0);
+	RegConsoleCmd("sm_czapki", CmdHats, "", 0);
+	RegConsoleCmd("sm_hats", CmdHats, "", 0);
+	RegConsoleCmd("sm_efekty", CmdEffects, "", 0);
+	RegConsoleCmd("sm_effects", CmdEffects, "", 0);
+	RegConsoleCmd("sm_usun", CmdDelete, "", 0);
+	RegConsoleCmd("sm_delete", CmdDelete, "", 0);
+	RegConsoleCmd("sm_kolory", CmdColors, "", 0);
+	RegConsoleCmd("sm_colors", CmdColors, "", 0);
+	return 0;
+}
+
+public TF2Items_OnGiveNamedItem_Post(client, String:classname[], itemDefinitionIndex, itemLevel, itemQuality, entityIndex)
+{
+	if (StrEqual(classname, "tf_wearable", true))
+	{
+		new index = -1;
+		if ((index = FindValueInArray(gPlayerData[client][3], itemDefinitionIndex)) == -1)
+		{
+			return 0;
+		}
+		new arrayDane[3];
+		GetArrayArray(gPlayerData[client][4], index, arrayDane, 3);
+		new i;
+		while (i < 3)
+		{
+			if (arrayDane[i])
+			{
+				TF2Attrib_SetByDefIndex(entityIndex, attributs_index[i], float(arrayDane[i]));
+			}
+			i++;
+		}
+	}
+	else
+	{
+		if (StrContains(classname, "tf_weapon_", true) != -1)
+		{
+			new index = -1;
+			if ((index = FindValueInArray(gPlayerData[client][3], TF2_GetPlayerClass(client))) == -1)
+			{
+				if ((index = FindValueInArray(gPlayerData[client][3], any:0)) == -1)
+				{
+					return 0;
+				}
+			}
+			new arrayDane[3];
+			GetArrayArray(gPlayerData[client][4], index, arrayDane, 3);
+			new i;
+			while (i < 3)
+			{
+				if (arrayDane[i])
+				{
+					TF2Attrib_SetByDefIndex(entityIndex, attributs_ks_index[i], float(arrayDane[i]));
+				}
+				i++;
+			}
+		}
+	}
+	return 0;
+}
+
+public Action:CmdColors(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		return Action:0;
+	}
+	MenuKolory(client);
+	return Action:0;
+}
+
+public Action:CmdWeapons(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		return Action:0;
+	}
+	MenuBronie(client);
+	return Action:0;
+}
+
+public Action:CmdHats(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		return Action:0;
+	}
+	MenuSklep(client);
+	return Action:0;
+}
+
+public Action:CmdDelete(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		return Action:0;
+	}
+	MenuUsun(client);
+	return Action:0;
+}
+
+public Action:CmdEffects(client, args)
+{
+	if (!IsClientInGame(client))
+	{
+		return Action:0;
+	}
+	new String:userFlag[12];
+	new arrayDane[3];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		GetTrieArray(gServerData[9], userFlag, arrayDane, 3, 0);
+		decl String:szLang[128];
+		Format(szLang, 128, "%T", "MenuTitleMain", 0);
+		new Handle:hMenu = CreateMenu(Menu_hMain, MenuAction:28);
+		SetMenuTitle(hMenu, szLang);
+		if (0 < arrayDane[2])
+		{
+			AddMenuItem(hMenu, "0", "[NEW] Dodaj efekt na broń", 0);
+		}
+		if (0 < arrayDane[0])
+		{
+			AddMenuItem(hMenu, "1", "Dodaj efekt na czapki", 0);
+			AddMenuItem(hMenu, "2", "Usun efekt z czapki", 0);
+		}
+		if (0 < arrayDane[1])
+		{
+			AddMenuItem(hMenu, "3", "Stwórz własną farbę", 0);
+			AddMenuItem(hMenu, "4", "Usuń farbe z listy", 0);
+		}
+		DisplayMenu(hMenu, client, 0);
+		return Action:0;
+	}
+	CPrintToChat(client, "%t", "AccessToVip");
+	return Action:0;
+}
+
+public Menu_hMain(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		switch (StringToInt(szInt, 10))
+		{
+			case 0:
+			{
+				MenuBronie(client);
+			}
+			case 1:
+			{
+				MenuSklep(client);
+			}
+			case 2:
+			{
+				MenuUsun(client);
+			}
+			case 3:
+			{
+				MenuKoloryDodaj(client);
+			}
+			case 4:
+			{
+				MenuKoloryUsun(client);
+			}
+			default:
+			{
+			}
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public MenuSklep(client)
+{
+	if (!gServerData[3])
+	{
+		return 0;
+	}
+	new String:userFlag[12];
+	new arrayDane[3];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		GetTrieArray(gServerData[9], userFlag, arrayDane, 3, 0);
+		if (!gPlayerData[client][68])
+		{
+			OnCheckPlayerColors(client);
+		}
+		new ilosc;
+		new i;
+		while (GetArraySize(gPlayerData[client][3]) > i)
+		{
+			if (!(GetArrayCell(gPlayerData[client][3], i, 0, false) <= 9))
+			{
+				ilosc++;
+			}
+			i++;
+		}
+		new var1;
+		if (ilosc >= arrayDane[0] && arrayDane[0])
+		{
+			CPrintToChat(client, "%t", "TooMany", ilosc);
+			return 0;
+		}
+		CPrintToChat(client, "%t", "Waiting");
+		StworzSocket(client);
+		return 0;
+	}
+	CPrintToChat(client, "%t", "AccessToVip");
+	return 0;
+}
+
+public MenuKolory(client)
+{
+	if (!gServerData[3])
+	{
+		return 0;
+	}
+	new String:userFlag[12];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		if (!gPlayerData[client][68])
+		{
+			OnCheckPlayerColors(client);
+			CPrintToChat(client, "%t", "Replay");
+			return 0;
+		}
+		decl String:szLang[128];
+		Format(szLang, 128, "%T", "MenuTitleColors", 0);
+		new Handle:hMenu = CreateMenu(Menu_hKolory, MenuAction:28);
+		SetMenuTitle(hMenu, szLang);
+		AddMenuItem(hMenu, "0", "Zrób kolor", 0);
+		AddMenuItem(hMenu, "1", "Usuń kolor", 0);
+		DisplayMenu(hMenu, client, 0);
+		return 0;
+	}
+	CPrintToChat(client, "%t", "AccessToVip");
+	return 0;
+}
+
+public MenuKoloryDodaj(client)
+{
+	new String:userFlag[12];
+	new arrayDane[3];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		GetTrieArray(gServerData[9], userFlag, arrayDane, 3, 0);
+		new ilosc = GetArraySize(gPlayerData[client][65]);
+		new var1;
+		if (ilosc >= arrayDane[1] && arrayDane[1])
+		{
+			CPrintToChat(client, "%t", "TooManyColors", ilosc);
+			return 0;
+		}
+		SendSocketOnce(client);
+		decl String:szUrl[128];
+		Format(szUrl, 128, "http://%s%s/colors/?sid=%s", SOCKET_URL[index_socket], SOCKET_HOME[index_socket], gPlayerData[client][5]);
+		UstawMotd(client, szUrl);
+		return 0;
+	}
+	CPrintToChat(client, "%t", "AccessToVip");
+	return 0;
+}
+
+public MenuKoloryUsun(client)
+{
+	new ilosc = GetArraySize(gPlayerData[client][65]);
+	if (0 >= ilosc)
+	{
+		CPrintToChat(client, "%t", "NoColors");
+		return 0;
+	}
+	decl String:szLang[128];
+	Format(szLang, 128, "%T", "MenuTitleColorDelete", 0);
+	new Handle:hMenu = CreateMenu(Menu_Kolory_Usun, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	decl String:szName[20];
+	new i;
+	while (i < ilosc)
+	{
+		GetArrayString(gPlayerData[client][66], i, szName, 20);
+		AddMenuItem(hMenu, szName, szName, 0);
+		i++;
+	}
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Kolory_Usun(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:szName[20];
+		GetMenuItem(menu, param2, szName, 20, 0, "", 0);
+		DelClientColor(client, szName);
+		CPrintToChat(client, "%t", "RemoveColor", szName);
+		MenuKoloryUsun(client);
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public Menu_hKolory(Handle:menu, MenuAction:action, client, item)
+{
+	if (action == MenuAction:4)
+	{
+		if (item)
+		{
+			MenuKoloryUsun(client);
+		}
+		else
+		{
+			MenuKoloryDodaj(client);
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public MenuUsun(client)
+{
+	if (!gServerData[3])
+	{
+		return 0;
+	}
+	new ilosc;
+	new i;
+	while (GetArraySize(gPlayerData[client][3]) > i)
+	{
+		if (!(GetArrayCell(gPlayerData[client][3], i, 0, false) <= 9))
+		{
+			ilosc++;
+		}
+		i++;
+	}
+	if (0 >= ilosc)
+	{
+		CPrintToChat(client, "%t", "NoEffects");
+		return 0;
+	}
+	decl String:szLang[128];
+	Format(szLang, 128, "%T", "MenuTitleDelete", 0);
+	new Handle:hMenu = CreateMenu(Menu_Hats_Usun, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	decl String:szHat[64];
+	decl String:szInt[12];
+	new cell;
+	new i;
+	while (GetArraySize(gPlayerData[client][3]) > i)
+	{
+		cell = GetArrayCell(gPlayerData[client][3], i, 0, false);
+		if (!(cell <= 9))
+		{
+			IntToString(cell, szInt, 10);
+			GetTrieString(gServerData[1], szInt, szHat, 64, 0);
+			AddMenuItem(hMenu, szInt, szHat, 0);
+		}
+		i++;
+	}
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Hats_Usun(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		if (TF2_IsPlayerInCondition(client, TFCond:7))
+		{
+			return 0;
+		}
+		decl String:szInt[12];
+		decl String:szHat[64];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		GetTrieString(gServerData[1], szInt, szHat, 64, 0);
+		gPlayerData[client][0] = StringToInt(szInt, 10);
+		new arrayData[3];
+		new index = -1;
+		if ((index = FindValueInArray(gPlayerData[client][3], gPlayerData[client][0])) == -1)
+		{
+			return 0;
+		}
+		GetArrayArray(gPlayerData[client][4], index, arrayData, 3);
+		TF2Attrib_AutoIndexForAllHats(client, arrayData, true);
+		DelClientEfekt(client, gPlayerData[client][0]);
+		CPrintToChat(client, "%t", "RemoveEffect", szHat);
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public CreateClientHats(client, Handle:hArray)
+{
+	decl String:szLang[128];
+	Format(szLang, 128, "%T", "MenuTitleHats", 0);
+	new Handle:hMenu = CreateMenu(Menu_Hats, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	decl String:szHat[64];
+	decl String:szInt[12];
+	new item;
+	new flags;
+	new len;
+	new i;
+	while (GetArraySize(hArray) > i)
+	{
+		item = GetArrayCell(hArray, i, 0, false);
+		IntToString(item, szInt, 9);
+		if (!(FindValueInArray(gPlayerData[client][3], item) != -1))
+		{
+			if (GetTrieString(gServerData[1], szInt, szHat, 64, 0))
+			{
+				len = 0;
+				flags = 0;
+				GetTrieValue(gServerData[6], szInt, flags);
+				len = Format(szHat[len], 64 - len, "%s ", szHat) + len;
+				if (flags & 1)
+				{
+					len = Format(szHat[len], 64 - len, "[P]") + len;
+				}
+				if (flags & 2)
+				{
+					len = Format(szHat[len], 64 - len, "[U]") + len;
+				}
+				AddMenuItem(hMenu, szInt, szHat, 0);
+			}
+		}
+		i++;
+	}
+	CloseHandle(hArray);
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Hats(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		GetTrieValue(gServerData[6], szInt, gPlayerData[client][67]);
+		gPlayerData[client][0] = StringToInt(szInt, 10);
+		if (gPlayerData[client][67] & 2)
+		{
+			StworzMenuEfekt(client);
+		}
+		else
+		{
+			gPlayerData[client][1] = 0;
+			StworzMenuFarba(client);
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public StworzMenuEfekt(client)
+{
+	decl String:szLang[128];
+	decl String:szInt[12];
+	decl String:szItems[64];
+	Format(szLang, 128, "%T", "MenuTitleEffects", 0, gPlayerData[client]);
+	new Handle:hMenu = CreateMenu(Menu_Efekt, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	AddMenuItem(hMenu, "n", "Nie chce żadnego Efektu!", 0);
+	new cell;
+	new i;
+	while (GetArraySize(gServerData[4]) > i)
+	{
+		cell = GetArrayCell(gServerData[4], i, 0, false);
+		if (cell < 2000)
+		{
+			IntToString(cell, szInt, 11);
+			GetTrieString(gServerData[5], szInt, szItems, 64, 0);
+			AddMenuItem(hMenu, szInt, szItems, 0);
+		}
+		i++;
+	}
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Efekt(Handle:menu, MenuAction:action, client, param2)
+{
+	new var1;
+	if (action == MenuAction:4 && gPlayerData[client][0] > 0)
+	{
+		new String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		if (szInt[0] != 'n')
+		{
+			gPlayerData[client][1] = StringToInt(szInt, 10);
+		}
+		else
+		{
+			gPlayerData[client][1] = 0;
+		}
+		new var2;
+		if (gPlayerData[client][67] & 1 && GetArraySize(gPlayerData[client][65]) > 0)
+		{
+			StworzMenuFarba(client);
+		}
+		else
+		{
+			new arrayDane[3];
+			arrayDane[0] = gPlayerData[client][1];
+			TF2Attrib_AutoIndexForAllHats(client, arrayDane, false);
+			UstawEfekty(client, arrayDane);
+		}
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public MenuBronie(client)
+{
+	if (!gServerData[3])
+	{
+		return 0;
+	}
+	new String:userFlag[12];
+	new arrayDane[3];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		GetTrieArray(gServerData[9], userFlag, arrayDane, 3, 0);
+		if (!arrayDane[2])
+		{
+			CPrintToChat(client, "%t", "AccessToVip");
+			return 0;
+		}
+		decl String:szLang[128];
+		decl String:szInt[12];
+		Format(szLang, 128, "%T", "MenuTitleClass", 0);
+		new Handle:hMenu = CreateMenu(Menu_Class, MenuAction:28);
+		SetMenuTitle(hMenu, szLang);
+		new i;
+		while (i < 10)
+		{
+			IntToString(i, szInt, 11);
+			AddMenuItem(hMenu, szInt, NazwyPostaci[i], 0);
+			i++;
+		}
+		DisplayMenu(hMenu, client, 0);
+		return 0;
+	}
+	CPrintToChat(client, "%t", "AccessToVip");
+	return 0;
+}
+
+public Menu_Class(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		new String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		gPlayerData[client][0] = StringToInt(szInt, 10);
+		MenuBronie2(client);
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public MenuBronie2(client)
+{
+	decl String:szLang[128];
+	Format(szLang, 128, "%T", "MenuTitleWeapons", 0);
+	new Handle:hMenu = CreateMenu(Menu_Weapons, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	AddMenuItem(hMenu, "0", "Killstreaker (efekt)", 0);
+	AddMenuItem(hMenu, "1", "Sheen (blask)", 0);
+	SetMenuExitBackButton(hMenu, true);
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Weapons(Handle:menu, MenuAction:action, client, param2)
+{
+	new var1;
+	if (action == MenuAction:4 && gPlayerData[client][0] <= 9)
+	{
+		switch (param2)
+		{
+			case 0:
+			{
+				MenuKillstreaker(client);
+			}
+			case 1:
+			{
+				MenuSheen(client);
+			}
+			default:
+			{
+			}
+		}
+	}
+	else
+	{
+		new var2;
+		if (action == MenuAction:8 && param2 == -6)
+		{
+			MenuBronie(client);
+		}
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public MenuKillstreaker(client)
+{
+	decl String:szLang[128];
+	decl String:szInt[12];
+	decl String:szItems[64];
+	Format(szLang, 128, "%T", "MenuTitleKillstreaker", 0);
+	new Handle:hMenu = CreateMenu(Menu_Handle_Kill, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	AddMenuItem(hMenu, "n", "Brak!", 0);
+	new cell;
+	new i;
+	while (GetArraySize(gServerData[4]) > i)
+	{
+		cell = GetArrayCell(gServerData[4], i, 0, false);
+		new var1;
+		if (cell >= 2002 && cell < 22002)
+		{
+		}
+		else
+		{
+			IntToString(cell, szInt, 11);
+			GetTrieString(gServerData[5], szInt, szItems, 64, 0);
+			AddMenuItem(hMenu, szInt, szItems, 0);
+		}
+		i++;
+	}
+	SetMenuExitBackButton(hMenu, true);
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public MenuSheen(client)
+{
+	decl String:szLang[128];
+	decl String:szInt[12];
+	decl String:szItems[64];
+	Format(szLang, 128, "%T", "MenuTitleSheen", 0);
+	new Handle:hMenu = CreateMenu(Menu_Handle_Sheen, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	AddMenuItem(hMenu, "n", "Brak!", 0);
+	new cell;
+	new i;
+	while (GetArraySize(gServerData[4]) > i)
+	{
+		cell = GetArrayCell(gServerData[4], i, 0, false);
+		if (cell >= 22002)
+		{
+			IntToString(cell, szInt, 11);
+			GetTrieString(gServerData[5], szInt, szItems, 64, 0);
+			AddMenuItem(hMenu, szInt, szItems, 0);
+		}
+		i++;
+	}
+	SetMenuExitBackButton(hMenu, true);
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Handle_Kill(Handle:menu, MenuAction:action, client, param2)
+{
+	new var1;
+	if (action == MenuAction:4 && gPlayerData[client][0] <= 9)
+	{
+		new String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		new arrayData[3];
+		new index = -1;
+		if ((index = FindValueInArray(gPlayerData[client][3], gPlayerData[client][0])) == -1)
+		{
+			arrayData[1] = 0;
+		}
+		else
+		{
+			new arrayDane2[3];
+			GetArrayArray(gPlayerData[client][4], index, arrayDane2, 3);
+			arrayData[1] = arrayDane2[1];
+		}
+		arrayData[0] = StringToInt(szInt, 10);
+		if (szInt[0] == 'n')
+		{
+			arrayData[0] = 0;
+		}
+		new var2;
+		if (arrayData[0] > 0 && arrayData[1] > 0)
+		{
+			arrayData[2] = 3;
+		}
+		else
+		{
+			new var3;
+			if (arrayData[0] && arrayData[1] > 0)
+			{
+				arrayData[2] = 2;
+			}
+			new var4;
+			if (arrayData[0] > 0 && arrayData[1])
+			{
+				arrayData[2] = 2;
+			}
+			arrayData[2] = 0;
+		}
+		if (!arrayData[2])
+		{
+			TF2Attrib_AutoIndexForAllWeapons(client, arrayData, true);
+		}
+		new var5;
+		if (arrayData[0] && arrayData[1] && arrayData[2])
+		{
+			TF2Attrib_DefIndexForAllWeapons(client, attributs_ks_index[0], 0.0, true);
+		}
+		new var6;
+		if (arrayData[0] && arrayData[1] && arrayData[2] && gPlayerData[client][0] > 0)
+		{
+			if ((index = FindValueInArray(gPlayerData[client][3], any:0)) != -1)
+			{
+				new arrayDane2[3];
+				GetArrayArray(gPlayerData[client][4], index, arrayDane2, 3);
+				TF2Attrib_AutoIndexForAllWeapons(client, arrayDane2, false);
+			}
+		}
+		TF2Attrib_AutoIndexForAllWeapons(client, arrayData, false);
+		UstawEfekty(client, arrayData);
+		MenuBronie2(client);
+	}
+	else
+	{
+		new var7;
+		if (action == MenuAction:8 && param2 == -6)
+		{
+			MenuBronie2(client);
+		}
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public Menu_Handle_Sheen(Handle:menu, MenuAction:action, client, param2)
+{
+	new var1;
+	if (action == MenuAction:4 && gPlayerData[client][0] <= 9)
+	{
+		new String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		new arrayData[3];
+		new index = -1;
+		if ((index = FindValueInArray(gPlayerData[client][3], gPlayerData[client][0])) == -1)
+		{
+			if ((index = FindValueInArray(gPlayerData[client][3], any:0)) == -1)
+			{
+				arrayData[0] = 0;
+			}
+		}
+		else
+		{
+			new arrayDane2[3];
+			GetArrayArray(gPlayerData[client][4], index, arrayDane2, 3);
+			arrayData[0] = arrayDane2[0];
+		}
+		arrayData[1] = StringToInt(szInt, 10);
+		if (arrayData[1] >= 22002)
+		{
+			arrayData[1] += -22001;
+		}
+		if (szInt[0] == 'n')
+		{
+			arrayData[1] = 0;
+		}
+		new var2;
+		if (arrayData[0] > 0 && arrayData[1] > 0)
+		{
+			arrayData[2] = 3;
+		}
+		else
+		{
+			new var3;
+			if (arrayData[0] && arrayData[1] > 0)
+			{
+				arrayData[2] = 2;
+			}
+			new var4;
+			if (arrayData[0] > 0 && arrayData[1])
+			{
+				arrayData[2] = 2;
+			}
+			arrayData[2] = 0;
+		}
+		if (!arrayData[2])
+		{
+			TF2Attrib_AutoIndexForAllWeapons(client, arrayData, true);
+		}
+		new var5;
+		if (arrayData[1] && arrayData[0] && arrayData[2])
+		{
+			TF2Attrib_DefIndexForAllWeapons(client, attributs_ks_index[0], 0.0, true);
+		}
+		new var6;
+		if (arrayData[0] && arrayData[1] && arrayData[2] && gPlayerData[client][0] > 0)
+		{
+			if ((index = FindValueInArray(gPlayerData[client][3], any:0)) != -1)
+			{
+				new arrayDane2[3];
+				GetArrayArray(gPlayerData[client][4], index, arrayDane2, 3);
+				TF2Attrib_AutoIndexForAllWeapons(client, arrayDane2, false);
+			}
+		}
+		TF2Attrib_AutoIndexForAllWeapons(client, arrayData, false);
+		UstawEfekty(client, arrayData);
+		MenuBronie2(client);
+	}
+	else
+	{
+		new var7;
+		if (action == MenuAction:8 && param2 == -6)
+		{
+			MenuBronie2(client);
+		}
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public StworzMenuFarba(client)
+{
+	new ilosc = GetArraySize(gPlayerData[client][65]);
+	if (0 >= ilosc)
+	{
+		CPrintToChat(client, "%t", "NoColors");
+		return 0;
+	}
+	decl String:szLang[128];
+	decl String:szInt[12];
+	decl String:szName[64];
+	Format(szLang, 128, "%T", "MenuTitlePaints", 0);
+	new Handle:hMenu = CreateMenu(Menu_Farba, MenuAction:28);
+	SetMenuTitle(hMenu, szLang);
+	AddMenuItem(hMenu, "n", "Nie chce żadnej Farby!", 0);
+	new i;
+	while (i < ilosc)
+	{
+		IntToString(i, szInt, 11);
+		GetArrayString(gPlayerData[client][66], i, szName, 64);
+		AddMenuItem(hMenu, szInt, szName, 0);
+		i++;
+	}
+	DisplayMenu(hMenu, client, 0);
+	return 0;
+}
+
+public Menu_Farba(Handle:menu, MenuAction:action, client, param2)
+{
+	if (action == MenuAction:4)
+	{
+		decl String:szInt[12];
+		GetMenuItem(menu, param2, szInt, 10, 0, "", 0);
+		new arrayFarba[2];
+		new arrayDane[3];
+		if (szInt[0] != 'n')
+		{
+			GetArrayArray(gPlayerData[client][65], StringToInt(szInt, 10), arrayFarba, 2);
+		}
+		else
+		{
+			arrayFarba[0] = 0;
+			arrayFarba[1] = 0;
+		}
+		arrayDane[0] = gPlayerData[client][1];
+		arrayDane[1] = arrayFarba[0];
+		arrayDane[2] = arrayFarba[1];
+		TF2Attrib_AutoIndexForAllHats(client, arrayDane, false);
+		UstawEfekty(client, arrayDane);
+	}
+	else
+	{
+		if (action == MenuAction:16)
+		{
+			CloseHandle(menu);
+		}
+	}
+	return 0;
+}
+
+public UstawEfekty(client, array[3])
+{
+	AddClientEfekt(client, gPlayerData[client][0], array);
+	CPrintToChat(client, "%t", "InfoAfterBuy");
+	return 0;
+}
+
+public UstawMotd(client, String:url[])
+{
+	new Handle:Kv = CreateKeyValues("data", "", "");
+	KvSetString(Kv, "title", "Title");
+	KvSetNum(Kv, "type", 2);
+	KvSetString(Kv, "msg", url);
+	KvSetNum(Kv, "customsvr", 1);
+	ShowVGUIPanel(client, "info", Kv, true);
+	CloseHandle(Kv);
+	return 0;
+}
+
+TF2Attrib_AutoIndexForAllWeapons(client, arrayDane[3], bool:delete)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	new var1;
+	if (gPlayerData[client][0] != TF2_GetPlayerClass(client) && gPlayerData[client][0] > 0)
+	{
+		return 0;
+	}
+	decl bool:is_spy;
+	is_spy = !!TF2_GetPlayerClass(client) == 8;
+	new i;
+	while (i < 3)
+	{
+		new var2;
+		if (is_spy && i == 1)
+		{
+		}
+		else
+		{
+			new entity = GetPlayerWeaponSlot(client, i);
+			if (IsValidEntity(entity))
+			{
+				new j;
+				while (j < 3)
+				{
+					new var3;
+					if (arrayDane[j] && !delete)
+					{
+					}
+					else
+					{
+						if (delete)
+						{
+							TF2Attrib_RemoveByDefIndex(entity, attributs_ks_index[j]);
+						}
+						else
+						{
+							TF2Attrib_SetByDefIndex(entity, attributs_ks_index[j], float(arrayDane[j]));
+						}
+					}
+					j++;
+				}
+			}
+		}
+		i++;
+	}
+	return 0;
+}
+
+TF2Attrib_DefIndexForAllWeapons(client, iAttrib, Float:fVal, bool:delete)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	new var1;
+	if (gPlayerData[client][0] != TF2_GetPlayerClass(client) && gPlayerData[client][0] > 0)
+	{
+		return 0;
+	}
+	decl bool:is_spy;
+	is_spy = !!TF2_GetPlayerClass(client) == 8;
+	new i;
+	while (i < 3)
+	{
+		new var2;
+		if (is_spy && i == 1)
+		{
+		}
+		else
+		{
+			new entity = GetPlayerWeaponSlot(client, i);
+			if (IsValidEntity(entity))
+			{
+				if (delete)
+				{
+					TF2Attrib_RemoveByDefIndex(entity, iAttrib);
+				}
+				else
+				{
+					TF2Attrib_SetByDefIndex(entity, iAttrib, fVal);
+				}
+			}
+		}
+		i++;
+	}
+	return 0;
+}
+
+TF2Attrib_AutoIndexForAllHats(client, arrayDane[3], bool:delete)
+{
+	if (!IsPlayerAlive(client))
+	{
+		return 0;
+	}
+	new entity = MaxClients + 1;
+	while ((entity = FindEntityByClassname(entity, "tf_wearable")) != -1)
+	{
+		new var1;
+		if (!(client == GetEntPropEnt(entity, PropType:0, "m_hOwnerEntity", 0) && gPlayerData[client][0] == GetEntProp(entity, PropType:0, "m_iItemDefinitionIndex", 4, 0)))
+		{
+			new j;
+			while (j < 3)
+			{
+				new var2;
+				if (arrayDane[j] && !delete)
+				{
+				}
+				else
+				{
+					if (delete)
+					{
+						TF2Attrib_RemoveByDefIndex(entity, attributs_index[j]);
+					}
+					else
+					{
+						TF2Attrib_SetByDefIndex(entity, attributs_index[j], float(arrayDane[j]));
+					}
+				}
+				j++;
+			}
+		}
+	}
+	return 0;
+}
+
+public OnPluginStart_Listen()
+{
+	if (hTrieSocket)
+	{
+		ClearTrie(hTrieSocket);
+	}
+	else
+	{
+		hTrieSocket = CreateTrie();
+	}
+	gServerData[2] = GetConVarInt(FindConVar("hostport")) + 25555;
+	new Handle:socket = SocketCreate(SocketType:1, OnSocketErrorListen);
+	SocketBind(socket, "0.0.0.0", gServerData[2]);
+	SocketListen(socket, OnSocketIncoming);
+	return 0;
+}
+
+public OnSocketIncoming(Handle:socket, Handle:newSocket, String:remoteIP[], remotePort, any:arg)
+{
+	LogMessage("conn ip %s", remoteIP);
+	SocketSetReceiveCallback(newSocket, OnChildSocketReceive);
+	SocketSetDisconnectCallback(newSocket, OnChildSocketDisconnected);
+	SocketSetErrorCallback(newSocket, OnChildSocketError);
+	return 0;
+}
+
+public OnChildSocketReceive(Handle:socket, String:receiveData[], dataSize, any:arg)
+{
+	new var3 = 0;
+	IntToString(socket, var3, 10);
+	LogMessage("gotcmd: %s", receiveData);
+	if (strncmp(receiveData, "open", 4, true))
+	{
+
+/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
+ function "OnChildSocketReceive" (number 78)
+
+public OnChildSocketDisconnected(Handle:socket, any:arg)
+{
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnChildSocketError(Handle:socket, errorType, errorNum, any:ary)
+{
+	LogError("OnChildSocketError error %d (errno %d)", errorType, errorNum);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnSocketErrorListen(Handle:socket, errorType, errorNum, any:arg)
+{
+	LogError("OnSocketErrorListen error %d (errno %d)", errorType, errorNum);
+	SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 8, false, false);
+	CloseHandle(socket);
+	return 0;
+}
+
+public OnPluginStart_Update()
+{
+	RegAdminCmd("sm_items_update", StworzSocketUpdate, 16384, "Aktualizuje baze czapke dostepnych w menu", "", 0);
+	return 0;
+}
+
+public Action:StworzSocketUpdate(client, args)
+{
+	if (update)
+	{
+		ReplyToCommand(client, "Poczekaj! Trwa pobieranie aktualizacji");
+		return Action:3;
+	}
+	update = true;
+	gServerData[3] = 0;
+	ktory_plik = 0;
+	new Handle:socket = SocketCreate(SocketType:1, OnSocketErrorUpdate);
+	SocketSetArg(socket, client);
+	SocketConnect(socket, OnSocketConnectedUpdate, OnSocketReceiveUpdate, OnSocketDisconnectedUpdate, SOCKET_URL[index_socket], 80);
+	ReplyToCommand(0, "Trwa pobieranie aktualizacji");
+	return Action:3;
+}
+
+public OnSocketConnectedUpdate(Handle:socket, any:client)
+{
+	decl String:requestStr[200];
+	Format(requestStr, 200, "GET %s/hats/?update=1&port=%i HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", SOCKET_HOME[index_socket], 1132 + 8, SOCKET_URL[index_socket]);
+	SocketSend(socket, requestStr, -1);
+	update = true;
+	gServerData[3] = 0;
+	return 0;
+}
+
+public OnSocketReceiveUpdate(Handle:socket, String:receiveData[], dataSize, any:client)
+{
+	update = false;
+	gServerData[3] = 0;
+	new idx = get_pointer_pos(receiveData);
+	if (receiveData[idx] == '1')
+	{
+		SocketAktualizacaPliku(szUpdatePliki[ktory_plik]);
+		return 0;
+	}
+	ReplyToCommand(client, "Aktualizacja przerwana!!! Sprobuj pozniej");
+	return 0;
+}
+
+public SocketAktualizacaPliku(String:nazwaPliku[])
+{
+	decl String:requestStr[200];
+	Format(requestStr, 200, "GET %s/hats/?file=%s&port=%i HTTP/1.0\r\nHost: %s\r\nConnection: close\r\n\r\n", SOCKET_HOME[index_socket], nazwaPliku, 1132 + 8, SOCKET_URL[index_socket]);
+	decl String:szFile[128];
+	BuildPath(PathType:0, szFile, 128, "data/%s", nazwaPliku);
+	new Handle:hFile = OpenFile(szFile, "wb");
+	new Handle:hPack = CreateDataPack();
+	WritePackCell(hPack, any:0);
+	WritePackCell(hPack, hFile);
+	WritePackString(hPack, requestStr);
+	new Handle:sockets = SocketCreate(SocketType:1, OnSocketErrorUpdate);
+	SocketSetArg(sockets, hPack);
+	SocketConnect(sockets, OnSocketConnectedUpdateFile, OnSocketReceiveUpdateFile, OnSocketDisconnectedUpdateFile, SOCKET_URL[index_socket], 80);
+	gServerData[3] = 0;
+	update = true;
+	return 0;
+}
+
+public OnSocketConnectedUpdateFile(Handle:socket, any:hPack)
+{
+	decl String:requestStr[200];
+	SetPackPosition(hPack, 2);
+	ReadPackString(hPack, requestStr, 200);
+	SocketSend(socket, requestStr, -1);
+	gServerData[3] = 0;
+	update = true;
+	return 0;
+}
+
+public OnSocketReceiveUpdateFile(Handle:socket, String:receiveData[], dataSize, any:hPack)
+{
+	update = false;
+	new idx;
+	SetPackPosition(hPack, 0);
+	new bool:bParsedHeader = ReadPackCell(hPack);
+	if (!bParsedHeader)
+	{
+		if ((idx = StrContains(receiveData, "\r\n\r\n", true)) == -1)
+		{
+			idx = 0;
+		}
+		else
+		{
+			idx += 4;
+		}
+		SetPackPosition(hPack, 0);
+		WritePackCell(hPack, any:1);
+	}
+	SetPackPosition(hPack, 1);
+	new Handle:open = ReadPackCell(hPack);
+	while (idx < dataSize)
+	{
+		idx++;
+		WriteFileCell(open, receiveData[idx], 1);
+	}
+	return 0;
+}
+
+public OnSocketDisconnectedUpdateFile(Handle:socket, any:hPack)
+{
+	SetPackPosition(hPack, 1);
+	CloseHandle(ReadPackCell(hPack));
+	CloseHandle(hPack);
+	CloseHandle(socket);
+	ktory_plik += 1;
+	if (ktory_plik >= 2)
+	{
+		gServerData[3] = 1;
+		update = false;
+		ReplyToCommand(0, "Aktualizacja przebiegla pomyslnie");
+		WczytajNazwyCzapek();
+	}
+	else
+	{
+		SocketAktualizacaPliku(szUpdatePliki[ktory_plik]);
+	}
+	return 0;
+}
+
+public OnSocketDisconnectedUpdate(Handle:socket, any:client)
+{
+	CloseHandle(socket);
+	update = false;
+	return 0;
+}
+
+public OnSocketErrorUpdate(Handle:socket, errorType, errorNum, any:client)
+{
+	LogMessage("OnSocketErrorUpdate error %d (errno %d)", errorType, errorNum);
+	CloseHandle(socket);
+	gServerData[3] = 0;
+	update = false;
+	return 0;
+}
+
+public OnPluginStart_Sql()
+{
+	CreateDataBase();
+	return 0;
+}
+
+public OnMapStart_Sql()
+{
+	return 0;
+}
+
+public OnClientPostAdminCheck_Sql(client)
+{
+	if (gEfekty & 2)
+	{
+		SetFailState("Brak aktywnej licencji!");
+		return 0;
+	}
+	if (gPlayerData[client][3])
+	{
+		ClearArray(gPlayerData[client][3]);
+	}
+	else
+	{
+		gPlayerData[client][3] = CreateArray(1, 0);
+	}
+	if (gPlayerData[client][4])
+	{
+		ClearArray(gPlayerData[client][4]);
+	}
+	else
+	{
+		gPlayerData[client][4] = CreateArray(3, 0);
+	}
+	if (gPlayerData[client][66])
+	{
+		ClearArray(gPlayerData[client][66]);
+	}
+	else
+	{
+		gPlayerData[client][66] = CreateArray(ByteCountToCells(20), 0);
+	}
+	if (gPlayerData[client][65])
+	{
+		ClearArray(gPlayerData[client][65]);
+	}
+	else
+	{
+		gPlayerData[client][65] = CreateArray(2, 0);
+	}
+	new String:userFlag[12];
+	if (GetUserFlagByTrie(client, userFlag, 10))
+	{
+		decl String:buffer[256];
+		Format(buffer, 255, "SELECT `ITEM`,`EFEKT` FROM `PlayerEfektNew` WHERE `PlayerEfektNew`.`STEAMID` = '%s'", gPlayerData[client][5]);
+		SQL_TQuery(gServerData[0], SQL_CheckEfektUsr, buffer, GetClientUserId(client), DBPriority:1);
+		return 0;
+	}
+	return 0;
+}
+
+public SQL_CheckEfektUsr(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var2 = 0;
+	if ((var2 = GetClientOfUserId(data)))
+	{
+		if (hndl)
+		{
+			new var3;
+			new var4;
+			new arrayDane[3];
+			new IDitem;
+			while (SQL_FetchRow(hndl))
+			{
+				IDitem = SQL_FetchInt(hndl, 0, 0);
+				if (!(FindValueInArray(gPlayerData[var2][3], IDitem) != -1))
+				{
+					SQL_FetchString(hndl, 1, var3, 32, 0);
+					ExplodeString(var3, " ", var4, 3, 10, false);
+					arrayDane[0] = StringToInt(var4 + var4, 10);
+					new var5 = var4 + 4;
+					arrayDane[1] = StringToInt(var5 + var5, 10);
+					new var6 = var4 + 8;
+					arrayDane[2] = StringToInt(var6 + var6, 10);
+					new var1;
+					if (arrayDane[0] || arrayDane[1] || arrayDane[2])
+					{
+						PushArrayArray(gPlayerData[var2][4], arrayDane, 3);
+						PushArrayCell(gPlayerData[var2][3], IDitem);
+					}
+				}
+			}
+			return 0;
+		}
+		LogError("SQL_CheckEfektUsr Query failed! %s", error);
+		return 0;
+	}
+	return 0;
+}
+
+public OnCheckPlayerColors(client)
+{
+	decl String:buffer[256];
+	Format(buffer, 255, "SELECT `NAME`,`COLOR` FROM `PlayerColors` WHERE `PlayerColors`.`STEAMID` = '%s'", gPlayerData[client][5]);
+	SQL_TQuery(gServerData[0], SQL_CheckKolorUsr, buffer, GetClientUserId(client), DBPriority:1);
+	return 0;
+}
+
+public SQL_CheckKolorUsr(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	new var1 = 0;
+	if ((var1 = GetClientOfUserId(data)))
+	{
+		if (hndl)
+		{
+			new var2;
+			new var3;
+			new arrayDane[2];
+			while (SQL_FetchRow(hndl))
+			{
+				SQL_FetchString(hndl, 0, var2, 32, 0);
+				if (!(FindStringInArray(gPlayerData[var1][66], var2) != -1))
+				{
+					PushArrayString(gPlayerData[var1][66], var2);
+					SQL_FetchString(hndl, 1, var2, 32, 0);
+					ExplodeString(var2, " ", var3, 2, 10, false);
+					arrayDane[0] = StringToInt(var3 + var3, 10);
+					new var4 = var3 + 4;
+					arrayDane[1] = StringToInt(var4 + var4, 10);
+					PushArrayArray(gPlayerData[var1][65], arrayDane, 2);
+				}
+			}
+			gPlayerData[var1][68] = 1;
+			return 0;
+		}
+		LogError("SQL_CheckKolorUsr Query failed! %s", error);
+		return 0;
+	}
+	return 0;
+}
+
+public SQL_ErrorCheckCallback(Handle:owner, Handle:hndl, String:error[], any:data)
+{
+	if (!StrEqual("", error, true))
+	{
+		LogError("SQL_ErrorCheckCallback Error: %s", error);
+		return 0;
+	}
+	return 0;
+}
+
+CreateDataBase()
+{
+	if (!SQL_CheckConfig("default"))
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 4, false, false);
+		return 0;
+	}
+	new String:Error[256];
+	gServerData[0] = SQL_Connect("default", true, Error, 255);
+	if (gServerData[0])
+	{
+		new len;
+		decl String:query[512];
+		len = Format(query[len], 512 - len, "CREATE TABLE IF NOT EXISTS `PlayerEfektNew` (") + len;
+		len = Format(query[len], 512 - len, "`STEAMID` varchar(32) NOT NULL,") + len;
+		len = Format(query[len], 512 - len, "`ITEM` int(11) NOT NULL, PRIMARY KEY(`STEAMID`, `ITEM`), ") + len;
+		len = Format(query[len], 512 - len, "`EFEKT` varchar(32) NOT NULL,") + len;
+		len = Format(query[len], 512 - len, "`TIME` int(11) NOT NULL") + len;
+		len = Format(query[len], 512 - len, ") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci;") + len;
+		SQL_FastQuery(gServerData[0], query, -1);
+		len = 0;
+		len = Format(query[len], 512 - len, "CREATE TABLE IF NOT EXISTS `PlayerColors` (");
+		len = Format(query[len], 512 - len, "`STEAMID` varchar(32) NOT NULL,") + len;
+		len = Format(query[len], 512 - len, "`NAME` varchar(20) NOT NULL, PRIMARY KEY(`STEAMID`, `NAME`), ") + len;
+		len = Format(query[len], 512 - len, "`COLOR` varchar(32) NOT NULL,") + len;
+		len = Format(query[len], 512 - len, "`TIME` int(11) NOT NULL") + len;
+		len = Format(query[len], 512 - len, ") ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_polish_ci;") + len;
+		SQL_FastQuery(gServerData[0], query, -1);
+		return 0;
+	}
+	PrintToServer("Failed to connect: %s", Error);
+	SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 4, false, false);
+	return 0;
+}
+
+AddClientEfekt(client, czapka, efekt[3])
+{
+	decl String:buffer[252];
+	Format(buffer, 250, "INSERT INTO `PlayerEfektNew` (`STEAMID`,`ITEM`,`EFEKT`,`TIME`) VALUES ('%s','%d','%d %d %d','%d') ON DUPLICATE KEY UPDATE `EFEKT` = '%d %d %d'", gPlayerData[client][5], czapka, efekt, efekt[1], efekt[2], GetTime({0,0}) + 2592000, efekt, efekt[1], efekt[2]);
+	SQL_TQuery(gServerData[0], SQL_ErrorCheckCallback, buffer, any:0, DBPriority:1);
+	new index = -1;
+	if ((index = FindValueInArray(gPlayerData[client][3], czapka)) != -1)
+	{
+		RemoveFromArray(gPlayerData[client][3], index);
+		RemoveFromArray(gPlayerData[client][4], index);
+	}
+	new var1;
+	if (efekt[0] || efekt[1] || efekt[2])
+	{
+		PushArrayCell(gPlayerData[client][3], czapka);
+		PushArrayArray(gPlayerData[client][4], efekt, 3);
+	}
+	return 0;
+}
+
+DelClientEfekt(client, czapka)
+{
+	decl String:buffer[252];
+	Format(buffer, 250, "DELETE FROM `PlayerEfektNew` WHERE `STEAMID` = '%s' AND `ITEM` = '%d'", gPlayerData[client][5], czapka);
+	SQL_TQuery(gServerData[0], SQL_ErrorCheckCallback, buffer, any:0, DBPriority:1);
+	new index = -1;
+	if ((index = FindValueInArray(gPlayerData[client][3], czapka)) != -1)
+	{
+		RemoveFromArray(gPlayerData[client][3], index);
+		RemoveFromArray(gPlayerData[client][4], index);
+	}
+	return 0;
+}
+
+AddClientColor(client, color[2], String:szName[])
+{
+	decl String:buffer[252];
+	Format(buffer, 250, "INSERT INTO `PlayerColors` (`STEAMID`,`NAME`,`COLOR`,`TIME`) VALUES ('%s','%s','%d %d','%d')", gPlayerData[client][5], szName, color, color[1], GetTime({0,0}) + 2592000);
+	SQL_TQuery(gServerData[0], SQL_ErrorCheckCallback, buffer, any:0, DBPriority:1);
+	PushArrayString(gPlayerData[client][66], szName);
+	PushArrayArray(gPlayerData[client][65], color, 2);
+	return 0;
+}
+
+DelClientColor(client, String:szName[])
+{
+	decl String:buffer[252];
+	Format(buffer, 250, "DELETE FROM `PlayerColors` WHERE `STEAMID` = '%s' AND `NAME` = '%s'", gPlayerData[client][5], szName);
+	SQL_TQuery(gServerData[0], SQL_ErrorCheckCallback, buffer, any:0, DBPriority:1);
+	new index = -1;
+	if ((index = FindStringInArray(gPlayerData[client][66], szName)) != -1)
+	{
+		RemoveFromArray(gPlayerData[client][66], index);
+		RemoveFromArray(gPlayerData[client][65], index);
+	}
+	return 0;
+}
+
+public OnPluginStart_Parser()
+{
+	RegAdminCmd("sm_efekty_access_reload", PrzeladujAccessKonfing, 16384, "Aktualizuje baze czapke dostepnych w menu", "", 0);
+	WczytajNazwyCzapek();
+	WczytajAccessKonfing();
+	return 0;
+}
+
+public Action:PrzeladujAccessKonfing(client, args)
+{
+	ReplyToCommand(0, "Trwa przeladowanie konfinga");
+	WczytajAccessKonfing();
+	return Action:3;
+}
+
+public WczytajNazwyCzapek()
+{
+	new var1;
+	BuildPath(PathType:0, var1, 128, "data/hats_info_pl.txt");
+	if ((gServerData[3] = FileExists(var1, false)))
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) & -17, false, false);
+		new var2;
+		var2 = OpenFile(var1, "rt");
+		new var3;
+		new var4;
+		if (gServerData[1])
+		{
+			ClearTrie(gServerData[1]);
+		}
+		else
+		{
+			gServerData[1] = CreateTrie();
+		}
+		if (gServerData[6])
+		{
+			ClearTrie(gServerData[6]);
+		}
+		else
+		{
+			gServerData[6] = CreateTrie();
+		}
+		while (!IsEndOfFile(var2))
+		{
+			ReadFileLine(var2, var3, 128);
+			if (!(ExplodeString(var3, " ; ", var4, 3, 64, false) != 3))
+			{
+				TrimString(var4 + var4);
+				new var5 = var4 + 4;
+				TrimString(var5 + var5);
+				new var6 = var4 + 8;
+				TrimString(var6 + var6);
+				new var7 = var4 + 4;
+				SetTrieString(gServerData[1], var4 + var4, var7 + var7, true);
+				new var8 = var4 + 8;
+				SetTrieValue(gServerData[6], var4 + var4, StringToInt(var8 + var8, 10), true);
+			}
+		}
+		CloseHandle(var2);
+		WczytajNazwyEfektow();
+		return 0;
+	}
+	SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 16, false, false);
+	return 0;
+}
+
+public WczytajNazwyEfektow()
+{
+	new var1;
+	BuildPath(PathType:0, var1, 128, "data/efekt_info.txt");
+	if ((gServerData[3] = FileExists(var1, false)))
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) & -17, false, false);
+		new var2;
+		var2 = OpenFile(var1, "rt");
+		new var3;
+		new var4;
+		if (gServerData[4])
+		{
+			ClearArray(gServerData[4]);
+		}
+		else
+		{
+			gServerData[4] = CreateArray(1, 0);
+		}
+		if (gServerData[5])
+		{
+			ClearTrie(gServerData[5]);
+		}
+		else
+		{
+			gServerData[5] = CreateTrie();
+		}
+		while (!IsEndOfFile(var2))
+		{
+			ReadFileLine(var2, var3, 128);
+			if (!(ExplodeString(var3, " ; ", var4, 2, 64, false) != 2))
+			{
+				TrimString(var4 + var4);
+				new var5 = var4 + 4;
+				TrimString(var5 + var5);
+				PushArrayCell(gServerData[4], StringToInt(var4 + var4, 10));
+				new var6 = var4 + 4;
+				SetTrieString(gServerData[5], var4 + var4, var6 + var6, true);
+			}
+		}
+		CloseHandle(var2);
+		return 0;
+	}
+	SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 16, false, false);
+	return 0;
+}
+
+public WczytajAccessKonfing()
+{
+	decl String:szFile[128];
+	BuildPath(PathType:0, szFile, 128, "configs/efekty_access.cfg");
+	if ((gServerData[3] = FileExists(szFile, false)))
+	{
+		SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) & -33, false, false);
+		if (gServerData[9])
+		{
+			ClearTrie(gServerData[9]);
+		}
+		else
+		{
+			gServerData[9] = CreateTrie();
+		}
+		new Handle:hParser = SMC_CreateParser();
+		new line;
+		SMC_SetReaders(hParser, Config_NewSection, Config_KeyValue, Config_EndSection);
+		new SMCError:result = SMC_ParseFile(hParser, szFile, 0, 0);
+		CloseHandle(hParser);
+		if (result)
+		{
+			decl String:szError[128];
+			SMC_GetErrorString(result, szError, 128);
+			LogError("Blad %s w lini %d, na pliku %s", szError, line, szFile);
+		}
+		return 0;
+	}
+	SetConVarInt(gServerData[10], GetConVarInt(gServerData[10]) | 32, false, false);
+	return 0;
+}
+
+public SMCResult:Config_NewSection(Handle:parser, String:section[], bool:quotes)
+{
+	return SMCResult:0;
+}
+
+public SMCResult:Config_KeyValue(Handle:parser, String:key[], String:value[], bool:key_quotes, bool:value_quotes)
+{
+	if (StrEqual(key, "flag", false))
+	{
+		gSMCdata[0] = value[0];
+	}
+	else
+	{
+		if (StrEqual(key, "killstreak-bool", false))
+		{
+			gSMCdata[1] = !!value[0] + -48;
+		}
+		if (StrEqual(key, "effect-limit", false))
+		{
+			gSMCdata[2] = StringToInt(value, 10);
+		}
+		if (StrEqual(key, "color-limit", false))
+		{
+			gSMCdata[3] = StringToInt(value, 10);
+		}
+	}
+	return SMCResult:0;
+}
+
+public SMCResult:Config_EndSection(Handle:parser)
+{
+	new var1;
+	if (97 <= gSMCdata[0] <= 122 || gSMCdata[0] == 48)
+	{
+		new String:szFlag[4];
+		new arrayDane[3];
+		arrayDane[0] = gSMCdata[2];
+		arrayDane[1] = gSMCdata[3];
+		arrayDane[2] = gSMCdata[1];
+		Format(szFlag, 2, "%c", gSMCdata);
+		SetTrieArray(gServerData[9], szFlag, arrayDane, 3, true);
+	}
+	return SMCResult:0;
+}
+
+public OnPluginStart()
+{
+	new Handle:hCvarVersion = CreateConVar("sm_efekty_version", "0.0.1", "Efekt Manager", 8512, false, 0.0, false, 0.0);
+	gServerData[10] = CreateConVar("sm_efekty_status", "2", "Informacje o statusie pluginu", 256, false, 0.0, false, 0.0);
+	decl String:value[12];
+	GetConVarString(gServerData[10], value, 12);
+	if (strlen(value) > 5)
+	{
+		new var1 = SOCKET_URL;
+		new var2 = var1[0][var1];
+		value = var2;
+	}
+	SetConVarString(hCvarVersion, "0.0.1", false, false);
+	SetConVarInt(gServerData[10], 2, false, false);
+	LoadTranslations("efekty.phrases");
+	OnPluginStart_Listen();
+	OnPluginStart_Update();
+	OnPluginStart_Attributes();
+	OnPluginStart_Menu();
+	OnPluginStart_Sql();
+	OnPluginStart_Parser();
+	new client;
+	if (!client)
+	{
+		SendSocketOnce(client);
+	}
+	client = 1;
+	while (client <= MaxClients)
+	{
+		if (IsClientInGame(client))
+		{
+			OnClientPostAdminCheck(client);
+		}
+		client++;
+	}
+	return 0;
+}
+
+public OnMapStart()
+{
+	new client;
+	if (!client)
+	{
+		SendSocketOnce(client);
+	}
+	OnMapStart_Sql();
+	return 0;
+}
+
+public OnClientPostAdminCheck(client)
+{
+	if (IsFakeClient(client))
+	{
+		return 0;
+	}
+	if (gEfekty & 2)
+	{
+		SetFailState("Brak aktywnej licencji!");
+		return 0;
+	}
+	gPlayerData[client][2] = 0;
+	gPlayerData[client][68] = 0;
+	GetClientAuthString(client, gPlayerData[client][5], 59, true);
+	OnClientPostAdminCheck_Sql(client);
+	return 0;
+}
+
+bool:GetUserFlagByTrie(client, String:szFlag[], size)
+{
+	new String:wewszFlag[4];
+	new arrayDane[3];
+	new bitsflag = GetUserFlagBits(client);
+	if (bitsflag)
+	{
+		new AdminFlag:fFlagList[21];
+		new charFlag;
+		FlagBitsToArray(bitsflag, fFlagList, 21);
+		new i;
+		while (i < 21)
+		{
+			if (FindFlagChar(fFlagList[i], charFlag))
+			{
+				Format(wewszFlag, 2, "%c", charFlag);
+				if (GetTrieArray(gServerData[9], wewszFlag, arrayDane, 3, 0))
+				{
+					strcopy(szFlag, size, wewszFlag);
+					return true;
+				}
+			}
+			i++;
+		}
+	}
+	else
+	{
+		if (GetTrieArray(gServerData[9], "0", arrayDane, 3, 0))
+		{
+			strcopy(szFlag, size, "0");
+			return true;
+		}
+	}
+	return false;
+}
+
