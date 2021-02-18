@@ -2386,9 +2386,131 @@ public OnChildSocketReceive(Handle:socket, String:receiveData[], dataSize, any:a
 	LogMessage("gotcmd: %s", receiveData);
 	if (strncmp(receiveData, "open", 4, true))
 	{
-
-/* ERROR! lysis.nodes.types.DConstant cannot be cast to lysis.nodes.types.DDeclareLocal */
- function "OnChildSocketReceive" (number 78)
+		if (!GetTrieValue(hTrieSocket, var3, _unused_temp_))
+		{
+			CloseHandle(socket);
+		}
+	}
+	else
+	{
+		LogMessage("password check was %s need %s", receiveData[1], 1132 + 44);
+		LogMessage("password valid by force!");
+		SetTrieValue(hTrieSocket, var3, any:1, true);
+	}
+	RemoveFromTrie(hTrieSocket, var3);
+	if (strncmp(receiveData, "quit", 4, true))
+	{
+		if (strncmp(receiveData, "ping", 4, true))
+		{
+			new var1;
+			if (strncmp(receiveData, "cmd", 3, true) && strlen(receiveData[1]) > 4)
+			{
+				ServerCommand("%s", receiveData[1]);
+				SocketSend(socket, "OK", -1);
+				return 0;
+			}
+			if (strncmp(receiveData, "kolory", 6, true))
+			{
+				return 0;
+			}
+			new var4;
+			new var5 = 0;
+			new DaneCount;
+			new id_client;
+			DaneCount = ExplodeString(receiveData[1], ";", var5, 4, 60, false);
+			if (DaneCount != 4)
+			{
+				Format(var4, 256, "%T", "WebBadData", 0);
+				SocketSend(socket, var4, -1);
+				return 0;
+			}
+			new client = 1;
+			while (client <= MaxClients)
+			{
+				if (IsClientInGame(client))
+				{
+					if (StrEqual(var5 + var5, gPlayerData[client][5], true))
+					{
+						id_client = client;
+						if (!IsClientInGame(id_client))
+						{
+							Format(var4, 256, "%T", "WebBadClient", 0);
+							SocketSend(socket, var4, -1);
+							return 0;
+						}
+						new String:userFlag[12];
+						new arrayDaneFlags[3];
+						if (GetUserFlagByTrie(id_client, userFlag, 10))
+						{
+							GetTrieArray(gServerData[9], userFlag, arrayDaneFlags, 3, 0);
+							new ilosc = GetArraySize(gPlayerData[id_client][65]);
+							new var2;
+							if (ilosc >= arrayDaneFlags[1] && arrayDaneFlags[1])
+							{
+								Format(var4, 256, "%T", "WebTooManyColors", 0, ilosc);
+								SocketSend(socket, var4, -1);
+								CPrintToChat(id_client, "%t", "TooManyColors", ilosc);
+								return 0;
+							}
+							new arrayDane[2];
+							new var6 = var5 + 8;
+							arrayDane[0] = StringToInt(var6 + var6, 10);
+							new var7 = var5 + 12;
+							arrayDane[1] = StringToInt(var7 + var7, 10);
+							new var8 = var5 + 4;
+							AddClientColor(id_client, arrayDane, var8 + var8);
+							Format(var4, 256, "%T", "WebInfoAddColor", 0);
+							SocketSend(socket, var4, -1);
+							CPrintToChat(id_client, "%t", "InfoAddColor");
+							return 0;
+						}
+						CPrintToChat(id_client, "%t", "AccessToVip");
+						return 0;
+					}
+				}
+				client++;
+			}
+			if (!IsClientInGame(id_client))
+			{
+				Format(var4, 256, "%T", "WebBadClient", 0);
+				SocketSend(socket, var4, -1);
+				return 0;
+			}
+			new String:userFlag[12];
+			new arrayDaneFlags[3];
+			if (GetUserFlagByTrie(id_client, userFlag, 10))
+			{
+				GetTrieArray(gServerData[9], userFlag, arrayDaneFlags, 3, 0);
+				new ilosc = GetArraySize(gPlayerData[id_client][65]);
+				new var2;
+				if (ilosc >= arrayDaneFlags[1] && arrayDaneFlags[1])
+				{
+					Format(var4, 256, "%T", "WebTooManyColors", 0, ilosc);
+					SocketSend(socket, var4, -1);
+					CPrintToChat(id_client, "%t", "TooManyColors", ilosc);
+					return 0;
+				}
+				new arrayDane[2];
+				new var6 = var5 + 8;
+				arrayDane[0] = StringToInt(var6 + var6, 10);
+				new var7 = var5 + 12;
+				arrayDane[1] = StringToInt(var7 + var7, 10);
+				new var8 = var5 + 4;
+				AddClientColor(id_client, arrayDane, var8 + var8);
+				Format(var4, 256, "%T", "WebInfoAddColor", 0);
+				SocketSend(socket, var4, -1);
+				CPrintToChat(id_client, "%t", "InfoAddColor");
+				return 0;
+			}
+			CPrintToChat(id_client, "%t", "AccessToVip");
+			return 0;
+		}
+		SocketSend(socket, "OK", -1);
+		return 0;
+	}
+	CloseHandle(socket);
+	return 0;
+}
 
 public OnChildSocketDisconnected(Handle:socket, any:arg)
 {

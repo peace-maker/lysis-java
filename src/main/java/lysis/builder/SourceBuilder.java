@@ -318,8 +318,15 @@ public class SourceBuilder {
 	}
 
 	private String buildLocalRef(DLocalRef lref) {
-		if (lref.getOperand(0) instanceof DTempName)
+		if (lref.getOperand(0).type() == NodeType.TempName)
 			return ((DTempName) lref.getOperand(0)).name();
+		// A dummy variable that got overoptimized to a single constant.
+		// new value = 0;
+		// GetTrieValue(hTrie, key, value)
+		// |value| is never used elsewhere.
+		// TODO: Prevent removal of this stack variable, since it's not just a stack temporary per se.
+		if (lref.getOperand(0).type() == NodeType.Constant)
+			return "_unused_temp_";
 		if (lref.local() == null)
 			return "_NULLVAR_";
 		return lref.local().var().name();
