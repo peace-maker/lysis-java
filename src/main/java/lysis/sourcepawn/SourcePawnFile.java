@@ -401,22 +401,19 @@ public class SourcePawnFile extends PawnFile {
 			ExtendedDataInputStream br = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, sc.dataoffs, sc.size));
 
-			LinkedList<Variable> globals = new LinkedList<Variable>();
-
 			int numPubVars = sc.size / 8;
 			pubvars_ = new PubVar[numPubVars];
+			globals_ = new Variable[numPubVars];
 			for (int i = 0; i < numPubVars; i++) {
 				long address = br.ReadUInt32();
 				long nameOffset = br.ReadUInt32();
 				String name = ReadString(binary, sections_.get(".names").dataoffs + (int) nameOffset);
 				pubvars_[i] = new PubVar(name, address);
 
-				Variable v = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global,
+				// Add the public variables to the list right away.
+				globals_[i] = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global,
 						name, null);
-				globals.add(v);
 			}
-			// Add the public variables to the list right away.
-			globals_ = globals.toArray(new Variable[0]);
 			br.close();
 
 			// Collect the addresses of strings in structs to be able

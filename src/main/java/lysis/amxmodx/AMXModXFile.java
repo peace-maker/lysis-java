@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -35,8 +36,11 @@ public class AMXModXFile extends PawnFile {
 	public final static long MIN_DEBUG_FILE_VERSION = 8;
 	public final static long CUR_FILE_VERSION = 8;
 	public final static int DEFSIZE = 8;
-	public final static int AMX_FLAG_DEBUG = 0x2;
-	public final static int AMX_FLAG_COMPACT = 0x4;
+	public final static int AMX_FLAG_DEBUG = 0x2; /* symbolic info. available */
+	public final static int AMX_FLAG_COMPACT = 0x4; /* compact encoding */
+	public final static int AMX_FLAG_BYTEOPC = 0x8; /* opcode is a byte (not a cell) */
+	public final static int AMX_FLAG_NOCHECKS = 0x10; /* no array bounds checking; no STMT opcode */
+
 	public final static byte IDENT_VARIABLE = 1;
 	public final static byte IDENT_REFERENCE = 2;
 	public final static byte IDENT_ARRAY = 3;
@@ -169,6 +173,7 @@ public class AMXModXFile extends PawnFile {
 		if (amx.publics > 0) {
 			int count = (amx.natives - amx.publics) / DEFSIZE;
 			publics_ = new Public[count];
+			functions_ = new Function[count];
 			ExtendedDataInputStream r = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, amx.publics, count * DEFSIZE));
 			for (int i = 0; i < publics_.length; i++) {
@@ -176,6 +181,7 @@ public class AMXModXFile extends PawnFile {
 				int nameoffset = r.ReadInt32();
 				String name = ReadName(binary, nameoffset);
 				publics_[i] = new Public(name, address);
+				functions_[i] = new Function(address, address, 0, name);
 			}
 			r.close();
 		}
@@ -189,6 +195,11 @@ public class AMXModXFile extends PawnFile {
 		{
 			byte[] codeBytes = Slice(binary, amx.cod, amx.dat - amx.cod);
 			code_ = new Code(codeBytes, (byte) 0, 0, 0, 0);
+			
+			// Update public function codeend to assume the rest of the file.
+			for (Function f : functions_) {
+				f.setCodeEnd(code().bytes().length + 1);
+			}
 		}
 
 		// .DATA
@@ -216,6 +227,7 @@ public class AMXModXFile extends PawnFile {
 		if (amx.pubvars > 0) {
 			int count = (amx.tags - amx.pubvars) / DEFSIZE;
 			pubvars_ = new PubVar[count];
+			globals_ = new Variable[count];
 			ExtendedDataInputStream r = new ExtendedDataInputStream(
 					new ByteArrayInputStream(binary, amx.pubvars, count * DEFSIZE));
 			for (int i = 0; i < count; i++) {
@@ -223,7 +235,10 @@ public class AMXModXFile extends PawnFile {
 				int nameoffset = r.ReadInt32();
 				String name = ReadName(binary, nameoffset);
 				pubvars_[i] = new PubVar(name, address);
+				globals_[i] = new Variable(address, 0, null, 0, code().bytes().length, VariableType.Normal, Scope.Global,
+						name, null);
 			}
+			allvars_ = globals_.clone();
 			r.close();
 		}
 
@@ -273,8 +288,15 @@ public class AMXModXFile extends PawnFile {
 				// System.out.println(i + ": " + debugLines_[i]);
 			}
 
+			// Merge the list with the .publics one
 			List<Function> functions = new LinkedList<Function>();
+			if (functions_ != null)
+				functions.addAll(Arrays.asList(functions_));
+			
+			// Merge the list with the .pubvars one
 			List<Variable> globals = new LinkedList<Variable>();
+			if (globals_ != null)
+				globals.addAll(Arrays.asList(globals_));
 			List<Variable> locals = new LinkedList<Variable>();
 			List<Variable> allvars = new LinkedList<Variable>();
 
@@ -296,7 +318,27 @@ public class AMXModXFile extends PawnFile {
 				// vclassByte, dimcount, name);
 
 				if (ident == IDENT_FUNCTION) {
+					// Been in PUBLICS as well?
 					Function func = new Function(addr, codestart, codeend, name, tagid);
+					Function existingFunction = null;
+					for (Function otherFunc : functions) {
+						if (name.equals(otherFunc.name())) {
+							existingFunction = otherFunc;
+							break;
+						}
+					}
+						
+					// This function came up already.
+					if (existingFunction != null) {
+						if (existingFunction.address() != func.address()
+								|| existingFunction.codeStart() != func.codeStart()) {
+							System.err.printf(
+									"// Duplicate information for symbol \"%s\" at %x with different addresses. Keeping the existing at %x.%n",
+									name, func.address(), existingFunction.address());
+						}
+						// Remove the old one from the list as this might have more info.
+						functions.remove(existingFunction);
+					}
 					functions.add(func);
 				} else {
 					VariableType type = FromIdent(ident);
@@ -311,9 +353,29 @@ public class AMXModXFile extends PawnFile {
 					}
 
 					Variable var = new Variable(addr, tagid, null, codestart, codeend, type, vclass, name, dims);
-					if (vclass == Scope.Global)
+					if (vclass == Scope.Global) {
+						// Been in PUBVARS as well?
+						Variable existingGlobal = null;
+						for (Variable glob : globals) {
+							if (name.equals(glob.name())) {
+								existingGlobal = glob;
+								break;
+							}
+						}
+
+						// This function came up already.
+						if (existingGlobal != null) {
+							if (existingGlobal.address() != addr) {
+								System.err.printf(
+										"// Error reading debug info. Duplicate information for symbol \"%s\" with differing address %x from already known address %x.%n",
+										name, addr, existingGlobal.address());
+								break;
+							}
+							// Remove the old one from the list as this might have more info.
+							globals.remove(existingGlobal);
+						}
 						globals.add(var);
-					else
+					} else
 						locals.add(var);
 				}
 			}

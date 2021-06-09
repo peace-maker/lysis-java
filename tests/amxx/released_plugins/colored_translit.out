@@ -1,0 +1,2499 @@
+new MapName;
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+new g_var31c144;
+new g_var31c148;
+new g_var31c1cc;
+new g_var31c168;
+new g_var31c1d0;
+new g_var31c1d4;
+new g_var31c150;
+new g_var31c128;
+new g_var31c194;
+new g_var31c398;
+new g_var31c180;
+new g_var31c198;
+new g_var31c16c;
+new g_var31c19c;
+new g_var31c174;
+new g_var31c154;
+new g_var31c158;
+new g_var31c394;
+new g_var31c124;
+new g_var31c1ac;
+new g_var31c13c;
+new g_var31c1a0;
+new g_var31c1dc;
+new g_var31c15c;
+new g_var31c140;
+new g_var31c160;
+new g_var31c1a4;
+new g_var31c1e0;
+new g_var31c1e4;
+new g_var31c1a8;
+new g_var31c12c;
+new g_var31c3a0;
+new g_var31c138;
+new g_var31c1b4;
+new g_var31c130;
+new g_var31c164;
+new g_var11dc0;
+new g_var31c384;
+new g_var31c1b0;
+new g_var31c1c8;
+new g_var31c378;
+new g_var31c37c;
+new g_var31c1b8;
+new g_var31c388;
+new g_var31c1bc;
+new g_var31c38c;
+new g_var31c1c0;
+new g_var31c390;
+new g_var31c1c4;
+new g_var31c39c;
+new g_var31c380;
+new g_var31c134;
+new g_var31c14c;
+new g_var31c170;
+new g_var31c178;
+new g_var31c17c;
+new g_var31c184;
+new g_var31c188;
+new g_var31c18c;
+new g_var31c190;
+new g_var31c1d8;
+public Block(_arg0)
+{
+	3260908[_arg0] = !3260908[_arg0];
+	new var1;
+	if (3260908[_arg0])
+	{
+		var1 = 3265140;
+	}
+	else
+	{
+		var1 = 3265208;
+	}
+	client_print_color(_arg0, MaxClients, "Отображение рангов [\x04%s\x01]", var1);
+	return 0;
+}
+
+public OnAPISendChatPrefix(_arg0, _arg1, _arg2)
+{
+	new var1;
+	if (_arg2 == 1 && _arg1 && cmsapi_get_user_services(_arg0, 3272404, "_nick_prefix", MaxClients, MaxClients))
+	{
+		formatex(3207304[_arg0], 63, "%s", _arg1);
+	}
+	return 0;
+}
+
+public ShowInfo(_arg0)
+{
+	if (get_pcvar_num(g_var31c144) == 1)
+	{
+		3229216[_arg0] = 1;
+	}
+	new var1;
+	if (get_pcvar_num(g_var31c148) == 1 && get_pcvar_num(g_var31c144) != 2)
+	{
+		if (!is_user_connected(_arg0))
+		{
+			return 0;
+		}
+		formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_INFO_RUS");
+		sub_10afc(_arg0, 3259684, 0);
+		formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_INFO_ENG");
+		sub_10afc(_arg0, 3259684, 0);
+	}
+	return 0;
+}
+
+public client_disconnected(_arg0)
+{
+	remove_task(_arg0 + 3000, MaxClients);
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	3260908[_arg0] = 1;
+	3261172[_arg0] = 0;
+	set_task(1092616192, "ShowInfo", _arg0, 3272356, MaxClients, 3272360, MaxClients);
+	get_user_name(_arg0, 3252004, 63);
+	get_user_ip(_arg0, 3252260, 31, 1);
+	if (3229084[_arg0] > get_systime(MaxClients))
+	{
+		new var1;
+		if (!equal(3202948[_arg0], 3252004, MaxClients) && !equal(3224464[_arg0], 3252260, MaxClients))
+		{
+			3229084[_arg0] = get_systime(MaxClients);
+			3228820[_arg0] = 0;
+			3228952[_arg0] = 0;
+		}
+	}
+	3207304[_arg0] = 0;
+	3215884[_arg0] = 0;
+	set_task(1073741824, "setprefix", _arg0 + 3000, 3272356, MaxClients, 3272360, MaxClients);
+	return 0;
+}
+
+public cmd_gag(_arg0, _arg1, _arg2)
+{
+	if (!sub_5d8(_arg0, _arg1, _arg2, 3, 0))
+	{
+		return 1;
+	}
+	read_args(3260452, 63);
+	parse(3260452, 3252516, 31, 3252388, 31);
+	if (!sub_8(3252388))
+	{
+		formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_CMD_ERROR");
+		sub_10afc(_arg0, 3259684, 0);
+		return 0;
+	}
+	g_var31c1cc = sub_904(_arg0, 3252516, 8);
+	if (!g_var31c1cc)
+	{
+		return 1;
+	}
+	get_user_name(_arg0, 3252644, 31);
+	get_user_name(g_var31c1cc, 3252772, 31);
+	new var1;
+	if (get_user_flags(g_var31c1cc, MaxClients) & 262146 && get_pcvar_num(g_var31c168))
+	{
+		formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_IMMUNITY", 3252772);
+		sub_10afc(_arg0, 3259684, 0);
+	}
+	else
+	{
+		g_var31c1d0 = str_to_num(3252388);
+		get_user_name(g_var31c1cc, 3202948[g_var31c1cc], 31);
+		get_user_ip(g_var31c1cc, 3224464[g_var31c1cc], 31, 1);
+		g_var31c1d4 = get_systime(MaxClients);
+		3229084[g_var31c1cc] = g_var31c1d0 * 60 + g_var31c1d4;
+		3261040[g_var31c1cc] = 0;
+		if (get_pcvar_num(g_var31c150))
+		{
+			client_cmd(g_var31c1cc, "spk buttons/button5");
+			client_cmd(_arg0, "spk buttons/button5");
+		}
+		switch (get_cvar_num("amx_show_activity"))
+		{
+			case 0:
+			{
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_A0_GAG", 3252772, g_var31c1d0);
+				sub_10afc(_arg0, 3259684, 0);
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_GAGED", g_var31c1d0);
+				sub_10afc(g_var31c1cc, 3259684, 0);
+			}
+			case 1:
+			{
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", -1, "CT_A1_GAG", 3252772, g_var31c1d0);
+				new var5 = 0;
+				while (get_maxplayers() >= var5)
+				{
+					new var3;
+					if (!is_user_connected(var5) || g_var31c1cc != var5)
+					{
+					}
+					else
+					{
+						sub_10afc(var5, 3259684, 0);
+					}
+					var5++;
+				}
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_GAGED", g_var31c1d0);
+				sub_10afc(g_var31c1cc, 3259684, 0);
+			}
+			case 2:
+			{
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", -1, "CT_A2_GAG", 3252644, 3252772, g_var31c1d0);
+				new var4 = 0;
+				while (get_maxplayers() >= var4)
+				{
+					new var2;
+					if (!is_user_connected(var4) || g_var31c1cc != var4)
+					{
+					}
+					else
+					{
+						sub_10afc(var4, 3259684, 0);
+					}
+					var4++;
+				}
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_GAGED2", 3252644, g_var31c1d0);
+				sub_10afc(g_var31c1cc, 3259684, 0);
+				if (get_pcvar_num(g_var31c128))
+				{
+					get_time("20%y.%m.%d", 3242148, 31);
+					get_time("%H:%M:%S", 3242532, 31);
+					formatex(3242660, 63, "%s/colored_translit", 3254564);
+					formatex(3241636, 127, "%s/gag_%s.log", 3242660, 3242148);
+					if (!dir_exists(3242660, MaxClients))
+					{
+						mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+					}
+					get_user_ip(g_var31c1cc, 3242276, 31, 1);
+					get_user_ip(_arg0, 3242916, 31, 1);
+					formatex(3229348, 1023, "%s - ADMIN %s <%s> has gaged %s <%s> for %d minutes", 3242532, 3252644, 3242916, 3252772, 3242276, g_var31c1d0);
+					write_file(3241636, 3229348, -1);
+				}
+			}
+			default:
+			{
+			}
+		}
+	}
+	return 0;
+}
+
+public cmd_ungag(_arg0, _arg1, _arg2)
+{
+	if (!sub_5d8(_arg0, _arg1, _arg2, 2, 0))
+	{
+		return 1;
+	}
+	g_var31c1d4 = get_systime(MaxClients);
+	read_args(3252516, 31);
+	g_var31c1cc = sub_904(_arg0, 3252516, 8);
+	if (!g_var31c1cc)
+	{
+		return 1;
+	}
+	get_user_name(_arg0, 3252644, 31);
+	get_user_name(g_var31c1cc, 3252772, 31);
+	if (g_var31c1d4 >= 3229084[g_var31c1cc])
+	{
+		formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_ALREADY", 3252772);
+		sub_10afc(_arg0, 3259684, 0);
+	}
+	else
+	{
+		g_var31c1d4 = get_systime(MaxClients);
+		3229084[g_var31c1cc] = g_var31c1d4;
+		if (get_pcvar_num(g_var31c150))
+		{
+			client_cmd(g_var31c1cc, "spk buttons/button6");
+			client_cmd(_arg0, "spk buttons/button6");
+		}
+		switch (get_cvar_num("amx_show_activity"))
+		{
+			case 0:
+			{
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_A0_UNGAG", 3252772);
+				sub_10afc(_arg0, 3259684, 0);
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_UNGAGED");
+				sub_10afc(g_var31c1cc, 3259684, 0);
+			}
+			case 1:
+			{
+				formatex(3259684, 191, "[\x04%s\x01] %L", "Colored Translit", -1, "CT_A1_UNGAG", 3252772);
+				new var4 = 0;
+				while (get_maxplayers() >= var4)
+				{
+					new var2;
+					if (!is_user_connected(var4) || g_var31c1cc != var4)
+					{
+					}
+					else
+					{
+						sub_10afc(var4, 3259684, 0);
+					}
+					var4++;
+				}
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_UNGAGED");
+				sub_10afc(g_var31c1cc, 3259684, 0);
+			}
+			case 2:
+			{
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", -1, "CT_A2_UNGAG", 3252644, 3252772);
+				new var3 = 0;
+				while (get_maxplayers() >= var3)
+				{
+					new var1;
+					if (!is_user_connected(var3) || g_var31c1cc != var3)
+					{
+					}
+					else
+					{
+						sub_10afc(var3, 3259684, 0);
+					}
+					var3++;
+				}
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", g_var31c1cc, "CT_YOU_UNGAGED2", 3252644);
+				sub_10afc(g_var31c1cc, 3259684, 0);
+				if (get_pcvar_num(g_var31c128))
+				{
+					get_time("20%y.%m.%d", 3242148, 31);
+					get_time("%H:%M:%S", 3242532, 31);
+					formatex(3242660, 63, "%s/colored_translit", 3254564);
+					formatex(3241636, 127, "%s/gag_%s.log", 3242660, 3242148);
+					if (!dir_exists(3242660, MaxClients))
+					{
+						mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+					}
+					get_user_ip(g_var31c1cc, 3242276, 31, 1);
+					get_user_ip(_arg0, 3242916, 31, 1);
+					formatex(3229348, 1023, "%s - ADMIN %s <%s> has ungaged %s <%s>", 3242532, 3252644, 3242916, 3252772, 3242276);
+					write_file(3241636, 3229348, -1);
+				}
+			}
+			default:
+			{
+			}
+		}
+	}
+	return 0;
+}
+
+public hook_say(_arg0)
+{
+	new var1;
+	if (is_user_hltv(_arg0) || is_user_bot(_arg0))
+	{
+		return 0;
+	}
+	if (sub_d868(_arg0))
+	{
+		return 1;
+	}
+	read_args(3249188, 255);
+	remove_quotes(3249188);
+	sub_2dc(3249188, 255, "%s", 3277924);
+	new var20 = 0;
+	while (var20 < 4)
+	{
+		21536[var20] = 0;
+		var20++;
+	}
+	ExecuteForward(g_var31c194, 3260904, _arg0, 3249188, 0);
+	if (sub_e560(3249188))
+	{
+		return 0;
+	}
+	if (sub_daf0(3249188))
+	{
+		return 1;
+	}
+	if (sub_db88(3249188))
+	{
+		return 1;
+	}
+	g_var31c398 = 0;
+	get_time("20%y.%m.%d", 3242148, 31);
+	get_time("%H:%M:%S", 3242532, 31);
+	new var2;
+	if (get_pcvar_num(g_var31c180) && sub_dc10(_arg0, 3249188))
+	{
+		ExecuteForward(g_var31c198, 3260904, _arg0, 3249188);
+		sub_e614(_arg0, 1);
+		return 1;
+	}
+	new var3;
+	if (get_pcvar_num(g_var31c16c) && sub_dd54(_arg0, 3249188))
+	{
+		ExecuteForward(g_var31c19c, 3260904, _arg0, 3249188);
+		3228820[_arg0]++;
+		if (get_pcvar_num(g_var31c174) <= 3228820[_arg0] - 1)
+		{
+			3228820[_arg0] = 0;
+			sub_e614(_arg0, 2);
+		}
+		else
+		{
+			formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SPAMWARN", get_pcvar_num(g_var31c174) - 3228820[_arg0]);
+			sub_10afc(_arg0, 3259684, 0);
+			if (get_pcvar_num(g_var31c150))
+			{
+				client_cmd(_arg0, "spk buttons/blip2");
+			}
+		}
+		return 1;
+	}
+	new var4;
+	if (get_pcvar_num(g_var31c154) && sub_de98(3249188))
+	{
+		if (get_pcvar_num(g_var31c158) == 1)
+		{
+			g_var31c394 = 1;
+		}
+		else
+		{
+			if (get_pcvar_num(g_var31c158) == 2)
+			{
+				return 1;
+			}
+			if (get_pcvar_num(g_var31c158) == 3)
+			{
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		g_var31c394 = 0;
+	}
+	if (sub_df78(3249188))
+	{
+		return 1;
+	}
+	get_user_team(_arg0, 3251876, 31);
+	sub_fc60(255, 3249188);
+	new var5;
+	if (get_pcvar_num(g_var31c124) && !g_var31c394)
+	{
+		new var6;
+		if (3229216[_arg0] == 1 || get_pcvar_num(g_var31c144) == 2)
+		{
+			new var21 = 0;
+			while (var21 < g_var31c1ac)
+			{
+				if (contain(3250212, 3169156[var21]) != -1)
+				{
+					sub_2dc(3250212, 255, 3169156[var21], 3186052[var21]);
+				}
+				var21++;
+			}
+			new var22 = 0;
+			while (var22 < g_var31c1ac)
+			{
+				if (contain(3249188, 3169156[var22]) != -1)
+				{
+					sub_2dc(3249188, 255, 3169156[var22], 3186052[var22]);
+				}
+				var22++;
+			}
+		}
+	}
+	get_user_name(_arg0, 3251236, 127);
+	if (get_pcvar_num(g_var31c13c))
+	{
+		new var23;
+		var23 = sub_e058(_arg0, 3250212);
+		if (var23)
+		{
+			ExecuteForward(g_var31c1a0, 3260904, _arg0, 3249188);
+		}
+		if (var23)
+		{
+			g_var31c1dc = 1;
+			3228952[_arg0]++;
+			new var7;
+			if (get_pcvar_num(g_var31c15c) && 3228952[_arg0] - 1 >= get_pcvar_num(g_var31c140))
+			{
+				3228952[_arg0] = 0;
+				3261040[_arg0] = 0;
+				g_var31c1d4 = get_systime(MaxClients);
+				3229084[_arg0] = get_pcvar_num(g_var31c160) * 60 + g_var31c1d4;
+				get_user_name(_arg0, 3202948[_arg0], 31);
+				get_user_ip(_arg0, 3224464[_arg0], 31, 1);
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SWEAR_GAG", get_pcvar_num(g_var31c160));
+				sub_10afc(_arg0, 3259684, 0);
+				if (get_pcvar_num(g_var31c128) == 1)
+				{
+					formatex(3242660, 63, "%s/chat_translit", 3254564);
+					formatex(3241636, 127, "%s/gag_%s.log", 3242660, 3242148);
+					if (!dir_exists(3242660, MaxClients))
+					{
+						mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+					}
+					get_user_ip(_arg0, 3242276, 31, 1);
+					formatex(3229348, 1023, "%s - Swear Filter has gaged %s <%s> for %d minutes. Message: %s. Found: %s", 3242532, 3202948[_arg0], 3242276, get_pcvar_num(g_var31c160), 3250212, 2909156[var23 + -1]);
+					write_file(3241636, 3229348, -1);
+				}
+				if (get_pcvar_num(g_var31c150))
+				{
+					client_cmd(_arg0, "spk buttons/button5");
+				}
+			}
+			else
+			{
+				if (get_pcvar_num(g_var31c15c))
+				{
+					formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SWEARWARN", get_pcvar_num(g_var31c140) - 3228952[_arg0]);
+					sub_10afc(_arg0, 3259684, 0);
+					if (get_pcvar_num(g_var31c150))
+					{
+						client_cmd(_arg0, "spk buttons/blip2");
+					}
+				}
+			}
+		}
+		else
+		{
+			g_var31c1dc = 0;
+		}
+	}
+	ExecuteForward(g_var31c1a4, 3260904, _arg0);
+	g_var31c1e0 = 0;
+	g_var31c1e4 = 0;
+	new var24 = 0;
+	g_var31c1e0 = formatex(3243044, 511, 3279144);
+	if (21536/* ERROR unknown load Constant */)
+	{
+		var24 = 0;
+		while (21536/* ERROR unknown load Constant */ > var24)
+		{
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", 880/* ERROR unknown load Constant */ + 880[var24]) + g_var31c1e0;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 880/* ERROR unknown load Constant */ + 880[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	new var8;
+	if (!is_user_alive(_arg0) && !equal(3251876, "SPECTATOR", MaxClients))
+	{
+		g_var31c1a8 = 0;
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x01*%L* ", -1, "CT_DEAD") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "*%L* ", -1, "CT_DEAD") + g_var31c1e4;
+	}
+	else
+	{
+		new var9;
+		if (!is_user_alive(_arg0) && equal(3251876, "SPECTATOR", MaxClients))
+		{
+			g_var31c1a8 = 0;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x01*%L* ", -1, "CT_SPECTATOR") + g_var31c1e0;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "*%L* ", -1, "CT_SPECTATOR") + g_var31c1e4;
+		}
+		g_var31c1a8 = 1;
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, 3279536) + g_var31c1e0;
+	}
+	if (21536 + 4/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 4/* ERROR unknown load Binary */ > var24)
+		{
+			new var25 = 880 + 4;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", var25 + var25[var24]) + g_var31c1e0;
+			new var26 = 880 + 4;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", var26 + var26[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	new var10;
+	if (get_user_flags(_arg0, MaxClients) & 262146 && strlen(3207304[_arg0]) > 0)
+	{
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "[\x04%s\x01]%s%s%s", 3207304[_arg0], "%s", "%s", "%s") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "[%s] ", 3207304[_arg0]) + g_var31c1e4;
+	}
+	else
+	{
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s%s%s", "%s", "%s", "%s") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "[%s] ", 3215884[_arg0]) + g_var31c1e4;
+	}
+	if (21536 + 8/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 8/* ERROR unknown load Binary */ > var24)
+		{
+			new var27 = 880 + 8;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", var27 + var27[var24]) + g_var31c1e0;
+			new var28 = 880 + 8;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", var28 + var28[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	if (get_user_flags(_arg0, MaxClients) & 262146)
+	{
+		switch (get_pcvar_num(g_var31c12c))
+		{
+			case 1:
+			{
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 2:
+			{
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x04%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 3:
+			{
+				g_var31c3a0 = -1;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 4:
+			{
+				g_var31c3a0 = -3;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 5:
+			{
+				g_var31c3a0 = -2;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 6:
+			{
+				g_var31c3a0 = _arg0;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+			}
+			default:
+			{
+			}
+		}
+		switch (get_pcvar_num(g_var31c138))
+		{
+			case 1:
+			{
+				new var16;
+				if (g_var31c1dc)
+				{
+					var16 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var16 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": %s", var16) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 2:
+			{
+				new var15;
+				if (g_var31c1dc)
+				{
+					var15 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var15 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x04%s", var15) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 3:
+			{
+				g_var31c3a0 = -1;
+				new var14;
+				if (g_var31c1dc)
+				{
+					var14 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var14 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var14) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 4:
+			{
+				g_var31c3a0 = -3;
+				new var13;
+				if (g_var31c1dc)
+				{
+					var13 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var13 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var13) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 5:
+			{
+				g_var31c3a0 = -2;
+				new var12;
+				if (g_var31c1dc)
+				{
+					var12 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var12 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var12) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 6:
+			{
+				g_var31c3a0 = _arg0;
+				new var11;
+				if (g_var31c1dc)
+				{
+					var11 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var11 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var11) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			default:
+			{
+			}
+		}
+	}
+	else
+	{
+		g_var31c3a0 = _arg0;
+		new var17;
+		if (g_var31c1dc)
+		{
+			var17 = 73156[random(g_var31c1b4)];
+		}
+		else
+		{
+			var17 = 3249188;
+		}
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s \x01: %s", 3251236, var17) + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s : %s ", 3251236, 3249188) + g_var31c1e4;
+	}
+	if (21536 + 12/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 12/* ERROR unknown load Binary */ > var24)
+		{
+			new var29 = 880 + 12;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, " %s", var29 + var29[var24]) + g_var31c1e0;
+			new var30 = 880 + 12;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s", var30 + var30[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	formatex(3247140, 511, 3243044, 3280408, 3280412, 3280416);
+	formatex(3245092, 511, 3243044, "[\x04", 3215884[_arg0], "\x01]");
+	switch (get_pcvar_num(g_var31c130))
+	{
+		case 0:
+		{
+			sub_102fc(g_var31c3a0, g_var31c1a8);
+		}
+		case 1:
+		{
+			sub_105d4(g_var31c3a0);
+		}
+		case 2:
+		{
+			if (get_user_flags(_arg0, MaxClients) & 8)
+			{
+				sub_105d4(g_var31c3a0);
+			}
+			else
+			{
+				sub_102fc(g_var31c3a0, g_var31c1a8);
+			}
+		}
+		default:
+		{
+		}
+	}
+	if (get_pcvar_num(g_var31c128))
+	{
+		formatex(3242660, 63, "%s/chat_translit", 3254564);
+		formatex(3241636, 127, "%s/chat_%s.txt", 3242660, 3242148);
+		if (!dir_exists(3242660, MaxClients))
+		{
+			mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+		}
+		if (!file_exists(3241636, MaxClients))
+		{
+			formatex(3239588, 511, "Start log %s", 3242148);
+			write_file(3241636, 3239588, -1);
+			write_file(3241636, 3280624, -1);
+		}
+		get_user_ip(_arg0, 3242276, 31, 1);
+		get_user_authid(_arg0, 3242404, 31);
+		formatex(3237540, 511, "%s [%s] - [%s] - ", 3242532, 3242404, 3242276);
+		formatex(3229348, 1023, "%s[ALL] -> %s", 3237540, 3233444);
+		write_file(3241636, 3229348, -1);
+		log_message("\"%s<%i><%s><%s>\" %s \"%s\"%s", 3251236, get_user_userid(_arg0), 3242404, 3251876, "say", 3249188, 3280880);
+	}
+	new var18;
+	if ((!g_var31c1dc || get_pcvar_num(g_var31c15c) == 1) && get_pcvar_num(g_var31c164))
+	{
+		g_var31c1d4 = get_systime(MaxClients);
+		3229084[_arg0] = get_pcvar_num(g_var31c164) + g_var31c1d4;
+		3261040[_arg0] = 1;
+	}
+	return 1;
+}
+
+public hook_say_team(_arg0)
+{
+	new var1;
+	if (is_user_hltv(_arg0) || is_user_bot(_arg0))
+	{
+		return 0;
+	}
+	if (sub_d868(_arg0))
+	{
+		return 1;
+	}
+	read_args(3249188, 255);
+	remove_quotes(3249188);
+	sub_2dc(3249188, 255, "%s", 3280896);
+	new var20 = 0;
+	while (var20 < 4)
+	{
+		21536[var20] = 0;
+		var20++;
+	}
+	ExecuteForward(g_var31c194, 3260904, _arg0, 3249188, 1);
+	if (sub_e560(3249188))
+	{
+		return 0;
+	}
+	if (sub_daf0(3249188))
+	{
+		return 1;
+	}
+	if (sub_db88(3249188))
+	{
+		if (get_pcvar_num(g_var31c158) == 1)
+		{
+			g_var31c398 = 1;
+		}
+		else
+		{
+			if (get_pcvar_num(g_var31c158) == 2)
+			{
+				return 1;
+			}
+			if (get_pcvar_num(g_var31c158) == 3)
+			{
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		g_var31c398 = 0;
+	}
+	get_time("20%y.%m.%d", 3242148, 31);
+	get_time("%H:%M:%S", 3242532, 31);
+	new var2;
+	if (get_pcvar_num(g_var31c180) && sub_dc10(_arg0, 3249188))
+	{
+		ExecuteForward(g_var31c198, 3260904, _arg0, 3249188);
+		sub_e614(_arg0, 1);
+		return 1;
+	}
+	new var3;
+	if (get_pcvar_num(g_var31c16c) && sub_dd54(_arg0, 3249188))
+	{
+		ExecuteForward(g_var31c19c, 3260904, _arg0, 3249188);
+		3228820[_arg0]++;
+		if (get_pcvar_num(g_var31c174) <= 3228820[_arg0] - 1)
+		{
+			3228820[_arg0] = 0;
+			sub_e614(_arg0, 2);
+		}
+		else
+		{
+			formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SPAMWARN", get_pcvar_num(g_var31c174) - 3228820[_arg0]);
+			sub_10afc(_arg0, 3259684, 0);
+			if (get_pcvar_num(g_var31c150))
+			{
+				client_cmd(_arg0, "spk buttons/blip2");
+			}
+		}
+		return 1;
+	}
+	new var4;
+	if (get_pcvar_num(g_var31c154) && sub_de98(3249188))
+	{
+		if (get_pcvar_num(g_var31c158) == 1)
+		{
+			g_var31c394 = 1;
+		}
+		else
+		{
+			if (get_pcvar_num(g_var31c158) == 2)
+			{
+				return 1;
+			}
+			if (get_pcvar_num(g_var31c158) == 3)
+			{
+				return 0;
+			}
+		}
+	}
+	else
+	{
+		g_var31c394 = 0;
+	}
+	if (sub_df78(3249188))
+	{
+		return 1;
+	}
+	get_user_team(_arg0, 3251876, 31);
+	sub_fc60(255, 3249188);
+	new var5;
+	if (get_pcvar_num(g_var31c124) && !g_var31c394)
+	{
+		new var6;
+		if (3229216[_arg0] == 1 || get_pcvar_num(g_var31c144) == 2)
+		{
+			new var21 = 0;
+			while (var21 < g_var31c1ac)
+			{
+				if (contain(3250212, 3169156[var21]) != -1)
+				{
+					sub_2dc(3250212, 255, 3169156[var21], 3186052[var21]);
+				}
+				var21++;
+			}
+			new var22 = 0;
+			while (var22 < g_var31c1ac)
+			{
+				if (contain(3249188, 3169156[var22]) != -1)
+				{
+					sub_2dc(3249188, 255, 3169156[var22], 3186052[var22]);
+				}
+				var22++;
+			}
+		}
+	}
+	get_user_name(_arg0, 3251236, 127);
+	if (get_pcvar_num(g_var31c13c))
+	{
+		new var23;
+		var23 = sub_e058(_arg0, 3250212);
+		if (var23)
+		{
+			ExecuteForward(g_var31c1a0, 3260904, _arg0, 3249188);
+		}
+		if (var23)
+		{
+			g_var31c1dc = 1;
+			3228952[_arg0]++;
+			new var7;
+			if (get_pcvar_num(g_var31c15c) && 3228952[_arg0] - 1 >= get_pcvar_num(g_var31c140))
+			{
+				3228952[_arg0] = 0;
+				3261040[_arg0] = 0;
+				g_var31c1d4 = get_systime(MaxClients);
+				3229084[_arg0] = get_pcvar_num(g_var31c160) * 60 + g_var31c1d4;
+				get_user_name(_arg0, 3202948[_arg0], 31);
+				get_user_ip(_arg0, 3224464[_arg0], 31, 1);
+				formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SWEAR_GAG", get_pcvar_num(g_var31c160));
+				sub_10afc(_arg0, 3259684, 0);
+				if (get_pcvar_num(g_var31c128) == 1)
+				{
+					formatex(3242660, 63, "%s/chat_translit", 3254564);
+					formatex(3241636, 127, "%s/gag_%s.log", 3242660, 3242148);
+					if (!dir_exists(3242660, MaxClients))
+					{
+						mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+					}
+					get_user_ip(_arg0, 3242276, 31, 1);
+					formatex(3229348, 1023, "%s - Swear Filter has gaged %s <%s> for %d minutes. Message: %s. Found: %s", 3242532, 3202948[_arg0], 3242276, get_pcvar_num(g_var31c160), 3250212, 2909156[var23 + -1]);
+					write_file(3241636, 3229348, -1);
+				}
+				if (get_pcvar_num(g_var31c150))
+				{
+					client_cmd(_arg0, "spk buttons/button5");
+				}
+			}
+			else
+			{
+				if (get_pcvar_num(g_var31c15c))
+				{
+					formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SWEARWARN", get_pcvar_num(g_var31c140) - 3228952[_arg0]);
+					sub_10afc(_arg0, 3259684, 0);
+					if (get_pcvar_num(g_var31c150))
+					{
+						client_cmd(_arg0, "spk buttons/blip2");
+					}
+				}
+			}
+		}
+		else
+		{
+			g_var31c1dc = 0;
+		}
+	}
+	ExecuteForward(g_var31c1a4, 3260904, _arg0);
+	g_var31c1e0 = 0;
+	g_var31c1e4 = 0;
+	new var24 = 0;
+	g_var31c1e0 = formatex(3243044, 511, 3282116);
+	if (21536/* ERROR unknown load Constant */)
+	{
+		var24 = 0;
+		while (21536/* ERROR unknown load Constant */ > var24)
+		{
+			log_amx("ADD %s", 880/* ERROR unknown load Constant */ + 880[var24]);
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", 880/* ERROR unknown load Constant */ + 880[var24]) + g_var31c1e0;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 880/* ERROR unknown load Constant */ + 880[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	new var8;
+	if (!is_user_alive(_arg0) && !equal(3251876, "SPECTATOR", MaxClients))
+	{
+		g_var31c1a8 = 0;
+		g_var31c1e0 = formatex(3243044, 511, "\x01*%L* ", -1, "CT_DEAD");
+		g_var31c1e4 = formatex(3233444, 1023, "*%L* ", -1, "CT_DEAD");
+	}
+	else
+	{
+		new var9;
+		if (!is_user_alive(_arg0) && equal(3251876, "SPECTATOR", MaxClients))
+		{
+			g_var31c1a8 = 0;
+			g_var31c1e0 = formatex(3243044, 511, "\x01*%L* ", -1, "CT_SPECTATOR");
+			g_var31c1e4 = formatex(3233444, 1023, "*%L* ", -1, "CT_SPECTATOR");
+		}
+		g_var31c1a8 = 1;
+		g_var31c1e0 = formatex(3243044, 511, 3282536);
+	}
+	if (equal(3251876, "TERRORIST", MaxClients))
+	{
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "(%L) ", -1, "CT_TERRORIST") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e0, "(%L) ", -1, "CT_TERRORIST") + g_var31c1e4;
+	}
+	else
+	{
+		if (equal(3251876, "CT", MaxClients))
+		{
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "(%L) ", -1, "CT_CT") + g_var31c1e0;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e0, "(%L) ", -1, "CT_CT") + g_var31c1e4;
+		}
+		if (equal(3251876, "SPECTATOR", MaxClients))
+		{
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "(%L) ", -1, "CT_SPECTATOR2") + g_var31c1e0;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e0, "(%L) ", -1, "CT_SPECTATOR2") + g_var31c1e4;
+		}
+	}
+	if (21536 + 4/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 4/* ERROR unknown load Binary */ > var24)
+		{
+			new var25 = 880 + 4;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", var25 + var25[var24]) + g_var31c1e0;
+			new var26 = 880 + 4;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", var26 + var26[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	new var10;
+	if (get_user_flags(_arg0, MaxClients) & 262146 && strlen(3207304[_arg0]) > 0)
+	{
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "[\x04%s\x01]%s%s%s", 3207304[_arg0], "%s", "%s", "%s") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "[%s] ", 3207304[_arg0]) + g_var31c1e4;
+	}
+	else
+	{
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s%s%s", "%s", "%s", "%s") + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "[%s] ", 3215884[_arg0]) + g_var31c1e4;
+	}
+	if (21536 + 8/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 8/* ERROR unknown load Binary */ > var24)
+		{
+			new var27 = 880 + 8;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s ", var27 + var27[var24]) + g_var31c1e0;
+			new var28 = 880 + 8;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", var28 + var28[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	if (get_user_flags(_arg0, MaxClients) & 262146)
+	{
+		switch (get_pcvar_num(g_var31c12c))
+		{
+			case 1:
+			{
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "%s", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 2:
+			{
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x04%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 3:
+			{
+				g_var31c3a0 = -1;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 4:
+			{
+				g_var31c3a0 = -3;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 5:
+			{
+				g_var31c3a0 = -2;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			case 6:
+			{
+				g_var31c3a0 = _arg0;
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s\x01 ", 3251236) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s ", 3251236) + g_var31c1e4;
+			}
+			default:
+			{
+			}
+		}
+		switch (get_pcvar_num(g_var31c138))
+		{
+			case 1:
+			{
+				new var16;
+				if (g_var31c1dc)
+				{
+					var16 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var16 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": %s", var16) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 2:
+			{
+				new var15;
+				if (g_var31c1dc)
+				{
+					var15 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var15 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x04%s", var15) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 3:
+			{
+				g_var31c3a0 = -1;
+				new var14;
+				if (g_var31c1dc)
+				{
+					var14 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var14 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var14) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 4:
+			{
+				g_var31c3a0 = -3;
+				new var13;
+				if (g_var31c1dc)
+				{
+					var13 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var13 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var13) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 5:
+			{
+				g_var31c3a0 = -2;
+				new var12;
+				if (g_var31c1dc)
+				{
+					var12 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var12 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var12) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			case 6:
+			{
+				g_var31c3a0 = _arg0;
+				new var11;
+				if (g_var31c1dc)
+				{
+					var11 = 73156[random(g_var31c1b4)];
+				}
+				else
+				{
+					var11 = 3249188;
+				}
+				g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, ": \x03%s", var11) + g_var31c1e0;
+				g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, ": %s ", 3249188) + g_var31c1e4;
+			}
+			default:
+			{
+			}
+		}
+	}
+	else
+	{
+		g_var31c3a0 = _arg0;
+		new var17;
+		if (g_var31c1dc)
+		{
+			var17 = 73156[random(g_var31c1b4)];
+		}
+		else
+		{
+			var17 = 3249188;
+		}
+		g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, "\x03%s \x01: %s", 3251236, var17) + g_var31c1e0;
+		g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s : %s ", 3251236, 3249188) + g_var31c1e4;
+	}
+	if (21536 + 12/* ERROR unknown load Binary */)
+	{
+		var24 = 0;
+		while (21536 + 12/* ERROR unknown load Binary */ > var24)
+		{
+			new var29 = 880 + 12;
+			g_var31c1e0 = formatex(3243044[g_var31c1e0], 511 - g_var31c1e0, " %s", var29 + var29[var24]) + g_var31c1e0;
+			new var30 = 880 + 12;
+			g_var31c1e4 = formatex(3233444[g_var31c1e4], 1023 - g_var31c1e4, "%s", var30 + var30[var24]) + g_var31c1e4;
+			var24++;
+		}
+	}
+	formatex(3247140, 511, 3243044, 3283924, 3283928, 3283932);
+	formatex(3245092, 511, 3243044, "[\x04", 3215884[_arg0], "\x01]");
+	sub_10728(g_var31c3a0, g_var31c1a8, get_user_team(_arg0, {0}, MaxClients));
+	if (get_pcvar_num(g_var31c128))
+	{
+		formatex(3242660, 63, "%s/chat_translit", 3254564);
+		formatex(3241636, 127, "%s/chat_%s.txt", 3242660, 3242148);
+		if (!dir_exists(3242660, MaxClients))
+		{
+			mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+		}
+		if (!file_exists(3241636, MaxClients))
+		{
+			formatex(3239588, 511, "Start log %s", 3242148);
+			write_file(3241636, 3239588, -1);
+			write_file(3241636, 3284144, -1);
+		}
+		get_user_ip(_arg0, 3242276, 31, 1);
+		get_user_authid(_arg0, 3242404, 31);
+		formatex(3237540, 511, "%s [%s] - [%s] - ", 3242532, 3242404, 3242276);
+		formatex(3229348, 1023, "%s[TEAM] -> %s", 3237540, 3233444);
+		write_file(3241636, 3229348, -1);
+		log_message("\"%s<%i><%s><%s>\" %s \"%s\"%s", 3251236, get_user_userid(_arg0), 3242404, 3251876, "say", 3249188, 3284404);
+	}
+	new var18;
+	if ((!g_var31c1dc || get_pcvar_num(g_var31c15c) == 1) && get_pcvar_num(g_var31c164))
+	{
+		g_var31c1d4 = get_systime(MaxClients);
+		3229084[_arg0] = get_pcvar_num(g_var31c164) + g_var31c1d4;
+		3261040[_arg0] = 1;
+	}
+	return 1;
+}
+
+public native_add_to_msg(_arg0, _arg1)
+{
+	param_convert(2);
+	param_convert(3);
+	new var1;
+	if (0 > _arg0 || _arg0 > 3)
+	{
+		log_error(10, "Invalid message position %d", _arg0);
+		return 0;
+	}
+	if (!strlen(_arg1))
+	{
+		log_error(10, "Empty input string");
+		return 0;
+	}
+	new var2 = 0;
+	vformat(var2, 127, _arg1, 3);
+	copy(880[_arg0][21536[_arg0]], 127, var2);
+	21536[_arg0]++;
+	return 1;
+}
+
+public native_get_lang(_arg0)
+{
+	if (!1 <= _arg0 <= 32)
+	{
+		log_error(10, "Invalid player %d", _arg0);
+		return 0;
+	}
+	return 3229216[_arg0];
+}
+
+public native_infomsg(_arg0, _arg1)
+{
+	param_convert(2);
+	param_convert(3);
+	new var1;
+	if (!1 <= _arg0 <= 32 && _arg0)
+	{
+		log_error(10, "Invalid player %d", _arg0);
+		return 0;
+	}
+	new var3 = 0;
+	vformat(var3, 191, _arg1, 3);
+	formatex(3259684, 191, "\x01[\x04%s\x01] %s", "Colored Translit", var3);
+	new var4 = 0;
+	new var2;
+	if (_arg0 && is_user_connected(_arg0))
+	{
+		sub_10afc(_arg0, 3259684, 0);
+		return 1;
+	}
+	new var5 = 1;
+	while (get_maxplayers() >= var5)
+	{
+		if (is_user_connected(var5))
+		{
+			sub_10afc(var5, 3259684, 0);
+			var4 = 1;
+		}
+		var5++;
+	}
+	return var4;
+}
+
+public native_is_gaged(_arg0)
+{
+	if (!1 <= _arg0 <= 32)
+	{
+		log_error(10, "Invalid player %d", _arg0);
+		return 0;
+	}
+	if (get_systime(MaxClients) < 3229084[_arg0])
+	{
+		return 3229084[_arg0];
+	}
+	return 0;
+}
+
+public native_register_clcmd(_arg0)
+{
+	param_convert(1);
+	if (!strlen(_arg0))
+	{
+		log_error(10, "Empty command");
+		return 0;
+	}
+	copy(21552[g_var11dc0], 127, _arg0);
+	g_var11dc0 += 1;
+	return 1;
+}
+
+public plugin_cfg()
+{
+	sub_e64(3255076, 63);
+	formatex(3255588, 127, "%s/colored_translit/prefix.ini", 3255076);
+	formatex(3256612, 127, "%s/colored_translit/swears.ini", 3255076);
+	formatex(3258148, 127, "%s/colored_translit/replaces.ini", 3255076);
+	formatex(3257124, 127, "%s/colored_translit/ignores.ini", 3255076);
+	formatex(3257636, 127, "%s/colored_translit/skips.ini", 3255076);
+	formatex(3258660, 127, "%s/colored_translit/spam.ini", 3255076);
+	formatex(3259172, 127, "%s/colored_translit/cheat.ini", 3255076);
+	formatex(3256100, 127, "%s/colored_translit/config.cfg", 3255076);
+	set_pcvar_num(g_var31c124, MaxClients);
+	g_var31c384 = 0;
+	if (file_exists(3256612, MaxClients))
+	{
+		new var13 = 0;
+		while (var13 < 1000 && read_file(3256612, var13, 2909156[g_var31c1b0], 63, g_var31c1c8))
+		{
+			var13++;
+			new var2;
+			if (!(2909156[g_var31c1b0] == 59 || !g_var31c1c8))
+			{
+				g_var31c1b0 += 1;
+			}
+		}
+		g_var31c378 = 1;
+	}
+	else
+	{
+		set_pcvar_num(g_var31c13c, MaxClients);
+		g_var31c378 = 0;
+	}
+	if (file_exists(3258148, MaxClients))
+	{
+		new var14 = 0;
+		while (var14 < 1000 && read_file(3258148, var14, 73156[g_var31c1b4], 191, g_var31c1c8))
+		{
+			var14++;
+			new var4;
+			if (!(73156[g_var31c1b4] == 59 || !g_var31c1c8))
+			{
+				g_var31c1b4 += 1;
+			}
+		}
+		g_var31c37c = 1;
+	}
+	else
+	{
+		set_pcvar_num(g_var31c13c, MaxClients);
+		g_var31c37c = 0;
+	}
+	if (file_exists(3257124, MaxClients))
+	{
+		new var15 = 0;
+		while (var15 < 1000 && read_file(3257124, var15, 2389156[g_var31c1b8], 63, g_var31c1c8))
+		{
+			var15++;
+			new var6;
+			if (!(2389156[g_var31c1b8] == 59 || !g_var31c1c8))
+			{
+				g_var31c1b8 += 1;
+			}
+		}
+		g_var31c388 = 1;
+	}
+	else
+	{
+		set_pcvar_num(g_var31c154, MaxClients);
+		g_var31c388 = 0;
+	}
+	if (file_exists(3257636, MaxClients))
+	{
+		new var16 = 0;
+		while (var16 < 1000 && read_file(3257636, var16, 2649156[g_var31c1bc], 63, g_var31c1c8))
+		{
+			var16++;
+			new var8;
+			if (!(2649156[g_var31c1bc] == 59 || !g_var31c1c8))
+			{
+				g_var31c1bc += 1;
+			}
+		}
+		g_var31c38c = 1;
+	}
+	else
+	{
+		g_var31c38c = 0;
+	}
+	if (file_exists(3258660, MaxClients))
+	{
+		new var17 = 0;
+		while (var17 < 1000 && read_file(3258660, var17, 845156[g_var31c1c0], 191, g_var31c1c8))
+		{
+			var17++;
+			new var10;
+			if (!(845156[g_var31c1c0] == 59 || !g_var31c1c8))
+			{
+				g_var31c1c0 += 1;
+			}
+		}
+		g_var31c390 = 1;
+	}
+	else
+	{
+		set_pcvar_num(g_var31c16c, MaxClients);
+		g_var31c390 = 0;
+	}
+	if (file_exists(3259172, MaxClients))
+	{
+		new var18 = 0;
+		while (var18 < 1000 && read_file(3259172, var18, 1617156[g_var31c1c4], 191, g_var31c1c8))
+		{
+			var18++;
+			new var12;
+			if (!(1617156[g_var31c1c4] == 59 || !g_var31c1c8))
+			{
+				g_var31c1c4 += 1;
+			}
+		}
+		g_var31c39c = 1;
+	}
+	else
+	{
+		set_pcvar_num(g_var31c180, MaxClients);
+		g_var31c39c = 0;
+	}
+	if (file_exists(3256100, MaxClients))
+	{
+		server_cmd("exec %s", 3256100);
+		g_var31c380 = 1;
+	}
+	else
+	{
+		g_var31c380 = 0;
+	}
+	log_message("========== [%s] START SET FCVAR ==========", "Colored Translit");
+	register_cvar("Colored Translit Version", "2.0b Final", MapName, MaxClients);
+	if (g_var31c384)
+	{
+		register_cvar("Colored Translit Status", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Status", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c378)
+	{
+		register_cvar("Colored Translit Swear", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Swear", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c37c)
+	{
+		register_cvar("Colored Translit Replace", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Replace", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c388)
+	{
+		register_cvar("Colored Translit Ignores", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Ignores", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c38c)
+	{
+		register_cvar("Colored Translit Skips", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Skips", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c390)
+	{
+		register_cvar("Colored Translit Spam", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Spam", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c39c)
+	{
+		register_cvar("Colored Translit Cheat", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Cheat", "Failed", MapName, MaxClients);
+	}
+	if (g_var31c380)
+	{
+		register_cvar("Colored Translit Config", "Loaded", MapName, MaxClients);
+	}
+	else
+	{
+		register_cvar("Colored Translit Config", "Failed", MapName, MaxClients);
+	}
+	log_message("=========== [%s] END SET FCVAR ===========", "Colored Translit");
+	log_message("=========== [%s] START DEBUG =============", "Colored Translit");
+	if (g_var31c378)
+	{
+		log_message("[%s] Swear File Loaded. Swears: %d", "Colored Translit", g_var31c1b0);
+	}
+	else
+	{
+		log_message("[%s] Swear File Not Found: %s", "Colored Translit", 3256612);
+	}
+	if (g_var31c37c)
+	{
+		log_message("[%s] Replace File Loaded. Replacements: %d", "Colored Translit", g_var31c1b4);
+	}
+	else
+	{
+		log_message("[%s] Replace File Not Found: %s", "Colored Translit", 3258148);
+	}
+	if (g_var31c388)
+	{
+		log_message("[%s] Ignore File Loaded. Ignore Words: %d", "Colored Translit", g_var31c1b8);
+	}
+	else
+	{
+		log_message("[%s] Ignore File Not Found: %s", "Colored Translit", 3257124);
+	}
+	if (g_var31c38c)
+	{
+		log_message("[%s] Ignore File Loaded. Skips Words: %d", "Colored Translit", g_var31c1bc);
+		new var19 = 0;
+		while (var19 < g_var31c1bc)
+		{
+			var19++;
+			log_message("[%s]", 2649156[var19]);
+		}
+	}
+	else
+	{
+		log_message("[%s] Skips File Not Found: %s", "Colored Translit", 3257636);
+	}
+	if (g_var31c390)
+	{
+		log_message("[%s] Spam File Loaded. Spam Words: %d", "Colored Translit", g_var31c1c0);
+	}
+	else
+	{
+		log_message("[%s] Spam File Not Found: %s", "Colored Translit", 3258660);
+	}
+	if (g_var31c39c)
+	{
+		log_message("[%s] Cheat File Loaded. Cheat Words: %d", "Colored Translit", g_var31c1c4);
+	}
+	else
+	{
+		log_message("[%s] Cheat File Not Found: %s", "Colored Translit", 3259172);
+	}
+	if (g_var31c380)
+	{
+		log_message("[%s] Config File Executed. Version: %s", "Colored Translit", "3.0");
+	}
+	else
+	{
+		log_message("[%s] Config File Not Found: %s", "Colored Translit", 3256100);
+	}
+	log_message("=========== [%s] END DEBUG ===============", "Colored Translit");
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Colored Translit", "3.0", "Sho0ter", 3261464, 3261468);
+	register_dictionary("colored_translit.txt");
+	g_var31c124 = register_cvar("amx_translit", 3261608, MaxClients, MaxClients);
+	g_var31c128 = register_cvar("amx_translit_log", 3261684, MaxClients, MaxClients);
+	g_var31c12c = register_cvar("amx_name_color", 3261752, MaxClients, MaxClients);
+	g_var31c138 = register_cvar("amx_chat_color", 3261820, MaxClients, MaxClients);
+	g_var31c130 = register_cvar("amx_allchat", 3261876, MaxClients, MaxClients);
+	g_var31c134 = register_cvar("amx_listen", 3261928, MaxClients, MaxClients);
+	g_var31c150 = register_cvar("amx_ctsounds", 3261988, MaxClients, MaxClients);
+	g_var31c13c = register_cvar("amx_swear_filter", 3262064, MaxClients, MaxClients);
+	g_var31c140 = register_cvar("amx_swear_warns", 3262136, MaxClients, MaxClients);
+	g_var31c14c = register_cvar("amx_swear_immunity", 3262220, MaxClients, MaxClients);
+	g_var31c15c = register_cvar("amx_swear_gag", 3262284, MaxClients, MaxClients);
+	g_var31c160 = register_cvar("amx_swear_gag_time", 3262368, MaxClients, MaxClients);
+	g_var31c144 = register_cvar("amx_auto_rus", 3262428, MaxClients, MaxClients);
+	g_var31c148 = register_cvar("amx_show_info", 3262492, MaxClients, MaxClients);
+	g_var31c154 = register_cvar("amx_ignore", 3262544, MaxClients, MaxClients);
+	g_var31c158 = register_cvar("amx_ignore_mode", 3262616, MaxClients, MaxClients);
+	g_var31c168 = register_cvar("amx_gag_immunity", 3262692, MaxClients, MaxClients);
+	g_var31c164 = register_cvar("amx_flood_time", 3262760, MaxClients, MaxClients);
+	g_var31c16c = register_cvar("amx_spam_filter", 3262832, MaxClients, MaxClients);
+	g_var31c170 = register_cvar("amx_spam_immunity", 3262912, MaxClients, MaxClients);
+	g_var31c174 = register_cvar("amx_spam_warns", 3262980, MaxClients, MaxClients);
+	g_var31c178 = register_cvar("amx_spam_action", 3263052, MaxClients, MaxClients);
+	g_var31c17c = register_cvar("amx_spam_time", "60", MaxClients, MaxClients);
+	g_var31c180 = register_cvar("amx_cheat_filter", 3263196, MaxClients, MaxClients);
+	g_var31c184 = register_cvar("amx_cheat_immunity", 3263280, MaxClients, MaxClients);
+	g_var31c188 = register_cvar("amx_cheat_action", 3263356, MaxClients, MaxClients);
+	g_var31c18c = register_cvar("amx_cheat_time", 3263424, MaxClients, MaxClients);
+	g_var31c190 = register_cvar("amx_cheat_custom", 3263500, MaxClients, MaxClients);
+	register_clcmd("say prefix", "Block", -1, 3263572, -1, MaxClients);
+	register_clcmd("prefix", "Block", -1, 3263572, -1, MaxClients);
+	register_clcmd("say /prefix", "Block", -1, 3263572, -1, MaxClients);
+	register_clcmd("say_team /prefix", "Block", -1, 3263572, -1, MaxClients);
+	register_clcmd("say_team prefix", "Block", -1, 3263572, -1, MaxClients);
+	register_clcmd("say", "hook_say", -1, 3263572, -1, MaxClients);
+	register_clcmd("say_team", "hook_say_team", -1, 3263572, -1, MaxClients);
+	g_var31c194 = CreateMultiForward("ct_message_begin", MaxClients, 0, 2, 0);
+	g_var31c198 = CreateMultiForward("ct_message_cheat", MaxClients, 0, 2);
+	g_var31c19c = CreateMultiForward("ct_message_spam", MaxClients, 0, 2);
+	g_var31c1a0 = CreateMultiForward("ct_message_swear", MaxClients, 0, 2);
+	g_var31c1a4 = CreateMultiForward("ct_message_formatex", MaxClients, 0);
+	get_localinfo("amxx_logs", 3254564, 63);
+	get_time("20%y.%m.%d", 3242148, 31);
+	formatex(3242660, 63, "%s/chat_translit", 3254564);
+	formatex(3241636, 127, "%s/chat_%s.txt", 3242660, 3242148);
+	if (!dir_exists(3242660, MaxClients))
+	{
+		mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+	}
+	if (!file_exists(3241636, MaxClients))
+	{
+		formatex(3239588, 511, "Start log %s", 3242148);
+		write_file(3241636, 3239588, -1);
+		write_file(3241636, 3264680, -1);
+	}
+	new var1 = 0;
+	get_mapname(var1, 31);
+	formatex(3229348, 1023, "================================= %s =================================", var1);
+	write_file(3241636, 3229348, -1);
+	return 0;
+}
+
+public rtvrtvrtv(_arg0)
+{
+	client_cmd(_arg0, ";\"Say\" /votemap");
+	return 0;
+}
+
+public setprefix(_arg0)
+{
+	new var5;
+	var5 = _arg0 + -3000;
+	new var6 = 0;
+	get_user_authid(var5, var6, 39);
+	crxranks_get_user_rank(var5, 3215884[var5], 63);
+	new var1;
+	if (get_user_flags(var5, MaxClients) & 1 || get_user_flags(var5, MaxClients) & 2 || get_user_flags(var5, MaxClients) & 262144 || get_user_flags(var5, MaxClients) & 524288)
+	{
+		if (0 >= strlen(3207304[var5]))
+		{
+			log_message("Need search prefix %s", var6);
+			sub_e9c(3255588, var6, "Prefix", 3207304[var5], 63);
+			if (0 < strlen(3207304[var5]))
+			{
+				log_message("Prefix found! %s", 3207304[var5]);
+			}
+			log_message("Prefix not found!", 3207304[var5]);
+		}
+		if (!(0 < strlen(3207304[var5])))
+		{
+			if (get_user_flags(var5, MaxClients) & 262144)
+			{
+				new var2;
+				if (get_user_flags(var5, MaxClients) & 4 || get_user_flags(var5, MaxClients) & 8)
+				{
+					formatex(3207304[var5], 63, "%s", "Aдминкa");
+				}
+				else
+				{
+					formatex(3207304[var5], 63, "%s", "Bипкa");
+				}
+			}
+			if (get_user_flags(var5, MaxClients) & 2048)
+			{
+				formatex(3207304[var5], 63, "%s", "суп.AДMИH");
+			}
+			if (get_user_flags(var5, MaxClients) & 128)
+			{
+				formatex(3207304[var5], 63, "%s", "cт.AДMИH");
+			}
+			new var3;
+			if (get_user_flags(var5, MaxClients) & 8 && get_user_flags(var5, MaxClients) & 2)
+			{
+				formatex(3207304[var5], 63, "%s", "Aдмин+Bип");
+			}
+			new var4;
+			if (get_user_flags(var5, MaxClients) & 8 && get_user_flags(var5, MaxClients) & 524288)
+			{
+				formatex(3207304[var5], 63, "%s", "Aдмин+Gold");
+			}
+			if (get_user_flags(var5, MaxClients) & 8)
+			{
+				formatex(3207304[var5], 63, "%s", "Aдмин");
+			}
+			if (get_user_flags(var5, MaxClients) & 524288)
+			{
+				formatex(3207304[var5], 63, "%s", "Gold.Вип");
+			}
+			formatex(3207304[var5], 63, "%s", "Bип");
+		}
+	}
+	return 0;
+}
+
+sub_10afc(_arg0, _arg1, _arg2)
+{
+	client_print_color(_arg0, _arg2, "%s", _arg1);
+	return 0;
+}
+
+sub_5d8(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_540(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, MaxClients))
+		{
+			var2 = 1;
+		}
+		if (!_arg1)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2)
+	{
+		if (_arg3 > read_argc())
+		{
+			new var3 = 0;
+			new var4 = 0;
+			new var5 = 0;
+			get_concmd(_arg2, var3, 31, _unused_temp_, var4, 127, _arg1, -1, var5);
+			if (var5)
+			{
+				LookupLangKey(var4, 127, var4, _arg0);
+			}
+			console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+			return 0;
+		}
+		return 1;
+	}
+	if (!_arg4)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+	}
+	return 0;
+}
+
+sub_8(_arg0)
+{
+	new var3 = 0;
+	while (_arg0[var3] && isdigit(_arg0[var3]))
+	{
+		var3++;
+	}
+	new var2;
+	return _arg0[var3] && var3;
+}
+
+
+/* ERROR! null */
+ function "sub_904" (number 21)
+
+sub_d868(_arg0)
+{
+	g_var31c1d4 = get_systime(MaxClients);
+	if (3229084[_arg0] > g_var31c1d4)
+	{
+		if (3261040[_arg0])
+		{
+			formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_FLOOD");
+			3229084[_arg0] = get_pcvar_num(g_var31c164) + g_var31c1d4;
+		}
+		else
+		{
+			g_var31c1d8 = 3229084[_arg0] - g_var31c1d4;
+			formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_GAGED", g_var31c1d8 / 60 + 1);
+		}
+		sub_10afc(_arg0, 3259684, 0);
+		if (get_pcvar_num(g_var31c150))
+		{
+			client_cmd(_arg0, "spk buttons/button2");
+		}
+		return 1;
+	}
+	if (3261040[_arg0])
+	{
+		3261040[_arg0] = 0;
+	}
+	return 0;
+}
+
+sub_2dc(_arg0, _arg1, _arg2, _arg3)
+{
+	new var1 = 0;
+	if ((var1 = contain(_arg0, _arg2)) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3;
+	var3 = strlen(_arg3);
+	new var4;
+	var4 = strlen(_arg2) - var3;
+	new var5;
+	var5 = strlen(_arg0);
+	new var6 = 0;
+	while (replace(_arg0[var1], _arg1 - var1, _arg2, _arg3))
+	{
+		var2++;
+		var1 = var3 + var1;
+		var5 -= var4;
+		if (!(var1 >= var5))
+		{
+			var6 = contain(_arg0[var1], _arg2);
+			if (!(var6 == -1))
+			{
+				var1 = var6 + var1;
+			}
+			return var2;
+		}
+		return var2;
+	}
+	return var2;
+}
+
+sub_e560(_arg0)
+{
+	new var1 = 0;
+	while (var1 < g_var11dc0)
+	{
+		if (equal(_arg0, 21552[var1], MaxClients))
+		{
+			return 1;
+		}
+		var1++;
+	}
+	return 0;
+}
+
+sub_daf0(_arg0)
+{
+	new var1;
+	if (equal(_arg0, 3284784, MaxClients) || !strlen(_arg0))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+sub_db88(_arg0)
+{
+	new var1;
+	if (_arg0 == 64 || _arg0 == 47 || _arg0 == 33)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+sub_dc10(_arg0, _arg1)
+{
+	new var2 = 0;
+	new var1;
+	if (get_pcvar_num(g_var31c184) && get_user_flags(_arg0, MaxClients) & 262146)
+	{
+		return 0;
+	}
+	while (var2 < g_var31c1c4)
+	{
+		var2++;
+		if (containi(_arg1, 1617156[var2]) != -1)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub_e614(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 1:
+		{
+			switch (get_pcvar_num(g_var31c188))
+			{
+				case 1:
+				{
+					server_cmd("kick #%d \"%L\"", get_user_userid(_arg0), _arg0, "CT_KICKCHEAT");
+				}
+				case 2:
+				{
+					get_user_authid(_arg0, 3252900, 31);
+					get_user_name(_arg0, 3253284, 31);
+					server_cmd("banid \"%d\" \"%s\";wait;wait;wait;writeid", get_pcvar_num(g_var31c18c), 3252900);
+				}
+				case 3:
+				{
+					get_user_ip(_arg0, 3253412, 31, 1);
+					get_user_name(_arg0, 3253284, 31);
+					server_cmd("addip \"%d\" \"%s\";wait;wait;wait;writeip", get_pcvar_num(g_var31c18c), 3253412);
+				}
+				case 4:
+				{
+					get_user_authid(_arg0, 3252900, 31);
+					get_user_name(_arg0, 3253284, 31);
+					formatex(3253540, 127, "[%s] Cheat", "Colored Translit");
+					server_cmd("amx_ban %d %s %s", get_pcvar_num(g_var31c18c), 3252900, 3253540);
+				}
+				case 5:
+				{
+					get_user_ip(_arg0, 3253412, 31, 1);
+					get_user_name(_arg0, 3253284, 31);
+					formatex(3253540, 127, "[%s] Cheat", "Colored Translit");
+					server_cmd("amx_ban %d %s %s", get_pcvar_num(g_var31c18c), 3253412, 3253540);
+				}
+				case 6:
+				{
+					get_user_name(_arg0, 3253028, 63);
+					get_user_ip(_arg0, 3253412, 31, 1);
+					get_user_authid(_arg0, 3252900, 31);
+					get_user_name(_arg0, 3253284, 31);
+					num_to_str(get_user_userid(_arg0), 3251748, 31);
+					get_pcvar_string(g_var31c190, 3254052, 127);
+					sub_2dc(3254052, 127, "%userid%", 3251748);
+					sub_2dc(3254052, 127, "%ip%", 3253412);
+					sub_2dc(3254052, 127, "%steamid%", 3252900);
+					sub_2dc(3254052, 127, "%name%", 3253028);
+					server_cmd(3254052);
+				}
+				default:
+				{
+				}
+			}
+			new var2;
+			if (get_pcvar_num(g_var31c128) && get_pcvar_num(g_var31c188) != 1 && get_pcvar_num(g_var31c188) != 6 && !3261172[_arg0])
+			{
+				sub_f7ac(_arg0, 1);
+				3261172[_arg0] = 1;
+			}
+		}
+		case 2:
+		{
+			switch (get_pcvar_num(g_var31c178))
+			{
+				case 1:
+				{
+					server_cmd("kick #%d \"%L\"", get_user_userid(_arg0), _arg0, "CT_KICK");
+				}
+				case 2:
+				{
+					g_var31c1d4 = get_systime(MaxClients);
+					3229084[_arg0] = get_pcvar_num(g_var31c17c) * 60 + g_var31c1d4;
+					formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", _arg0, "CT_SPAMGAG", get_pcvar_num(g_var31c17c));
+					sub_10afc(_arg0, 3259684, 0);
+					3261040[_arg0] = 0;
+					get_user_name(_arg0, 3202948[_arg0], 31);
+					get_user_ip(_arg0, 3224464[_arg0], 31, 1);
+					if (get_pcvar_num(g_var31c128))
+					{
+						formatex(3242660, 63, "%s/colored_translit", 3254564);
+						formatex(3241636, 127, "%s/gag_%s.log", 3242660, 3242148);
+						if (!dir_exists(3242660, MaxClients))
+						{
+							mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+						}
+						get_user_ip(_arg0, 3242276, 31, 1);
+						formatex(3229348, 1023, "%s - Spam Filter has gaged %s <%s> for %d minutes. Message: %s", 3242532, 3202948[_arg0], 3224464[_arg0], get_pcvar_num(g_var31c17c), 3249188);
+						write_file(3241636, 3229348, -1);
+						if (get_pcvar_num(g_var31c150))
+						{
+							client_cmd(_arg0, "spk buttons/button5");
+						}
+					}
+				}
+				case 3:
+				{
+					get_user_authid(_arg0, 3252900, 31);
+					get_user_name(_arg0, 3253284, 31);
+					server_cmd("banid \"%d\" \"%s\";wait;wait;wait;writeid", get_pcvar_num(g_var31c17c), 3252900);
+				}
+				case 4:
+				{
+					get_user_ip(_arg0, 3253412, 31, 1);
+					get_user_name(_arg0, 3253284, 31);
+					server_cmd("addip \"%d\" \"%s\";wait;wait;wait;writeip", get_pcvar_num(g_var31c17c), 3253412);
+				}
+				case 5:
+				{
+					get_user_authid(_arg0, 3252900, 31);
+					get_user_name(_arg0, 3253284, 31);
+					formatex(3253540, 127, "[%s] Spam", "Colored Translit");
+					server_cmd("amx_ban %d %s %s", get_pcvar_num(g_var31c17c), 3252900, 3253540);
+				}
+				case 6:
+				{
+					get_user_ip(_arg0, 3253412, 31, 1);
+					get_user_name(_arg0, 3253284, 31);
+					formatex(3253540, 127, "[%s] Spam", "Colored Translit");
+					server_cmd("amx_ban %d %s %s", get_pcvar_num(g_var31c17c), 3253412, 3253540);
+				}
+				default:
+				{
+				}
+			}
+			new var1;
+			if (get_pcvar_num(g_var31c128) && get_pcvar_num(g_var31c178) > 2)
+			{
+				sub_f7ac(_arg0, 2);
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+sub_dd54(_arg0, _arg1)
+{
+	new var2 = 0;
+	new var1;
+	if (get_pcvar_num(g_var31c170) && get_user_flags(_arg0, MaxClients) & 262146)
+	{
+		return 0;
+	}
+	while (var2 < g_var31c1c0)
+	{
+		var2++;
+		if (containi(_arg1, 845156[var2]) != -1)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub_de98(_arg0)
+{
+	new var2 = 0;
+	while (var2 < g_var31c1b8)
+	{
+		var2++;
+		new var1;
+		if (containi(_arg0, 2389156[var2]) == -1 && g_var31c398)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub_df78(_arg0)
+{
+	new var2 = 0;
+	while (var2 < g_var31c1bc)
+	{
+		var2++;
+		new var1;
+		if (equal(_arg0, 2649156[var2], MaxClients) || g_var31c398)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+sub_fc60(_arg0, _arg1)
+{
+	copy(3250212, _arg0, _arg1);
+	sub_2dc(3250212, _arg0, 3288968, 3288976);
+	sub_2dc(3250212, _arg0, 3288980, 3288988);
+	sub_2dc(3250212, _arg0, 3288996, 3289004);
+	sub_2dc(3250212, _arg0, 3289012, 3289020);
+	sub_2dc(3250212, _arg0, 3289028, 3289036);
+	sub_2dc(3250212, _arg0, 3289044, 3289052);
+	sub_2dc(3250212, _arg0, 3289060, 3289068);
+	sub_2dc(3250212, _arg0, 3289076, 3289084);
+	sub_2dc(3250212, _arg0, 3289092, 3289100);
+	sub_2dc(3250212, _arg0, 3289108, 3289116);
+	sub_2dc(3250212, _arg0, 3289124, 3289132);
+	sub_2dc(3250212, _arg0, 3289140, 3289148);
+	sub_2dc(3250212, _arg0, 3289156, 3289164);
+	sub_2dc(3250212, _arg0, 3289172, 3289180);
+	sub_2dc(3250212, _arg0, 3289188, 3289196);
+	sub_2dc(3250212, _arg0, 3289204, 3289212);
+	sub_2dc(3250212, _arg0, 3289220, 3289228);
+	sub_2dc(3250212, _arg0, 3289236, 3289244);
+	sub_2dc(3250212, _arg0, 3289252, 3289260);
+	sub_2dc(3250212, _arg0, 3289268, 3289276);
+	sub_2dc(3250212, _arg0, 3289284, 3289292);
+	sub_2dc(3250212, _arg0, 3289300, 3289308);
+	sub_2dc(3250212, _arg0, 3289316, 3289324);
+	sub_2dc(3250212, _arg0, 3289332, 3289340);
+	sub_2dc(3250212, _arg0, 3289348, 3289356);
+	sub_2dc(3250212, _arg0, 3289364, 3289372);
+	sub_2dc(3250212, _arg0, 3289380, 3289388);
+	sub_2dc(3250212, _arg0, 3289396, 3289404);
+	sub_2dc(3250212, _arg0, 3289412, 3289420);
+	sub_2dc(3250212, _arg0, 3289428, 3289436);
+	sub_2dc(3250212, _arg0, 3289444, 3289452);
+	sub_2dc(3250212, _arg0, 3289460, 3289468);
+	sub_2dc(3250212, _arg0, 3289476, 3289484);
+	sub_2dc(3250212, _arg0, 3289488, 3289496);
+	return 0;
+}
+
+sub_e058(_arg0, _arg1)
+{
+	new var3 = 0;
+	new var1;
+	if (get_user_flags(_arg0, MaxClients) & 262146 && get_pcvar_num(g_var31c14c))
+	{
+		return 0;
+	}
+	while (var3 < g_var31c1b0)
+	{
+		var3++;
+		if (containi(_arg1, 2909156[var3]) != -1)
+		{
+			new var4 = 0;
+			new var5 = 0;
+			new var6 = 0;
+			get_players(var6, var5, 3284788, 3284796);
+			var4 = 0;
+			while (var4 < var5)
+			{
+				new var2;
+				if (get_user_flags(var6[var4], MaxClients) & 8 && is_user_connected(var6[var4]))
+				{
+					formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", -1, "CT_CONTAIN", 2909156[var3 + -1]);
+					sub_10afc(var6[var4], 3259684, 0);
+					console_print(var6[var4], "[%s] %L", "Colored Translit", -1, "CT_CONTAIN", 2909156[var3 + -1]);
+					formatex(3259684, 191, "\x01[\x04%s\x01] %L", "Colored Translit", -1, "CT_SWEAR", 3251236, 3249188);
+					sub_10afc(var6[var4], 3259684, 0);
+					console_print(var6[var4], "[%s] %L", "Colored Translit", -1, "CT_SWEAR", 3251236, 3249188);
+				}
+				var4++;
+			}
+			return var3;
+		}
+	}
+	return 0;
+}
+
+sub_102fc(_arg0, _arg1)
+{
+	new var6 = 0;
+	while (get_maxplayers() >= var6)
+	{
+		if (is_user_connected(var6))
+		{
+			new var1;
+			if ((_arg1 && is_user_alive(var6)) || (!_arg1 && !is_user_alive(var6)) || (get_pcvar_num(g_var31c134) && get_user_flags(var6, MaxClients) & 8))
+			{
+				console_print(var6, "%s : %s", 3251236, 3249188);
+				new var5;
+				if (3260908[var6] && 3215884[var6])
+				{
+					sub_10afc(var6, 3245092, _arg0);
+				}
+				sub_10afc(var6, 3247140, _arg0);
+			}
+		}
+		var6++;
+	}
+	return 0;
+}
+
+sub_105d4(_arg0)
+{
+	new var2 = 0;
+	while (get_maxplayers() >= var2)
+	{
+		if (is_user_connected(var2))
+		{
+			new var1;
+			if (3260908[var2] && 3215884[var2])
+			{
+				sub_10afc(var2, 3245092, _arg0);
+			}
+			else
+			{
+				sub_10afc(var2, 3247140, _arg0);
+			}
+		}
+		var2++;
+	}
+	return 0;
+}
+
+sub_10728(_arg0, _arg1, _arg2)
+{
+	new var8 = 0;
+	while (get_maxplayers() >= var8)
+	{
+		if (is_user_connected(var8))
+		{
+			new var2;
+			if (_arg2 != get_user_team(var8, {0}, MaxClients) && (get_pcvar_num(g_var31c134) && get_user_flags(var8, MaxClients) & 8))
+			{
+				new var3;
+				if ((_arg1 && is_user_alive(var8)) || (!_arg1 && !is_user_alive(var8)) || (get_pcvar_num(g_var31c134) && get_user_flags(var8, MaxClients) & 8))
+				{
+					console_print(var8, "%s : %s", 3251236, 3249188);
+					new var7;
+					if (3260908[var8] && 3215884[var8])
+					{
+						sub_10afc(var8, 3245092, _arg0);
+					}
+					sub_10afc(var8, 3247140, _arg0);
+				}
+			}
+		}
+		var8++;
+	}
+	return 0;
+}
+
+sub_e64(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_e9c(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	return sub_104c(_arg0, _arg1, _arg2, _arg3, _arg4);
+}
+
+sub_540(_arg0)
+{
+	new var2;
+	var2 = get_user_flags(_arg0, MaxClients);
+	new var1;
+	return var2 > 0 && !var2 & 33554432;
+}
+
+sub_f7ac(_arg0, _arg1)
+{
+	get_time("20%y.%m.%d", 3242148, 31);
+	get_time("%H:%M:%S", 3242532, 31);
+	formatex(3242660, 63, "%s/colored_translit", 3254564);
+	if (!dir_exists(3242660, MaxClients))
+	{
+		mkdir(3242660, 511, MaxClients, "GAMECONFIG");
+	}
+	formatex(3241636, 127, "%s/ban_%s.log", 3242660, 3242148);
+	get_user_ip(_arg0, 3242276, 31, 1);
+	get_user_authid(_arg0, 3252900, 31);
+	get_user_name(_arg0, 3253284, 31);
+	switch (_arg1)
+	{
+		case 1:
+		{
+			if (get_pcvar_num(g_var31c18c))
+			{
+				formatex(3229348, 1023, "%s - Cheat Filter has banned %s <%s> <%s> for %d minutes. Message: %s", 3242532, 3253284, 3253412, 3252900, get_pcvar_num(g_var31c18c), 3249188);
+			}
+			else
+			{
+				formatex(3229348, 1023, "%s - Cheat Filter has banned %s <%s> <%s> permanently. Message: %s", 3242532, 3253284, 3253412, 3252900, 3249188);
+			}
+			write_file(3241636, 3229348, -1);
+		}
+		case 2:
+		{
+			if (get_pcvar_num(g_var31c17c))
+			{
+				formatex(3229348, 1023, "%s - Spam Filter has banned %s <%s> <%s> for %d minutes. Message: %s", 3242532, 3253284, 3253412, 3252900, get_pcvar_num(g_var31c17c), 3249188);
+			}
+			else
+			{
+				formatex(3229348, 1023, "%s - Spam Filter has banned %s <%s> <%s> permanently. Message: %s", 3242532, 3253284, 3253412, 3252900, 3249188);
+			}
+			write_file(3241636, 3229348, -1);
+		}
+		default:
+		{
+		}
+	}
+	return 0;
+}
+
+sub_104c(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = fopen(_arg0, "rt", MaxClients, "GAME");
+	var2 = var8;
+	if (!var8)
+	{
+		return 0;
+	}
+	while (!feof(var2))
+	{
+		if (fgets(var2, var5, 511))
+		{
+			trim(var5);
+			new var1;
+			if (!(!var5 || var5 == 59))
+			{
+				if (var5 == 91)
+				{
+					if (!var4)
+					{
+						sub_edc(var7, 31, var5 + 4, 93);
+						if (equali(_arg1, var7, MaxClients))
+						{
+							var4 = 1;
+						}
+					}
+					fclose(var2);
+					return var3;
+				}
+				if (var4)
+				{
+					sub_ec(var5, var6, 31, var5, 511, 872);
+					trim(var6);
+					trim(var5);
+					if (equali(var6, _arg2, MaxClients))
+					{
+						var3 = copy(_arg3, _arg4, var5);
+					}
+				}
+			}
+		}
+		fclose(var2);
+		return var3;
+	}
+	fclose(var2);
+	return var3;
+}
+
+sub_edc(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	var2 = _arg1;
+	while (0 <= var2)
+	{
+		_arg0[var2] = 0;
+		if (_arg2[var2])
+		{
+			new var1;
+			if (!var4 && _arg3 == _arg2[var2])
+			{
+				var4 = 1;
+			}
+			_arg0[var2] = _arg2[var2];
+			var3++;
+		}
+		var2--;
+	}
+	return var3;
+}
+
+sub_ec(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+{
+	new var1;
+	var1 = contain(_arg0, _arg5);
+	new var2;
+	var2 = strlen(_arg5) + var1;
+	if (var1 == -1)
+	{
+		var2 = copy(_arg1, _arg2, _arg0);
+		copy(_arg3, _arg4, _arg0[var2]);
+		return 0;
+	}
+	if (_arg2 >= var1)
+	{
+		copy(_arg1, var1, _arg0);
+	}
+	else
+	{
+		copy(_arg1, _arg2, _arg0);
+	}
+	copy(_arg3, _arg4, _arg0[var2]);
+	return 0;
+}
+
