@@ -97,10 +97,11 @@ public class AbstractStack {
 		if (offset < 0)
 			return stack_.get((int) ((-offset / 4) - 1));
 
-		if ((int) ((offset - 12) / 4) >= args_.length)
+		int argidx = (int) ((offset - 12) / 4);
+		if (argidx < 0 || argidx >= args_.length)
 			return new StackEntry(null, null);
 
-		return args_[(int) ((offset - 12) / 4)];
+		return args_[argidx];
 	}
 
 	public DNode getName(long offset) {
