@@ -1,0 +1,4482 @@
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.6.4-dev+4625",
+	date = "12/20/2016",
+	time = "07:34:55"
+};
+new Float:NULL_VECTOR[3];
+new String:NULL_STRING[4];
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+new MaxClients;
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdkhooks =
+{
+	name = "SDKHooks",
+	file = "sdkhooks.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_left4downtown =
+{
+	name = "Left 4 Downtown",
+	file = "left4downtown.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_cprefs =
+{
+	name = "Client Preferences",
+	file = "clientprefs.ext",
+	autoload = 1,
+	required = 1,
+};
+public SharedPlugin:__pl_readyup =
+{
+	name = "readyup",
+	file = "readyup.smx",
+	required = 0,
+};
+new bool:g_bLateLoad;
+new bool:g_bFirstLoadDone;
+new bool:g_bLoadSkipDone;
+new bool:g_bLGOAvailable;
+new bool:g_bReadyUpAvailable;
+new bool:g_bPauseAvailable;
+new bool:g_bSkillDetectLoaded;
+new bool:g_bCMTActive;
+new bool:g_bCMTSwapped;
+new bool:g_bModeCampaign;
+new bool:g_bModeScavenge;
+new Handle:g_hCookiePrint;
+new g_iCookieValue[66];
+new Handle:g_hCvarDebug;
+new Handle:g_hCvarMVPBrevityFlags;
+new Handle:g_hCvarAutoPrintVs;
+new Handle:g_hCvarAutoPrintCoop;
+new Handle:g_hCvarShowBots;
+new Handle:g_hCvarDetailPercent;
+new Handle:g_hCvarWriteStats;
+new Handle:g_hCvarSkipMap;
+new bool:g_bGameStarted;
+new bool:g_bInRound;
+new bool:g_bTeamChanged;
+new bool:g_bTankInGame;
+new bool:g_bPlayersLeftStart;
+new bool:g_bSecondHalf;
+new bool:g_bFailedPrevious;
+new g_iRound;
+new g_iCurTeam;
+new g_iTeamSize = 4;
+new g_iLastRoundEndPrint;
+new g_iSurvived[2];
+new bool:g_bPaused;
+new g_iPauseStart;
+new g_iScores[2];
+new g_iFirstScoresSet[3];
+new g_iBoomedBy[66];
+new g_iPlayerIndexSorted[4][64];
+new g_iPlayerSortedUseTeam[4][64];
+new g_iPlayerRoundTeam[3][64];
+new g_iPlayerGameTeam[2][64];
+new g_strGameData[2];
+new g_strAllRoundData[2][19];
+new g_strRoundData[48][2][19];
+new g_strPlayerData[64][77];
+new g_strRoundPlayerData[64][2][77];
+new g_strPlayerInfData[64][77];
+new g_strRoundPlayerInfData[64][2][77];
+new Handle:g_hTriePlayers;
+new Handle:g_hTrieWeapons;
+new Handle:g_hTrieMaps;
+new Handle:g_hTrieEntityCreated;
+new Float:g_fHighestFlow[4];
+new String:g_sPlayerName[64][64];
+new String:g_sPlayerNameSafe[64][64];
+new String:g_sPlayerId[64][32];
+new String:g_sMapName[48][32];
+new String:g_sConfigName[32];
+new g_iPlayers;
+new String:g_sConsoleBuf[10][4096];
+new g_iConsoleBufChunks;
+new String:g_sStatsFile[64];
+new Handle:g_hStatsFile;
+public Plugin:myinfo =
+{
+	name = "Player Statistics",
+	description = "Tracks statistics, even when clients disconnect. MVP, Skills, Accuracy, etc.",
+	author = "Tabun",
+	version = "0.9.30",
+	url = "https://github.com/Tabbernaut/L4D2-Plugins"
+};
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+RoundFloat(Float:value)
+{
+	return RoundToNearest(value);
+}
+
+Float:operator*(Float:,_:)(Float:oper1, oper2)
+{
+	return oper1 * float(oper2);
+}
+
+bool:StrEqual(String:str1[], String:str2[], bool:caseSensitive)
+{
+	return strcmp(str1, str2, caseSensitive) == 0;
+}
+
+StrCat(String:buffer[], maxlength, String:source[])
+{
+	new len = strlen(buffer);
+	if (len >= maxlength)
+	{
+		return 0;
+	}
+	return Format(buffer[len], maxlength - len, "%s", source);
+}
+
+ExplodeString(String:text[], String:split[], String:buffers[][], maxStrings, maxStringLength, bool:copyRemainder)
+{
+	new reloc_idx;
+	new idx;
+	new total;
+	new var1;
+	if (maxStrings < 1 || !split[0])
+	{
+		return 0;
+	}
+	while ((idx = SplitString(text[reloc_idx], split, buffers[total], maxStringLength)) != -1)
+	{
+		reloc_idx = idx + reloc_idx;
+		total++;
+		if (maxStrings == total)
+		{
+			if (copyRemainder)
+			{
+				strcopy(buffers[total + -1], maxStringLength, text[reloc_idx - idx]);
+			}
+			return total;
+		}
+	}
+	total++;
+	strcopy(buffers[total], maxStringLength, text[reloc_idx]);
+	return total;
+}
+
+PrintToChatAll(String:format[])
+{
+	decl String:buffer[192];
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		if (IsClientInGame(i))
+		{
+			SetGlobalTransTarget(i);
+			VFormat(buffer, 192, format, 2);
+			PrintToChat(i, "%s", buffer);
+		}
+		i++;
+	}
+	return 0;
+}
+
+Handle:L4D2Direct_GetGameConf()
+{
+	static Handle:g_hGameConf_l4d2dir;
+	if (!g_hGameConf_l4d2dir)
+	{
+		g_hGameConf_l4d2dir = LoadGameConfigFile("l4d2_direct");
+	}
+	return g_hGameConf_l4d2dir;
+}
+
+Address:L4D2Direct_GetTerrorNavMesh()
+{
+	static Address:TheNavMesh;
+	if (!TheNavMesh)
+	{
+		TheNavMesh = GameConfGetAddress(L4D2Direct_GetGameConf(), "TerrorNavMesh");
+	}
+	return TheNavMesh;
+}
+
+Address:L4D2Direct_GetMapMaxFlowDistanceAddr()
+{
+	static Address:pMapMaxFlowDistance;
+	if (!pMapMaxFlowDistance)
+	{
+		new offs = GameConfGetOffset(L4D2Direct_GetGameConf(), "TerrorNavMesh::m_fMapMaxFlowDistance");
+		if (offs == -1)
+		{
+			return Address:0;
+		}
+		pMapMaxFlowDistance = L4D2Direct_GetTerrorNavMesh() + offs;
+	}
+	return pMapMaxFlowDistance;
+}
+
+Float:L4D2Direct_GetMapMaxFlowDistance()
+{
+	return LoadFromAddress(L4D2Direct_GetMapMaxFlowDistanceAddr(), NumberType:2);
+}
+
+Float:L4D2Direct_GetFlowDistance(client)
+{
+	static Handle:GetFlowDistanceSDKCall;
+	if (!GetFlowDistanceSDKCall)
+	{
+		StartPrepSDKCall(SDKCallType:2);
+		if (!PrepSDKCall_SetFromConf(L4D2Direct_GetGameConf(), SDKFuncConfSource:1, "CTerrorPlayer::GetFlowDistance"))
+		{
+			return 0.0;
+		}
+		PrepSDKCall_AddParameter(SDKType:4, SDKPassMethod:1, 0, 0);
+		PrepSDKCall_SetReturnInfo(SDKType:5, SDKPassMethod:1, 0, 0);
+		GetFlowDistanceSDKCall = EndPrepSDKCall();
+		if (!GetFlowDistanceSDKCall)
+		{
+			return 0.0;
+		}
+	}
+	return SDKCall(GetFlowDistanceSDKCall, client, 0);
+}
+
+public __pl_readyup_SetNTVOptional()
+{
+	MarkNativeAsOptional("AddStringToReadyFooter");
+	MarkNativeAsOptional("IsInReady");
+	MarkNativeAsOptional("IsClientCaster");
+	MarkNativeAsOptional("IsIDCaster");
+	return 0;
+}
+
+public __pl_lgofnoc_SetNTVOptional()
+{
+	MarkNativeAsOptional("LGO_BuildConfigPath");
+	MarkNativeAsOptional("LGO_ExecuteConfigCfg");
+	MarkNativeAsOptional("LGO_IsMapDataAvailable");
+	MarkNativeAsOptional("LGO_GetMapValueInt");
+	MarkNativeAsOptional("LGO_GetMapValueFloat");
+	MarkNativeAsOptional("LGO_GetMapValueVector");
+	MarkNativeAsOptional("LGO_GetMapValueString");
+	MarkNativeAsOptional("LGO_CopyMapSubsection");
+	return 0;
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	g_bLateLoad = late;
+	return APLRes:0;
+}
+
+public OnAllPluginsLoaded()
+{
+	g_bLGOAvailable = LibraryExists("lgofnoc");
+	g_bReadyUpAvailable = LibraryExists("readyup");
+	g_bPauseAvailable = LibraryExists("pause");
+	g_bSkillDetectLoaded = LibraryExists("skill_detect");
+	return 0;
+}
+
+public OnLibraryRemoved(String:name[])
+{
+	if (StrEqual(name, "lgofnoc", true))
+	{
+		g_bLGOAvailable = false;
+	}
+	else
+	{
+		if (StrEqual(name, "readyup", true))
+		{
+			g_bReadyUpAvailable = false;
+		}
+		if (StrEqual(name, "pause", true))
+		{
+			g_bPauseAvailable = false;
+		}
+		if (StrEqual(name, "skill_detect", true))
+		{
+			g_bSkillDetectLoaded = false;
+		}
+	}
+	return 0;
+}
+
+public OnLibraryAdded(String:name[])
+{
+	if (StrEqual(name, "lgofnoc", true))
+	{
+		g_bLGOAvailable = true;
+	}
+	else
+	{
+		if (StrEqual(name, "readyup", true))
+		{
+			g_bReadyUpAvailable = true;
+		}
+		if (StrEqual(name, "pause", true))
+		{
+			g_bPauseAvailable = true;
+		}
+		if (StrEqual(name, "skill_detect", true))
+		{
+			g_bSkillDetectLoaded = true;
+		}
+	}
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "OnPluginStart" (number 18)
+
+public LGO_OnMatchModeStart(String:sConfig[])
+{
+	g_bLoadSkipDone = false;
+	return 0;
+}
+
+public OnConfigsExecuted()
+{
+	g_iTeamSize = GetConVarInt(FindConVar("survivor_limit"));
+	new Handle:tmpHandle = FindConVar("l4d_ready_cfg_name");
+	if (tmpHandle)
+	{
+		GetConVarString(tmpHandle, g_sConfigName, 32);
+	}
+	return 0;
+}
+
+public OnClientPostAdminCheck(client)
+{
+	GetPlayerIndexForClient(client);
+	return 0;
+}
+
+public OnClientDisconnect(client)
+{
+	g_iCookieValue[client] = 0;
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(client);
+	if (index == -1)
+	{
+		return 0;
+	}
+	new time = GetTime({0,0});
+	if (g_bPaused)
+	{
+		time = g_iPauseStart;
+	}
+	if (g_iCurTeam == g_iPlayerRoundTeam[2][index])
+	{
+		g_strRoundPlayerData[index][g_iCurTeam][72] = time;
+		if (!g_strRoundPlayerData[index][g_iCurTeam][74])
+		{
+			g_strRoundPlayerData[index][g_iCurTeam][74] = time;
+		}
+		if (!g_strRoundPlayerData[index][g_iCurTeam][76])
+		{
+			g_strRoundPlayerData[index][g_iCurTeam][76] = time;
+		}
+	}
+	else
+	{
+		new var1;
+		if (g_iCurTeam == g_iPlayerRoundTeam[2][index])
+		{
+			var1 = 0;
+		}
+		else
+		{
+			var1 = 1;
+		}
+		if (var1)
+		{
+			g_strRoundPlayerInfData[index][g_iCurTeam][24] = time;
+		}
+	}
+	return 0;
+}
+
+public OnMapStart()
+{
+	g_bSecondHalf = false;
+	CheckGameMode();
+	new var2;
+	if (!g_bLoadSkipDone && (g_bLGOAvailable || GetConVarBool(g_hCvarSkipMap)))
+	{
+		PrintDebug(2, "OnMapStart: Resetting all stats (resetnextmap setting)... ");
+		ResetStats(false, -1, false);
+		SetConVarInt(g_hCvarSkipMap, 0, false, false);
+		g_bLoadSkipDone = true;
+		g_iFirstScoresSet[0] = 0;
+		g_iFirstScoresSet[1] = 0;
+		g_iFirstScoresSet[2] = 1;
+	}
+	else
+	{
+		if (g_bFirstLoadDone)
+		{
+			PrintDebug(2, "OnMapStart: Reset stats for round (Timer_ResetStats)");
+			CreateTimer(5.0, Timer_ResetStats, any:1, 2);
+		}
+	}
+	g_bFirstLoadDone = true;
+	CreateTimer(1.0, Timer_SaveFlows, any:0, 3);
+	GetCurrentMap(g_sMapName[g_iRound], 32);
+	return 0;
+}
+
+public OnMapEnd()
+{
+	g_bInRound = false;
+	g_iRound += 1;
+	new var1;
+	if (!g_bCMTActive && !g_bModeCampaign && IsMissionFinalMap())
+	{
+		HandleGameEnd();
+	}
+	return 0;
+}
+
+public Event_MissionLostCampaign(Handle:hEvent, String:name[], bool:dontBroadcast)
+{
+	5684/* ERROR unknown load Constant */++;
+	g_strRoundData[g_iRound][g_iCurTeam]++;
+	HandleRoundEnd(true);
+	return 0;
+}
+
+public Event_RoundStart(Handle:hEvent, String:name[], bool:dontBroadcast)
+{
+	HandleRoundStart(false);
+	CreateTimer(5.5, Timer_RoundStart, any:0, 2);
+	return 0;
+}
+
+HandleRoundStart(bool:bLeftStart)
+{
+	if (g_bInRound)
+	{
+		return 0;
+	}
+	g_bInRound = true;
+	g_bPlayersLeftStart = bLeftStart;
+	g_bTankInGame = false;
+	g_bPaused = false;
+	if (bLeftStart)
+	{
+		new var1;
+		if (g_bModeCampaign)
+		{
+			var1 = 0;
+		}
+		else
+		{
+			var1 = GetCurrentTeamSurvivor();
+		}
+		g_iCurTeam = var1;
+		ClearPlayerTeam(g_iCurTeam);
+	}
+	return 0;
+}
+
+public Action:Timer_RoundStart(Handle:timer)
+{
+	new var1;
+	if (g_bModeCampaign)
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = GetCurrentTeamSurvivor();
+	}
+	g_iCurTeam = var1;
+	ClearPlayerTeam(g_iCurTeam);
+	return Action:0;
+}
+
+public Event_RoundEnd(Handle:hEvent, String:name[], bool:dontBroadcast)
+{
+	HandleRoundEnd(false);
+	return 0;
+}
+
+HandleRoundEnd(bool:bFailed)
+{
+	PrintDebug(1, "HandleRoundEnd (failed: %i): inround: %i, current round: %i", bFailed, g_bInRound, g_iRound);
+	if (!g_bInRound)
+	{
+		return 0;
+	}
+	g_iSurvived[g_iCurTeam] = GetUprightSurvivors();
+	if (g_bTankInGame)
+	{
+		HandleTankTimeEnd();
+	}
+	SetRoundEndTimes();
+	g_bInRound = false;
+	new var1;
+	if (!g_bModeCampaign || !bFailed)
+	{
+		if (GetConVarBool(g_hCvarWriteStats))
+		{
+			if (g_bSecondHalf)
+			{
+				CreateTimer(1.0, Timer_WriteStats, g_iCurTeam, 0);
+			}
+			WriteStatsToFile(g_iCurTeam, false);
+		}
+		HandleRoundAddition();
+		new var2;
+		if (g_iLastRoundEndPrint && GetTime({0,0}) - g_iLastRoundEndPrint > 15)
+		{
+			AutomaticRoundEndPrint(false);
+		}
+	}
+	new var3;
+	if ((g_bModeCampaign || g_bSecondHalf) && !AreClientsConnected())
+	{
+		PrintDebug(2, "HandleRoundEnd: Reset stats for entire game (no players on server)...");
+		ResetStats(false, -1, false);
+	}
+	if (!g_bModeCampaign)
+	{
+		if (g_bSecondHalf)
+		{
+			g_iFirstScoresSet[2] = 0;
+		}
+		g_bSecondHalf = true;
+	}
+	else
+	{
+		g_bFailedPrevious = bFailed;
+	}
+	g_bPlayersLeftStart = false;
+	return 0;
+}
+
+SetRoundEndTimes()
+{
+	new i;
+	new j;
+	new time = GetTime({0,0});
+	i = 13;
+	while (i < 18)
+	{
+		new var1;
+		if (g_strRoundData[g_iRound][g_iCurTeam][i] && !g_strRoundData[g_iRound][g_iCurTeam][i + 1])
+		{
+			g_strRoundData[g_iRound][g_iCurTeam][i + 1] = time;
+		}
+		i += 2;
+	}
+	j = 0;
+	while (j < g_iPlayers)
+	{
+		i = 71;
+		while (i < 76)
+		{
+			new var2;
+			if (g_strRoundPlayerData[j][g_iCurTeam][i] && !g_strRoundPlayerData[j][g_iCurTeam][i + 1])
+			{
+				g_strRoundPlayerData[j][g_iCurTeam][i + 1] = time;
+			}
+			i += 2;
+		}
+		i = 23;
+		while (i < 24)
+		{
+			new var3;
+			if (g_strRoundPlayerInfData[j][g_iCurTeam][i] && !g_strRoundPlayerInfData[j][g_iCurTeam][i + 1])
+			{
+				g_strRoundPlayerInfData[j][g_iCurTeam][i + 1] = time;
+			}
+			i += 2;
+		}
+		j++;
+	}
+	return 0;
+}
+
+HandleRoundAddition()
+{
+	new i;
+	new j;
+	new var1;
+	if (g_iCurTeam)
+	{
+		var1 = 190424;
+	}
+	else
+	{
+		var1 = 190420;
+	}
+	PrintDebug(1, "Handling round addition for round %i, roundhalf %i (team %s).", g_iRound, g_bSecondHalf, var1);
+	i = 0;
+	while (i < 13)
+	{
+		new var5 = g_strAllRoundData[g_iCurTeam][i];
+		var5 = g_strRoundData[g_iRound][g_iCurTeam][i][var5];
+		i++;
+	}
+	i = 13;
+	while (i < 18)
+	{
+		new var2;
+		if (!g_strRoundData[g_iRound][g_iCurTeam][i] || !g_strRoundData[g_iRound][g_iCurTeam][i + 1])
+		{
+		}
+		else
+		{
+			if (!g_strAllRoundData[g_iCurTeam][i])
+			{
+				g_strAllRoundData[g_iCurTeam][i] = g_strRoundData[g_iRound][g_iCurTeam][i];
+				g_strAllRoundData[g_iCurTeam][i + 1] = g_strRoundData[g_iRound][g_iCurTeam][i + 1];
+			}
+			else
+			{
+				new var6 = g_strAllRoundData[g_iCurTeam][i + 1];
+				var6 = var6[g_strRoundData[g_iRound][g_iCurTeam][i + 1] - g_strRoundData[g_iRound][g_iCurTeam][i]];
+			}
+		}
+		i += 2;
+	}
+	j = 0;
+	while (j < g_iPlayers)
+	{
+		i = 0;
+		while (i < 71)
+		{
+			new var7 = g_strPlayerData[j][i];
+			var7 = g_strRoundPlayerData[j][g_iCurTeam][i][var7];
+			i++;
+		}
+		i = 71;
+		while (i < 76)
+		{
+			new var3;
+			if (!g_strRoundPlayerData[j][g_iCurTeam][i] || !g_strRoundPlayerData[j][g_iCurTeam][i + 1])
+			{
+			}
+			else
+			{
+				if (!g_strPlayerData[j][i])
+				{
+					g_strPlayerData[j][i] = g_strRoundPlayerData[j][g_iCurTeam][i];
+					g_strPlayerData[j][i + 1] = g_strRoundPlayerData[j][g_iCurTeam][i + 1];
+				}
+				else
+				{
+					new var8 = g_strPlayerData[j][i + 1];
+					var8 = var8[g_strRoundPlayerData[j][g_iCurTeam][i + 1] - g_strRoundPlayerData[j][g_iCurTeam][i]];
+				}
+			}
+			i += 2;
+		}
+		i = 0;
+		while (i < 23)
+		{
+			new var9 = g_strPlayerInfData[j][i];
+			var9 = g_strRoundPlayerInfData[j][g_iCurTeam][i][var9];
+			i++;
+		}
+		i = 23;
+		while (i < 24)
+		{
+			new var4;
+			if (!g_strRoundPlayerInfData[j][g_iCurTeam][i] || !g_strRoundPlayerInfData[j][g_iCurTeam][i + 1])
+			{
+			}
+			else
+			{
+				if (!g_strPlayerInfData[j][i])
+				{
+					g_strPlayerInfData[j][i] = g_strRoundPlayerInfData[j][g_iCurTeam][i];
+					g_strPlayerInfData[j][i + 1] = g_strRoundPlayerInfData[j][g_iCurTeam][i + 1];
+				}
+				else
+				{
+					new var10 = g_strPlayerInfData[j][i + 1];
+					var10 = var10[g_strRoundPlayerInfData[j][g_iCurTeam][i + 1] - g_strRoundPlayerInfData[j][g_iCurTeam][i]];
+				}
+			}
+			i += 2;
+		}
+		j++;
+	}
+	return 0;
+}
+
+public Event_MapTransition(Handle:hEvent, String:name[], bool:dontBroadcast)
+{
+	if (g_bModeCampaign)
+	{
+		HandleRoundEnd(false);
+	}
+	return 0;
+}
+
+public Event_FinaleWin(Handle:hEvent, String:name[], bool:dontBroadcast)
+{
+	if (g_bModeCampaign)
+	{
+		HandleRoundEnd(false);
+		if (!g_bCMTActive)
+		{
+			HandleGameEnd();
+		}
+	}
+	return 0;
+}
+
+HandleGameEnd()
+{
+	PrintDebug(2, "HandleGameEnd...");
+	ResetStats(false, -1, false);
+	g_bLoadSkipDone = false;
+	return 0;
+}
+
+public OnRoundIsLive()
+{
+	RoundReallyStarting();
+	return 0;
+}
+
+public Action:L4D_OnFirstSurvivorLeftSafeArea(client)
+{
+	HandleRoundStart(true);
+	if (!g_bReadyUpAvailable)
+	{
+		RoundReallyStarting();
+	}
+	return Action:0;
+}
+
+RoundReallyStarting()
+{
+	g_bPlayersLeftStart = true;
+	new time = GetTime({0,0});
+	new i = 1;
+	while (i <= MaxClients)
+	{
+		g_iBoomedBy[i] = 0;
+		i++;
+	}
+	i = 0;
+	while (i < 4)
+	{
+		g_fHighestFlow[i] = 0;
+		i++;
+	}
+	if (!g_bGameStarted)
+	{
+		g_bGameStarted = true;
+		g_strGameData[1] = time;
+		SetStartSurvivorTime(true, g_bFailedPrevious);
+	}
+	new var1;
+	if (g_bFailedPrevious && g_strRoundData[g_iRound][g_iCurTeam][14])
+	{
+		g_strRoundData[g_iRound][g_iCurTeam][13] = time - g_strRoundData[g_iRound][g_iCurTeam][14] - g_strRoundData[g_iRound][g_iCurTeam][13];
+		g_strRoundData[g_iRound][g_iCurTeam][14] = 0;
+		g_bFailedPrevious = false;
+	}
+	else
+	{
+		g_strRoundData[g_iRound][g_iCurTeam][13] = time;
+	}
+	UpdatePlayerCurrentTeam();
+	SetStartSurvivorTime(false, false);
+	return 0;
+}
+
+public OnPause()
+{
+	if (g_bPaused)
+	{
+		return 0;
+	}
+	g_bPaused = true;
+	new time = GetTime({0,0});
+	g_iPauseStart = time;
+	PrintDebug(1, "Pause (start time: %i -- stored time: %i -- round start time: %i).", g_iPauseStart, g_strRoundData[g_iRound][g_iCurTeam][15], g_strRoundData[g_iRound][g_iCurTeam][13]);
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "OnUnpause" (number 40)
+
+public Action:L4D_OnSetCampaignScores(&scoreA, &scoreB)
+{
+	if (g_bCMTSwapped)
+	{
+		g_iScores[1] = scoreA;
+		g_iScores[0] = scoreB;
+	}
+	else
+	{
+		g_iScores[0] = scoreA;
+		g_iScores[1] = scoreB;
+	}
+	if (!g_iFirstScoresSet[2])
+	{
+		g_iFirstScoresSet[0] = scoreA;
+		g_iFirstScoresSet[1] = scoreB;
+		g_iFirstScoresSet[2] = 1;
+	}
+	return Action:0;
+}
+
+public Action:Cmd_Say(client, args)
+{
+	if (!client)
+	{
+		return Action:0;
+	}
+	decl String:sMessage[64];
+	GetCmdArg(1, sMessage, 64);
+	new var1;
+	if (StrEqual(sMessage, "!mvp", true) || StrEqual(sMessage, "!ff", true) || StrEqual(sMessage, "!stats", true))
+	{
+		return Action:3;
+	}
+	return Action:0;
+}
+
+public Action:Cmd_StatsDisplayGeneral(client, args)
+{
+	new iType;
+	new String:sArg[24];
+	GetCmdArg(0, sArg, 24);
+	if (StrEqual(sArg, "sm_mvp", false))
+	{
+		iType = 1;
+	}
+	else
+	{
+		if (StrEqual(sArg, "sm_ff", false))
+		{
+			iType = 2;
+		}
+		if (StrEqual(sArg, "sm_skill", false))
+		{
+			iType = 3;
+		}
+		if (StrEqual(sArg, "sm_acc", false))
+		{
+			iType = 4;
+		}
+		if (StrEqual(sArg, "sm_inf", false))
+		{
+			iType = 5;
+		}
+	}
+	new bool:bSetRound;
+	new bool:bRound = 1;
+	new bool:bSetGame;
+	new bool:bGame;
+	new bool:bSetAll;
+	new bool:bAll;
+	new bool:bOther;
+	new bool:bTank;
+	new bool:bMore;
+	new bool:bMy;
+	new iStart = 1;
+	decl otherTeam;
+	new var1;
+	if (g_iCurTeam)
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	otherTeam = var1;
+	if (args)
+	{
+		GetCmdArg(1, sArg, 24);
+		new var2;
+		if (StrEqual(sArg, "help", false) || StrEqual(sArg, "?", false))
+		{
+			new var3;
+			if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+			{
+				PrintToChat(client, "\x01Use: /stats [<type>] [\x05round\x01/\x05game\x01/\x05team\x01/\x05all\x01/\x05other\x01]");
+				PrintToChat(client, "\x01 or: /stats [<type>] [\x05r\x01/\x05g\x01/\x05t\x01/\x05a\x01/\x05o\x01]");
+				PrintToChat(client, "\x01 where <type> is '\x04mvp\x01', '\x04skill\x01', '\x04ff\x01', '\x04acc\x01' or '\x04inf\x01'. (for more, see console)");
+			}
+			decl String:bufBasic[4096];
+			Format(bufBasic, 4096, "|------------------------------------------------------------------------------|\n");
+			Format(bufBasic, 4096, "%s| /stats command help      in chat:    '/stats <type> [argument [argument]]'   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|                          in console: 'sm_stats <type> [arguments...]'        |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|------------------------------------------------------------------------------|\n", bufBasic);
+			Format(bufBasic, 4096, "%s| stat type:   'general':  general statistics about the game, as in campaign   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|              'mvp'    :  SI damage, common kills    (extra argument: 'tank') |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|              'skill'  :  skeets, levels, crowns, tongue cuts, etc            |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|              'ff'     :  friendly fire damage (per type of weapon)           |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|              'acc'    :  accuracy details           (extra argument: 'more') |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|              'inf'    :  special infected stats (dp's, damage done etc)      |", bufBasic);
+			new var5;
+			if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+			{
+				PrintToConsole(client, bufBasic);
+			}
+			else
+			{
+				PrintToServer(bufBasic);
+			}
+			Format(bufBasic, 4096, "|------------------------------------------------------------------------------|\n");
+			Format(bufBasic, 4096, "%s| arguments:                                                                   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|------------------------------------------------------------------------------|\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   'round' ('r') / 'game' ('g') : for this round; or for entire game so far   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   'team' ('t') / 'all' ('a')   : current survivor team only; or all players  |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   'other' ('o') / 'my'         : team that is now infected; or your team NMW |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   'tank'          [ MVP only ] : show stats for tank fight                   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   'more'    [ ACC & MVP only ] : show more stats ( MVP time / SI/tank hits ) |", bufBasic);
+			new var7;
+			if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+			{
+				PrintToConsole(client, bufBasic);
+			}
+			else
+			{
+				PrintToServer(bufBasic);
+			}
+			Format(bufBasic, 4096, "|------------------------------------------------------------------------------|\n");
+			Format(bufBasic, 4096, "%s| examples:                                                                    |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|------------------------------------------------------------------------------|\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   '/stats skill round all' => shows skeets etc for all players, this round   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   '/stats ff team game'    => shows active team's friendly fire, this round  |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   '/stats acc my'          => shows accuracy stats (your team, this round)   |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|   '/stats mvp tank'        => shows survivor action while tank is/was up     |\n", bufBasic);
+			Format(bufBasic, 4096, "%s|------------------------------------------------------------------------------|", bufBasic);
+			new var9;
+			if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+			{
+				PrintToConsole(client, bufBasic);
+			}
+			else
+			{
+				PrintToServer(bufBasic);
+			}
+			return Action:3;
+		}
+		if (StrEqual(sArg, "mvp", false))
+		{
+			iType = 1;
+			iStart++;
+		}
+		else
+		{
+			if (StrEqual(sArg, "ff", false))
+			{
+				iType = 2;
+				iStart++;
+			}
+			new var11;
+			if (StrEqual(sArg, "skill", false) || StrEqual(sArg, "special", false) || StrEqual(sArg, "s", false))
+			{
+				iType = 3;
+				iStart++;
+			}
+			new var12;
+			if (StrEqual(sArg, "acc", false) || StrEqual(sArg, "accuracy", false) || StrEqual(sArg, "ac", false))
+			{
+				iType = 4;
+				iStart++;
+			}
+			new var13;
+			if (StrEqual(sArg, "inf", false) || StrEqual(sArg, "i", false))
+			{
+				iType = 5;
+				iStart++;
+			}
+			new var14;
+			if (StrEqual(sArg, "fact", false) || StrEqual(sArg, "fun", false))
+			{
+				iType = 6;
+				iStart++;
+			}
+			new var15;
+			if (StrEqual(sArg, "general", false) || StrEqual(sArg, "gen", false))
+			{
+				iType = 0;
+				iStart++;
+			}
+		}
+		new i = iStart;
+		while (i <= args)
+		{
+			GetCmdArg(i, sArg, 24);
+			new var16;
+			if (StrEqual(sArg, "round", false) || StrEqual(sArg, "r", false))
+			{
+				bSetRound = true;
+				bRound = true;
+			}
+			else
+			{
+				new var17;
+				if (StrEqual(sArg, "game", false) || StrEqual(sArg, "g", false))
+				{
+					bSetGame = true;
+					bGame = true;
+				}
+				new var18;
+				if (StrEqual(sArg, "all", false) || StrEqual(sArg, "a", false))
+				{
+					bSetAll = true;
+					bAll = true;
+				}
+				new var19;
+				if (StrEqual(sArg, "team", false) || StrEqual(sArg, "t", false))
+				{
+					if (bSetAll)
+					{
+						bSetAll = true;
+						bAll = false;
+					}
+				}
+				new var20;
+				if (StrEqual(sArg, "other", false) || StrEqual(sArg, "o", false) || StrEqual(sArg, "otherteam", false))
+				{
+					bOther = true;
+				}
+				new var21;
+				if (StrEqual(sArg, "more", false) || StrEqual(sArg, "m", false))
+				{
+					bMore = true;
+				}
+				if (StrEqual(sArg, "tank", false))
+				{
+					bTank = true;
+				}
+				if (StrEqual(sArg, "my", false))
+				{
+					bMy = true;
+				}
+				new var22;
+				if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+				{
+					PrintToChat(client, "Stats command: unknown argument: '%s'. Type '/stats help' for possible arguments.", sArg);
+				}
+				PrintToServer("Stats command: unknown argument: '%s'. Type '/stats help' for possible arguments.", sArg);
+			}
+			i++;
+		}
+	}
+	decl iTeam;
+	new var24;
+	if (bOther)
+	{
+		var24 = otherTeam;
+	}
+	else
+	{
+		var24 = -1;
+	}
+	iTeam = var24;
+	if (bMy)
+	{
+		new index = GetPlayerIndexForClient(client);
+		new curteam = -1;
+		if (index != -1)
+		{
+			curteam = g_iPlayerRoundTeam[2][index];
+			if (curteam != -1)
+			{
+				bSetAll = true;
+				bAll = false;
+				iTeam = curteam;
+			}
+			iTeam = -1;
+		}
+	}
+	switch (iType)
+	{
+		case 0:
+		{
+			new var54;
+			if (bSetAll && bAll)
+			{
+				var55 = false;
+			}
+			else
+			{
+				var55 = true;
+			}
+			new var56;
+			if (bSetRound && bRound)
+			{
+				var57 = true;
+			}
+			else
+			{
+				var57 = false;
+			}
+			DisplayStats(client, var57, -1, var55, iTeam);
+		}
+		case 1:
+		{
+			new var45;
+			if (bSetAll && bAll)
+			{
+				var46 = false;
+			}
+			else
+			{
+				var46 = true;
+			}
+			new var47;
+			if (bSetGame && bGame)
+			{
+				var48 = false;
+			}
+			else
+			{
+				var48 = true;
+			}
+			DisplayStatsMVP(client, bTank, bMore, var48, var46, iTeam);
+			new var49;
+			if (!bTank && !bMore)
+			{
+				new var50;
+				if (bSetAll && bAll)
+				{
+					var51 = false;
+				}
+				else
+				{
+					var51 = true;
+				}
+				new var52;
+				if (bSetGame && bGame)
+				{
+					var53 = false;
+				}
+				else
+				{
+					var53 = true;
+				}
+				DisplayStatsMVPChat(client, var53, var51, iTeam);
+			}
+		}
+		case 2:
+		{
+			new var41;
+			if (bSetAll && bAll)
+			{
+				var42 = false;
+			}
+			else
+			{
+				var42 = true;
+			}
+			new var43;
+			if (bSetGame && bGame)
+			{
+				var44 = false;
+			}
+			else
+			{
+				var44 = true;
+			}
+			DisplayStatsFriendlyFire(client, var44, var42, false, iTeam);
+		}
+		case 3:
+		{
+			new var37;
+			if (bSetAll && bAll)
+			{
+				var38 = false;
+			}
+			else
+			{
+				var38 = true;
+			}
+			new var39;
+			if (bSetGame && bGame)
+			{
+				var40 = false;
+			}
+			else
+			{
+				var40 = true;
+			}
+			DisplayStatsSpecial(client, var40, var38, false, iTeam);
+		}
+		case 4:
+		{
+			new var33;
+			if (bSetAll && bAll)
+			{
+				var34 = false;
+			}
+			else
+			{
+				var34 = true;
+			}
+			new var35;
+			if (bSetGame && bGame)
+			{
+				var36 = false;
+			}
+			else
+			{
+				var36 = true;
+			}
+			DisplayStatsAccuracy(client, bMore, var36, var34, false, iTeam);
+		}
+		case 5:
+		{
+			new var29;
+			if (bSetAll && bAll)
+			{
+				var30 = false;
+			}
+			else
+			{
+				var30 = true;
+			}
+			new var31;
+			if (bSetGame && bGame)
+			{
+				var32 = false;
+			}
+			else
+			{
+				var32 = true;
+			}
+			DisplayStatsInfected(client, var32, var30, false, iTeam);
+		}
+		case 6:
+		{
+			new var25;
+			if (bSetAll && bAll)
+			{
+				var26 = false;
+			}
+			else
+			{
+				var26 = true;
+			}
+			new var27;
+			if (bSetGame && bGame)
+			{
+				var28 = false;
+			}
+			else
+			{
+				var28 = true;
+			}
+			DisplayStatsFunFactChat(client, var28, var26, iTeam);
+		}
+		default:
+		{
+		}
+	}
+	return Action:3;
+}
+
+public Action:Cmd_StatsReset(client, args)
+{
+	ResetStats(false, -1, false);
+	PrintToChatAll("Player statistics reset.");
+	return Action:3;
+}
+
+public Action:Cmd_Cookie_SetPrintFlags(client, args)
+{
+	new var1;
+	if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+	{
+		PrintToServer("This command can only be used by clients. Use the sm_stats_autoprint_* cvars to set server preferences.");
+		return Action:3;
+	}
+	if (args)
+	{
+		decl String:sArg[24];
+		GetCmdArg(1, sArg, 24);
+		new iFlags = StringToInt(sArg, 10);
+		new var3;
+		if (StrEqual(sArg, "?", false) || StrEqual(sArg, "help", false))
+		{
+			PrintToChat(client, "\x01Use: \x04/stats_auto <flags>\x01. Flags is an integer that is the sum of all printouts to be displayed at round-end.");
+			PrintToChat(client, "\x01Set flags to 0 to use server autoprint default; set to -1 to not display anything at all.");
+			PrintToChat(client, "\x01See: \x05https://github.com/Tabbernaut/L4D2-Plugins/blob/master/stats/README.md\x01 for a list of flags.");
+			return Action:3;
+		}
+		new var4;
+		if (StrEqual(sArg, "test", false) || StrEqual(sArg, "preview", false))
+		{
+			if (g_iCookieValue[client] < 1)
+			{
+				PrintToChat(client, "\x01Stats Preview: No flags set. First set flags with \x04/stats_auto <flags>\x01. Type \x04/stats_auto help\x01 for more info.");
+				return Action:3;
+			}
+			AutomaticPrintPerClient(g_iCookieValue[client], client, -1, false, false, false, false);
+		}
+		else
+		{
+			if (iFlags >= -1)
+			{
+				if (iFlags == -1)
+				{
+					PrintToChat(client, "\x01Stats Pref.: \x04no round end prints at all\x01.");
+				}
+				else
+				{
+					if (iFlags)
+					{
+						new var8 = 0;
+						new String:tmpPrint[256];
+						new part;
+						if (iFlags & 1)
+						{
+							Format(var8[part], 24, "mvp/chat(round)");
+							part++;
+						}
+						if (iFlags & 2)
+						{
+							Format(var8[part], 24, "mvp/chat(game)");
+							part++;
+						}
+						if (iFlags & 4)
+						{
+							Format(var8[part], 24, "mvp(round)");
+							part++;
+						}
+						if (iFlags & 8)
+						{
+							Format(var8[part], 24, "mvp(game)");
+							part++;
+						}
+						if (iFlags & 32768)
+						{
+							Format(var8[part], 24, "mvp/more(round)");
+							part++;
+						}
+						if (iFlags & 65536)
+						{
+							Format(var8[part], 24, "mvp/more(game)");
+							part++;
+						}
+						if (iFlags & 16)
+						{
+							Format(var8[part], 24, "mvp/tankfight");
+							part++;
+						}
+						if (iFlags & 128)
+						{
+							Format(var8[part], 24, "skill/special(round)");
+							part++;
+						}
+						if (iFlags & 256)
+						{
+							Format(var8[part], 24, "skill/special(game)");
+							part++;
+						}
+						if (iFlags & 32)
+						{
+							Format(var8[part], 24, "ff(round)");
+							part++;
+						}
+						if (iFlags & 64)
+						{
+							Format(var8[part], 24, "ff(game)");
+							part++;
+						}
+						if (iFlags & 512)
+						{
+							Format(var8[part], 24, "accuracy(round)");
+							part++;
+						}
+						if (iFlags & 1024)
+						{
+							Format(var8[part], 24, "accuracy(game)");
+							part++;
+						}
+						if (iFlags & 2048)
+						{
+							Format(var8[part], 24, "acc/more(round)");
+							part++;
+						}
+						if (iFlags & 4096)
+						{
+							Format(var8[part], 24, "acc/more(game)");
+							part++;
+						}
+						PrintToChat(client, "\x01Stats Pref.: Flags set for:", var8);
+						new tmpCnt;
+						new i;
+						while (i < part)
+						{
+							new var5;
+							if (tmpCnt)
+							{
+								var5[0] = 194372;
+							}
+							else
+							{
+								var5[0] = 194376;
+							}
+							Format(tmpPrint, 256, "%s%s%s", tmpPrint, var5, var8[i]);
+							tmpCnt++;
+							new var6;
+							if (tmpCnt >= 6 || part + -1 != i)
+							{
+								new var7;
+								if (i < part + -1)
+								{
+									var7[0] = 194388;
+								}
+								else
+								{
+									var7[0] = 194392;
+								}
+								PrintToChat(client, "\x04%s%s\x01", tmpPrint, var7);
+								tmpCnt = 0;
+								tmpPrint = "";
+							}
+							i++;
+						}
+						PrintToChat(client, "\x01Use \x04/stats_auto test\x01 to get a report preview.");
+					}
+					PrintToChat(client, "\x01Stats Pref.: \x04server default\x01.");
+				}
+				g_iCookieValue[client] = iFlags;
+				if (AreClientCookiesCached(client))
+				{
+					decl String:sCookieValue[16];
+					IntToString(iFlags, sCookieValue, 16);
+					SetClientCookie(client, g_hCookiePrint, sCookieValue);
+				}
+				else
+				{
+					PrintToChat(client, "Stats Pref.: Error: cookie not cached yet (try again in a bit).");
+				}
+			}
+			PrintToChat(client, "Stats Pref.: invalid value: '%s'. Type '/stats_auto help' for more info.", sArg);
+		}
+	}
+	else
+	{
+		PrintToChat(client, "\x01Use: \x04/stats_auto <flags>\x01. Type \x04/stats_auto help\x01 for more info.");
+	}
+	return Action:3;
+}
+
+public OnClientCookiesCached(client)
+{
+	decl String:sCookieValue[16];
+	GetClientCookie(client, g_hCookiePrint, sCookieValue, 16);
+	g_iCookieValue[client] = StringToInt(sCookieValue, 10);
+	return 0;
+}
+
+public OnCMTStart(rounds, String:mapname[])
+{
+	g_bCMTActive = true;
+	PrintDebug(2, "CMT start. Rounds: %i. First map: %s", rounds, mapname);
+	ResetStats(false, -1, false);
+	return 0;
+}
+
+public OnCMTEnd()
+{
+	g_bCMTActive = false;
+	PrintDebug(2, "CMT end.");
+	HandleGameEnd();
+	return 0;
+}
+
+public OnCMTTeamSwap()
+{
+	PrintDebug(2, "CMT TeamSwap.");
+	g_bCMTSwapped = !g_bCMTSwapped;
+	new iTmp = g_iScores[0];
+	g_iScores[0] = g_iScores[1];
+	g_iScores[1] = iTmp;
+	iTmp = g_iFirstScoresSet[0];
+	g_iFirstScoresSet[0] = g_iFirstScoresSet[1];
+	g_iFirstScoresSet[1] = iTmp;
+	return 0;
+}
+
+public Action:Event_PlayerTeam(Handle:event, String:name[], bool:dontBroadcast)
+{
+	if (!g_bTeamChanged)
+	{
+		new newTeam = GetEventInt(event, "team");
+		new oldTeam = GetEventInt(event, "oldteam");
+		new var1;
+		if (newTeam != 2 && oldTeam != 2)
+		{
+			return Action:0;
+		}
+		g_bTeamChanged = true;
+		CreateTimer(0.5, Timer_TeamChanged, any:0, 2);
+	}
+	return Action:0;
+}
+
+public Action:Timer_TeamChanged(Handle:timer)
+{
+	g_bTeamChanged = false;
+	UpdatePlayerCurrentTeam();
+	return Action:0;
+}
+
+
+/* ERROR! null */
+ function "Event_PlayerHurt" (number 52)
+
+
+/* ERROR! null */
+ function "Event_InfectedHurt" (number 53)
+
+
+/* ERROR! null */
+ function "Event_PlayerFallDamage" (number 54)
+
+public Action:Event_WitchKilled(Handle:event, String:name[], bool:dontBroadcast)
+{
+	g_strRoundData[g_iRound][g_iCurTeam][8]++;
+	return Action:0;
+}
+
+
+/* ERROR! null */
+ function "Event_PlayerDeath" (number 56)
+
+public Action:Timer_CheckTankDeath(Handle:hTimer, any:client_oldTank)
+{
+	if (!IsTankInGame())
+	{
+		g_strRoundData[g_iRound][g_iCurTeam][9]++;
+		g_bTankInGame = false;
+		if (g_bInRound)
+		{
+			HandleTankTimeEnd();
+		}
+	}
+	return Action:0;
+}
+
+HandleTankTimeEnd()
+{
+	g_strRoundData[g_iRound][g_iCurTeam][18] = GetTime({0,0});
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "Event_TankSpawned" (number 59)
+
+
+/* ERROR! null */
+ function "Event_PlayerIncapped" (number 60)
+
+
+/* ERROR! null */
+ function "Event_PlayerRevived" (number 61)
+
+public Action:Event_SurvivorRescue(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "victim"));
+	new index = GetPlayerIndexForClient(client);
+	if (index == -1)
+	{
+		return Action:0;
+	}
+	new time = GetTime({0,0});
+	new var1;
+	if (g_strRoundPlayerData[index][g_iCurTeam][74] && g_strRoundPlayerData[index][g_iCurTeam][73])
+	{
+		new var3 = g_strRoundPlayerData[index][g_iCurTeam][73];
+		var3 = var3[time - g_strRoundPlayerData[index][g_iCurTeam][74]];
+		g_strRoundPlayerData[index][g_iCurTeam][74] = 0;
+	}
+	new var2;
+	if (g_strRoundPlayerData[index][g_iCurTeam][76] && g_strRoundPlayerData[index][g_iCurTeam][75])
+	{
+		new var4 = g_strRoundPlayerData[index][g_iCurTeam][75];
+		var4 = var4[time - g_strRoundPlayerData[index][g_iCurTeam][76]];
+		g_strRoundPlayerData[index][g_iCurTeam][76] = 0;
+	}
+	return Action:0;
+}
+
+
+/* ERROR! null */
+ function "Event_PlayerLedged" (number 63)
+
+
+/* ERROR! null */
+ function "Event_PlayerLedgeRelease" (number 64)
+
+
+/* ERROR! null */
+ function "Event_DefibUsed" (number 65)
+
+public Action:Event_HealSuccess(Handle:event, String:name[], bool:dontBroadcast)
+{
+	g_strRoundData[g_iRound][g_iCurTeam][2]++;
+	return Action:0;
+}
+
+public Action:Event_PillsUsed(Handle:event, String:name[], bool:dontBroadcast)
+{
+	g_strRoundData[g_iRound][g_iCurTeam][1]++;
+	return Action:0;
+}
+
+public Action:Event_AdrenUsed(Handle:event, String:name[], bool:dontBroadcast)
+{
+	g_strRoundData[g_iRound][g_iCurTeam][1]++;
+	return Action:0;
+}
+
+
+/* ERROR! null */
+ function "Event_WeaponFire" (number 69)
+
+
+/* ERROR! null */
+ function "Event_PlayerSpawn" (number 70)
+
+
+/* ERROR! null */
+ function "Event_PlayerBoomed" (number 71)
+
+public Action:Event_PlayerUnboomed(Handle:event, String:name[], bool:dontBroadcast)
+{
+	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	g_iBoomedBy[victim] = 0;
+	return Action:0;
+}
+
+public OnSpecialShoved(attacker, victim, zombieClass)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][38]++;
+	return 0;
+}
+
+public OnHunterDeadstop(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][39]++;
+	return 0;
+}
+
+public OnSkeet(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][30]++;
+	return 0;
+}
+
+public OnSkeetGL(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][30]++;
+	return 0;
+}
+
+public OnSkeetHurt(attacker, victim, damage)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][31]++;
+	return 0;
+}
+
+public OnSkeetMelee(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][32]++;
+	return 0;
+}
+
+public OnSkeetMeleeHurt(attacker, victim, damage)
+{
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][31]++;
+	return 0;
+}
+
+public OnSkeetSniper(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][30]++;
+	return 0;
+}
+
+public OnSkeetSniperHurt(attacker, victim, damage)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][31]++;
+	return 0;
+}
+
+public OnBoomerPop(attacker, victim, shoveCount, Float:timeAlive)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][35]++;
+	return 0;
+}
+
+public OnChargerLevel(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][33]++;
+	return 0;
+}
+
+public OnChargerLevelHurt(attacker, victim, damage)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][34]++;
+	return 0;
+}
+
+public OnTongueCut(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][40]++;
+	return 0;
+}
+
+public OnSmokerSelfClear(attacker, victim, withShove)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][41]++;
+	return 0;
+}
+
+public OnWitchCrown(attacker, damage)
+{
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][36]++;
+	return 0;
+}
+
+public OnWitchDrawCrown(attacker, damage, chipdamage)
+{
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][37]++;
+	return 0;
+}
+
+public OnTankRockEaten(attacker, victim)
+{
+	if (!g_bPlayersLeftStart)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(victim);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][51]++;
+	return 0;
+}
+
+public OnTankRockSkeeted(attacker, victim)
+{
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][50]++;
+	return 0;
+}
+
+public OnHunterHighPounce(attacker, victim, actualDamage, Float:damage, Float:height, bool:bReportedHigh)
+{
+	if (!bReportedHigh)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerInfData[index][g_iCurTeam][8]++;
+	new var1 = g_strRoundPlayerInfData[index][g_iCurTeam][9];
+	var1 = var1[RoundToFloor(damage)];
+	return 0;
+}
+
+public OnJockeyHighPounce(attacker, victim, Float:height, bool:bReportedHigh)
+{
+	if (!bReportedHigh)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerInfData[index][g_iCurTeam][10]++;
+	return 0;
+}
+
+public OnDeathCharge(attacker, victim, Float:height, Float:distance, bool:bCarried)
+{
+	new index = GetPlayerIndexForClient(attacker);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerInfData[index][g_iCurTeam][11]++;
+	return 0;
+}
+
+public OnSpecialClear(clearer, pinner, pinvictim, zombieClass, Float:timeA, Float:timeB, bool:withShove)
+{
+	new Float:fClearTime = timeA;
+	new var1;
+	if (zombieClass == 6 || zombieClass == 1)
+	{
+		fClearTime = timeB;
+	}
+	new var2;
+	if (fClearTime < 0.0 || 0.0 == fClearTime || fClearTime > 60.0 || pinvictim != clearer)
+	{
+		return 0;
+	}
+	new index = GetPlayerIndexForClient(clearer);
+	if (index == -1)
+	{
+		return 0;
+	}
+	g_strRoundPlayerData[index][g_iCurTeam][70] = RoundFloat(float(g_strRoundPlayerData[index][g_iCurTeam][69] * g_strRoundPlayerData[index][g_iCurTeam][70]) + fClearTime * 1000.0 / float(g_strRoundPlayerData[index][g_iCurTeam][69][0]));
+	g_strRoundPlayerData[index][g_iCurTeam][69]++;
+	return 0;
+}
+
+public Action:Timer_ResetStats(Handle:timer, any:roundOnly)
+{
+	ResetStats(roundOnly, -1, false);
+	return Action:0;
+}
+
+ResetStats(bool:bCurrentRoundOnly, iTeam, bool:bFailedRound)
+{
+	new i;
+	new j;
+	new k;
+	new var1;
+	if (bCurrentRoundOnly)
+	{
+		var1 = 195264;
+	}
+	else
+	{
+		var1 = 195276;
+	}
+	PrintDebug(1, "Resetting stats [round %i]. (for: %s; for team: %i)", g_iRound, var1, iTeam);
+	if (!bCurrentRoundOnly)
+	{
+		DisplayStats(-1, false, -1, true, -1);
+		g_iRound = 0;
+		g_bGameStarted = false;
+		g_strGameData[0] = 0;
+		i = 0;
+		while (i < 48)
+		{
+			j = 0;
+			while (j < 2)
+			{
+				k = 0;
+				while (k <= 18)
+				{
+					g_strRoundData[i][j][k] = 0;
+					k++;
+				}
+				j++;
+			}
+			i++;
+		}
+		j = 0;
+		while (j < 2)
+		{
+			k = 0;
+			while (k <= 18)
+			{
+				g_strAllRoundData[j][k] = 0;
+				k++;
+			}
+			j++;
+		}
+		i = 0;
+		while (i < 64)
+		{
+			j = 0;
+			while (j <= 76)
+			{
+				g_strPlayerData[i][j] = 0;
+				j++;
+			}
+			j = 0;
+			while (j <= 24)
+			{
+				g_strPlayerInfData[i][j] = 0;
+				j++;
+			}
+			j = 0;
+			while (j < 2)
+			{
+				g_iPlayerGameTeam[j][i] = -1;
+				j++;
+			}
+			i++;
+		}
+		j = 0;
+		while (j < 2)
+		{
+			g_iScores[j] = 0;
+			j++;
+		}
+	}
+	else
+	{
+		if (iTeam == -1)
+		{
+			k = 0;
+			while (k <= 18)
+			{
+				new var2;
+				if (bFailedRound && k)
+				{
+				}
+				else
+				{
+					g_strRoundData[g_iRound][0][k] = 0;
+					g_strRoundData[g_iRound][1][k] = 0;
+				}
+				k++;
+			}
+		}
+		k = 0;
+		while (k <= 18)
+		{
+			new var3;
+			if (bFailedRound && k)
+			{
+			}
+			else
+			{
+				g_strRoundData[g_iRound][iTeam][k] = 0;
+			}
+			k++;
+		}
+	}
+	if (iTeam == -1)
+	{
+		i = 0;
+		while (i < 64)
+		{
+			j = 0;
+			while (j < 2)
+			{
+				k = 0;
+				while (k <= 76)
+				{
+					g_strRoundPlayerData[i][j][k] = 0;
+					k++;
+				}
+				k = 0;
+				while (k <= 76)
+				{
+					g_strRoundPlayerInfData[i][j][k] = 0;
+					k++;
+				}
+				j++;
+			}
+			i++;
+		}
+	}
+	else
+	{
+		i = 0;
+		while (i < 64)
+		{
+			k = 0;
+			while (k <= 76)
+			{
+				g_strRoundPlayerData[i][iTeam][k] = 0;
+				k++;
+			}
+			k = 0;
+			while (k <= 24)
+			{
+				g_strRoundPlayerInfData[i][iTeam][k] = 0;
+				k++;
+			}
+			i++;
+		}
+	}
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "UpdatePlayerCurrentTeam" (number 97)
+
+ClearPlayerTeam(iTeam)
+{
+	new i;
+	new j;
+	if (iTeam == -1)
+	{
+		j = 0;
+		while (j < 3)
+		{
+			i = 0;
+			while (i < 64)
+			{
+				g_iPlayerRoundTeam[j][i] = -1;
+				i++;
+			}
+			j++;
+		}
+	}
+	else
+	{
+		i = 0;
+		while (i < 64)
+		{
+			g_iPlayerRoundTeam[iTeam][i] = -1;
+			i++;
+		}
+	}
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "SetStartSurvivorTime" (number 99)
+
+
+/* ERROR! null */
+ function "DisplayStats" (number 100)
+
+
+/* ERROR! null */
+ function "DisplayStatsMVPChat" (number 101)
+
+String:GetMVPChatString(bool:bRound, bool:bTeam, iTeam, _arg3)
+{
+	new String:printBuffer[1024] = "";
+	decl String:tmpBuffer[512];
+	SortPlayersMVP(bRound, 0, bTeam, iTeam);
+	SortPlayersMVP(bRound, 1, bTeam, iTeam);
+	SortPlayersMVP(bRound, 2, bTeam, iTeam);
+	decl team;
+	new var3;
+	if (iTeam != -1)
+	{
+		var3 = iTeam;
+	}
+	else
+	{
+		new var1;
+		if (g_bSecondHalf && !g_bPlayersLeftStart)
+		{
+			new var2;
+			if (g_iCurTeam)
+			{
+				var2 = 0;
+			}
+			else
+			{
+				var2 = 1;
+			}
+			var3 = var2;
+		}
+		var3 = g_iCurTeam;
+	}
+	team = var3;
+	decl mvp_SI;
+	new var43 = g_iPlayerIndexSorted;
+	mvp_SI = var43[0][var43];
+	new mvp_Common = g_iPlayerIndexSorted[1];
+	new mvp_FF = g_iPlayerIndexSorted[2];
+	new var4;
+	if (bTeam && !bRound)
+	{
+		new i;
+		while (i < g_iPlayers)
+		{
+			if (team == g_iPlayerRoundTeam[team][i])
+			{
+				new var44 = i;
+				mvp_FF = var44;
+				mvp_Common = var44;
+				mvp_SI = var44;
+			}
+			i++;
+		}
+	}
+	new iBrevityFlags = GetConVarInt(g_hCvarMVPBrevityFlags);
+	new var7;
+	if (g_iPlayers < 1 || (bRound && !g_strRoundPlayerData[mvp_SI][team][26]) || (!bRound && !g_strPlayerData[mvp_SI][26]))
+	{
+		mvp_SI = -1;
+	}
+	new var10;
+	if (g_iPlayers < 1 || (bRound && !g_strRoundPlayerData[mvp_Common][team][22]) || (!bRound && !g_strPlayerData[mvp_Common][22]))
+	{
+		mvp_Common = -1;
+	}
+	new var13;
+	if (g_iPlayers < 1 || (bRound && !g_strRoundPlayerData[mvp_FF][team][44]) || (!bRound && !g_strPlayerData[mvp_FF][44]))
+	{
+		mvp_FF = -1;
+	}
+	new var15;
+	if (mvp_SI == -1 && mvp_Common == -1 && (iBrevityFlags & 1 && iBrevityFlags & 2))
+	{
+		new var16;
+		if (bRound)
+		{
+			var16[0] = 197180;
+		}
+		else
+		{
+			var16[0] = 197184;
+		}
+		Format(tmpBuffer, 512, "[MVP%s]: (not enough action yet)\n", var16);
+		StrCat(printBuffer, 1024, tmpBuffer);
+	}
+	else
+	{
+		if (!iBrevityFlags & 1)
+		{
+			if (mvp_SI > -1)
+			{
+				if (iBrevityFlags & 32)
+				{
+					new var17;
+					if (bRound)
+					{
+						var17 = g_strRoundPlayerData[mvp_SI][team][24];
+					}
+					else
+					{
+						var17 = g_strPlayerData[mvp_SI][24];
+					}
+					new var18;
+					if (bRound)
+					{
+						var18 = g_strRoundPlayerData[mvp_SI][team][26];
+					}
+					else
+					{
+						var18 = g_strPlayerData[mvp_SI][26];
+					}
+					new var19;
+					if (bRound)
+					{
+						var19[0] = 197236;
+					}
+					else
+					{
+						var19[0] = 197240;
+					}
+					Format(tmpBuffer, 512, "[MVP%s] SI:\x03 %s \x01(\x05%d \x01dmg,\x05 %d \x01kills)\n", var19, g_sPlayerName[mvp_SI], var18, var17);
+				}
+				else
+				{
+					if (iBrevityFlags & 64)
+					{
+						new var20;
+						if (bRound)
+						{
+							var20 = float(g_strRoundPlayerData[mvp_SI][team][24]) / float(g_strRoundData[g_iRound][team][5]) * 100;
+						}
+						else
+						{
+							var20 = float(g_strPlayerData[mvp_SI][24]) / float(g_strAllRoundData[team][5]) * 100;
+						}
+						new var21;
+						if (bRound)
+						{
+							var21 = float(g_strRoundPlayerData[mvp_SI][team][26]) / float(g_strRoundData[g_iRound][team][6]) * 100;
+						}
+						else
+						{
+							var21 = float(g_strPlayerData[mvp_SI][26]) / float(g_strAllRoundData[team][6]) * 100;
+						}
+						new var22;
+						if (bRound)
+						{
+							var22[0] = 197296;
+						}
+						else
+						{
+							var22[0] = 197300;
+						}
+						Format(tmpBuffer, 512, "[MVP%s] SI:\x03 %s \x01(dmg \x04%i%%\x01, kills \x04%i%%\x01)\n", var22, g_sPlayerName[mvp_SI], RoundFloat(var21), RoundFloat(var20));
+					}
+					new var23;
+					if (bRound)
+					{
+						var23 = float(g_strRoundPlayerData[mvp_SI][team][24]) / float(g_strRoundData[g_iRound][team][5]) * 100;
+					}
+					else
+					{
+						var23 = float(g_strPlayerData[mvp_SI][24]) / float(g_strAllRoundData[team][5]) * 100;
+					}
+					new var24;
+					if (bRound)
+					{
+						var24 = g_strRoundPlayerData[mvp_SI][team][24];
+					}
+					else
+					{
+						var24 = g_strPlayerData[mvp_SI][24];
+					}
+					new var25;
+					if (bRound)
+					{
+						var25 = float(g_strRoundPlayerData[mvp_SI][team][26]) / float(g_strRoundData[g_iRound][team][6]) * 100;
+					}
+					else
+					{
+						var25 = float(g_strPlayerData[mvp_SI][26]) / float(g_strAllRoundData[team][6]) * 100;
+					}
+					new var26;
+					if (bRound)
+					{
+						var26 = g_strRoundPlayerData[mvp_SI][team][26];
+					}
+					else
+					{
+						var26 = g_strPlayerData[mvp_SI][26];
+					}
+					new var27;
+					if (bRound)
+					{
+						var27[0] = 197368;
+					}
+					else
+					{
+						var27[0] = 197372;
+					}
+					Format(tmpBuffer, 512, "[MVP%s] SI:\x03 %s \x01(\x05%d \x01dmg[\x04%i%%\x01],\x05 %d \x01kills [\x04%i%%\x01])\n", var27, g_sPlayerName[mvp_SI], var26, RoundFloat(var25), var24, RoundFloat(var23));
+				}
+				StrCat(printBuffer, 1024, tmpBuffer);
+			}
+			new var28;
+			if (bRound)
+			{
+				var28[0] = 197404;
+			}
+			else
+			{
+				var28[0] = 197408;
+			}
+			Format(tmpBuffer, 512, "[MVP%s] SI: \x03(nobody)\x01\n", var28);
+			StrCat(printBuffer, 1024, tmpBuffer);
+		}
+		if (!iBrevityFlags & 2)
+		{
+			new var32;
+			if (mvp_Common > -1 && ((bRound && g_strRoundData[g_iRound][team][4]) || (!bRound && g_strAllRoundData[team][4])))
+			{
+				if (iBrevityFlags & 32)
+				{
+					new var33;
+					if (bRound)
+					{
+						var33 = g_strRoundPlayerData[mvp_Common][team][22];
+					}
+					else
+					{
+						var33 = g_strPlayerData[mvp_Common][22];
+					}
+					new var34;
+					if (bRound)
+					{
+						var34[0] = 197448;
+					}
+					else
+					{
+						var34[0] = 197452;
+					}
+					Format(tmpBuffer, 512, "[MVP%s] CI:\x03 %s \x01(\x05%d \x01common)\n", var34, g_sPlayerName[mvp_Common], var33);
+				}
+				else
+				{
+					if (iBrevityFlags & 64)
+					{
+						new var35;
+						if (bRound)
+						{
+							var35 = float(g_strRoundPlayerData[mvp_Common][team][22]) / float(g_strRoundData[g_iRound][team][4]) * 100;
+						}
+						else
+						{
+							var35 = float(g_strPlayerData[mvp_Common][22]) / float(g_strAllRoundData[team][4]) * 100;
+						}
+						new var36;
+						if (bRound)
+						{
+							var36[0] = 197488;
+						}
+						else
+						{
+							var36[0] = 197492;
+						}
+						Format(tmpBuffer, 512, "[MVP%s] CI:\x03 %s \x01(\x04%i%%\x01)\n", var36, g_sPlayerName[mvp_Common], RoundFloat(var35));
+					}
+					new var37;
+					if (bRound)
+					{
+						var37 = float(g_strRoundPlayerData[mvp_Common][team][22]) / float(g_strRoundData[g_iRound][team][4]) * 100;
+					}
+					else
+					{
+						var37 = float(g_strPlayerData[mvp_Common][22]) / float(g_strAllRoundData[team][4]) * 100;
+					}
+					new var38;
+					if (bRound)
+					{
+						var38 = g_strRoundPlayerData[mvp_Common][team][22];
+					}
+					else
+					{
+						var38 = g_strPlayerData[mvp_Common][22];
+					}
+					new var39;
+					if (bRound)
+					{
+						var39[0] = 197544;
+					}
+					else
+					{
+						var39[0] = 197548;
+					}
+					Format(tmpBuffer, 512, "[MVP%s] CI:\x03 %s \x01(\x05%d \x01common [\x04%i%%\x01])\n", var39, g_sPlayerName[mvp_Common], var38, RoundFloat(var37));
+				}
+				StrCat(printBuffer, 1024, tmpBuffer);
+			}
+		}
+	}
+	if (!iBrevityFlags & 4)
+	{
+		if (mvp_FF == -1)
+		{
+			new var40;
+			if (bRound)
+			{
+				var40[0] = 197596;
+			}
+			else
+			{
+				var40[0] = 197600;
+			}
+			Format(tmpBuffer, 512, "[LVP%s] FF: no friendly fire at all!\n", var40);
+			StrCat(printBuffer, 1024, tmpBuffer);
+		}
+		new var41;
+		if (bRound)
+		{
+			var41 = g_strRoundPlayerData[mvp_FF][team][44];
+		}
+		else
+		{
+			var41 = g_strPlayerData[mvp_FF][44];
+		}
+		new var42;
+		if (bRound)
+		{
+			var42[0] = 197640;
+		}
+		else
+		{
+			var42[0] = 197644;
+		}
+		Format(tmpBuffer, 512, "[LVP%s] FF:\x03 %s \x01(\x05%d \x01dmg)\n", var42, g_sPlayerName[mvp_FF], var41);
+		StrCat(printBuffer, 1024, tmpBuffer);
+	}
+	return printBuffer;
+}
+
+
+/* ERROR! null */
+ function "DisplayStatsMVP" (number 103)
+
+
+/* ERROR! null */
+ function "DisplayStatsFunFactChat" (number 104)
+
+String:GetFunFactChatString(bool:bRound, bool:bTeam, iTeam, _arg3)
+{
+	new String:printBuffer[1024] = "";
+	decl team;
+	new var3;
+	if (iTeam != -1)
+	{
+		var3 = iTeam;
+	}
+	else
+	{
+		new var1;
+		if (g_bSecondHalf && !g_bPlayersLeftStart)
+		{
+			new var2;
+			if (g_iCurTeam)
+			{
+				var2 = 0;
+			}
+			else
+			{
+				var2 = 1;
+			}
+			var3 = var2;
+		}
+		var3 = g_iCurTeam;
+	}
+	team = var3;
+	new i;
+	new j;
+	new wTotal;
+	new wPicks[256];
+	new wTypeHighPly[17];
+	new wTypeHighVal[17];
+	new wTypeHighTeam[17];
+	new wTmp;
+	new highest;
+	new value;
+	new property;
+	new minval;
+	new maxval;
+	new bool:bInf;
+	i = 0;
+	while (i <= 16)
+	{
+		wTmp = 0;
+		wTypeHighPly[i] = -1;
+		wTypeHighTeam[i] = team;
+		bInf = false;
+		switch (i)
+		{
+			case 1:
+			{
+				property = 36;
+				minval = 1;
+				maxval = 10;
+			}
+			case 2:
+			{
+				property = 37;
+				minval = 1;
+				maxval = 10;
+			}
+			case 3:
+			{
+				property = 30;
+				minval = 2;
+				maxval = 20;
+			}
+			case 4:
+			{
+				property = 32;
+				minval = 1;
+				maxval = 10;
+			}
+			case 5:
+			{
+				bInf = true;
+				property = 8;
+				minval = 2;
+				maxval = 10;
+			}
+			case 6:
+			{
+				bInf = true;
+				property = 10;
+				minval = 2;
+				maxval = 10;
+			}
+			case 7:
+			{
+				property = 38;
+				minval = 15;
+				maxval = 50;
+			}
+			case 8:
+			{
+				property = 49;
+				minval = 4;
+				maxval = 10;
+			}
+			case 9:
+			{
+				property = 40;
+				minval = 4;
+				maxval = 10;
+			}
+			case 10:
+			{
+				property = 35;
+				minval = 4;
+				maxval = 10;
+			}
+			case 11:
+			{
+				property = 39;
+				minval = 7;
+				maxval = 20;
+			}
+			case 12:
+			{
+				property = 33;
+				minval = 3;
+				maxval = 10;
+			}
+			case 13:
+			{
+				bInf = true;
+				property = 4;
+				minval = 50;
+				maxval = 200;
+			}
+			case 14:
+			{
+				bInf = true;
+				property = 11;
+				minval = 1;
+				maxval = 4;
+			}
+			case 15:
+			{
+				bInf = true;
+				property = 6;
+				minval = 40;
+				maxval = 200;
+			}
+			case 16:
+			{
+				bInf = true;
+				property = 5;
+				minval = 60;
+				maxval = 200;
+			}
+			default:
+			{
+			}
+		}
+		highest = GetPlayerWithHighestValue(property, bRound, bTeam, team, bInf);
+		if (!(highest == -1))
+		{
+			if (bInf)
+			{
+				new var4;
+				if (bRound && bTeam)
+				{
+					value = g_strRoundPlayerInfData[highest][team][property];
+				}
+				else
+				{
+					if (g_strRoundPlayerInfData[highest][1][property] < g_strRoundPlayerInfData[highest][0][property])
+					{
+						value = g_strRoundPlayerInfData[highest][0][property];
+						wTypeHighTeam[i] = 0;
+					}
+					value = g_strRoundPlayerInfData[highest][1][property];
+					wTypeHighTeam[i] = 1;
+				}
+			}
+			else
+			{
+				new var5;
+				if (bRound && bTeam)
+				{
+					value = g_strRoundPlayerData[highest][team][property];
+				}
+				if (g_strRoundPlayerData[highest][1][property] < g_strRoundPlayerData[highest][0][property])
+				{
+					value = g_strRoundPlayerData[highest][0][property];
+					wTypeHighTeam[i] = 0;
+				}
+				value = g_strRoundPlayerData[highest][1][property];
+				wTypeHighTeam[i] = 1;
+			}
+			if (value > minval)
+			{
+				wTypeHighPly[i] = highest;
+				wTypeHighVal[i] = value;
+				if (value >= maxval)
+				{
+					wTmp = 10;
+				}
+				wTmp = RoundFloat(float(value - minval) / float(maxval - minval) * float(10)) + 1;
+			}
+			if (wTmp)
+			{
+				j = 0;
+				while (j < wTmp)
+				{
+					wPicks[j + wTotal] = i;
+					j++;
+				}
+				wTotal = wTmp + wTotal;
+			}
+		}
+		i++;
+	}
+	if (!wTotal)
+	{
+		return printBuffer;
+	}
+	new wPick = GetRandomInt(0, wTotal + -1);
+	wPick = wPicks[wPick];
+	switch (wPick)
+	{
+		case 1:
+		{
+			new var23;
+			if (bRound)
+			{
+				var23[0] = 200436;
+			}
+			else
+			{
+				var23[0] = 200444;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01crowned \x05%d \x01witches.\n", var23, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 2:
+		{
+			new var22;
+			if (bRound)
+			{
+				var22[0] = 200496;
+			}
+			else
+			{
+				var22[0] = 200504;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01draw-crowned \x05%d \x01witches.\n", var22, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 3:
+		{
+			new var21;
+			if (bRound)
+			{
+				var21[0] = 200552;
+			}
+			else
+			{
+				var21[0] = 200560;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01skeeted \x05%d \x01hunters.\n", var21, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 4:
+		{
+			new var19;
+			if (wTypeHighVal[wPick] == 1)
+			{
+				var19[0] = 200644;
+			}
+			else
+			{
+				var19[0] = 200648;
+			}
+			new var20;
+			if (bRound)
+			{
+				var20[0] = 200628;
+			}
+			else
+			{
+				var20[0] = 200636;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01skeeted \x05%d \x01hunter%s with a melee weapon.\n", var20, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick], var19);
+		}
+		case 5:
+		{
+			new var18;
+			if (bRound)
+			{
+				var18[0] = 201076;
+			}
+			else
+			{
+				var18[0] = 201084;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01landed \x05%d \x01highpounces with hunters.\n", var18, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 6:
+		{
+			new var17;
+			if (bRound)
+			{
+				var17[0] = 201148;
+			}
+			else
+			{
+				var17[0] = 201156;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01landed \x05%d \x01highpounces with jockeys.\n", var17, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 7:
+		{
+			new var16;
+			if (bRound)
+			{
+				var16[0] = 200700;
+			}
+			else
+			{
+				var16[0] = 200708;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01shoved \x05%d \x01special infected.\n", var16, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 8:
+		{
+			new var15;
+			if (bRound)
+			{
+				var15[0] = 200768;
+			}
+			else
+			{
+				var15[0] = 200776;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01got \x05%d \x01melee swings on the tank.\n", var15, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 9:
+		{
+			new var14;
+			if (bRound)
+			{
+				var14[0] = 200824;
+			}
+			else
+			{
+				var14[0] = 200832;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01cut \x05%d \x01tongue cuts.\n", var14, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 10:
+		{
+			new var13;
+			if (bRound)
+			{
+				var13[0] = 200880;
+			}
+			else
+			{
+				var13[0] = 200888;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01popped \x05%d \x01boomers.\n", var13, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 11:
+		{
+			new var12;
+			if (bRound)
+			{
+				var12[0] = 200940;
+			}
+			else
+			{
+				var12[0] = 200948;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01deadstopped \x05%d \x01hunters.\n", var12, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 12:
+		{
+			new var11;
+			if (bRound)
+			{
+				var11[0] = 201004;
+			}
+			else
+			{
+				var11[0] = 201012;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01fully leveled \x05%d \x01chargers.\n", var11, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 13:
+		{
+			new var10;
+			if (bRound)
+			{
+				var10[0] = 201316;
+			}
+			else
+			{
+				var10[0] = 201324;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01did a total of \x05%d \x01damage by scratching (standing) survivors.\n", var10, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 14:
+		{
+			new var8;
+			if (wTypeHighVal[wPick] == 1)
+			{
+				var8[0] = 201228;
+			}
+			else
+			{
+				var8[0] = 201232;
+			}
+			new var9;
+			if (bRound)
+			{
+				var9[0] = 201212;
+			}
+			else
+			{
+				var9[0] = 201220;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01death-charged \x05%d \x01 survivor%s.\n", var9, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick], var8);
+		}
+		case 15:
+		{
+			new var7;
+			if (bRound)
+			{
+				var7[0] = 201424;
+			}
+			else
+			{
+				var7[0] = 201432;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01got a total of \x05%d \x01damage by common hits on boomed (standing) survivors.\n", var7, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		case 16:
+		{
+			new var6;
+			if (bRound)
+			{
+				var6[0] = 201516;
+			}
+			else
+			{
+				var6[0] = 201524;
+			}
+			Format(printBuffer, 1024, "[%s fact] \x04%s \x01did a total of \x05%d \x01spit-damage on (standing) survivors.\n", var6, g_sPlayerName[wTypeHighPly[wPick]], wTypeHighVal[wPick]);
+		}
+		default:
+		{
+		}
+	}
+	return printBuffer;
+}
+
+
+/* ERROR! null */
+ function "DisplayStatsAccuracy" (number 106)
+
+
+/* ERROR! null */
+ function "DisplayStatsSpecial" (number 107)
+
+
+/* ERROR! null */
+ function "DisplayStatsInfected" (number 108)
+
+
+/* ERROR! null */
+ function "DisplayStatsFriendlyFire" (number 109)
+
+BuildConsoleBufferGeneral(bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var6 = g_sConsoleBuf;
+	new var7 = 24;
+
+/* ERROR! null */
+ function "BuildConsoleBufferGeneral" (number 110)
+
+BuildConsoleBufferSpecial(bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var47 = g_sConsoleBuf;
+	new var48 = 24;
+
+/* ERROR! null */
+ function "BuildConsoleBufferSpecial" (number 111)
+
+BuildConsoleBufferInfected(bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var33 = g_sConsoleBuf;
+	new var34 = 24;
+
+/* ERROR! null */
+ function "BuildConsoleBufferInfected" (number 112)
+
+BuildConsoleBufferAccuracy(bool:details, bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var46 = g_sConsoleBuf;
+	new var47 = 24;
+
+/* ERROR! null */
+ function "BuildConsoleBufferAccuracy" (number 113)
+
+BuildConsoleBufferMVP(bool:bTank, bool:bMore, bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var84 = g_sConsoleBuf;
+	new var85 = 24;
+
+/* ERROR! null */
+ function "BuildConsoleBufferMVP" (number 114)
+
+BuildConsoleBufferFriendlyFireGiven(bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var41 = g_sConsoleBuf;
+	new var42 = 15;
+
+/* ERROR! null */
+ function "BuildConsoleBufferFriendlyFireGiven" (number 115)
+
+BuildConsoleBufferFriendlyFireTaken(bool:bRound, bool:bTeam, iTeam)
+{
+	g_iConsoleBufChunks = 0;
+	new var41 = g_sConsoleBuf;
+	new var42 = 15;
+
+/* ERROR! null */
+ function "BuildConsoleBufferFriendlyFireTaken" (number 116)
+
+SortPlayersMVP(bool:bRound, sortCol, bool:bTeam, iTeam)
+{
+	new iStored;
+	new i;
+	new j;
+	new bool:found;
+	new highest;
+	new highTeam;
+	new pickTeam;
+	new var1;
+	if (sortCol < 0 || sortCol > 3)
+	{
+		return 0;
+	}
+	decl team;
+	new var4;
+	if (iTeam != -1)
+	{
+		var4 = iTeam;
+	}
+	else
+	{
+		new var2;
+		if (g_bSecondHalf && !g_bPlayersLeftStart)
+		{
+			new var3;
+			if (g_iCurTeam)
+			{
+				var3 = 0;
+			}
+			else
+			{
+				var3 = 1;
+			}
+			var4 = var3;
+		}
+		var4 = g_iCurTeam;
+	}
+	team = var4;
+	while (iStored < g_iPlayers)
+	{
+		highest = -1;
+		i = 0;
+		while (i < g_iPlayers)
+		{
+			found = false;
+			j = 0;
+			while (j < iStored)
+			{
+				if (i == g_iPlayerIndexSorted[sortCol][j])
+				{
+					found = true;
+				}
+				j++;
+			}
+			if (!found)
+			{
+				switch (sortCol)
+				{
+					case 0:
+					{
+						if (bRound)
+						{
+							if (bTeam)
+							{
+								new var29;
+								if (highest == -1 || g_strRoundPlayerData[i][team][26] > g_strRoundPlayerData[highest][team][26] || (g_strRoundPlayerData[highest][team][26] == g_strRoundPlayerData[i][team][26] && (g_strRoundPlayerData[i][team][22] > g_strRoundPlayerData[highest][team][22] || (g_strRoundPlayerData[highest][team][22] == g_strRoundPlayerData[i][team][22] && highest < 4))))
+								{
+									highest = i;
+								}
+							}
+							else
+							{
+								new var30;
+								if (g_strRoundPlayerData[i][0][26] >= g_strRoundPlayerData[i][1][26])
+								{
+									var30 = 0;
+								}
+								else
+								{
+									var30 = 1;
+								}
+								pickTeam = var30;
+								new var34;
+								if (highest == -1 || g_strRoundPlayerData[i][pickTeam][26] > g_strRoundPlayerData[highest][highTeam][26] || (g_strRoundPlayerData[highest][highTeam][26] == g_strRoundPlayerData[i][pickTeam][26] && (g_strRoundPlayerData[i][pickTeam][22] > g_strRoundPlayerData[highest][highTeam][22] || (g_strRoundPlayerData[highest][highTeam][22] == g_strRoundPlayerData[i][pickTeam][22] && highest < 4))))
+								{
+									highest = i;
+									g_iPlayerSortedUseTeam[sortCol][i] = pickTeam;
+									highTeam = pickTeam;
+								}
+							}
+						}
+						else
+						{
+							new var38;
+							if (highest == -1 || g_strPlayerData[i][26] > g_strPlayerData[highest][26] || (g_strPlayerData[highest][26] == g_strPlayerData[i][26] && (g_strPlayerData[i][22] > g_strPlayerData[highest][22] || (g_strPlayerData[highest][22] == g_strPlayerData[i][22] && highest < 4))))
+							{
+								highest = i;
+							}
+						}
+					}
+					case 1:
+					{
+						if (bRound)
+						{
+							if (bTeam)
+							{
+								new var16;
+								if (highest == -1 || g_strRoundPlayerData[i][team][22] > g_strRoundPlayerData[highest][team][22] || (g_strRoundPlayerData[highest][team][22] == g_strRoundPlayerData[i][team][22] && (g_strRoundPlayerData[i][team][26] > g_strRoundPlayerData[highest][team][26] || (g_strRoundPlayerData[highest][team][26] == g_strRoundPlayerData[i][team][26] && highest < 4))))
+								{
+									highest = i;
+								}
+							}
+							else
+							{
+								new var17;
+								if (g_strRoundPlayerData[i][0][22] >= g_strRoundPlayerData[i][1][22])
+								{
+									var17 = 0;
+								}
+								else
+								{
+									var17 = 1;
+								}
+								pickTeam = var17;
+								new var21;
+								if (highest == -1 || g_strRoundPlayerData[i][pickTeam][22] > g_strRoundPlayerData[highest][highTeam][22] || (g_strRoundPlayerData[highest][highTeam][22] == g_strRoundPlayerData[i][pickTeam][22] && (g_strRoundPlayerData[i][pickTeam][26] > g_strRoundPlayerData[highest][highTeam][26] || (g_strRoundPlayerData[highest][highTeam][26] == g_strRoundPlayerData[i][pickTeam][26] && highest < 4))))
+								{
+									highest = i;
+									g_iPlayerSortedUseTeam[sortCol][i] = pickTeam;
+									highTeam = pickTeam;
+								}
+							}
+						}
+						else
+						{
+							new var25;
+							if (highest == -1 || g_strPlayerData[i][22] > g_strPlayerData[highest][22] || (g_strPlayerData[highest][22] == g_strPlayerData[i][22] && (g_strPlayerData[i][26] > g_strPlayerData[highest][26] || (g_strPlayerData[highest][26] == g_strPlayerData[i][26] && highest < 4))))
+							{
+								highest = i;
+							}
+						}
+					}
+					case 2:
+					{
+						if (bRound)
+						{
+							if (bTeam)
+							{
+								new var9;
+								if (highest == -1 || g_strRoundPlayerData[i][team][44] > g_strRoundPlayerData[highest][team][44])
+								{
+									highest = i;
+								}
+							}
+							else
+							{
+								new var10;
+								if (g_strRoundPlayerData[i][0][44] >= g_strRoundPlayerData[i][1][44])
+								{
+									var10 = 0;
+								}
+								else
+								{
+									var10 = 1;
+								}
+								pickTeam = var10;
+								new var11;
+								if (highest == -1 || g_strRoundPlayerData[i][pickTeam][44] > g_strRoundPlayerData[highest][highTeam][44])
+								{
+									highest = i;
+									g_iPlayerSortedUseTeam[sortCol][i] = pickTeam;
+									highTeam = pickTeam;
+								}
+							}
+						}
+						else
+						{
+							new var12;
+							if (highest == -1 || g_strPlayerData[i][44] > g_strPlayerData[highest][44])
+							{
+								highest = i;
+							}
+						}
+					}
+					case 3:
+					{
+						if (bRound)
+						{
+							if (bTeam)
+							{
+								new var5;
+								if (highest == -1 || g_strRoundPlayerInfData[i][team][1] > g_strRoundPlayerInfData[highest][team][1])
+								{
+									highest = i;
+								}
+							}
+							else
+							{
+								new var6;
+								if (g_strRoundPlayerInfData[i][0][1] >= g_strRoundPlayerInfData[i][1][1])
+								{
+									var6 = 0;
+								}
+								else
+								{
+									var6 = 1;
+								}
+								pickTeam = var6;
+								new var7;
+								if (highest == -1 || g_strRoundPlayerInfData[i][pickTeam][1] > g_strRoundPlayerInfData[highest][highTeam][1])
+								{
+									highest = i;
+									g_iPlayerSortedUseTeam[sortCol][i] = pickTeam;
+									highTeam = pickTeam;
+								}
+							}
+						}
+						else
+						{
+							new var8;
+							if (highest == -1 || g_strPlayerInfData[i][1] > g_strPlayerInfData[highest][1])
+							{
+								highest = i;
+							}
+						}
+					}
+					default:
+					{
+					}
+				}
+			}
+			i++;
+		}
+		g_iPlayerIndexSorted[sortCol][iStored] = highest;
+		iStored++;
+	}
+	return 0;
+}
+
+GetPlayerWithHighestValue(property, bool:bRound, bool:bTeam, team, bool:bInfected)
+{
+	new i;
+	new highest;
+	new highTeam;
+	new pickTeam;
+	highest = -1;
+	if (bInfected)
+	{
+		i = 4;
+		while (i < g_iPlayers)
+		{
+			if (bRound)
+			{
+				if (bTeam)
+				{
+					new var1;
+					if (highest == -1 || g_strRoundPlayerInfData[i][team][property] > g_strRoundPlayerInfData[highest][team][property])
+					{
+						highest = i;
+					}
+				}
+				else
+				{
+					new var2;
+					if (g_strRoundPlayerInfData[i][0][property] >= g_strRoundPlayerInfData[i][1][property])
+					{
+						var2 = 0;
+					}
+					else
+					{
+						var2 = 1;
+					}
+					pickTeam = var2;
+					new var3;
+					if (highest == -1 || g_strRoundPlayerInfData[i][pickTeam][property] > g_strRoundPlayerInfData[highest][highTeam][property])
+					{
+						highest = i;
+						highTeam = pickTeam;
+					}
+				}
+			}
+			else
+			{
+				new var4;
+				if (highest == -1 || g_strPlayerInfData[i][property] > g_strPlayerInfData[highest][property])
+				{
+					highest = i;
+				}
+			}
+			i++;
+		}
+	}
+	else
+	{
+		i = 4;
+		while (i < g_iPlayers)
+		{
+			if (bRound)
+			{
+				if (bTeam)
+				{
+					new var5;
+					if (highest == -1 || g_strRoundPlayerData[i][team][property] > g_strRoundPlayerData[highest][team][property])
+					{
+						highest = i;
+					}
+				}
+				else
+				{
+					new var6;
+					if (g_strRoundPlayerData[i][0][property] >= g_strRoundPlayerData[i][1][property])
+					{
+						var6 = 0;
+					}
+					else
+					{
+						var6 = 1;
+					}
+					pickTeam = var6;
+					new var7;
+					if (highest == -1 || g_strRoundPlayerData[i][pickTeam][property] > g_strRoundPlayerData[highest][highTeam][property])
+					{
+						highest = i;
+						highTeam = pickTeam;
+					}
+				}
+			}
+			else
+			{
+				new var8;
+				if (highest == -1 || g_strPlayerData[i][property] > g_strPlayerData[highest][property])
+				{
+					highest = i;
+				}
+			}
+			i++;
+		}
+	}
+	return highest;
+}
+
+TableIncludePlayer(index, team, bool:bRound, bool:bReverseTeam, statA, statB)
+{
+	if (bReverseTeam)
+	{
+		new var1;
+		if (team)
+		{
+			var1 = 0;
+		}
+		else
+		{
+			var1 = 1;
+		}
+		if (var1 != g_iPlayerRoundTeam[team][index])
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		if (team != g_iPlayerRoundTeam[team][index])
+		{
+			return 0;
+		}
+	}
+	if (g_bPlayersLeftStart)
+	{
+		if (bReverseTeam)
+		{
+			new var3;
+			if ((g_strRoundPlayerInfData[index][team][23] && (g_strRoundPlayerInfData[index][team][15] || g_strRoundPlayerInfData[index][team][22])) && (g_iCurTeam == team && team && index >= 4))
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			new var6;
+			if (g_iCurTeam == team && team == g_iPlayerRoundTeam[2][index])
+			{
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		if (!bRound)
+		{
+			if (bReverseTeam)
+			{
+				new var8;
+				if ((g_strPlayerInfData[index][23] && (g_strPlayerInfData[index][15] || g_strPlayerInfData[index][22])) || team || index < 4)
+				{
+					return 0;
+				}
+			}
+			else
+			{
+				new var11;
+				if ((g_strPlayerData[index][71] || g_strPlayerData[index][statA] || g_strPlayerData[index][statB]) || team == g_iPlayerGameTeam[team][index])
+				{
+					return 0;
+				}
+			}
+		}
+		if (index >= 4)
+		{
+			if (!IsIndexSurvivor(index, bReverseTeam))
+			{
+				if (g_iCurTeam == team)
+				{
+					return 0;
+				}
+			}
+			if (g_iCurTeam != team)
+			{
+				return 0;
+			}
+		}
+	}
+	if (bReverseTeam)
+	{
+		if (bRound)
+		{
+			new var13;
+			if (g_strRoundPlayerInfData[index][team][statA] || g_strRoundPlayerInfData[index][team][statB])
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			new var14;
+			if (g_strPlayerInfData[index][statA] || g_strPlayerInfData[index][statB])
+			{
+				return 1;
+			}
+		}
+	}
+	else
+	{
+		if (bRound)
+		{
+			new var15;
+			if (g_strRoundPlayerData[index][team][statA] || g_strRoundPlayerData[index][team][statB])
+			{
+				return 1;
+			}
+		}
+		new var16;
+		if (g_strPlayerData[index][statA] || g_strPlayerData[index][statB])
+		{
+			return 1;
+		}
+	}
+	if (index < 4)
+	{
+		return 0;
+	}
+	new presTime;
+	new time = GetTime({0,0});
+	if (!bReverseTeam)
+	{
+		if (bRound)
+		{
+			new var17;
+			if (g_strRoundPlayerData[index][team][72])
+			{
+				var17 = g_strRoundPlayerData[index][team][72];
+			}
+			else
+			{
+				var17 = time;
+			}
+			presTime = var17 - g_strRoundPlayerData[index][team][71];
+		}
+		else
+		{
+			new var18;
+			if (g_strPlayerData[index][72])
+			{
+				var18 = g_strPlayerData[index][72];
+			}
+			else
+			{
+				var18 = time;
+			}
+			presTime = var18 - g_strPlayerData[index][71];
+		}
+	}
+	else
+	{
+		if (bRound)
+		{
+			new var19;
+			if (g_strRoundPlayerInfData[index][team][24])
+			{
+				var19 = g_strRoundPlayerInfData[index][team][24];
+			}
+			else
+			{
+				var19 = time;
+			}
+			presTime = var19 - g_strRoundPlayerInfData[index][team][23];
+		}
+		new var20;
+		if (g_strPlayerInfData[index][24])
+		{
+			var20 = g_strPlayerInfData[index][24];
+		}
+		else
+		{
+			var20 = time;
+		}
+		presTime = var20 - g_strPlayerInfData[index][23];
+	}
+	if (presTime >= 30)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+GetFullRoundTime(bRound, bTeam, team, bool:bTank)
+{
+	new start = 13;
+	new stop = 14;
+	if (bTank)
+	{
+		start = 17;
+		stop = 18;
+	}
+	new fullTime;
+	new time = GetTime({0,0});
+	if (bRound)
+	{
+		if (bTeam)
+		{
+			if (g_strRoundData[g_iRound][team][start])
+			{
+				new var1;
+				if (g_strRoundData[g_iRound][team][stop])
+				{
+					var1 = g_strRoundData[g_iRound][team][stop];
+				}
+				else
+				{
+					var1 = time;
+				}
+				fullTime = var1 - g_strRoundData[g_iRound][team][start];
+				new var2;
+				if (g_bPaused && g_iCurTeam == team)
+				{
+					new var3;
+					if (!bTank || g_bTankInGame)
+					{
+						fullTime -= time - g_iPauseStart;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (g_strRoundData[g_iRound][0][start])
+			{
+				new var4;
+				if (g_strRoundData[g_iRound][0][stop])
+				{
+					var4 = g_strRoundData[g_iRound][0][stop];
+				}
+				else
+				{
+					var4 = time;
+				}
+				fullTime = var4 - g_strRoundData[g_iRound][0][start];
+				new var5;
+				if (g_bPaused && g_iCurTeam)
+				{
+					new var6;
+					if (!bTank || g_bTankInGame)
+					{
+						fullTime -= time - g_iPauseStart;
+					}
+				}
+			}
+			if (g_strRoundData[g_iRound][1][start])
+			{
+				new var7;
+				if (g_strRoundData[g_iRound][1][stop])
+				{
+					var7 = g_strRoundData[g_iRound][1][stop];
+				}
+				else
+				{
+					var7 = time;
+				}
+				fullTime = var7 - g_strRoundData[g_iRound][1][start] + fullTime;
+				new var8;
+				if (g_bPaused && g_iCurTeam == 1)
+				{
+					new var9;
+					if (!bTank || g_bTankInGame)
+					{
+						fullTime -= time - g_iPauseStart;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		if (bTeam)
+		{
+			if (g_strAllRoundData[team][start])
+			{
+				new var10;
+				if (g_strAllRoundData[team][stop])
+				{
+					var10 = g_strAllRoundData[team][stop];
+				}
+				else
+				{
+					var10 = time;
+				}
+				fullTime = var10 - g_strAllRoundData[team][start];
+				new var11;
+				if (g_bPaused && g_iCurTeam == team)
+				{
+					new var12;
+					if (!bTank || g_bTankInGame)
+					{
+						fullTime -= time - g_iPauseStart;
+					}
+				}
+			}
+		}
+		new var19 = g_strAllRoundData;
+		if (var19[0][var19][start])
+		{
+			new var20 = g_strAllRoundData;
+			new var13;
+			if (var20[0][var20][stop])
+			{
+				new var21 = g_strAllRoundData;
+				var13 = var21[0][var21][stop];
+			}
+			else
+			{
+				var13 = time;
+			}
+			new var22 = g_strAllRoundData;
+			fullTime = var13 - var22[0][var22][start];
+			new var14;
+			if (g_bPaused && g_iCurTeam)
+			{
+				new var15;
+				if (!bTank || g_bTankInGame)
+				{
+					fullTime -= time - g_iPauseStart;
+				}
+			}
+		}
+		if (g_strAllRoundData[1][start])
+		{
+			new var16;
+			if (g_strAllRoundData[1][stop])
+			{
+				var16 = g_strAllRoundData[1][stop];
+			}
+			else
+			{
+				var16 = time;
+			}
+			fullTime = var16 - g_strAllRoundData[1][start] + fullTime;
+			new var17;
+			if (g_bPaused && g_iCurTeam == 1)
+			{
+				new var18;
+				if (!bTank || g_bTankInGame)
+				{
+					fullTime -= time - g_iPauseStart;
+				}
+			}
+		}
+	}
+	return fullTime;
+}
+
+GetPauseTime(bRound, bTeam, team, bool:bCurrentOnly)
+{
+	new start = 15;
+	new stop = 16;
+	new fullTime;
+	new time = GetTime({0,0});
+	if (bCurrentOnly)
+	{
+		if (bRound)
+		{
+			new var2;
+			if (g_bPaused && (g_iCurTeam != team && !bTeam))
+			{
+				fullTime = time - g_iPauseStart + fullTime;
+			}
+		}
+		return fullTime;
+	}
+	if (bRound)
+	{
+		if (bTeam)
+		{
+			new var3;
+			if (g_strRoundData[g_iRound][team][start] && g_strRoundData[g_iRound][team][stop])
+			{
+				fullTime = g_strRoundData[g_iRound][team][stop] - g_strRoundData[g_iRound][team][start];
+			}
+			new var4;
+			if (g_bPaused && g_iCurTeam == team)
+			{
+				fullTime = time - g_iPauseStart + fullTime;
+			}
+		}
+		else
+		{
+			new var5;
+			if (g_strRoundData[g_iRound][0][start] && g_strRoundData[g_iRound][0][stop])
+			{
+				fullTime = g_strRoundData[g_iRound][0][stop] - g_strRoundData[g_iRound][0][start];
+			}
+			new var6;
+			if (g_strRoundData[g_iRound][1][start] && g_strRoundData[g_iRound][1][stop])
+			{
+				fullTime = g_strRoundData[g_iRound][1][stop] - g_strRoundData[g_iRound][1][start] + fullTime;
+			}
+			if (g_bPaused)
+			{
+				fullTime = time - g_iPauseStart + fullTime;
+			}
+		}
+	}
+	else
+	{
+		if (bTeam)
+		{
+			new var7;
+			if (g_strAllRoundData[team][start] && g_strAllRoundData[team][stop])
+			{
+				fullTime = g_strAllRoundData[team][stop] - g_strAllRoundData[team][start];
+			}
+		}
+		new var10 = g_strAllRoundData;
+		new var8;
+		if (var10[0][var10][start] && var11[0][var11][stop])
+		{
+			new var12 = g_strAllRoundData;
+			new var13 = g_strAllRoundData;
+			fullTime = var12[0][var12][stop] - var13[0][var13][start];
+		}
+		new var9;
+		if (g_strAllRoundData[1][start] && g_strAllRoundData[1][stop])
+		{
+			fullTime = g_strAllRoundData[1][stop] - g_strAllRoundData[1][start] + fullTime;
+		}
+	}
+	return fullTime;
+}
+
+
+/* ERROR! null */
+ function "SaveFurthestFlows" (number 122)
+
+public Action:Timer_SaveFlows(Handle:timer)
+{
+	new var1;
+	if (!g_bPlayersLeftStart || !g_bInRound)
+	{
+		return Action:0;
+	}
+	SaveFurthestFlows();
+	return Action:0;
+}
+
+AutomaticRoundEndPrint(bool:doDelay)
+{
+	g_iLastRoundEndPrint = GetTime({0,0});
+	new Float:fDelay = 3.0;
+	if (g_bModeScavenge)
+	{
+		fDelay = 2.0;
+	}
+	if (doDelay)
+	{
+		CreateTimer(fDelay, Timer_AutomaticRoundEndPrint, any:0, 2);
+	}
+	else
+	{
+		Timer_AutomaticRoundEndPrint(Handle:0);
+	}
+	return 0;
+}
+
+public Action:Timer_AutomaticRoundEndPrint(Handle:timer)
+{
+	decl iFlags;
+	new var1;
+	if (g_bModeCampaign)
+	{
+		var1 = g_hCvarAutoPrintCoop;
+	}
+	else
+	{
+		var1 = g_hCvarAutoPrintVs;
+	}
+	iFlags = GetConVarInt(var1);
+	AutomaticPrintPerClient(iFlags, -1, -1, false, false, false, false);
+	new client = 1;
+	while (client <= MaxClients)
+	{
+		if (0 < g_iCookieValue[client])
+		{
+			AutomaticPrintPerClient(g_iCookieValue[client], client, -1, false, false, false, false);
+		}
+		client++;
+	}
+	return Action:0;
+}
+
+
+/* ERROR! lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition */
+ function "AutomaticPrintPerClient" (number 126)
+
+public Action:Timer_DelayedPrint(Handle:timer, Handle:pack)
+{
+	ResetPack(pack, false);
+	new flags = ReadPackCell(pack);
+	new client = ReadPackCell(pack);
+	new team = ReadPackCell(pack);
+	new bool:bSortedRound = ReadPackCell(pack);
+	new bool:bSortedGame = ReadPackCell(pack);
+	CloseHandle(pack);
+	AutomaticPrintPerClient(flags, client, team, true, true, bSortedRound, bSortedGame);
+	return Action:0;
+}
+
+GetCurrentTeamSurvivor()
+{
+	if (g_bCMTSwapped)
+	{
+		return !GameRules_GetProp("m_bAreTeamsFlipped", 4, 0);
+	}
+	return GameRules_GetProp("m_bAreTeamsFlipped", 4, 0);
+}
+
+GetWeaponTypeForClassname(String:classname[])
+{
+	new strWeaponType:weaponType;
+	if (!GetTrieValue(g_hTrieWeapons, classname, weaponType))
+	{
+		return 0;
+	}
+	return weaponType;
+}
+
+GetPlayerIndexForClient(client)
+{
+	new var1;
+	if ((client > 0 && client <= MaxClients) && IsClientInGame(client))
+	{
+		return -1;
+	}
+	decl String:sSteamId[32];
+	if (IsFakeClient(client))
+	{
+		Format(sSteamId, 32, "BOT_%i", GetPlayerCharacter(client));
+	}
+	else
+	{
+		GetClientAuthString(client, sSteamId, 32, true);
+	}
+	return GetPlayerIndexForSteamId(sSteamId, client);
+}
+
+GetPlayerIndexForSteamId(String:steamId[], client)
+{
+	new pIndex = -1;
+	if (!GetTrieValue(g_hTriePlayers, steamId, pIndex))
+	{
+		pIndex = g_iPlayers;
+		SetTrieValue(g_hTriePlayers, steamId, pIndex, true);
+		strcopy(g_sPlayerId[pIndex], 32, steamId);
+		if (client != -1)
+		{
+			GetClientName(client, g_sPlayerName[pIndex], 64);
+			strcopy(g_sPlayerNameSafe[pIndex], 20, g_sPlayerName[pIndex]);
+			stripUnicode(g_sPlayerNameSafe[pIndex], 20);
+		}
+		g_iPlayers += 1;
+		if (g_iPlayers >= 64)
+		{
+			g_iPlayers = 4;
+		}
+	}
+	return pIndex;
+}
+
+GetPlayerCharacter(client)
+{
+	new tmpChr = GetEntProp(client, PropType:0, "m_survivorCharacter", 4, 0);
+	new var1;
+	if (tmpChr < 0 || tmpChr >= 4)
+	{
+		decl String:model[256];
+		GetEntPropString(client, PropType:1, "m_ModelName", model, 256, 0);
+		if (StrContains(model, "gambler", true) != -1)
+		{
+			tmpChr = 0;
+		}
+		else
+		{
+			if (StrContains(model, "coach", true) != -1)
+			{
+				tmpChr = 2;
+			}
+			if (StrContains(model, "mechanic", true) != -1)
+			{
+				tmpChr = 3;
+			}
+			if (StrContains(model, "producer", true) != -1)
+			{
+				tmpChr = 1;
+			}
+			if (StrContains(model, "namvet", true) != -1)
+			{
+				tmpChr = 0;
+			}
+			if (StrContains(model, "teengirl", true) != -1)
+			{
+				tmpChr = 1;
+			}
+			if (StrContains(model, "biker", true) != -1)
+			{
+				tmpChr = 3;
+			}
+			if (StrContains(model, "manager", true) != -1)
+			{
+				tmpChr = 2;
+			}
+			tmpChr = 0;
+		}
+	}
+	return tmpChr;
+}
+
+
+/* ERROR! null */
+ function "IsIndexSurvivor" (number 133)
+
+bool:IsWitch(iEntity)
+{
+	new var1;
+	if (iEntity > 0 && IsValidEntity(iEntity) && IsValidEdict(iEntity))
+	{
+		decl String:strClassName[64];
+		GetEdictClassname(iEntity, strClassName, 64);
+		new strOEC:entType;
+		if (!GetTrieValue(g_hTrieEntityCreated, strClassName, entType))
+		{
+			return false;
+		}
+		return entType == 1;
+	}
+	return false;
+}
+
+bool:IsCommon(iEntity)
+{
+	new var1;
+	if (iEntity > 0 && IsValidEntity(iEntity) && IsValidEdict(iEntity))
+	{
+		decl String:strClassName[64];
+		GetEdictClassname(iEntity, strClassName, 64);
+		new strOEC:entType;
+		if (!GetTrieValue(g_hTrieEntityCreated, strClassName, entType))
+		{
+			return false;
+		}
+		return entType == 0;
+	}
+	return false;
+}
+
+
+/* ERROR! null */
+ function "IsTankInGame" (number 136)
+
+bool:IsPlayerIncapacitated(client)
+{
+	return GetEntProp(client, PropType:0, "m_isIncapacitated", 1, 0);
+}
+
+bool:IsHangingFromLedge(client)
+{
+	new var1;
+	return GetEntProp(client, PropType:0, "m_isHangingFromLedge", 4, 0) || GetEntProp(client, PropType:0, "m_isFallingFromLedge", 4, 0);
+}
+
+bool:IsPlayerIncapacitatedAtAll(client)
+{
+	new var1;
+	return IsPlayerIncapacitated(client) || IsHangingFromLedge(client);
+}
+
+
+/* ERROR! null */
+ function "AreClientsConnected" (number 140)
+
+
+/* ERROR! null */
+ function "GetUprightSurvivors" (number 141)
+
+public Action:Timer_WriteStats(Handle:timer, any:iTeam)
+{
+	WriteStatsToFile(iTeam, true);
+	return Action:0;
+}
+
+
+/* ERROR! null */
+ function "WriteStatsToFile" (number 143)
+
+InitTries()
+{
+	g_hTriePlayers = CreateTrie();
+	SetTrieValue(g_hTriePlayers, "BOT_0", any:0, true);
+	SetTrieValue(g_hTriePlayers, "BOT_1", any:1, true);
+	SetTrieValue(g_hTriePlayers, "BOT_2", any:2, true);
+	SetTrieValue(g_hTriePlayers, "BOT_3", any:3, true);
+	new var1 = g_sPlayerName;
+	new var2 = g_sPlayerId;
+	g_iPlayers = g_iPlayers + 4;
+	new i;
+	while (i < 4)
+	{
+		i++;
+	}
+	g_hTrieWeapons = CreateTrie();
+	SetTrieValue(g_hTrieWeapons, "weapon_pistol", any:4, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_pistol_magnum", any:4, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_pumpshotgun", any:1, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_shotgun_chrome", any:1, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_autoshotgun", any:1, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_shotgun_spas", any:1, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_hunting_rifle", any:3, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_sniper_military", any:3, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_sniper_awp", any:3, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_sniper_scout", any:3, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_smg", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_smg_silenced", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_smg_mp5", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_rifle", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_rifle_desert", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_rifle_ak47", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_rifle_sg552", any:2, true);
+	SetTrieValue(g_hTrieWeapons, "weapon_rifle_m60", any:2, true);
+	g_hTrieEntityCreated = CreateTrie();
+	SetTrieValue(g_hTrieEntityCreated, "infected", any:0, true);
+	SetTrieValue(g_hTrieEntityCreated, "witch", any:1, true);
+	g_hTrieMaps = CreateTrie();
+	SetTrieValue(g_hTrieMaps, "c1m4_atrium", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c2m5_concert", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c3m4_plantation", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c4m5_milltown_escape", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c5m5_bridge", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c6m3_port", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c7m3_port", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c8m5_rooftop", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c9m2_lots", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c10m5_houseboat", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c11m5_runway", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c12m5_cornfield", any:0, true);
+	SetTrieValue(g_hTrieMaps, "c13m4_cutthroatcreek", any:0, true);
+	return 0;
+}
+
+LeftPadString(String:text[], maxlength, cutOff, bool:bNumber)
+{
+	new tmp[maxlength];
+	new safe;
+	strcopy(tmp, maxlength, text);
+	if (!bNumber)
+	{
+		while (strlen(tmp) < cutOff && safe < 1000)
+		{
+			Format(tmp, maxlength, " %s", tmp);
+			safe++;
+		}
+	}
+	strcopy(text, maxlength, tmp);
+	return 0;
+}
+
+RightPadString(String:text[], maxlength, cutOff)
+{
+	new tmp[maxlength];
+	new safe;
+	strcopy(tmp, maxlength, text);
+	while (strlen(tmp) < cutOff && safe < 1000)
+	{
+		Format(tmp, maxlength, "%s ", tmp);
+		safe++;
+	}
+	strcopy(text, maxlength, tmp);
+	return 0;
+}
+
+FormatTimeAsDuration(String:text[], maxlength, time, bool:bPad)
+{
+	new tmp[maxlength];
+	if (time < 1)
+	{
+		Format(text, maxlength, "");
+		return 0;
+	}
+	if (time > 3600)
+	{
+		new tmpHr = RoundToFloor(float(time) / 3600.0);
+		Format(tmp, maxlength, "%ih", tmpHr);
+		time -= tmpHr * 3600;
+	}
+	if (time > 60)
+	{
+		if (strlen(tmp))
+		{
+			Format(tmp, maxlength, "%s ", tmp);
+		}
+		new tmpMin = RoundToFloor(float(time) / 60.0);
+		new var1;
+		if (bPad && tmpMin < 10)
+		{
+			var2[0] = 211432;
+		}
+		else
+		{
+			var2[0] = 211436;
+		}
+		Format(tmp, maxlength, "%s%im", var2, tmpMin);
+		time -= tmpMin * 60;
+	}
+	if (time)
+	{
+		new var3;
+		if (bPad && time < 10)
+		{
+			var4[0] = 211460;
+		}
+		else
+		{
+			var4[0] = 211464;
+		}
+		new var5;
+		if (strlen(tmp))
+		{
+			var5[0] = 211452;
+		}
+		else
+		{
+			var5[0] = 211456;
+		}
+		Format(tmp, maxlength, "%s%s%s%is", tmp, var5, var4, time);
+	}
+	strcopy(text, maxlength, tmp);
+	return 0;
+}
+
+FormatPercentage(String:text[], maxlength, part, whole, bool:bDecimal)
+{
+	new strTmp[maxlength];
+	new var1;
+	if (!whole || !part)
+	{
+		FormatEx(strTmp, maxlength, "");
+		strcopy(text, maxlength, strTmp);
+		return 0;
+	}
+	if (bDecimal)
+	{
+		new Float:fValue = float(part) / float(whole) * 100.0;
+		FormatEx(strTmp, maxlength, "%3.1f", fValue);
+	}
+	else
+	{
+		new iValue = RoundFloat(float(part) / float(whole) * 100.0);
+		FormatEx(strTmp, maxlength, "%i", iValue);
+	}
+	strcopy(text, maxlength, strTmp);
+	return 0;
+}
+
+CheckGameMode()
+{
+	new String:tmpStr[24];
+	GetConVarString(FindConVar("mp_gamemode"), tmpStr, 24);
+	new var1;
+	if (StrEqual(tmpStr, "coop", false) || StrEqual(tmpStr, "mutation4", false) || StrEqual(tmpStr, "mutation14", false) || StrEqual(tmpStr, "mutation20", false) || StrEqual(tmpStr, "mutationrandomcoop", false))
+	{
+		g_bModeCampaign = true;
+		g_bModeScavenge = false;
+	}
+	else
+	{
+		if (StrEqual(tmpStr, "scavenge", false))
+		{
+			g_bModeCampaign = false;
+			g_bModeScavenge = true;
+		}
+		g_bModeCampaign = false;
+		g_bModeScavenge = false;
+	}
+	return 0;
+}
+
+IsMissionFinalMap()
+{
+	new strMapType:mapType;
+	if (!GetTrieValue(g_hTrieMaps, g_sMapName[g_iRound], mapType))
+	{
+		return 0;
+	}
+	return mapType == 0;
+}
+
+stripUnicode(String:testString[64], maxLength)
+{
+	if (maxLength < 1)
+	{
+		maxLength = 64;
+	}
+	decl tmpString[maxLength];
+	strcopy(tmpString, maxLength, testString);
+	new uni;
+	new currentChar;
+	new tmpCharLength;
+	new i;
+	while (i < maxLength && tmpString[i])
+	{
+		if (tmpString[i] & '')
+		{
+			new var2;
+			if (i < maxLength + -1 && tmpString[i] & 224 == 192 && tmpString[i + 1] & 192 == 128)
+			{
+				i++;
+				currentChar = tmpString[i] & 31;
+				currentChar <<= 6;
+				currentChar = tmpString[i] & 63 + currentChar;
+				tmpCharLength = 1;
+			}
+			new var3;
+			if (i < maxLength + -2 && tmpString[i] & 240 == 224 && tmpString[i + 1] & 192 == 128 && tmpString[i + 2] & 192 == 128)
+			{
+				i++;
+				currentChar = tmpString[i] & 15;
+				currentChar <<= 6;
+				i++;
+				currentChar = tmpString[i] & 63 + currentChar;
+				currentChar <<= 6;
+				currentChar = tmpString[i] & 63 + currentChar;
+				tmpCharLength = 2;
+			}
+			new var4;
+			if (i < maxLength + -3 && tmpString[i] & 248 == 240 && tmpString[i + 1] & 192 == 128 && tmpString[i + 2] & 192 == 128 && tmpString[i + 3] & 192 == 128)
+			{
+				i++;
+				currentChar = tmpString[i] & 7;
+				currentChar <<= 6;
+				i++;
+				currentChar = tmpString[i] & 63 + currentChar;
+				currentChar <<= 6;
+				i++;
+				currentChar = tmpString[i] & 63 + currentChar;
+				currentChar <<= 6;
+				currentChar = tmpString[i] & 63 + currentChar;
+				tmpCharLength = 3;
+			}
+			currentChar = 161;
+			tmpCharLength = 0;
+		}
+		else
+		{
+			currentChar = tmpString[i];
+			tmpCharLength = 0;
+		}
+		if (currentChar > 160)
+		{
+			uni++;
+			new j = tmpCharLength;
+			while (0 <= j)
+			{
+				tmpString[i - j] = MissingTAG:95;
+				j--;
+			}
+		}
+		i++;
+	}
+	if (strlen(tmpString) > maxLength)
+	{
+		tmpString[maxLength] = MissingTAG:0;
+	}
+	strcopy(testString, maxLength, tmpString);
+	return 0;
+}
+
+PrintDebug(debugLevel, String:Message[])
+{
+	if (GetConVarInt(g_hCvarDebug) >= debugLevel)
+	{
+		decl String:DebugBuff[256];
+		VFormat(DebugBuff, 256, Message, 3);
+		LogMessage(DebugBuff);
+	}
+	return 0;
+}
+

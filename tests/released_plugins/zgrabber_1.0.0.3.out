@@ -60,7 +60,7 @@ ScaleVector(Float:vec[3], Float:scale)
 
 GetClientButtons(client)
 {
-	return GetEntProp(client, 1, 64, 4);
+	return GetEntProp(client, 1, "m_nButtons", 4);
 }
 
 EmitSoundToAll(String:sample[], entity, channel, level, flags, Float:volume, pitch, speakerentity, Float:origin[3], Float:dir[3], bool:updatePos, Float:soundtime)

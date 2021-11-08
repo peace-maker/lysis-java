@@ -1,0 +1,6336 @@
+new MaxClients;
+new NULL_STRING;
+new NULL_VECTOR;
+public Extension:__ext_core =
+{
+	name = "Core",
+	file = "core",
+	autoload = 0,
+	required = 0,
+};
+public Extension:__ext_cstrike =
+{
+	name = "cstrike",
+	file = "games/game.cstrike.ext",
+	autoload = 0,
+	required = 1,
+};
+public Extension:__ext_rip =
+{
+	name = "REST in Pawn",
+	file = "rip.ext",
+	autoload = 1,
+	required = 1,
+};
+public Extension:__ext_sdktools =
+{
+	name = "SDKTools",
+	file = "sdktools.ext",
+	autoload = 1,
+	required = 1,
+};
+public PlVers:__version =
+{
+	version = 5,
+	filevers = "1.10.0.6498",
+	date = "11/07/2021",
+	time = "17:28:45"
+};
+public Plugin:myinfo =
+{
+	name = "eItems",
+	description = "",
+	author = "SF",
+	version = "0.19.0",
+	url = ""
+};
+new g_varc28;
+new g_varc2c;
+new g_var61b75c;
+new g_var61b758;
+new g_varc30;
+new g_varb9c;
+new g_varbf8;
+new g_varbdc;
+new g_varbe0;
+new g_varc1c;
+new g_varbc0;
+new g_varbc8;
+new g_varbc4;
+new g_varbbc;
+new g_varc10;
+new g_varc0c;
+new g_varbec;
+new g_varbf0;
+new g_varc24;
+new g_varc00;
+new g_varba8;
+new g_varba4;
+new g_varbfc;
+new g_varba0;
+new g_varbac;
+new g_varbb0;
+new g_varc04;
+new g_varbe4;
+new g_varbe8;
+new g_varc20;
+new g_varbb4;
+new g_varbb8;
+new g_varc08;
+new g_varb98;
+new g_varb90;
+new g_varb8c;
+new g_varbd0;
+new g_varbd8;
+new g_varbd4;
+new g_varbcc;
+new g_varc18;
+new g_varc14;
+new g_varb94;
+new g_var970;
+new g_var974;
+new g_var61b754;
+new g_varbf4;
+new g_var978;
+new g_var61b8ac;
+public AreItemsSynced()
+{
+	return g_varc28;
+}
+
+public AreItemsSyncing()
+{
+	return g_varc2c;
+}
+
+public AskPluginLoad2()
+{
+	RegPluginLibrary("eItems");
+	CreateNatives();
+	CreateForwards();
+	return 0;
+}
+
+public CreateForwards()
+{
+	g_var61b75c = GlobalForward.GlobalForward("eItems_OnItemsSynced", 0);
+	g_var61b758 = GlobalForward.GlobalForward("eItems_OnWeaponGiven", 0, 2, 2, 7, 2, 2, 2, 2);
+	return 0;
+}
+
+public CreateNatives()
+{
+	CreateNative("eItems_GetWeaponCount", "dVecCoord");
+	CreateNative("eItems_GetPaintsCount", 457);
+	CreateNative("eItems_GetGlovesCount", "har");
+	CreateNative("eItems_GetMusicKitsCount", "um");
+	CreateNative("eItems_GetPinsCount", "dString");
+	CreateNative("eItems_GetCoinsCount", "dBool");
+	CreateNative("eItems_GetCoinsSetsCount", "ool");
+	CreateNative("eItems_GetStickersCount", 515);
+	CreateNative("eItems_GetStickersSetsCount", "fReadCoord");
+	CreateNative("eItems_GetAgentsCount", "riteAngles");
+	CreateNative("eItems_GetPatchesCount", "loat");
+	CreateNative("eItems_GetCratesCount", "dChar");
+	CreateNative("eItems_AreItemsSynced", "riteVecCoord");
+	CreateNative("eItems_AreItemsSyncing", "teVecCoord");
+	CreateNative("eItems_ReSync", "ort");
+	CreateNative("eItems_GetWeaponNumByDefIndex", 575);
+	CreateNative("eItems_GetWeaponNumByClassName", 573);
+	CreateNative("eItems_GetWeaponNumByWeapon", "fGetNumBytesLeft");
+	CreateNative("eItems_GetWeaponDefIndexByWeaponNum", "rmal");
+	CreateNative("eItems_GetWeaponDefIndexByClassName", "ecNormal");
+	CreateNative("eItems_IsDefIndexKnife", "Char");
+	CreateNative("eItems_GetWeaponDefIndexByWeapon", "Normal");
+	CreateNative("eItems_GetActiveWeaponNum", "teVecNormal");
+	CreateNative("eItems_GetActiveWeaponDefIndex", "riteVecNormal");
+	CreateNative("eItems_GetActiveWeapon", 351);
+	CreateNative("eItems_GetActiveWeaponClassName", "fWriteVecNormal");
+	CreateNative("eItems_GetInSlotWeaponNum", "d");
+	CreateNative("eItems_GetInSlotWeaponDefIndex", "ord");
+	CreateNative("eItems_GetInSlotWeapon", "eadWord");
+	CreateNative("eItems_GetInSlotWeaponClassName", "dWord");
+	CreateNative("eItems_IsSkinnableDefIndex", "fWrite.WriteShort");
+	CreateNative("eItems_FindWeaponByWeaponNum", "rd");
+	CreateNative("eItems_FindWeaponByDefIndex", "oord");
+	CreateNative("eItems_FindWeaponByClassName", "cCoord");
+	CreateNative("eItems_RefillClipAmmo", "t");
+	CreateNative("eItems_RefillReserveAmmo", 675);
+	CreateNative("eItems_IsValidWeapon", "te.WriteShort");
+	CreateNative("eItems_GiveWeapon", "te.WriteChar");
+	CreateNative("eItems_RemoveKnife", "rite.WriteWord");
+	CreateNative("eItems_RemoveWeapon", "te.WriteWord");
+	CreateNative("eItems_RespawnWeapon", ".WriteWord");
+	CreateNative("eItems_RespawnWeaponBySlot", "riteWord");
+	CreateNative("eItems_RemoveAllWeapons", "fWrite.WriteWord");
+	CreateNative("eItems_SetWeaponAmmo", 693);
+	CreateNative("eItems_SetAllWeaponsAmmo", "Word");
+	CreateNative("eItems_SetAllWeaponsAmmoByClassName", "rd");
+	CreateNative("eItems_SetActiveWeapon", "teWord");
+	CreateNative("eItems_DropWeapon", "VecCoord");
+	CreateNative("eItems_HasRareInspectByDefIndex", "riteChar");
+	CreateNative("eItems_HasRareDrawByDefIndex", ".WriteChar");
+	CreateNative("eItems_GetRareInspectSequenceByDefIndex", "ing");
+	CreateNative("eItems_GetRareDrawSequenceByDefIndex", "tring");
+	CreateNative("eItems_GetWeaponClassNameByWeaponNum", "oord");
+	CreateNative("eItems_GetWeaponClassNameByDefIndex", "eadCoord");
+	CreateNative("eItems_GetWeaponClassNameByWeapon", "dCoord");
+	CreateNative("eItems_GetWeaponDisplayNameByWeaponNum", "eadAngles");
+	CreateNative("eItems_GetWeaponDisplayNameByDefIndex", 559);
+	CreateNative("eItems_GetWeaponDisplayNameByClassName", "al");
+	CreateNative("eItems_GetWeaponDisplayNameByWeapon", "fReadAngles");
+	CreateNative("eItems_GetWeaponViewModelByWeaponNum", "te");
+	CreateNative("eItems_GetWeaponViewModelByDefIndex", "teByte");
+	CreateNative("eItems_GetWeaponViewModelByWeapon", "Byte");
+	CreateNative("eItems_GetWeaponViewModelByClassName", "riteByte");
+	CreateNative("eItems_GetWeaponWorldModelByWeaponNum", "rite.WriteChar");
+	CreateNative("eItems_GetWeaponWorldModelByDefIndex", 635);
+	CreateNative("eItems_GetWeaponWorldModelByWeapon", "fWrite.WriteChar");
+	CreateNative("eItems_GetWeaponWorldModelByClassName", 633);
+	CreateNative("eItems_GetWeaponSlotByWeaponNum", "te.WriteBool");
+	CreateNative("eItems_GetWeaponSlotByDefIndex", "fWrite.WriteBool");
+	CreateNative("eItems_GetWeaponSlotByWeapon", "rite.WriteBool");
+	CreateNative("eItems_GetWeaponSlotByClassName", 595);
+	CreateNative("eItems_GetWeaponTeamByWeaponNum", ".WriteByte");
+	CreateNative("eItems_GetWeaponTeamByDefIndex", "rite.WriteByte");
+	CreateNative("eItems_GetWeaponTeamByWeapon", "te.WriteByte");
+	CreateNative("eItems_GetWeaponTeamByClassName", "fWrite.WriteByte");
+	CreateNative("eItems_GetWeaponClipAmmoByWeaponNum", "eadVecCoord");
+	CreateNative("eItems_GetWeaponClipAmmoByDefIndex", 527);
+	CreateNative("eItems_GetWeaponClipAmmoByWeapon", "fReadVecCoord");
+	CreateNative("eItems_GetWeaponClipAmmoByClassName", "rd");
+	CreateNative("eItems_GetWeaponReserveAmmoByWeaponNum", 593);
+	CreateNative("eItems_GetWeaponReserveAmmoByDefIndex", "Left");
+	CreateNative("eItems_GetWeaponReserveAmmoByWeapon", "ft");
+	CreateNative("eItems_GetWeaponReserveAmmoByClassName", "esLeft");
+	CreateNative("eItems_GetWeaponPriceByWeaponNum", "ytesLeft");
+	CreateNative("eItems_GetWeaponPriceByDefIndex", "NumBytesLeft");
+	CreateNative("eItems_GetWeaponPriceByWeapon", "mBytesLeft");
+	CreateNative("eItems_GetWeaponPriceByClassName", "etNumBytesLeft");
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeaponNum", "s");
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByDefIndex", "ngles");
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeapon", "les");
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByClassName", "dAngles");
+	CreateNative("eItems_GetWeaponDamageByWeaponNum", "dVecNormal");
+	CreateNative("eItems_GetWeaponDamageByDefIndex", "fReadVecNormal");
+	CreateNative("eItems_GetWeaponDamageByWeapon", "eadVecNormal");
+	CreateNative("eItems_GetWeaponDamageByClassName", 543);
+	CreateNative("eItems_IsWeaponFullAutoByWeaponNum", "Short");
+	CreateNative("eItems_IsWeaponFullAutoByDefIndex", "riteShort");
+	CreateNative("eItems_IsWeaponFullAutoByWeapon", "teShort");
+	CreateNative("eItems_IsWeaponFullAutoByClassName", ".WriteShort");
+	CreateNative("eItems_GetWeaponSpreadByWeaponNum", "Bool");
+	CreateNative("eItems_GetWeaponSpreadByDefIndex", "riteBool");
+	CreateNative("eItems_GetWeaponSpreadByWeapon", "teBool");
+	CreateNative("eItems_GetWeaponSpreadByClassName", ".WriteBool");
+	CreateNative("eItems_GetWeaponCycleTimeByWeaponNum", "d");
+	CreateNative("eItems_GetWeaponCycleTimeByDefIndex", "Coord");
+	CreateNative("eItems_GetWeaponCycleTimeByWeapon", "ord");
+	CreateNative("eItems_GetWeaponCycleTimeByClassName", "ecCoord");
+	CreateNative("eItems_GetWeaponStickersSlotsByWeaponNum", 615);
+	CreateNative("eItems_GetWeaponStickersSlotsByDefIndex", "ol");
+	CreateNative("eItems_GetWeaponStickersSlotsByWeapon", 613);
+	CreateNative("eItems_IsSkinNumGloveApplicable", 655);
+	CreateNative("eItems_GetSkinNumByDefIndex", "fReadEntity");
+	CreateNative("eItems_GetSkinDefIndexBySkinNum", "g");
+	CreateNative("eItems_GetSkinDisplayNameByDefIndex", 485);
+	CreateNative("eItems_GetSkinDisplayNameBySkinNum", 487);
+	CreateNative("eItems_IsNativeSkin", "ar");
+	CreateNative("eItems_IsNativeSkinByDefIndex", 653);
+	CreateNative("eItems_GetSkinRarity", "eadEntity");
+	CreateNative("eItems_GetSkinRarityName", "dEntity");
+	CreateNative("eItems_GetSkinWearRemapByDefIndex", "ntity");
+	CreateNative("eItems_GetSkinWearRemapBySkinNum", "ity");
+	CreateNative("eItems_GetGlovesNumByDefIndex", "eadShort");
+	CreateNative("eItems_GetGlovesDefIndexByGlovesNum", "r");
+	CreateNative("eItems_GetGlovesDisplayNameByDefIndex", 423);
+	CreateNative("eItems_GetGlovesDisplayNameByGlovesNum", "fReadShort");
+	CreateNative("eItems_GetGlovesViewModelByGlovesNum", "rt");
+	CreateNative("eItems_GetGlovesViewModelByDefIndex", "hort");
+	CreateNative("eItems_GetGlovesWorldModelByGlovesNum", "fReadWord");
+	CreateNative("eItems_GetGlovesWorldModelByDefIndex", 435);
+	CreateNative("eItems_GetGlovesNumBySkinNum", "dShort");
+	CreateNative("eItems_GetMusicKitNumByDefIndex", "dNum");
+	CreateNative("eItems_GetMusicKitDefIndexByMusicKitNum", 447);
+	CreateNative("eItems_GetMusicKitDisplayNameByDefIndex", "fReadNum");
+	CreateNative("eItems_GetMusicKitDisplayNameByMusicKitNum", "eadNum");
+	CreateNative("eItems_GetPinNumByDefIndex", "eadString");
+	CreateNative("eItems_GetPinDefIndexByPinNum", "at");
+	CreateNative("eItems_GetPinDisplayNameByDefIndex", 471);
+	CreateNative("eItems_GetPinDisplayNameByPinNum", "fReadString");
+	CreateNative("eItems_GetCoinSetIdByCoinSetNum", "fReadBool");
+	CreateNative("eItems_GetCoinSetNumByCoinSetId", "eadBool");
+	CreateNative("eItems_GetCoinSetDisplayNameByCoinSetNum", 387);
+	CreateNative("eItems_GetCoinSetDisplayNameByCoinSetId", 385);
+	CreateNative("eItems_GetCoinDefIndexByCoinNum", "teAngles");
+	CreateNative("eItems_GetCoinNumByDefIndex", "es");
+	CreateNative("eItems_GetCoinDisplayNameByCoinNum", "Angles");
+	CreateNative("eItems_GetCoinDisplayNameByDefIndex", "gles");
+	CreateNative("eItems_IsCoinInSet", "teChar");
+	CreateNative("eItems_GetStickerSetIdByStickerSetNum", "ngle");
+	CreateNative("eItems_GetStickerSetNumByStickerSetId", "le");
+	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetNum", "dAngle");
+	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetId", "eadAngle");
+	CreateNative("eItems_GetStickerDefIndexByStickerNum", "y");
+	CreateNative("eItems_GetStickerNumByDefIndex", "fReadAngle");
+	CreateNative("eItems_GetStickerDisplayNameByStickerNum", 503);
+	CreateNative("eItems_GetStickerDisplayNameByDefIndex", 501);
+	CreateNative("eItems_IsStickerInSet", "rite.WriteShort");
+	CreateNative("eItems_GetAgentNumByDefIndex", "mal");
+	CreateNative("eItems_GetAgentDefIndexByAgentNum", "VecNormal");
+	CreateNative("eItems_GetAgentDisplayNameByDefIndex", "ormal");
+	CreateNative("eItems_GetAgentDisplayNameByAgentNum", "cNormal");
+	CreateNative("eItems_GetAgentPlayerModelByDefIndex", 369);
+	CreateNative("eItems_GetAgentPlayerModelByAgentNum", "l");
+	CreateNative("eItems_GetAgentTeamByDefIndex", "fWriteAngles");
+	CreateNative("eItems_GetAgentTeamByAgentNum", 371);
+	CreateNative("eItems_GetPatchNumByDefIndex", "dFloat");
+	CreateNative("eItems_GetPatchDefIndexByPatchNum", 459);
+	CreateNative("eItems_GetPatchDisplayNameByDefIndex", "fReadFloat");
+	CreateNative("eItems_GetPatchDisplayNameByPatchNum", "eadFloat");
+	CreateNative("eItems_GetCrateNumByDefIndex", 411);
+	CreateNative("eItems_GetCrateDefIndexByCrateNum", "l");
+	CreateNative("eItems_GetCrateDisplayNameByDefIndex", "fReadByte");
+	CreateNative("eItems_GetCrateDisplayNameByCrateNum", 399);
+	CreateNative("eItems_GetCrateWorldModelByDefIndex", "eadChar");
+	CreateNative("eItems_GetCrateWorldModelByCrateNum", "fReadChar");
+	CreateNative("eItems_GetCrateItemsCountByDefIndex", "e");
+	CreateNative("eItems_GetCrateItemsCountByCrateNum", "yte");
+	CreateNative("eItems_GetCrateItemByDefIndex", "dByte");
+	CreateNative("eItems_GetCrateItemByCrateNum", "eadByte");
+	return 0;
+}
+
+public DropWeapon(_arg0, _arg1)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		if (g_varc30)
+		{
+			return 0;
+		}
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg1);
+		if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+		{
+			return 0;
+		}
+		new var2;
+		var2 = GetWeaponSlotByDefIndex(var1);
+		if (0 > var2)
+		{
+			return 0;
+		}
+		if (_arg1 != GetPlayerWeaponSlot(_arg0, var2))
+		{
+			return 0;
+		}
+		new var3;
+		var3 = GetEntProp(_arg0, 0, "m_iHideHUD", 4, 0);
+		new var4;
+		var4 = GetEntPropEnt(_arg1, 0, "m_hOwnerEntity", 0);
+		if (_arg0 != var4)
+		{
+			SetEntPropEnt(_arg1, 0, "m_hOwnerEntity", _arg0, 0);
+		}
+		if (GetActiveWeapon(_arg0) == _arg1)
+		{
+			SetEntPropEnt(_arg0, 0, "m_hActiveWeapon", -1, 0);
+		}
+		CS_DropWeapon(_arg0, _arg1, 0, 1);
+		if (_arg0 != var4)
+		{
+			SetEntPropEnt(_arg1, 0, "m_hOwnerEntity", var4, 0);
+		}
+		SetEntProp(_arg0, 0, "m_iHideHUD", var3, 4, 0);
+		return 1;
+	}
+	return 0;
+}
+
+public Event_OnRoundEnd()
+{
+	g_varc30 = 1;
+	return 0;
+}
+
+public Event_OnRoundStart()
+{
+	g_varc30 = 0;
+	return 0;
+}
+
+public Event_PlayerDeath(_arg0)
+{
+	new var1;
+	var1 = GetClientOfUserId(GetEventInt(_arg0, "userid", 0));
+	2428[var1] = 0;
+	return 0;
+}
+
+public FindWeaponByClassName(_arg0, _arg1)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByClassName(_arg1);
+		if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+		{
+			return -1;
+		}
+		new var2;
+		var2 = GetEntPropArraySize(_arg0, 0, "m_hMyWeapons");
+		new var3 = 0;
+		while (var3 < var2)
+		{
+			new var4;
+			var4 = GetEntPropEnt(_arg0, 0, "m_hMyWeapons", var3);
+			if (IsValidWeapon(var4))
+			{
+				new var5;
+				var5 = GetWeaponDefIndexByWeapon(var4);
+				if (var1 == var5)
+				{
+					return var4;
+				}
+			}
+			var3++;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+public FindWeaponByDefIndex(_arg0, _arg1)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg1, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	if (GetWeaponClassNameByDefIndex(_arg1, var1, 48))
+	{
+		return FindWeaponByClassName(_arg0, var1);
+	}
+	return -1;
+}
+
+public FindWeaponByWeaponNum(_arg0, _arg1)
+{
+	if (g_varbf8 < _arg1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	if (GetWeaponClassNameByWeaponNum(_arg1, var1, 48))
+	{
+		return FindWeaponByClassName(_arg0, var1);
+	}
+	return -1;
+}
+
+public GetActiveWeapon(_arg0)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		return GetEntPropEnt(_arg0, 0, "m_hActiveWeapon", 0);
+	}
+	return -1;
+}
+
+public GetActiveWeaponDefIndex(_arg0)
+{
+	new var1;
+	var1 = GetActiveWeapon(_arg0);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponDefIndexByWeapon(var1);
+	}
+	return -1;
+}
+
+public GetActiveWeaponSlot(_arg0)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var1 = 0;
+		while (var1 <= 4)
+		{
+			if (GetActiveWeapon(_arg0) == GetPlayerWeaponSlot(_arg0, var1))
+			{
+				return var1;
+			}
+			var1++;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+public GetAgentDefIndexByAgentNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbdc) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbdc, _arg0, 0, 0);
+}
+
+public GetAgentDisplayNameByAgentNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetAgentDefIndexByAgentNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbe0, var2, var3, 82, 0);
+	strcopy(_arg1, _arg2, var3 + 8);
+	return 1;
+}
+
+public GetAgentDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbe0, var1, var2, 82, 0);
+	strcopy(_arg1, _arg2, var2 + 8);
+	return 1;
+}
+
+public GetAgentNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbdc, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetAgentPlayerModelByAgentNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetAgentDefIndexByAgentNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbe0, var2, var3, 82, 0);
+	strcopy(_arg1, _arg2, var3 + 72);
+	return 1;
+}
+
+public GetAgentPlayerModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbe0, var1, var2, 82, 0);
+	strcopy(_arg1, _arg2, var2 + 72);
+	return 1;
+}
+
+public GetAgentTeamByAgentNum(_arg0)
+{
+	new var1;
+	var1 = GetAgentDefIndexByAgentNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbe0, var2, var3, 82, 0);
+	return var3 + 4/* ERROR unknown load Binary */;
+}
+
+public GetAgentTeamByDefIndex(_arg0)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbe0, var1, var2, 82, 0);
+	return var2 + 4/* ERROR unknown load Binary */;
+}
+
+public GetAgentsCount()
+{
+	return g_varc1c;
+}
+
+public GetCoinDefIndexByCoinNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbc0) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbc0, _arg0, 0, 0);
+}
+
+public GetCoinDisplayNameByCoinNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetCoinDefIndexByCoinNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbc8, var2, var3, 17, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetCoinDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbc8, var1, var2, 17, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetCoinNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbc0, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetCoinSetDisplayNameByCoinSetId(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbc4, var1, var2, 18, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetCoinSetDisplayNameByCoinSetNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetCoinSetIdByCoinSetNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbc4, var2, var3, 18, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetCoinSetIdByCoinSetNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbbc) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbbc, _arg0, 0, 0);
+}
+
+public GetCoinSetNumByCoinSetId(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbbc, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetCoinsCount()
+{
+	return g_varc10;
+}
+
+public GetCoinsSetsCount()
+{
+	return g_varc0c;
+}
+
+public GetCrateDefIndexByCrateNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbec) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbec, _arg0, 0, 0);
+}
+
+public GetCrateDisplayNameByCrateNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetCrateDefIndexByCrateNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	strcopy(_arg1, _arg2, var3 + 12);
+	return 1;
+}
+
+public GetCrateDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbf0, var1, var2, 83, 0);
+	strcopy(_arg1, _arg2, var2 + 12);
+	return 1;
+}
+
+public GetCrateItemByCrateNum(_arg0, _arg1, _arg2, _arg3)
+{
+	if (ArrayList.Length.get(g_varbec) < _arg0)
+	{
+		return 0;
+	}
+	new var1;
+	var1 = GetCrateDefIndexByCrateNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	return ArrayList.GetArray(var3 + 8/* ERROR unknown load Binary */, _arg1, _arg2, _arg3);
+}
+
+public GetCrateItemByDefIndex(_arg0, _arg1, _arg2, _arg3)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbec, _arg0, 0);
+	if (var1 == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	IntToString(_arg0, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	return ArrayList.GetArray(var3 + 8/* ERROR unknown load Binary */, _arg1, _arg2, _arg3);
+}
+
+public GetCrateItemsCountByCrateNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbec) < _arg0)
+	{
+		return -1;
+	}
+	new var1;
+	var1 = GetCrateDefIndexByCrateNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	return var3 + 4/* ERROR unknown load Binary */;
+}
+
+public GetCrateItemsCountByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbec, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	IntToString(_arg0, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	return var3 + 4/* ERROR unknown load Binary */;
+}
+
+public GetCrateNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbec, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetCrateWorldModelByCrateNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetCrateDefIndexByCrateNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbf0, var2, var3, 83, 0);
+	strcopy(_arg1, _arg2, var3 + 76);
+	return 1;
+}
+
+public GetCrateWorldModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbf0, var1, var2, 83, 0);
+	strcopy(_arg1, _arg2, var2 + 76);
+	return 1;
+}
+
+public GetCratesCount()
+{
+	return g_varc24;
+}
+
+public GetGlovesCount()
+{
+	return g_varc00;
+}
+
+public GetGlovesDefIndexByGlovesNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varba8) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varba8, _arg0, 0, 0);
+}
+
+public GetGlovesDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetGlovesDisplayNameByGlovesNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetGlovesDefIndexByGlovesNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetGlovesNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varba8, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetGlovesNumBySkinNum(_arg0)
+{
+	if (g_varbfc < _arg0)
+	{
+		return -1;
+	}
+	new var1;
+	var1 = GetSkinDefIndexBySkinNum(_arg0);
+	new var2 = 0;
+	new var3 = 0;
+	while (ArrayList.Length.get(g_varba8) > var3)
+	{
+		new var4;
+		var4 = ArrayList.Get(g_varba8, var3, 0, 0);
+		IntToString(var4, var2, 12);
+		new var5 = 0;
+		StringMap.GetValue(g_varba0, var2, var5);
+		if (var5)
+		{
+			if (!(ArrayList.FindValue(var5, var1, 0) == -1))
+			{
+				return var3;
+			}
+		}
+		var3++;
+	}
+	return -1;
+}
+
+public GetGlovesViewModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varba8, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	strcopy(_arg1, _arg2, var2 + 68);
+	return 1;
+}
+
+public GetGlovesViewModelByGlovesNum(_arg0, _arg1, _arg2)
+{
+	if (g_varc00 < _arg0)
+	{
+		return 0;
+	}
+	new var1;
+	var1 = GetGlovesDefIndexByGlovesNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	strcopy(_arg1, _arg2, var3 + 68);
+	return 1;
+}
+
+public GetGlovesWorldModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varba8, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	strcopy(_arg1, _arg2, var2 + 324);
+	return 1;
+}
+
+public GetGlovesWorldModelByGlovesNum(_arg0, _arg1, _arg2)
+{
+	if (g_varc00 < _arg0)
+	{
+		return 0;
+	}
+	new var1;
+	var1 = GetGlovesDefIndexByGlovesNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	strcopy(_arg1, _arg2, var3 + 324);
+	return 1;
+}
+
+public GetInSlotWeapon(_arg0, _arg1)
+{
+	new var1;
+	var1 = GetEntPropArraySize(_arg0, 0, "m_hMyWeapons");
+	new var2 = 0;
+	while (var2 < var1)
+	{
+		new var3;
+		var3 = GetEntPropEnt(_arg0, 0, "m_hMyWeapons", var2);
+		if (IsValidWeapon(var3))
+		{
+			if (_arg1 == GetWeaponSlotByWeapon(var3))
+			{
+				return var3;
+			}
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetMusicKitDefIndexByMusicKitNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbac) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbac, _arg0, 0, 0);
+}
+
+public GetMusicKitDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbb0, var1, var2, 17, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetMusicKitDisplayNameByMusicKitNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetMusicKitDefIndexByMusicKitNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbb0, var2, var3, 17, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetMusicKitNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbac, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetMusicKitsCount()
+{
+	return g_varc04;
+}
+
+public GetPaintsCount()
+{
+	return g_varbfc;
+}
+
+public GetPatchDefIndexByPatchNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbe4) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbe4, _arg0, 0, 0);
+}
+
+public GetPatchDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbe8, var1, var2, 17, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetPatchDisplayNameByPatchNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetPatchDefIndexByPatchNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbe8, var2, var3, 17, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetPatchNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbe4, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetPatchesCount()
+{
+	return g_varc20;
+}
+
+public GetPinDefIndexByPinNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbb4) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbb4, _arg0, 0, 0);
+}
+
+public GetPinDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbb8, var1, var2, 17, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetPinDisplayNameByPinNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetPinDefIndexByPinNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbb8, var2, var3, 17, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetPinNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbb4, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetPinsCount()
+{
+	return g_varc08;
+}
+
+public GetRareDrawSequenceByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 688/* ERROR unknown load Binary */;
+}
+
+public GetRareInspectSequenceByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 684/* ERROR unknown load Binary */;
+}
+
+public GetSkinDefIndexBySkinNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varb90) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varb90, _arg0, 0, 0);
+}
+
+public GetSkinDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb8c, var1, var2, 33, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetSkinDisplayNameBySkinNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetSkinDefIndexBySkinNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb8c, var2, var3, 33, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetSkinNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varb90, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetSkinRarity(_arg0)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb8c, var1, var2, 33, 0);
+	return var2 + 72/* ERROR unknown load Binary */;
+}
+
+public GetSkinRarityName(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb8c, var1, var2, 33, 0);
+	strcopy(_arg1, _arg2, var2 + 76);
+	return 1;
+}
+
+public GetSkinWearRemapByDefIndex(_arg0, _arg1)
+{
+	new var2 = 0;
+	IntToString(_arg0, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb8c, var2, var3, 33, 0);
+	new var4;
+	new var1;
+	if (_arg1)
+	{
+		var1 = var3 + 128/* ERROR unknown load Binary */;
+	}
+	else
+	{
+		var1 = var3 + 124/* ERROR unknown load Binary */;
+	}
+	var4 = var1;
+	return var4;
+}
+
+public GetSkinWearRemapBySkinNum(_arg0, _arg1)
+{
+	new var2;
+	var2 = GetSkinDefIndexBySkinNum(_arg0);
+	new var3 = 0;
+	IntToString(var2, var3, 12);
+	new var4 = 0;
+	StringMap.GetArray(g_varb8c, var3, var4, 33, 0);
+	new var5;
+	new var1;
+	if (_arg1)
+	{
+		var1 = var4 + 128/* ERROR unknown load Binary */;
+	}
+	else
+	{
+		var1 = var4 + 124/* ERROR unknown load Binary */;
+	}
+	var5 = var1;
+	return var5;
+}
+
+public GetStickerDefIndexByStickerNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbd0) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbd0, _arg0, 0, 0);
+}
+
+public GetStickerDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbd8, var1, var2, 17, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetStickerDisplayNameByStickerNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetStickerDefIndexByStickerNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbd8, var2, var3, 17, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetStickerNumByDefIndex(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbd0, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetStickerSetDisplayNameByStickerSetId(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varbd4, var1, var2, 18, 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetStickerSetDisplayNameByStickerSetNum(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetStickerSetIdByStickerSetNum(_arg0);
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbd4, var2, var3, 18, 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetStickerSetIdByStickerSetNum(_arg0)
+{
+	if (ArrayList.Length.get(g_varbcc) < _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varbcc, _arg0, 0, 0);
+}
+
+public GetStickerSetNumByStickerSetId(_arg0)
+{
+	new var1;
+	var1 = ArrayList.FindValue(g_varbcc, _arg0, 0);
+	if (var1 == -1)
+	{
+		return -1;
+	}
+	return var1;
+}
+
+public GetStickersCount()
+{
+	return g_varc18;
+}
+
+public GetStickersSetsCount()
+{
+	return g_varc14;
+}
+
+public GetWeaponClassNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	strcopy(_arg1, _arg2, var2 + 68);
+	return 1;
+}
+
+public GetWeaponClassNameByWeapon(_arg0, _arg1, _arg2)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		strcopy(_arg1, _arg2, var3 + 68);
+		return 1;
+	}
+	return 0;
+}
+
+public GetWeaponClassNameByWeaponNum(_arg0, _arg1, _arg2)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	strcopy(_arg1, _arg2, var3 + 68);
+	return 1;
+}
+
+public GetWeaponClipAmmoByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 640/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponClipAmmoByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 640/* ERROR unknown load Binary */;
+}
+
+public GetWeaponClipAmmoByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 640/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponClipAmmoByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 640/* ERROR unknown load Binary */;
+}
+
+public GetWeaponCount()
+{
+	return g_varbf8;
+}
+
+public GetWeaponCycleTimeByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 660/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1082130432;
+}
+
+public GetWeaponCycleTimeByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return -1082130432;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 660/* ERROR unknown load Binary */;
+}
+
+public GetWeaponCycleTimeByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return -1082130432;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 660/* ERROR unknown load Binary */;
+	}
+	return -1082130432;
+}
+
+public GetWeaponCycleTimeByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return -1082130432;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 660/* ERROR unknown load Binary */;
+}
+
+public GetWeaponDamageByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 668/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponDamageByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 668/* ERROR unknown load Binary */;
+}
+
+public GetWeaponDamageByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 668/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponDamageByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 668/* ERROR unknown load Binary */;
+}
+
+public GetWeaponDefIndexByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return GetWeaponDefIndexByWeaponNum(var2);
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponDefIndexByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		return GetEntProp(_arg0, 0, "m_iItemDefinitionIndex", 4, 0);
+	}
+	return 0;
+}
+
+public GetWeaponDefIndexByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return -1;
+	}
+	if (0 > _arg0)
+	{
+		return -1;
+	}
+	return ArrayList.Get(g_varb9c, _arg0, 0, 0);
+}
+
+public GetWeaponDisplayNameByClassName(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			strcopy(_arg1, _arg2, var4 + 4);
+			return 1;
+		}
+		var2++;
+	}
+	return 0;
+}
+
+public GetWeaponDisplayNameByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	strcopy(_arg1, _arg2, var2 + 4);
+	return 1;
+}
+
+public GetWeaponDisplayNameByWeapon(_arg0, _arg1, _arg2)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		strcopy(_arg1, _arg2, var3 + 4);
+		return 1;
+	}
+	return 0;
+}
+
+public GetWeaponDisplayNameByWeaponNum(_arg0, _arg1, _arg2)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	strcopy(_arg1, _arg2, var3 + 4);
+	return 1;
+}
+
+public GetWeaponMaxPlayerSpeedByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 652/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponMaxPlayerSpeedByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 652/* ERROR unknown load Binary */;
+}
+
+public GetWeaponMaxPlayerSpeedByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 652/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponMaxPlayerSpeedByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 652/* ERROR unknown load Binary */;
+}
+
+public GetWeaponNumByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var2;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponNumByDefIndex(_arg0)
+{
+	return ArrayList.FindValue(g_varb9c, _arg0, 0);
+}
+
+public GetWeaponNumByWeapon(_arg0)
+{
+	new var1;
+	var1 = GetWeaponDefIndexByWeapon(_arg0);
+	if (0 >= var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	return var3;
+}
+
+public GetWeaponPriceByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 656/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponPriceByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 656/* ERROR unknown load Binary */;
+}
+
+public GetWeaponPriceByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 656/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponPriceByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 656/* ERROR unknown load Binary */;
+}
+
+public GetWeaponReserveAmmoByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 648/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponReserveAmmoByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 648/* ERROR unknown load Binary */;
+}
+
+public GetWeaponReserveAmmoByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 648/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponReserveAmmoByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 648/* ERROR unknown load Binary */;
+}
+
+public GetWeaponSlotByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 636/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponSlotByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 636/* ERROR unknown load Binary */;
+}
+
+public GetWeaponSlotByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 636/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponSlotByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 636/* ERROR unknown load Binary */;
+}
+
+public GetWeaponSpreadByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 664/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1082130432;
+}
+
+public GetWeaponSpreadByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return -1082130432;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 664/* ERROR unknown load Binary */;
+}
+
+public GetWeaponSpreadByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return -1082130432;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 664/* ERROR unknown load Binary */;
+	}
+	return -1082130432;
+}
+
+public GetWeaponSpreadByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return -1082130432;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 664/* ERROR unknown load Binary */;
+}
+
+public GetWeaponStickersSlotsByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return -1;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 644/* ERROR unknown load Binary */;
+}
+
+public GetWeaponStickersSlotsByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return -1;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 644/* ERROR unknown load Binary */;
+	}
+	return -1;
+}
+
+public GetWeaponStickersSlotsByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return -1;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 644/* ERROR unknown load Binary */;
+}
+
+public GetWeaponTeamByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 632/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public GetWeaponTeamByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 632/* ERROR unknown load Binary */;
+}
+
+public GetWeaponTeamByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 632/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public GetWeaponTeamByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 632/* ERROR unknown load Binary */;
+}
+
+public GetWeaponViewModelByClassName(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			strcopy(_arg1, _arg2, var4 + 116);
+			return 1;
+		}
+		var2++;
+	}
+	return 0;
+}
+
+public GetWeaponViewModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	strcopy(_arg1, _arg2, var2 + 116);
+	return 1;
+}
+
+public GetWeaponViewModelByWeapon(_arg0, _arg1, _arg2)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		strcopy(_arg1, _arg2, var3 + 116);
+		return 1;
+	}
+	return 0;
+}
+
+public GetWeaponViewModelByWeaponNum(_arg0, _arg1, _arg2)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	strcopy(_arg1, _arg2, var3 + 116);
+	return 1;
+}
+
+public GetWeaponWorldModelByClassName(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			strcopy(_arg1, _arg2, var4 + 372);
+			return 1;
+		}
+		var2++;
+	}
+	return 0;
+}
+
+public GetWeaponWorldModelByDefIndex(_arg0, _arg1, _arg2)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	strcopy(_arg1, _arg2, var2 + 372);
+	return 1;
+}
+
+public GetWeaponWorldModelByWeapon(_arg0, _arg1, _arg2)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		strcopy(_arg1, _arg2, var3 + 372);
+		return 1;
+	}
+	return 0;
+}
+
+public GetWeaponWorldModelByWeaponNum(_arg0, _arg1, _arg2)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	strcopy(_arg1, _arg2, var3 + 372);
+	return 1;
+}
+
+public HasRareDrawByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 680/* ERROR unknown load Binary */;
+}
+
+public HasRareInspectByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 676/* ERROR unknown load Binary */;
+}
+
+public IsCoinInSet(_arg0, _arg1)
+{
+	new var1;
+	var1 = GetCoinDefIndexByCoinNum(_arg0);
+	new var2 = 0;
+	IntToString(_arg1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varbc4, var2, var3, 18, 0);
+	new var4;
+	var4 = var3 + 68/* ERROR unknown load Binary */;
+	return ArrayList.FindValue(var4, var1, 0) != -1;
+}
+
+public IsDefIndexKnife(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	if (var2 + 636/* ERROR unknown load Binary */ == 2)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+public IsNativeSkin(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = GetSkinDefIndexBySkinNum(_arg0);
+	new var2 = 0;
+	switch (_arg2)
+	{
+		case 0:
+		{
+			new var5;
+			var5 = eItems_GetWeaponDefIndexByWeaponNum(_arg1);
+			IntToString(var5, var2, 12);
+			new var6 = 0;
+			StringMap.GetValue(g_varb94, var2, var6);
+			if (var6)
+			{
+				return ArrayList.FindValue(var6, var1, 0) != -1;
+			}
+			return 0;
+		}
+		case 1:
+		{
+			new var3;
+			var3 = eItems_GetGlovesDefIndexByGlovesNum(_arg1);
+			IntToString(var3, var2, 12);
+			new var4 = 0;
+			StringMap.GetValue(g_varba0, var2, var4);
+			if (var4)
+			{
+				return ArrayList.FindValue(var4, var1, 0) != -1;
+			}
+			return 0;
+		}
+		default:
+		{
+			return 0;
+		}
+	}
+}
+
+public IsNativeSkinByDefIndex(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	switch (_arg2)
+	{
+		case 0:
+		{
+			IntToString(_arg1, var1, 12);
+			new var3 = 0;
+			StringMap.GetValue(g_varb94, var1, var3);
+			if (var3)
+			{
+				return ArrayList.FindValue(var3, _arg0, 0) != -1;
+			}
+			return 0;
+		}
+		case 1:
+		{
+			IntToString(_arg1, var1, 12);
+			new var2 = 0;
+			StringMap.GetValue(g_varba0, var1, var2);
+			if (var2)
+			{
+				return ArrayList.FindValue(var2, _arg0, 0) != -1;
+			}
+			return 0;
+		}
+		default:
+		{
+			return 0;
+		}
+	}
+}
+
+public IsSkinNumGloveApplicable(_arg0)
+{
+	new var1 = 0;
+	new var2;
+	var2 = ArrayList.Get(g_varb90, _arg0, 0, 0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb8c, var1, var3, 33, 0);
+	return var3 + 68/* ERROR unknown load Binary */;
+}
+
+public IsSkinnableDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetValue(g_varb94, var1, var2);
+	if (var2)
+	{
+		return ArrayList.Length.get(var2) > 0;
+	}
+	return 0;
+}
+
+public IsStickerInSet(_arg0, _arg1)
+{
+	new var1;
+	if (_arg0 < 0 || _arg0 > g_varc14)
+	{
+		return 0;
+	}
+	new var2;
+	if (_arg1 < 0 || _arg1 > g_varc18)
+	{
+		return 0;
+	}
+	return 3124[_arg0][_arg1];
+}
+
+public IsValidWeapon(_arg0)
+{
+	new var1;
+	if (IsValidEntity(_arg0) && IsValidEdict(_arg0) && _arg0 <= 0)
+	{
+		return 0;
+	}
+	if (sub_9f8(_arg0, 0, "m_hOwnerEntity"))
+	{
+		new var2;
+		var2 = GetEntProp(_arg0, 0, "m_iItemDefinitionIndex", 4, 0);
+		if (ArrayList.FindValue(g_varb9c, var2, 0) != -1)
+		{
+			return 1;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public IsValidWeaponClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (ArrayList.Length.get(g_varb9c) > var2)
+	{
+		if (GetWeaponClassNameByWeaponNum(var2, var1, 48))
+		{
+			if (!(strcmp(var1, _arg0, 1)))
+			{
+				return 1;
+			}
+		}
+		var2++;
+	}
+	return 0;
+}
+
+public IsWeaponFullAutoByClassName(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_varbf8)
+	{
+		new var3;
+		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
+		IntToString(var3, var1, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		if (!(strcmp(_arg0, var4 + 68, 0)))
+		{
+			return var4 + 672/* ERROR unknown load Binary */;
+		}
+		var2++;
+	}
+	return -1;
+}
+
+public IsWeaponFullAutoByDefIndex(_arg0)
+{
+	if (ArrayList.FindValue(g_varb9c, _arg0, 0) == -1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	IntToString(_arg0, var1, 12);
+	new var2 = 0;
+	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	return var2 + 672/* ERROR unknown load Binary */;
+}
+
+public IsWeaponFullAutoByWeapon(_arg0)
+{
+	if (IsValidWeapon(_arg0))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg0);
+		if (0 >= var1)
+		{
+			return 0;
+		}
+		new var2 = 0;
+		IntToString(var1, var2, 12);
+		new var3 = 0;
+		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		return var3 + 672/* ERROR unknown load Binary */;
+	}
+	return 0;
+}
+
+public IsWeaponFullAutoByWeaponNum(_arg0)
+{
+	if (g_varbf8 < _arg0)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2;
+	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
+	IntToString(var2, var1, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	return var3 + 672/* ERROR unknown load Binary */;
+}
+
+public LoadConfig()
+{
+	new var1;
+	var1 = KeyValues.KeyValues("eItems", 6414228, 6414232);
+	if (KeyValues.ImportFromFile(var1, 6403936))
+	{
+		KeyValues.GetString(var1, "Language", 6404192, 12, "en");
+		KeyValues.GetString(var1, "Token", 6404204, NULL_STRING, 6414308);
+		Format(6404204, NULL_STRING, "Bearer %s", 6404204);
+		CloseHandle(var1);
+		var1 = 0;
+		return 0;
+	}
+	SetFailState("%s Unable to import config file!", "[eItems]");
+	return 0;
+}
+
+public Native_AreItemsSynced()
+{
+	return AreItemsSynced();
+}
+
+public Native_AreItemsSyncing()
+{
+	return AreItemsSyncing();
+}
+
+public Native_DropWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return DropWeapon(var1, var2);
+}
+
+public Native_FindWeaponByClassName()
+{
+	new var1 = 0;
+	new var2;
+	var2 = GetNativeCell(1);
+	GetNativeString(2, var1, 48, 0);
+	return FindWeaponByClassName(var2, var1);
+}
+
+public Native_FindWeaponByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return FindWeaponByDefIndex(var1, var2);
+}
+
+public Native_FindWeaponByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return FindWeaponByWeaponNum(var1, var2);
+}
+
+public Native_GetActiveWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return GetActiveWeapon(var1);
+}
+
+public Native_GetActiveWeaponClassName()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetActiveWeaponDefIndex(var1);
+	if (ArrayList.FindValue(g_varb9c, var2, 0) == -1)
+	{
+		return 0;
+	}
+	new var3 = 0;
+	if (GetWeaponClassNameByDefIndex(var2, var3, 48))
+	{
+		return SetNativeString(2, var3, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetActiveWeaponDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetActiveWeapon(var1);
+	if (IsValidWeapon(var2))
+	{
+		return GetWeaponDefIndexByWeapon(var2);
+	}
+	return -1;
+}
+
+public Native_GetActiveWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetActiveWeapon(var1);
+	if (IsValidWeapon(var2))
+	{
+		return GetWeaponNumByWeapon(var2);
+	}
+	return -1;
+}
+
+public Native_GetAgentDefIndexByAgentNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc1c < var1)
+	{
+		return -1;
+	}
+	return GetAgentDefIndexByAgentNum(var1);
+}
+
+public Native_GetAgentDisplayNameByAgentNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc1c < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetAgentDisplayNameByAgentNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetAgentDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbdc, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetAgentDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetAgentNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbdc, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetAgentNumByDefIndex(var1);
+}
+
+public Native_GetAgentPlayerModelByAgentNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc1c < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetAgentPlayerModelByAgentNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetAgentPlayerModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbdc, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetAgentPlayerModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetAgentTeamByAgentNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc1c < var1)
+	{
+		return -1;
+	}
+	return GetAgentTeamByAgentNum(var1);
+}
+
+public Native_GetAgentTeamByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbdc, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetAgentTeamByDefIndex(var1);
+}
+
+public Native_GetAgentsCount()
+{
+	return GetAgentsCount();
+}
+
+public Native_GetCoinDefIndexByCoinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc10 < var1)
+	{
+		return -1;
+	}
+	return GetCoinDefIndexByCoinNum(var1);
+}
+
+public Native_GetCoinDisplayNameByCoinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc10 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetCoinDisplayNameByCoinNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCoinDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbc0, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetCoinDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCoinNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbc0, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetCoinNumByDefIndex(var1);
+}
+
+public Native_GetCoinSetDisplayNameByCoinSetId()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbbc, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetCoinSetDisplayNameByCoinSetId(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCoinSetDisplayNameByCoinSetNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc0c < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetCoinSetDisplayNameByCoinSetNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCoinSetIdByCoinSetNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc0c < var1)
+	{
+		return -1;
+	}
+	return GetCoinSetIdByCoinSetNum(var1);
+}
+
+public Native_GetCoinSetNumByCoinSetId()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbbc, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetCoinSetNumByCoinSetId(var1);
+}
+
+public Native_GetCoinsCount()
+{
+	return GetCoinsCount();
+}
+
+public Native_GetCoinsSetsCount()
+{
+	return GetCoinsSetsCount();
+}
+
+public Native_GetCrateDefIndexByCrateNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc24 < var1)
+	{
+		return -1;
+	}
+	return GetCrateDefIndexByCrateNum(var1);
+}
+
+public Native_GetCrateDisplayNameByCrateNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc24 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetCrateDisplayNameByCrateNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCrateDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbec, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetCrateDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCrateItemByCrateNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	if (g_varc24 < var1)
+	{
+		return 0;
+	}
+	new var3 = 0;
+	if (GetCrateItemByCrateNum(var1, var2, var3, 2))
+	{
+		return SetNativeArray(3, var3, GetNativeCell(4)) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCrateItemByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	if (ArrayList.FindValue(g_varbec, var1, 0) == -1)
+	{
+		return -1;
+	}
+	new var3 = 0;
+	if (GetCrateItemByDefIndex(var1, var2, var3, 2))
+	{
+		return SetNativeArray(3, var3, GetNativeCell(4)) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCrateItemsCountByCrateNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc24 < var1)
+	{
+		return -1;
+	}
+	return GetCrateItemsCountByCrateNum(var1);
+}
+
+public Native_GetCrateItemsCountByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbec, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetCrateItemsCountByDefIndex(var1);
+}
+
+public Native_GetCrateNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbec, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetCrateNumByDefIndex(var1);
+}
+
+public Native_GetCrateWorldModelByCrateNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc24 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetCrateWorldModelByCrateNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCrateWorldModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbec, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetCrateWorldModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetCratesCount()
+{
+	return GetCratesCount();
+}
+
+public Native_GetGlovesCount()
+{
+	return GetGlovesCount();
+}
+
+public Native_GetGlovesDefIndexByGlovesNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc00 < var1)
+	{
+		return -1;
+	}
+	return GetGlovesDefIndexByGlovesNum(var1);
+}
+
+public Native_GetGlovesDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varba8, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetGlovesDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetGlovesDisplayNameByGlovesNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc00 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetGlovesDisplayNameByGlovesNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetGlovesNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varba8, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetGlovesNumByDefIndex(var1);
+}
+
+public Native_GetGlovesNumBySkinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbfc < var1)
+	{
+		return -1;
+	}
+	return GetGlovesNumBySkinNum(var1);
+}
+
+public Native_GetGlovesViewModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varba8, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetGlovesViewModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetGlovesViewModelByGlovesNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc00 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetGlovesViewModelByGlovesNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetGlovesWorldModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varba8, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetGlovesWorldModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetGlovesWorldModelByGlovesNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc00 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetGlovesWorldModelByGlovesNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetInSlotWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return GetInSlotWeapon(var1, var2);
+}
+
+public Native_GetInSlotWeaponClassName()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetInSlotWeapon(var1, var2);
+	new var4;
+	var4 = GetWeaponDefIndexByWeapon(var3);
+	if (ArrayList.FindValue(g_varb9c, var4, 0) == -1)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	if (GetWeaponClassNameByDefIndex(var4, var5, 48))
+	{
+		return SetNativeString(2, var5, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetInSlotWeaponDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetInSlotWeapon(var1, var2);
+	if (IsValidWeapon(var3))
+	{
+		return GetWeaponDefIndexByWeapon(var3);
+	}
+	return -1;
+}
+
+public Native_GetInSlotWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetInSlotWeapon(var1, var2);
+	if (IsValidWeapon(var3))
+	{
+		return GetWeaponNumByWeapon(var3);
+	}
+	return -1;
+}
+
+public Native_GetMusicKitDefIndexByMusicKitNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc04 < var1)
+	{
+		return -1;
+	}
+	return GetMusicKitDefIndexByMusicKitNum(var1);
+}
+
+public Native_GetMusicKitDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbac, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetMusicKitDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetMusicKitDisplayNameByMusicKitNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc04 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetMusicKitDisplayNameByMusicKitNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetMusicKitNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbac, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetMusicKitNumByDefIndex(var1);
+}
+
+public Native_GetMusicKitsCount()
+{
+	return GetMusicKitsCount();
+}
+
+public Native_GetPaintsCount()
+{
+	return GetPaintsCount();
+}
+
+public Native_GetPatchDefIndexByPatchNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc20 < var1)
+	{
+		return -1;
+	}
+	return GetPatchDefIndexByPatchNum(var1);
+}
+
+public Native_GetPatchDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbe4, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetPatchDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetPatchDisplayNameByPatchNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc20 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetPatchDisplayNameByPatchNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetPatchNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbe4, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetPatchNumByDefIndex(var1);
+}
+
+public Native_GetPatchesCount()
+{
+	return GetPatchesCount();
+}
+
+public Native_GetPinDefIndexByPinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc08 < var1)
+	{
+		return -1;
+	}
+	return GetPinDefIndexByPinNum(var1);
+}
+
+public Native_GetPinDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbb4, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetPinDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetPinDisplayNameByPinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc08 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetPinDisplayNameByPinNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetPinNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbb4, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetPinNumByDefIndex(var1);
+}
+
+public Native_GetPinsCount()
+{
+	return GetPinsCount();
+}
+
+public Native_GetRareDrawSequenceByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetRareDrawSequenceByDefIndex(var1);
+}
+
+public Native_GetRareInspectSequenceByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetRareInspectSequenceByDefIndex(var1);
+}
+
+public Native_GetSkinDefIndexBySkinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbfc < var1)
+	{
+		return -1;
+	}
+	return GetSkinDefIndexBySkinNum(var1);
+}
+
+public Native_GetSkinDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb90, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetSkinDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetSkinDisplayNameBySkinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbfc < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetSkinDisplayNameBySkinNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetSkinNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb90, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetSkinNumByDefIndex(var1);
+}
+
+public Native_GetSkinRarity()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb90, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetSkinRarity(var1);
+}
+
+public Native_GetSkinRarityName()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb90, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetSkinRarityName(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetSkinWearRemapByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb90, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2;
+	var2 = GetNativeCell(2);
+	return GetSkinWearRemapByDefIndex(var1, var2);
+}
+
+public Native_GetSkinWearRemapBySkinNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbfc < var1)
+	{
+		return -1;
+	}
+	new var2;
+	var2 = GetNativeCell(2);
+	return GetSkinWearRemapBySkinNum(var1, var2);
+}
+
+public Native_GetStickerDefIndexByStickerNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc18 < var1)
+	{
+		return -1;
+	}
+	return GetStickerDefIndexByStickerNum(var1);
+}
+
+public Native_GetStickerDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbd0, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetStickerDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetStickerDisplayNameByStickerNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc18 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetStickerDisplayNameByStickerNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetStickerNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbd0, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetStickerNumByDefIndex(var1);
+}
+
+public Native_GetStickerSetDisplayNameByStickerSetId()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbcc, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetStickerSetDisplayNameByStickerSetId(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetStickerSetDisplayNameByStickerSetNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc14 < var1)
+	{
+		return -1;
+	}
+	new var2 = 0;
+	if (GetStickerSetDisplayNameByStickerSetNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetStickerSetIdByStickerSetNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varc14 < var1)
+	{
+		return -1;
+	}
+	return GetStickerSetIdByStickerSetNum(var1);
+}
+
+public Native_GetStickerSetNumByStickerSetId()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varbcc, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetStickerSetNumByStickerSetId(var1);
+}
+
+public Native_GetStickersCount()
+{
+	return GetStickersCount();
+}
+
+public Native_GetStickersSetsCount()
+{
+	return GetStickersSetsCount();
+}
+
+public Native_GetWeaponClassNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponClassNameByDefIndex(var1, var2, 48))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponClassNameByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		new var2 = 0;
+		if (GetWeaponClassNameByWeapon(var1, var2, 48))
+		{
+			return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponClassNameByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponClassNameByWeaponNum(var1, var2, 48))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponClipAmmoByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponClipAmmoByClassName(var1);
+}
+
+public Native_GetWeaponClipAmmoByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponClipAmmoByDefIndex(var1);
+}
+
+public Native_GetWeaponClipAmmoByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponClipAmmoByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponClipAmmoByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponClipAmmoByWeaponNum(var1);
+}
+
+public Native_GetWeaponCount()
+{
+	return GetWeaponCount();
+}
+
+public Native_GetWeaponCycleTimeByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponCycleTimeByClassName(var1);
+}
+
+public Native_GetWeaponCycleTimeByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return -1082130432;
+	}
+	return GetWeaponCycleTimeByDefIndex(var1);
+}
+
+public Native_GetWeaponCycleTimeByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponCycleTimeByWeapon(var1);
+	}
+	return -1082130432;
+}
+
+public Native_GetWeaponCycleTimeByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return -1082130432;
+	}
+	return GetWeaponCycleTimeByWeaponNum(var1);
+}
+
+public Native_GetWeaponDamageByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponDamageByClassName(var1);
+}
+
+public Native_GetWeaponDamageByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponDamageByDefIndex(var1);
+}
+
+public Native_GetWeaponDamageByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponDamageByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponDamageByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponDamageByWeaponNum(var1);
+}
+
+public Native_GetWeaponDefIndexByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponDefIndexByClassName(var1);
+}
+
+public Native_GetWeaponDefIndexByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return GetWeaponDefIndexByWeapon(var1);
+}
+
+public Native_GetWeaponDefIndexByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return GetWeaponDefIndexByWeaponNum(var1);
+}
+
+public Native_GetWeaponDisplayNameByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	new var2 = 0;
+	if (GetWeaponDisplayNameByClassName(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponDisplayNameByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponDisplayNameByDefIndex(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponDisplayNameByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		new var2 = 0;
+		if (GetWeaponDisplayNameByWeapon(var1, var2, 64))
+		{
+			return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponDisplayNameByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponDisplayNameByWeaponNum(var1, var2, 64))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponMaxPlayerSpeedByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponMaxPlayerSpeedByClassName(var1);
+}
+
+public Native_GetWeaponMaxPlayerSpeedByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponMaxPlayerSpeedByDefIndex(var1);
+}
+
+public Native_GetWeaponMaxPlayerSpeedByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponMaxPlayerSpeedByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponMaxPlayerSpeedByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponMaxPlayerSpeedByWeaponNum(var1);
+}
+
+public Native_GetWeaponNumByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponNumByClassName(var1);
+}
+
+public Native_GetWeaponNumByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return GetWeaponNumByDefIndex(var1);
+}
+
+public Native_GetWeaponNumByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return GetWeaponNumByWeapon(var1);
+}
+
+public Native_GetWeaponPriceByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponPriceByClassName(var1);
+}
+
+public Native_GetWeaponPriceByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponPriceByDefIndex(var1);
+}
+
+public Native_GetWeaponPriceByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponPriceByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponPriceByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponPriceByWeaponNum(var1);
+}
+
+public Native_GetWeaponReserveAmmoByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponReserveAmmoByClassName(var1);
+}
+
+public Native_GetWeaponReserveAmmoByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponReserveAmmoByDefIndex(var1);
+}
+
+public Native_GetWeaponReserveAmmoByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponReserveAmmoByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponReserveAmmoByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponReserveAmmoByWeaponNum(var1);
+}
+
+public Native_GetWeaponSlotByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponSlotByClassName(var1);
+}
+
+public Native_GetWeaponSlotByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponSlotByDefIndex(var1);
+}
+
+public Native_GetWeaponSlotByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponSlotByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponSlotByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponSlotByWeaponNum(var1);
+}
+
+public Native_GetWeaponSpreadByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponSpreadByClassName(var1);
+}
+
+public Native_GetWeaponSpreadByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return -1082130432;
+	}
+	return GetWeaponSpreadByDefIndex(var1);
+}
+
+public Native_GetWeaponSpreadByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponSpreadByWeapon(var1);
+	}
+	return -1082130432;
+}
+
+public Native_GetWeaponSpreadByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return -1082130432;
+	}
+	return GetWeaponSpreadByWeaponNum(var1);
+}
+
+public Native_GetWeaponStickersSlotsByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return -1;
+	}
+	return GetWeaponStickersSlotsByDefIndex(var1);
+}
+
+public Native_GetWeaponStickersSlotsByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponStickersSlotsByWeapon(var1);
+	}
+	return -1;
+}
+
+public Native_GetWeaponStickersSlotsByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return -1;
+	}
+	return GetWeaponStickersSlotsByWeaponNum(var1);
+}
+
+public Native_GetWeaponTeamByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return GetWeaponTeamByClassName(var1);
+}
+
+public Native_GetWeaponTeamByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return GetWeaponTeamByDefIndex(var1);
+}
+
+public Native_GetWeaponTeamByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return GetWeaponTeamByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_GetWeaponTeamByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return GetWeaponTeamByWeaponNum(var1);
+}
+
+public Native_GetWeaponViewModelByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	new var2 = 0;
+	if (GetWeaponViewModelByClassName(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponViewModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponViewModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponViewModelByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		new var2 = 0;
+		if (GetWeaponViewModelByWeapon(var1, var2, "BfWriteFloat"))
+		{
+			return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponViewModelByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponViewModelByWeaponNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponWorldModelByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	new var2 = 0;
+	if (GetWeaponWorldModelByClassName(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponWorldModelByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponWorldModelByDefIndex(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponWorldModelByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		new var2 = 0;
+		if (GetWeaponWorldModelByWeapon(var1, var2, "BfWriteFloat"))
+		{
+			return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public Native_GetWeaponWorldModelByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	if (GetWeaponWorldModelByWeaponNum(var1, var2, "BfWriteFloat"))
+	{
+		return SetNativeString(2, var2, GetNativeCell(3), 1, 0) == 0;
+	}
+	return 0;
+}
+
+public Native_GiveWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2 = 0;
+	GetNativeString(2, var2, 48, 0);
+	new var3;
+	var3 = GetNativeCell(3);
+	new var4;
+	var4 = GetNativeCell(4);
+	new var5;
+	var5 = GetNativeCell(5);
+	new var6;
+	var6 = GetNativeCell(6);
+	return sub_14090(var1, var2, var3, var4, var5, var6);
+}
+
+public Native_HasRareDrawByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return HasRareDrawByDefIndex(var1);
+}
+
+public Native_HasRareInspectByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return HasRareInspectByDefIndex(var1);
+}
+
+public Native_IsCoinInSet()
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var3;
+	var3 = GetNativeCell(2);
+	new var1;
+	if (var2 < 0 || var3 < 0)
+	{
+		return 0;
+	}
+	return IsCoinInSet(var2, var3);
+}
+
+public Native_IsDefIndexKnife()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return IsDefIndexKnife(var1);
+}
+
+public Native_IsNativeSkin()
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var3;
+	var3 = GetNativeCell(2);
+	new var4;
+	var4 = GetNativeCell(3);
+	new var1;
+	if (var4 < 0 || var4 > 1)
+	{
+		return 0;
+	}
+	return IsNativeSkin(var2, var3, var4);
+}
+
+public Native_IsNativeSkinByDefIndex()
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var3;
+	var3 = GetNativeCell(2);
+	new var4;
+	var4 = GetNativeCell(3);
+	new var1;
+	if (var4 < 0 || var4 > 1)
+	{
+		return 0;
+	}
+	return IsNativeSkinByDefIndex(var2, var3, var4);
+}
+
+public Native_IsSkinNumGloveApplicable()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbfc < var1)
+	{
+		return 0;
+	}
+	return IsSkinNumGloveApplicable(var1);
+}
+
+public Native_IsSkinnableDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return IsSkinnableDefIndex(var1);
+}
+
+public Native_IsStickerInSet()
+{
+	new var2;
+	var2 = GetNativeCell(1);
+	new var3;
+	var3 = GetNativeCell(2);
+	new var1;
+	if (var3 < 0 || var2 < 0)
+	{
+		return 0;
+	}
+	return IsStickerInSet(var2, var3);
+}
+
+public Native_IsValidWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return IsValidWeapon(var1);
+}
+
+public Native_IsWeaponFullAutoByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	return IsWeaponFullAutoByClassName(var1);
+}
+
+public Native_IsWeaponFullAutoByDefIndex()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	return IsWeaponFullAutoByDefIndex(var1);
+}
+
+public Native_IsWeaponFullAutoByWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return IsWeaponFullAutoByWeapon(var1);
+	}
+	return 0;
+}
+
+public Native_IsWeaponFullAutoByWeaponNum()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (g_varbf8 < var1)
+	{
+		return 0;
+	}
+	return IsWeaponFullAutoByWeaponNum(var1);
+}
+
+public Native_ReSync()
+{
+	sub_1bd18(0);
+	ParseItems();
+	return 1;
+}
+
+public Native_RefillClipAmmo()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return RefillClipAmmo(var1);
+	}
+	return 0;
+}
+
+public Native_RefillReserveAmmo()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	if (IsValidWeapon(var1))
+	{
+		return RefillReserveAmmo(var1);
+	}
+	return 0;
+}
+
+public Native_RemoveAllWeapons()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return RemoveAllWeapons(var1, var2);
+}
+
+public Native_RemoveKnife()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	return RemoveKnife(var1);
+}
+
+public Native_RemoveWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return RemoveWeapon(var1, var2);
+}
+
+public Native_RespawnWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetNativeCell(3);
+	return sub_16498(var1, var2, var3);
+}
+
+public Native_RespawnWeaponBySlot()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetPlayerWeaponSlot(var1, var2);
+	return sub_16498(var1, var3, 1);
+}
+
+public Native_SetActiveWeapon()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	return SetActiveWeapon(var1, var2);
+}
+
+public Native_SetAllWeaponsAmmo()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(1);
+	return SetAllWeaponsAmmo(var1, var2);
+}
+
+public Native_SetAllWeaponsAmmoByClassName()
+{
+	new var1 = 0;
+	GetNativeString(1, var1, 48, 0);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetNativeCell(2);
+	return SetAllWeaponsAmmoByClassName(var1, var2, var3);
+}
+
+public Native_SetWeaponAmmo()
+{
+	new var1;
+	var1 = GetNativeCell(1);
+	new var2;
+	var2 = GetNativeCell(2);
+	new var3;
+	var3 = GetNativeCell(3);
+	return SetWeaponAmmo(var1, var2, var3);
+}
+
+public OnClientPutInServer(_arg0)
+{
+	sub_b70(2428[_arg0]);
+	return 0;
+}
+
+public OnMapStart()
+{
+	new var1 = 0;
+	if (var1 + 1826/* ERROR unknown load Binary */)
+	{
+		var1 + 1826/* ERROR unknown load Binary */ = var1 + 2576/* ERROR unknown load Binary */ + 301;
+		new var2 = var1 + 2576;
+		var2 = var1 + 2/* ERROR unknown load Binary */ & var2;
+	}
+	return 0;
+}
+
+public OnNormalSoundPlayed(_arg0, _arg1, _arg2)
+{
+	new var1;
+	if (StrContains(_arg2, "itempickup.wav", 0) > -1 || StrContains(_arg2, "ClipEmpty_Rifle.wav", 0) > -1 || StrContains(_arg2, "buttons/", 0) > -1)
+	{
+		new var2 = 0;
+		while (var2 <= MaxClients)
+		{
+			if (sub_b98(var2, 0))
+			{
+				if (2428[var2] == 1)
+				{
+					return 3;
+				}
+			}
+			var2++;
+		}
+	}
+	return 0;
+}
+
+public OnPluginEnd()
+{
+	CloseHandle(g_varb8c);
+	g_varb8c = 0;
+	CloseHandle(g_varb90);
+	g_varb90 = 0;
+	CloseHandle(g_varb94);
+	g_varb94 = 0;
+	CloseHandle(g_varb98);
+	g_varb98 = 0;
+	CloseHandle(g_varb9c);
+	g_varb9c = 0;
+	CloseHandle(g_varba0);
+	g_varba0 = 0;
+	CloseHandle(g_varba4);
+	g_varba4 = 0;
+	CloseHandle(g_varba8);
+	g_varba8 = 0;
+	CloseHandle(g_varbac);
+	g_varbac = 0;
+	CloseHandle(g_varbb0);
+	g_varbb0 = 0;
+	CloseHandle(g_varbb4);
+	g_varbb4 = 0;
+	CloseHandle(g_varbb8);
+	g_varbb8 = 0;
+	CloseHandle(g_varbbc);
+	g_varbbc = 0;
+	CloseHandle(g_varbc0);
+	g_varbc0 = 0;
+	CloseHandle(g_varbc4);
+	g_varbc4 = 0;
+	CloseHandle(g_varbc8);
+	g_varbc8 = 0;
+	CloseHandle(g_varbcc);
+	g_varbcc = 0;
+	CloseHandle(g_varbd0);
+	g_varbd0 = 0;
+	CloseHandle(g_varbd4);
+	g_varbd4 = 0;
+	CloseHandle(g_varbd8);
+	g_varbd8 = 0;
+	CloseHandle(g_varbdc);
+	g_varbdc = 0;
+	CloseHandle(g_varbe0);
+	g_varbe0 = 0;
+	CloseHandle(g_varbe4);
+	g_varbe4 = 0;
+	CloseHandle(g_varbe8);
+	g_varbe8 = 0;
+	new var1 = 0;
+	while (var1 < g_varc24)
+	{
+		new var2;
+		var2 = GetCrateDefIndexByCrateNum(var1);
+		new var3 = 0;
+		IntToString(var2, var3, 12);
+		new var4 = 0;
+		StringMap.GetArray(g_varbf0, var3, var4, 83, 0);
+		new var5 = var4 + 8;
+		CloseHandle(var5);
+		var5 = 0;
+		var1++;
+	}
+	CloseHandle(g_varbec);
+	g_varbec = 0;
+	CloseHandle(g_varbf0);
+	g_varbf0 = 0;
+	return 0;
+}
+
+public OnPluginStart()
+{
+	g_varb8c = StringMap.StringMap();
+	g_varb90 = ArrayList.ArrayList(1, 0);
+	g_varb94 = StringMap.StringMap();
+	g_varb98 = StringMap.StringMap();
+	g_varb9c = ArrayList.ArrayList(1, 0);
+	g_varba0 = StringMap.StringMap();
+	g_varba4 = StringMap.StringMap();
+	g_varba8 = ArrayList.ArrayList(1, 0);
+	g_varbac = ArrayList.ArrayList(1, 0);
+	g_varbb0 = StringMap.StringMap();
+	g_varbb4 = ArrayList.ArrayList(1, 0);
+	g_varbb8 = StringMap.StringMap();
+	g_varbbc = ArrayList.ArrayList(1, 0);
+	g_varbc0 = ArrayList.ArrayList(1, 0);
+	g_varbc4 = StringMap.StringMap();
+	g_varbc8 = StringMap.StringMap();
+	g_varbcc = ArrayList.ArrayList(1, 0);
+	g_varbd0 = ArrayList.ArrayList(1, 0);
+	g_varbd4 = StringMap.StringMap();
+	g_varbd8 = StringMap.StringMap();
+	g_varbdc = ArrayList.ArrayList(1, 0);
+	g_varbe0 = StringMap.StringMap();
+	g_varbe4 = ArrayList.ArrayList(1, 0);
+	g_varbe8 = StringMap.StringMap();
+	g_varbec = ArrayList.ArrayList(1, 0);
+	g_varbf0 = StringMap.StringMap();
+	g_var970 = FindConVar("sv_hibernate_when_empty");
+	g_var974 = ConVar.IntValue.get(g_var970);
+	sub_1bd18(0);
+	BuildPath(0, 6403936, "BfWriteFloat", "configs/eItems.cfg");
+	LoadConfig();
+	ParseItems();
+	HookEvent("player_death", 17, 1);
+	HookEvent("round_poststart", 15, 1);
+	HookEvent("cs_pre_restart", 13, 1);
+	AddNormalSoundHook("rite.WriteNum");
+	new var1;
+	var1 = LoadGameConfigFile("sdkhooks.games");
+	StartPrepSDKCall(2);
+	PrepSDKCall_SetFromConf(var1, 0, "Weapon_Switch");
+	PrepSDKCall_AddParameter(0, 0, 0, 0);
+	PrepSDKCall_AddParameter(4, 1, 0, 0);
+	g_var61b754 = EndPrepSDKCall();
+	return 0;
+}
+
+public ParseAgents(_arg0)
+{
+	g_varc1c = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	while (JSONArray.Length.get(_arg0) > var7)
+	{
+		var1 = JSONArray.Get(_arg0, var7);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		var3 = JSONObject.GetInt(var1, "team");
+		ArrayList.Push(g_varbdc, var2);
+		JSONObject.GetString(var1, "item_name", var4, NULL_STRING);
+		JSONObject.GetString(var1, "player_model", var5, "BfWriteFloat");
+		IntToString(var2, var6, 12);
+		new var8 = 0;
+		var8 = var7;
+		var8 + 4/* ERROR unknown load Binary */ = var3;
+		strcopy(var8 + 8, NULL_STRING, var4);
+		strcopy(var8 + 72, "BfWriteFloat", var5);
+		StringMap.SetArray(g_varbe0, var6, var8, 82, 1);
+		CloseHandle(var1);
+		var1 = 0;
+		var7++;
+	}
+	PrintToServer("%s %i agents synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParseCoins(_arg0)
+{
+	new var1;
+	var1 = JSONObject.Get(_arg0, "categories");
+	new var2;
+	var2 = JSONObject.Get(_arg0, "items");
+	g_varc0c = JSONArray.Length.get(var1);
+	g_varc10 = JSONArray.Length.get(var2);
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	while (var7 < g_varc0c)
+	{
+		new var8;
+		var8 = JSONArray.Get(var1, var7);
+		var3 = JSONObject.GetInt(var8, "id");
+		JSONObject.GetString(var8, "name", var4, NULL_STRING);
+		IntToString(var3, var6, 12);
+		new var9;
+		var9 = JSONObject.Get(var8, "items");
+		new var10;
+		var10 = ArrayList.ArrayList(1, 0);
+		new var11 = 0;
+		while (JSONObject.Size.get(var9) > var11)
+		{
+			IntToString(var11, var5, 12);
+			new var12;
+			var12 = JSONObject.GetInt(var9, var5);
+			ArrayList.Push(var10, var12);
+			var11++;
+		}
+		ArrayList.Push(g_varbbc, var3);
+		new var13 = 0;
+		var13 = var7;
+		strcopy(var13 + 4, NULL_STRING, var4);
+		var13 + 68/* ERROR unknown load Binary */ = var10;
+		StringMap.SetArray(g_varbc4, var6, var13, 18, 1);
+		CloseHandle(var9);
+		var9 = 0;
+		CloseHandle(var8);
+		var8 = 0;
+		var7++;
+	}
+	new var14 = 0;
+	while (var14 < g_varc10)
+	{
+		new var15;
+		var15 = JSONArray.Get(var2, var14);
+		var3 = JSONObject.GetInt(var15, "def_index");
+		IntToString(var3, var5, 12);
+		ArrayList.Push(g_varbc0, var3);
+		JSONObject.GetString(var15, "item_name", var4, NULL_STRING);
+		new var16 = 0;
+		var16 = var14;
+		strcopy(var16 + 4, NULL_STRING, var4);
+		StringMap.SetArray(g_varbc8, var5, var16, 17, 1);
+		CloseHandle(var15);
+		var15 = 0;
+		var14++;
+	}
+	CloseHandle(var1);
+	var1 = 0;
+	CloseHandle(var2);
+	var2 = 0;
+	PrintToServer("%s %i coins (in %i sets) synced successfully!", "[eItems]", g_varc10, g_varc0c);
+	return 0;
+}
+
+public ParseCrates(_arg0)
+{
+	g_varc24 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	while (JSONArray.Length.get(_arg0) > var6)
+	{
+		var1 = JSONArray.Get(_arg0, var6);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varbec, var2);
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		JSONObject.GetString(var1, "view_model", var5, "BfWriteFloat");
+		IntToString(var2, var4, 12);
+		new var7;
+		var7 = JSONObject.Get(var1, "items");
+		new var8;
+		var8 = ArrayList.ArrayList(2, 0);
+		new var9 = 0;
+		while (JSONArray.Length.get(var7) > var9)
+		{
+			new var10;
+			var10 = JSONArray.Get(var7, var9);
+			new var11;
+			var11 = JSONObject.GetInt(var10, "weapon_def_index");
+			new var12;
+			var12 = JSONObject.GetInt(var10, "paint_def_index");
+			new var13 = 0;
+			var13 = var11;
+			var13 + 4/* ERROR unknown load Binary */ = var12;
+			ArrayList.PushArray(var8, var13, -1);
+			CloseHandle(var10);
+			var10 = 0;
+			var9++;
+		}
+		new var14 = 0;
+		var14 = var6;
+		var14 + 4/* ERROR unknown load Binary */ = JSONArray.Length.get(var7);
+		var14 + 8/* ERROR unknown load Binary */ = var8;
+		strcopy(var14 + 12, NULL_STRING, var3);
+		strcopy(var14 + 76, "BfWriteFloat", var5);
+		StringMap.SetArray(g_varbf0, var4, var14, 83, 1);
+		CloseHandle(var7);
+		var7 = 0;
+		CloseHandle(var1);
+		var1 = 0;
+		var6++;
+	}
+	PrintToServer("%s %i crates synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParseData(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	g_varc2c = 1;
+	g_varbf4 = GetEngineTime();
+	new var2;
+	var2 = JSONObject.Get(var1, "weapons");
+	new var3;
+	var3 = JSONObject.Get(var1, "paints");
+	new var4;
+	var4 = JSONObject.Get(var1, "gloves");
+	new var5;
+	var5 = JSONObject.Get(var1, "coins");
+	new var6;
+	var6 = JSONObject.Get(var1, "pins");
+	new var7;
+	var7 = JSONObject.Get(var1, "crates");
+	new var8;
+	var8 = JSONObject.Get(var1, "music_kits");
+	new var9;
+	var9 = JSONObject.Get(var1, "patches");
+	new var10;
+	var10 = JSONObject.Get(var1, "sprayes");
+	new var11;
+	var11 = JSONObject.Get(var1, "stickers");
+	new var12;
+	var12 = JSONObject.Get(var1, "agents");
+	ParsePaints(var3);
+	ParseWeapons(var2);
+	ParseGloves(var4);
+	ParseMusicKits(var8);
+	ParsePins(var6);
+	ParseCoins(var5);
+	ParseStickers(var11);
+	ParseAgents(var12);
+	ParsePatches(var9);
+	ParseCrates(var7);
+	CloseHandle(var1);
+	var1 = 0;
+	CloseHandle(var2);
+	var2 = 0;
+	CloseHandle(var3);
+	var3 = 0;
+	CloseHandle(var4);
+	var4 = 0;
+	CloseHandle(var5);
+	var5 = 0;
+	CloseHandle(var6);
+	var6 = 0;
+	CloseHandle(var7);
+	var7 = 0;
+	CloseHandle(var8);
+	var8 = 0;
+	CloseHandle(var9);
+	var9 = 0;
+	CloseHandle(var10);
+	var10 = 0;
+	CloseHandle(var11);
+	var11 = 0;
+	CloseHandle(var12);
+	var12 = 0;
+	new var13;
+	var13 = GetEngineTime();
+	PrintToServer("%s Items synced successfully in %0.5f seconds", "[eItems]", var13 - g_varbf4);
+	g_varc28 = 1;
+	g_varc2c = 0;
+	Call_StartForward(g_var61b75c);
+	Call_Finish(0);
+	sub_1bd18(1);
+	return 0;
+}
+
+public ParseGloves(_arg0)
+{
+	g_varc00 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	while (JSONArray.Length.get(_arg0) > var10)
+	{
+		var1 = JSONArray.Get(_arg0, var10);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varba8, var2);
+		JSONObject.GetString(var1, "item_name", var5, NULL_STRING);
+		JSONObject.GetString(var1, "view_model", var6, "BfWriteFloat");
+		JSONObject.GetString(var1, "world_model", var7, "BfWriteFloat");
+		IntToString(var2, var8, 12);
+		new var11;
+		var11 = ArrayList.ArrayList(1, 0);
+		if (JSONObject.HasKey(var1, "paints"))
+		{
+			new var12;
+			var12 = JSONObject.Get(var1, "paints");
+			new var13 = 0;
+			while (JSONObject.Size.get(var12) > var13)
+			{
+				IntToString(var13, var9, 12);
+				var3 = JSONObject.GetInt(var12, var9);
+				IntToString(var3, var4, 12);
+				new var14 = 0;
+				StringMap.GetArray(g_varb8c, var4, var14, 33, 0);
+				var14 + 68/* ERROR unknown load Binary */ = 1;
+				StringMap.SetArray(g_varb8c, var4, var14, 33, 1);
+				ArrayList.Push(var11, var3);
+				var13++;
+			}
+			StringMap.SetValue(g_varba0, var8, var11, 1);
+			CloseHandle(var12);
+			var12 = 0;
+		}
+		new var15 = 0;
+		var15 = var10;
+		strcopy(var15 + 4, NULL_STRING, var5);
+		strcopy(var15 + 68, "BfWriteFloat", var6);
+		strcopy(var15 + 324, "BfWriteFloat", var7);
+		var15 + 580/* ERROR unknown load Binary */ = var11;
+		StringMap.SetArray(g_varba4, var8, var15, "Listener", 1);
+		CloseHandle(var1);
+		var1 = 0;
+		var10++;
+	}
+	PrintToServer("%s %i gloves synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParseItems()
+{
+	new var1 = 0;
+	GetServerAuthId(3, var1, 18);
+	new var2 = 0;
+	Format(var2, "eature", "items_%s.json?steam_id=%s", 6404192, var1);
+	PrintToServer("%s Downloading eItems data from API", "[eItems]");
+	new var3 = 0;
+	Format(var3, "gle", "https://api.sourcefactory.eu/api/v1/plugins/%i/data/%s", 2, var2);
+	g_var978 = HTTPRequest.HTTPRequest(var3);
+	HTTPRequest.SetHeader(g_var978, "User-Agent", "eItems HTTP Client 1.0 (730)");
+	HTTPRequest.SetHeader(g_var978, "Authorization", 6404204);
+	HTTPRequest.Get(g_var978, "fWrite.WriteFloat", 0);
+	return 0;
+}
+
+public ParseItemsDownloaded(_arg0)
+{
+	if (HTTPResponse.Status.get(_arg0) != 200)
+	{
+		if (g_var61b8ac <= 5)
+		{
+			PrintToServer("%s Downloading eItems data from API failed! Attempt: %i/5, Trying again in 2 seconds", "[eItems]", g_var61b8ac);
+			g_var61b8ac += 1;
+			CreateTimer(1073741824, "String", 2, 0);
+		}
+		else
+		{
+			PrintToServer("%s Downloading eItems data from API failed!", "[eItems]");
+		}
+		return 0;
+	}
+	if (HTTPResponse.Data.get(_arg0))
+	{
+		PrintToServer("%s eItems data for '%s' language downloaded successfully", "[eItems]", 6404192);
+		ParseData(HTTPResponse.Data.get(_arg0));
+		return 0;
+	}
+	PrintToServer("%s Downloading eItems data from API failed!", "[eItems]");
+	return 0;
+}
+
+public ParseMusicKits(_arg0)
+{
+	g_varc04 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	while (JSONArray.Length.get(_arg0) > var5)
+	{
+		var1 = JSONArray.Get(_arg0, var5);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varbac, var2);
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		IntToString(var2, var4, 12);
+		new var6 = 0;
+		var6 = var5;
+		strcopy(var6 + 4, NULL_STRING, var3);
+		StringMap.SetArray(g_varbb0, var4, var6, 17, 1);
+		CloseHandle(var1);
+		var1 = 0;
+		var5++;
+	}
+	PrintToServer("%s %i music kits synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParsePaints(_arg0)
+{
+	g_varbfc = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	while (JSONArray.Length.get(_arg0) > var9)
+	{
+		var1 = JSONArray.Get(_arg0, var9);
+		new var10;
+		var10 = JSONObject.Get(var1, "rarity");
+		JSONObject.GetString(var10, "name", var6, 48);
+		new var11;
+		var11 = JSONObject.Get(var1, "wear_remap");
+		JSONObject.GetString(var11, "min", var7, 12);
+		JSONObject.GetString(var11, "max", var8, 12);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varb90, var2);
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		if (JSONObject.HasKey(var1, "item_name_extra"))
+		{
+			JSONObject.GetString(var1, "item_name_extra", var4, 32);
+			FormatEx(var3, NULL_STRING, "%s %s", var3, var4);
+		}
+		IntToString(var2, var5, 12);
+		new var12 = 0;
+		var12 = var9;
+		var12 + 72/* ERROR unknown load Binary */ = JSONObject.GetInt(var10, "id");
+		strcopy(var12 + 4, NULL_STRING, var3);
+		strcopy(var12 + 76, 48, var6);
+		var12 + 68/* ERROR unknown load Binary */ = 0;
+		var12 + 124/* ERROR unknown load Binary */ = StringToFloat(var7);
+		var12 + 128/* ERROR unknown load Binary */ = StringToFloat(var8);
+		StringMap.SetArray(g_varb8c, var5, var12, 33, 1);
+		CloseHandle(var1);
+		var1 = 0;
+		CloseHandle(var10);
+		var10 = 0;
+		CloseHandle(var11);
+		var11 = 0;
+		var9++;
+	}
+	PrintToServer("%s %i paints synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParsePatches(_arg0)
+{
+	g_varc20 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	while (JSONArray.Length.get(_arg0) > var5)
+	{
+		var1 = JSONArray.Get(_arg0, var5);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varbe4, var2);
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		IntToString(var2, var4, 12);
+		new var6 = 0;
+		var6 = var5;
+		strcopy(var6 + 4, NULL_STRING, var3);
+		StringMap.SetArray(g_varbe8, var4, var6, 17, 1);
+		CloseHandle(var1);
+		var1 = 0;
+		var5++;
+	}
+	PrintToServer("%s %i patches synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParsePins(_arg0)
+{
+	g_varc08 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	while (JSONArray.Length.get(_arg0) > var5)
+	{
+		var1 = JSONArray.Get(_arg0, var5);
+		var2 = JSONObject.GetInt(var1, "def_index");
+		ArrayList.Push(g_varbb4, var2);
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		IntToString(var2, var4, 12);
+		new var6 = 0;
+		var6 = var5;
+		strcopy(var6 + 4, NULL_STRING, var3);
+		StringMap.SetArray(g_varbb8, var4, var6, 17, 1);
+		CloseHandle(var1);
+		var1 = 0;
+		var5++;
+	}
+	PrintToServer("%s %i pins synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public ParseStickers(_arg0)
+{
+	new var1;
+	var1 = JSONObject.Get(_arg0, "categories");
+	new var2;
+	var2 = JSONObject.Get(_arg0, "items");
+	g_varc14 = JSONArray.Length.get(var1);
+	g_varc18 = JSONArray.Length.get(var2);
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	while (var7 < g_varc14)
+	{
+		new var8;
+		var8 = JSONArray.Get(var1, var7);
+		var3 = JSONObject.GetInt(var8, "id");
+		JSONObject.GetString(var8, "name", var4, NULL_STRING);
+		IntToString(var3, var6, 12);
+		new var9;
+		var9 = JSONObject.Get(var8, "items");
+		new var10;
+		var10 = ArrayList.ArrayList(1, 0);
+		new var11 = 0;
+		while (JSONObject.Size.get(var9) > var11)
+		{
+			IntToString(var11, var5, 12);
+			new var12;
+			var12 = JSONObject.GetInt(var9, var5);
+			ArrayList.Push(var10, var12);
+			var11++;
+		}
+		ArrayList.Push(g_varbcc, var3);
+		new var13 = 0;
+		var13 = var7;
+		strcopy(var13 + 4, NULL_STRING, var4);
+		var13 + 68/* ERROR unknown load Binary */ = var10;
+		StringMap.SetArray(g_varbd4, var6, var13, 18, 1);
+		CloseHandle(var9);
+		var9 = 0;
+		CloseHandle(var8);
+		var8 = 0;
+		var7++;
+	}
+	new var14 = 0;
+	while (var14 < g_varc18)
+	{
+		new var15;
+		var15 = JSONArray.Get(var2, var14);
+		var3 = JSONObject.GetInt(var15, "def_index");
+		IntToString(var3, var5, 12);
+		ArrayList.Push(g_varbd0, var3);
+		JSONObject.GetString(var15, "item_name", var4, NULL_STRING);
+		new var16 = 0;
+		var16 = var14;
+		strcopy(var16 + 4, NULL_STRING, var4);
+		StringMap.SetArray(g_varbd8, var5, var16, 17, 1);
+		new var17 = 0;
+		while (var17 < g_varc14)
+		{
+			new var18;
+			var18 = GetStickerSetIdByStickerSetNum(var17);
+			new var19 = 0;
+			IntToString(var18, var19, 12);
+			new var20 = 0;
+			StringMap.GetArray(g_varbd4, var19, var20, 18, 0);
+			new var21;
+			var21 = var20 + 68/* ERROR unknown load Binary */;
+			new var22 = 0;
+			if (0 <= (var22 = ArrayList.FindValue(var21, var3, 0) != -1))
+			{
+				3124[var17][var14] = var22;
+			}
+			var17++;
+		}
+		CloseHandle(var15);
+		var15 = 0;
+		var14++;
+	}
+	CloseHandle(var1);
+	var1 = 0;
+	CloseHandle(var2);
+	var2 = 0;
+	PrintToServer("%s %i stickers (in %i sets) synced successfully!", "[eItems]", g_varc18, g_varc14);
+	return 0;
+}
+
+public ParseWeapons(_arg0)
+{
+	g_varbf8 = JSONArray.Length.get(_arg0);
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	new var14 = 0;
+	new var15 = 0;
+	new var16 = 0;
+	new var17 = 0;
+	new var18 = 0;
+	new var19 = 0;
+	new var20 = 0;
+	new var21 = 0;
+	new var22 = 0;
+	new var23 = 0;
+	new var24 = 0;
+	new var25 = 0;
+	while (JSONArray.Length.get(_arg0) > var25)
+	{
+		var8 = 0;
+		var9 = 0;
+		var14 = 0;
+		var10 = 0;
+		var11 = 0;
+		var12 = -1;
+		var13 = -1;
+		var15 = -1;
+		var16 = -1;
+		var18 = -1;
+		var19 = -1;
+		var20 = -1;
+		var21 = -1;
+		var22 = 0;
+		var17 = 0;
+		var23 = 0;
+		var24 = 0;
+		var1 = JSONArray.Get(_arg0, var25);
+		var9 = JSONObject.GetInt(var1, "def_index");
+		var14 = JSONObject.GetInt(var1, "team");
+		if (JSONObject.HasKey(var1, "slot"))
+		{
+			var15 = JSONObject.GetInt(var1, "slot");
+		}
+		var10 = JSONObject.GetBool(var1, "has_rare_inspect");
+		var11 = JSONObject.GetBool(var1, "has_rare_draw");
+		if (JSONObject.HasKey(var1, "rare_inspect"))
+		{
+			var12 = JSONObject.GetInt(var1, "rare_inspect");
+		}
+		if (JSONObject.HasKey(var1, "rare_draw"))
+		{
+			var13 = JSONObject.GetInt(var1, "rare_draw");
+		}
+		JSONObject.GetString(var1, "item_name", var3, NULL_STRING);
+		JSONObject.GetString(var1, "class_name", var2, 48);
+		JSONObject.GetString(var1, "view_model", var4, "BfWriteFloat");
+		JSONObject.GetString(var1, "world_model", var5, "BfWriteFloat");
+		if (!(JSONObject.IsNull(var1, "stickers_count")))
+		{
+			var17 = JSONObject.GetInt(var1, "stickers_count");
+		}
+		IntToString(var9, var7, 12);
+		new var26;
+		var26 = ArrayList.ArrayList(1, 0);
+		if (JSONObject.HasKey(var1, "paints"))
+		{
+			new var27;
+			var27 = JSONObject.Get(var1, "paints");
+			new var28 = 0;
+			while (JSONObject.Size.get(var27) > var28)
+			{
+				IntToString(var28, var6, 12);
+				var8 = JSONObject.GetInt(var27, var6);
+				ArrayList.Push(var26, var8);
+				var28++;
+			}
+			StringMap.SetValue(g_varb94, var7, var26, 1);
+			CloseHandle(var27);
+			var27 = 0;
+		}
+		if (JSONObject.HasKey(var1, "attributes"))
+		{
+			new var29;
+			var29 = JSONObject.Get(var1, "attributes");
+			if (JSONObject.HasKey(var29, "primary_clip_size"))
+			{
+				var16 = JSONObject.GetInt(var29, "primary_clip_size");
+			}
+			if (JSONObject.HasKey(var29, "primary_reserve_ammo_max"))
+			{
+				var18 = JSONObject.GetInt(var29, "primary_reserve_ammo_max");
+			}
+			if (JSONObject.HasKey(var29, "max_player_speed"))
+			{
+				var19 = JSONObject.GetInt(var29, "max_player_speed");
+			}
+			if (JSONObject.HasKey(var29, "in_game_price"))
+			{
+				var20 = JSONObject.GetInt(var29, "in_game_price");
+			}
+			if (JSONObject.HasKey(var29, "damage"))
+			{
+				var21 = JSONObject.GetInt(var29, "damage");
+			}
+			if (JSONObject.HasKey(var29, "is_full_auto"))
+			{
+				var22 = JSONObject.GetInt(var29, "is_full_auto");
+			}
+			if (JSONObject.HasKey(var29, "cycletime"))
+			{
+				var23 = JSONObject.GetFloat(var29, "cycletime");
+			}
+			if (JSONObject.HasKey(var29, "spread"))
+			{
+				var24 = JSONObject.GetFloat(var29, "spread");
+			}
+			CloseHandle(var29);
+			var29 = 0;
+		}
+		CloseHandle(var1);
+		var1 = 0;
+		new var30 = 0;
+		strcopy(var30 + 4, NULL_STRING, var3);
+		strcopy(var30 + 68, 48, var2);
+		strcopy(var30 + 116, "BfWriteFloat", var4);
+		strcopy(var30 + 372, "BfWriteFloat", var5);
+		strcopy(var30 + 4, NULL_STRING, var3);
+		strcopy(var30 + 4, NULL_STRING, var3);
+		strcopy(var30 + 4, NULL_STRING, var3);
+		var30 = var25;
+		var30 + 628/* ERROR unknown load Binary */ = var26;
+		var30 + 632/* ERROR unknown load Binary */ = var14;
+		var30 + 636/* ERROR unknown load Binary */ = var15;
+		var30 + 640/* ERROR unknown load Binary */ = var16;
+		var30 + 648/* ERROR unknown load Binary */ = var18;
+		var30 + 652/* ERROR unknown load Binary */ = var19;
+		var30 + 656/* ERROR unknown load Binary */ = var20;
+		var30 + 668/* ERROR unknown load Binary */ = var21;
+		var30 + 644/* ERROR unknown load Binary */ = var17;
+		var30 + 672/* ERROR unknown load Binary */ = var22;
+		var30 + 660/* ERROR unknown load Binary */ = var23;
+		var30 + 664/* ERROR unknown load Binary */ = var24;
+		var30 + 676/* ERROR unknown load Binary */ = var10;
+		var30 + 680/* ERROR unknown load Binary */ = var11;
+		var30 + 684/* ERROR unknown load Binary */ = var12;
+		var30 + 688/* ERROR unknown load Binary */ = var13;
+		StringMap.SetArray(g_varb98, var7, var30, "ener", 1);
+		ArrayList.Push(g_varb9c, var9);
+		var25++;
+	}
+	PrintToServer("%s %i weapons synced successfully!", "[eItems]", JSONArray.Length.get(_arg0));
+	return 0;
+}
+
+public RefillClipAmmo(_arg0)
+{
+	new var1;
+	var1 = GetWeaponDefIndexByWeapon(_arg0);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	new var4;
+	var4 = var3 + 640/* ERROR unknown load Binary */;
+	return SetWeaponAmmo(_arg0, -1, var4);
+}
+
+public RefillReserveAmmo(_arg0)
+{
+	new var1;
+	var1 = GetWeaponDefIndexByWeapon(_arg0);
+	if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	IntToString(var1, var2, 12);
+	new var3 = 0;
+	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	new var4;
+	var4 = var3 + 648/* ERROR unknown load Binary */;
+	return SetWeaponAmmo(_arg0, var4, -1);
+}
+
+public RemoveAllWeapons(_arg0, _arg1)
+{
+	if (g_varc30)
+	{
+		return -1;
+	}
+	if (sub_b98(_arg0, 1))
+	{
+		new var2 = 0;
+		new var3 = -1;
+		new var4 = -1;
+		new var5;
+		var5 = GetEntPropArraySize(_arg0, 0, "m_hMyWeapons");
+		new var6 = 0;
+		while (var6 < var5)
+		{
+			var4 = GetEntPropEnt(_arg0, 0, "m_hMyWeapons", var6);
+			if (IsValidWeapon(var4))
+			{
+				var3 = GetWeaponSlotByWeapon(var4);
+				if (!(0 > var3))
+				{
+					new var1;
+					if (!(_arg1 == var3 && _arg1 > -1))
+					{
+						if (RemoveWeapon(_arg0, var4))
+						{
+							var2++;
+						}
+					}
+				}
+			}
+			var6++;
+		}
+		return var2;
+	}
+	return -1;
+}
+
+public RemoveKnife(_arg0)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var1 = -1;
+		new var2 = -1;
+		new var3 = 0;
+		while (GetEntPropArraySize(_arg0, 0, "m_hMyWeapons") > var3)
+		{
+			var1 = GetEntPropEnt(_arg0, 0, "m_hMyWeapons", var3);
+			if (IsValidWeapon(var1))
+			{
+				var2 = GetWeaponDefIndexByWeapon(var1);
+				if (IsDefIndexKnife(var2))
+				{
+					return RemoveWeapon(_arg0, var1);
+				}
+			}
+			var3++;
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public RemoveWeapon(_arg0, _arg1)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		if (g_varc30)
+		{
+			return 0;
+		}
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg1);
+		if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+		{
+			return 0;
+		}
+		new var2;
+		var2 = GetWeaponSlotByDefIndex(var1);
+		if (0 > var2)
+		{
+			return 0;
+		}
+		if (_arg1 != GetPlayerWeaponSlot(_arg0, var2))
+		{
+			return 0;
+		}
+		if (!(RemovePlayerItem(_arg0, _arg1)))
+		{
+			if (!(DropWeapon(_arg0, _arg1)))
+			{
+				return 0;
+			}
+		}
+		AcceptEntityInput(_arg1, "Kill", -1, -1, 0);
+		return 1;
+	}
+	return 0;
+}
+
+public SetActiveWeapon(_arg0, _arg1)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg1);
+		if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+		{
+			return 0;
+		}
+		new var2;
+		var2 = GetWeaponSlotByDefIndex(var1);
+		if (0 > var2)
+		{
+			return 0;
+		}
+		if (_arg1 != GetPlayerWeaponSlot(_arg0, var2))
+		{
+			return 0;
+		}
+		new var3;
+		var3 = GetEntProp(_arg0, 0, "m_iHideHUD", 4, 0);
+		new var4 = 0;
+		GetWeaponClassNameByWeapon(_arg1, var4, 48);
+		FakeClientCommandEx(_arg0, "use %s", var4);
+		SDKCall(g_var61b754, _arg0, _arg1, 0);
+		SetEntPropEnt(_arg0, 0, "m_hActiveWeapon", _arg1, 0);
+		SetEntProp(_arg0, 0, "m_iHideHUD", var3, 4, 0);
+		return 1;
+	}
+	return 0;
+}
+
+public SetAllWeaponsAmmo(_arg0, _arg1)
+{
+	new var1;
+	var1 = MaxClients;
+	while (var1 < 2048)
+	{
+		if (IsValidWeapon(var1))
+		{
+			new var2;
+			var2 = GetWeaponDefIndexByWeapon(var1);
+			if (!(ArrayList.FindValue(g_varb9c, var2, 0) == -1))
+			{
+				if (!(IsDefIndexKnife(var2)))
+				{
+					if (!(SetWeaponAmmo(var1, _arg0, _arg1)))
+					{
+					}
+				}
+			}
+		}
+		var1++;
+	}
+	return 1;
+}
+
+public SetAllWeaponsAmmoByClassName(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2;
+	var2 = MaxClients;
+	while (var2 < 2048)
+	{
+		if (IsValidWeapon(var2))
+		{
+			new var3;
+			var3 = GetWeaponDefIndexByWeapon(var2);
+			if (!(ArrayList.FindValue(g_varb9c, var3, 0) == -1))
+			{
+				if (!(IsDefIndexKnife(var3)))
+				{
+					if (GetWeaponClassNameByDefIndex(var3, var1, 48))
+					{
+						if (!(strcmp(var1, _arg0, 1)))
+						{
+							if (!(SetWeaponAmmo(var2, _arg1, _arg2)))
+							{
+							}
+						}
+					}
+				}
+			}
+		}
+		var2++;
+	}
+	return 1;
+}
+
+public SetWeaponAmmo(_arg0, _arg1, _arg2)
+{
+	new var1;
+	if (_arg1 < 0 && _arg2 < 0)
+	{
+		return 0;
+	}
+	if (_arg1 > -1)
+	{
+		SetEntProp(_arg0, 0, "m_iPrimaryReserveAmmoCount", _arg1, 4, 0);
+	}
+	if (_arg2 > -1)
+	{
+		SetEntProp(_arg0, 0, "m_iClip1", _arg2, 4, 0);
+	}
+	return 1;
+}
+
+public Timer_AttemptDownload()
+{
+	ParseItems();
+	return 0;
+}
+
+public Timer_ParseFinished()
+{
+	sub_1bd18(1);
+	return 0;
+}
+
+public Timer_ParseItems()
+{
+	ParseItems();
+	return 0;
+}
+
+public __ext_core_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetFeatureStatus");
+	MarkNativeAsOptional("RequireFeature");
+	MarkNativeAsOptional("AddCommandListener");
+	MarkNativeAsOptional("RemoveCommandListener");
+	MarkNativeAsOptional("BfWriteBool");
+	MarkNativeAsOptional("BfWriteByte");
+	MarkNativeAsOptional("BfWriteChar");
+	MarkNativeAsOptional("BfWriteShort");
+	MarkNativeAsOptional("BfWriteWord");
+	MarkNativeAsOptional("BfWriteNum");
+	MarkNativeAsOptional("BfWriteFloat");
+	MarkNativeAsOptional("BfWriteString");
+	MarkNativeAsOptional("BfWriteEntity");
+	MarkNativeAsOptional("BfWriteAngle");
+	MarkNativeAsOptional("BfWriteCoord");
+	MarkNativeAsOptional("BfWriteVecCoord");
+	MarkNativeAsOptional("BfWriteVecNormal");
+	MarkNativeAsOptional("BfWriteAngles");
+	MarkNativeAsOptional("BfReadBool");
+	MarkNativeAsOptional("BfReadByte");
+	MarkNativeAsOptional("BfReadChar");
+	MarkNativeAsOptional("BfReadShort");
+	MarkNativeAsOptional("BfReadWord");
+	MarkNativeAsOptional("BfReadNum");
+	MarkNativeAsOptional("BfReadFloat");
+	MarkNativeAsOptional("BfReadString");
+	MarkNativeAsOptional("BfReadEntity");
+	MarkNativeAsOptional("BfReadAngle");
+	MarkNativeAsOptional("BfReadCoord");
+	MarkNativeAsOptional("BfReadVecCoord");
+	MarkNativeAsOptional("BfReadVecNormal");
+	MarkNativeAsOptional("BfReadAngles");
+	MarkNativeAsOptional("BfGetNumBytesLeft");
+	MarkNativeAsOptional("BfWrite.WriteBool");
+	MarkNativeAsOptional("BfWrite.WriteByte");
+	MarkNativeAsOptional("BfWrite.WriteChar");
+	MarkNativeAsOptional("BfWrite.WriteShort");
+	MarkNativeAsOptional("BfWrite.WriteWord");
+	MarkNativeAsOptional("BfWrite.WriteNum");
+	MarkNativeAsOptional("BfWrite.WriteFloat");
+	MarkNativeAsOptional("BfWrite.WriteString");
+	MarkNativeAsOptional("BfWrite.WriteEntity");
+	MarkNativeAsOptional("BfWrite.WriteAngle");
+	MarkNativeAsOptional("BfWrite.WriteCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecCoord");
+	MarkNativeAsOptional("BfWrite.WriteVecNormal");
+	MarkNativeAsOptional("BfWrite.WriteAngles");
+	MarkNativeAsOptional("BfRead.ReadBool");
+	MarkNativeAsOptional("BfRead.ReadByte");
+	MarkNativeAsOptional("BfRead.ReadChar");
+	MarkNativeAsOptional("BfRead.ReadShort");
+	MarkNativeAsOptional("BfRead.ReadWord");
+	MarkNativeAsOptional("BfRead.ReadNum");
+	MarkNativeAsOptional("BfRead.ReadFloat");
+	MarkNativeAsOptional("BfRead.ReadString");
+	MarkNativeAsOptional("BfRead.ReadEntity");
+	MarkNativeAsOptional("BfRead.ReadAngle");
+	MarkNativeAsOptional("BfRead.ReadCoord");
+	MarkNativeAsOptional("BfRead.ReadVecCoord");
+	MarkNativeAsOptional("BfRead.ReadVecNormal");
+	MarkNativeAsOptional("BfRead.ReadAngles");
+	MarkNativeAsOptional("BfRead.BytesLeft.get");
+	MarkNativeAsOptional("PbReadInt");
+	MarkNativeAsOptional("PbReadFloat");
+	MarkNativeAsOptional("PbReadBool");
+	MarkNativeAsOptional("PbReadString");
+	MarkNativeAsOptional("PbReadColor");
+	MarkNativeAsOptional("PbReadAngle");
+	MarkNativeAsOptional("PbReadVector");
+	MarkNativeAsOptional("PbReadVector2D");
+	MarkNativeAsOptional("PbGetRepeatedFieldCount");
+	MarkNativeAsOptional("PbSetInt");
+	MarkNativeAsOptional("PbSetFloat");
+	MarkNativeAsOptional("PbSetBool");
+	MarkNativeAsOptional("PbSetString");
+	MarkNativeAsOptional("PbSetColor");
+	MarkNativeAsOptional("PbSetAngle");
+	MarkNativeAsOptional("PbSetVector");
+	MarkNativeAsOptional("PbSetVector2D");
+	MarkNativeAsOptional("PbAddInt");
+	MarkNativeAsOptional("PbAddFloat");
+	MarkNativeAsOptional("PbAddBool");
+	MarkNativeAsOptional("PbAddString");
+	MarkNativeAsOptional("PbAddColor");
+	MarkNativeAsOptional("PbAddAngle");
+	MarkNativeAsOptional("PbAddVector");
+	MarkNativeAsOptional("PbAddVector2D");
+	MarkNativeAsOptional("PbRemoveRepeatedFieldValue");
+	MarkNativeAsOptional("PbReadMessage");
+	MarkNativeAsOptional("PbReadRepeatedMessage");
+	MarkNativeAsOptional("PbAddMessage");
+	MarkNativeAsOptional("Protobuf.ReadInt");
+	MarkNativeAsOptional("Protobuf.ReadInt64");
+	MarkNativeAsOptional("Protobuf.ReadFloat");
+	MarkNativeAsOptional("Protobuf.ReadBool");
+	MarkNativeAsOptional("Protobuf.ReadString");
+	MarkNativeAsOptional("Protobuf.ReadColor");
+	MarkNativeAsOptional("Protobuf.ReadAngle");
+	MarkNativeAsOptional("Protobuf.ReadVector");
+	MarkNativeAsOptional("Protobuf.ReadVector2D");
+	MarkNativeAsOptional("Protobuf.GetRepeatedFieldCount");
+	MarkNativeAsOptional("Protobuf.SetInt");
+	MarkNativeAsOptional("Protobuf.SetInt64");
+	MarkNativeAsOptional("Protobuf.SetFloat");
+	MarkNativeAsOptional("Protobuf.SetBool");
+	MarkNativeAsOptional("Protobuf.SetString");
+	MarkNativeAsOptional("Protobuf.SetColor");
+	MarkNativeAsOptional("Protobuf.SetAngle");
+	MarkNativeAsOptional("Protobuf.SetVector");
+	MarkNativeAsOptional("Protobuf.SetVector2D");
+	MarkNativeAsOptional("Protobuf.AddInt");
+	MarkNativeAsOptional("Protobuf.AddInt64");
+	MarkNativeAsOptional("Protobuf.AddFloat");
+	MarkNativeAsOptional("Protobuf.AddBool");
+	MarkNativeAsOptional("Protobuf.AddString");
+	MarkNativeAsOptional("Protobuf.AddColor");
+	MarkNativeAsOptional("Protobuf.AddAngle");
+	MarkNativeAsOptional("Protobuf.AddVector");
+	MarkNativeAsOptional("Protobuf.AddVector2D");
+	MarkNativeAsOptional("Protobuf.RemoveRepeatedFieldValue");
+	MarkNativeAsOptional("Protobuf.ReadMessage");
+	MarkNativeAsOptional("Protobuf.ReadRepeatedMessage");
+	MarkNativeAsOptional("Protobuf.AddMessage");
+	VerifyCoreVersion();
+	return 0;
+}
+
+sub_b98(_arg0, _arg1)
+{
+	new var2;
+	return 0 < _arg0 && _arg0 <= MaxClients && IsClientInGame(_arg0) && IsFakeClient(_arg0) && (_arg1 && IsPlayerAlive(_arg0));
+}
+
+sub_9f8(_arg0, _arg1, _arg2)
+{
+	if (_arg1 == 1)
+	{
+		return FindDataMapInfo(_arg0, _arg2, 0, 0, 0) != -1;
+	}
+	if (_arg1)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	if (GetEntityNetClass(_arg0, var1, NULL_STRING))
+	{
+		return FindSendPropInfo(var1, _arg2, 0, 0, 0) != -1;
+	}
+	return 0;
+}
+
+sub_14090(_arg0, _arg1, _arg2, _arg3, _arg4, _arg5)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var26;
+		var26 = GetClientTeam(_arg0);
+		new var1;
+		if (var26 != 2 && var26 != 3)
+		{
+			return -1;
+		}
+		new var27;
+		var27 = GetEntPropEnt(_arg0, 0, "m_hViewModel", 0);
+		new var28 = -1;
+		new var2;
+		if (var27 > -1 && IsValidEntity(var27))
+		{
+			var28 = GetEntProp(var27, 0, "m_nSequence", 4, 0);
+		}
+		if (IsValidWeaponClassName(_arg1))
+		{
+			new var29;
+			var29 = GetWeaponTeamByClassName(_arg1);
+			new var30;
+			var30 = GetWeaponDefIndexByClassName(_arg1);
+			new var31;
+			var31 = GetEntProp(_arg0, 0, "m_bIsLookingAtWeapon", 4, 0);
+			new var32;
+			var32 = GetEntProp(_arg0, 0, "m_bIsHoldingLookAtWeapon", 4, 0);
+			new var33 = -1;
+			new var34 = -1;
+			new var35 = -1;
+			new var36 = -1;
+			new var37 = -1;
+			new var38 = -1;
+			new var39;
+			var39 = GetWeaponSlotByClassName(_arg1);
+			new var40;
+			var40 = GetPlayerWeaponSlot(_arg0, var39);
+			new var41;
+			var41 = GetEntProp(_arg0, 0, "m_iHideHUD", 4, 0);
+			new var42;
+			var42 = GetEntPropFloat(_arg0, 0, "m_flNextAttack", 0);
+			new var43 = -1082130432;
+			new var44 = -1082130432;
+			new var45 = -1082130432;
+			new var46 = -1082130432;
+			new var47 = -1082130432;
+			new var48 = -1082130432;
+			new var49 = 0;
+			new var50;
+			var50 = IsDefIndexKnife(var30);
+			if (IsValidWeapon(var40))
+			{
+				GetWeaponClassNameByWeapon(var40, var49, 48);
+				if (sub_9f8(var40, 0, "m_flNextPrimaryAttack"))
+				{
+					var44 = GetEntPropFloat(var40, 0, "m_flNextPrimaryAttack", 0);
+				}
+				if (sub_9f8(var40, 0, "m_flNextSecondaryAttack"))
+				{
+					var45 = GetEntPropFloat(var40, 0, "m_flNextSecondaryAttack", 0);
+				}
+				if (sub_9f8(var40, 0, "m_flTimeWeaponIdle"))
+				{
+					var46 = GetEntPropFloat(var40, 0, "m_flTimeWeaponIdle", 0);
+				}
+				if (sub_9f8(var40, 0, "m_fAccuracyPenalty"))
+				{
+					var47 = GetEntPropFloat(var40, 0, "m_fAccuracyPenalty", 0);
+				}
+				if (sub_9f8(var40, 0, "m_bReloadVisuallyComplete"))
+				{
+					var33 = GetEntProp(var40, 0, "m_bReloadVisuallyComplete", 4, 0);
+				}
+				if (sub_9f8(var40, 0, "m_bSilencerOn"))
+				{
+					var34 = GetEntProp(var40, 0, "m_bSilencerOn", 4, 0);
+				}
+				if (sub_9f8(var40, 0, "m_weaponMode"))
+				{
+					var35 = GetEntProp(var40, 0, "m_weaponMode", 4, 0);
+				}
+				if (sub_9f8(var40, 0, "m_iRecoilIndex"))
+				{
+					var36 = GetEntProp(var40, 0, "m_iRecoilIndex", 4, 0);
+				}
+				if (sub_9f8(var40, 0, "m_iIronSightMode"))
+				{
+					var37 = GetEntProp(var40, 0, "m_iIronSightMode", 4, 0);
+				}
+				if (sub_9f8(var40, 0, "m_flDoneSwitchingSilencer"))
+				{
+					var43 = GetEntPropFloat(var40, 0, "m_flDoneSwitchingSilencer", 0);
+				}
+				if (sub_9f8(var40, 0, "m_fLastShotTime"))
+				{
+					var48 = GetEntPropFloat(var40, 0, "m_fLastShotTime", 0);
+				}
+				if (sub_9f8(var40, 0, "m_zoomLevel"))
+				{
+					var38 = GetEntProp(var40, 0, "m_zoomLevel", 4, 0);
+				}
+				if (var50)
+				{
+					if (!(RemoveKnife(_arg0)))
+					{
+						2428[_arg0] = 0;
+						return -1;
+					}
+				}
+				if (!(RemoveWeapon(_arg0, var40)))
+				{
+					2428[_arg0] = 0;
+					return -1;
+				}
+			}
+			new var3;
+			if (var29 != var26 && var29 > 1)
+			{
+				SetEntProp(_arg0, 0, "m_iTeamNum", var29, 4, 0);
+			}
+			2428[_arg0] = 1;
+			new var51 = -1;
+			new var52 = 0;
+			if (!var52)
+			{
+				var51 = GivePlayerItem(_arg0, _arg1, 0);
+				var52 = IsValidWeapon(var51);
+			}
+			new var4;
+			if (IsValidWeapon(var51) && var52)
+			{
+				new var5;
+				if (var29 > 1 && var26 != GetClientTeam(_arg0))
+				{
+					SetEntProp(_arg0, 0, "m_iTeamNum", var26, 4, 0);
+				}
+				2428[_arg0] = 0;
+				new var6;
+				if (var51 > 0 && IsValidEdict(var51) && IsValidEntity(var51))
+				{
+					AcceptEntityInput(var51, "Kill", -1, -1, 0);
+				}
+				return -1;
+			}
+			var30 = GetWeaponDefIndexByWeapon(var51);
+			if (var50)
+			{
+				EquipPlayerWeapon(_arg0, var51);
+			}
+			else
+			{
+				SetWeaponAmmo(var51, _arg2, _arg3);
+			}
+			new var53 = -1;
+			new var7;
+			if (_arg4 >= 0 && _arg4 <= 4)
+			{
+				var53 = GetPlayerWeaponSlot(_arg0, _arg4);
+				if (IsValidWeapon(var53))
+				{
+					SetActiveWeapon(_arg0, var53);
+				}
+			}
+			new var54;
+			var54 = GetActiveWeapon(_arg0);
+			new var8;
+			if (var51 == var54 && _arg5)
+			{
+				if (var51 == var53)
+				{
+					if (sub_9c4(_arg1, var49, 0))
+					{
+						new var9;
+						if (var31 > -1 && sub_9f8(_arg0, 0, "m_bIsLookingAtWeapon"))
+						{
+							SetEntProp(_arg0, 0, "m_bIsLookingAtWeapon", var31, 4, 0);
+						}
+						new var10;
+						if (var32 > -1 && sub_9f8(_arg0, 0, "m_bIsHoldingLookAtWeapon"))
+						{
+							SetEntProp(_arg0, 0, "m_bIsHoldingLookAtWeapon", var32, 4, 0);
+						}
+						new var11;
+						if (var42 > -1.0 && sub_9f8(_arg0, 0, "m_flNextAttack"))
+						{
+							SetEntPropFloat(_arg0, 0, "m_flNextAttack", var42, 0);
+						}
+						new var12;
+						if (var44 > -1.0 && sub_9f8(var40, 0, "m_flNextPrimaryAttack"))
+						{
+							SetEntPropFloat(var51, 0, "m_flNextPrimaryAttack", var44, 0);
+						}
+						new var13;
+						if (var45 > -1.0 && sub_9f8(var40, 0, "m_flNextSecondaryAttack"))
+						{
+							SetEntPropFloat(var51, 0, "m_flNextSecondaryAttack", var45, 0);
+						}
+						new var14;
+						if (var46 > -1.0 && sub_9f8(var40, 0, "m_flTimeWeaponIdle"))
+						{
+							SetEntPropFloat(var51, 0, "m_flTimeWeaponIdle", var46, 0);
+						}
+						new var15;
+						if (var47 > -1.0 && sub_9f8(var40, 0, "m_fAccuracyPenalty"))
+						{
+							SetEntPropFloat(var51, 0, "m_fAccuracyPenalty", var47, 0);
+						}
+						new var16;
+						if (var43 > -1.0 && sub_9f8(var40, 0, "m_flDoneSwitchingSilencer"))
+						{
+							SetEntPropFloat(var51, 0, "m_flDoneSwitchingSilencer", var43, 0);
+						}
+						new var17;
+						if (var48 > -1.0 && sub_9f8(var40, 0, "m_fLastShotTime"))
+						{
+							SetEntPropFloat(var51, 0, "m_fLastShotTime", var48, 0);
+						}
+						new var18;
+						if (var33 > -1 && sub_9f8(var40, 0, "m_bReloadVisuallyComplete"))
+						{
+							SetEntProp(var51, 0, "m_bReloadVisuallyComplete", var33, 4, 0);
+						}
+						new var19;
+						if (var34 > -1 && sub_9f8(var40, 0, "m_bSilencerOn"))
+						{
+							SetEntProp(var51, 0, "m_bSilencerOn", var34, 4, 0);
+						}
+						new var20;
+						if (var35 > -1 && sub_9f8(var40, 0, "m_weaponMode"))
+						{
+							SetEntProp(var51, 0, "m_weaponMode", var35, 4, 0);
+						}
+						new var21;
+						if (var36 > -1 && sub_9f8(var40, 0, "m_iRecoilIndex"))
+						{
+							SetEntProp(var51, 0, "m_iRecoilIndex", var36, 4, 0);
+						}
+						new var22;
+						if (var37 > -1 && sub_9f8(var40, 0, "m_iIronSightMode"))
+						{
+							SetEntProp(var51, 0, "m_iIronSightMode", var37, 4, 0);
+						}
+						new var23;
+						if (var38 > -1 && sub_9f8(var40, 0, "m_zoomLevel"))
+						{
+							SetEntProp(var51, 0, "m_zoomLevel", var38, 4, 0);
+						}
+					}
+					if (var50)
+					{
+						switch (var30)
+						{
+							case 512:
+							{
+								var28 = 1;
+							}
+							case 514:
+							{
+								var28 = 1;
+							}
+							case 515:
+							{
+								var28 = 2;
+							}
+							case 516:
+							{
+								var28 = 1;
+							}
+							default:
+							{
+								var28 = 2;
+							}
+						}
+					}
+					if (sub_9c4(_arg1, "weapon_m4a1_silencer", 0))
+					{
+						var28 = 1;
+					}
+					var28 = 0;
+				}
+			}
+			if (!(IsValidEntity(var27)))
+			{
+				var27 = GetEntPropEnt(_arg0, 0, "m_hViewModel", 0);
+			}
+			new var24;
+			if (IsValidEntity(var27) && var28 > -1 && _arg5)
+			{
+				SetEntProp(var27, 0, "m_nSequence", var28, 4, 0);
+			}
+			SetEntProp(_arg0, 0, "m_iHideHUD", var41, 4, 0);
+			new var25;
+			if (var29 > 1 && var26 != GetClientTeam(_arg0))
+			{
+				SetEntProp(_arg0, 0, "m_iTeamNum", var26, 4, 0);
+			}
+			2428[_arg0] = 0;
+			Call_StartForward(g_var61b758);
+			Call_PushCell(_arg0);
+			Call_PushCell(var51);
+			Call_PushString(_arg1);
+			Call_PushCell(var30);
+			Call_PushCell(GetWeaponSlotByDefIndex(var30));
+			Call_PushCell(IsSkinnableDefIndex(var30));
+			Call_PushCell(var50);
+			Call_Finish(0);
+			return var51;
+		}
+		return -1;
+	}
+	return -1;
+}
+
+sub_1bd18(_arg0)
+{
+	if (g_var974)
+	{
+		if (_arg0)
+		{
+			PrintToServer("%s Hibernation returned back to default", "[eItems]");
+			ConVar.SetInt(g_var970, g_var974, 0, 0);
+			return 0;
+		}
+		PrintToServer("%s Hibernation disabled", "[eItems]");
+		ConVar.SetInt(g_var970, 0, 0, 0);
+		return 0;
+	}
+	return 0;
+}
+
+sub_16498(_arg0, _arg1, _arg2)
+{
+	if (sub_b98(_arg0, 1))
+	{
+		new var1;
+		var1 = GetWeaponDefIndexByWeapon(_arg1);
+		if (ArrayList.FindValue(g_varb9c, var1, 0) == -1)
+		{
+			return -1;
+		}
+		new var2;
+		var2 = GetWeaponSlotByDefIndex(var1);
+		if (0 > var2)
+		{
+			return -1;
+		}
+		if (GetPlayerWeaponSlot(_arg0, var2) != _arg1)
+		{
+			return -1;
+		}
+		new var3 = 0;
+		if (GetWeaponClassNameByDefIndex(var1, var3, 48))
+		{
+			new var4 = -1;
+			new var5 = -1;
+			if (sub_9f8(_arg1, 0, "m_iPrimaryReserveAmmoCount"))
+			{
+				var4 = GetEntProp(_arg1, 0, "m_iPrimaryReserveAmmoCount", 4, 0);
+			}
+			if (sub_9f8(_arg1, 0, "m_iClip1"))
+			{
+				var5 = GetEntProp(_arg1, 0, "m_iClip1", 4, 0);
+			}
+			return sub_14090(_arg0, var3, var4, var5, GetActiveWeaponSlot(_arg0), _arg2);
+		}
+		return -1;
+	}
+	return -1;
+}
+
+sub_b70(_arg0)
+{
+	_arg0 = 0;
+	return 0;
+}
+
+sub_9c4(_arg0, _arg1, _arg2)
+{
+	return strcmp(_arg0, _arg1, _arg2) == 0;
+}
+
