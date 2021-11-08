@@ -120,184 +120,184 @@ public CreateForwards()
 
 public CreateNatives()
 {
-	CreateNative("eItems_GetWeaponCount", "dVecCoord");
+	CreateNative("eItems_GetWeaponCount", 533);
 	CreateNative("eItems_GetPaintsCount", 457);
-	CreateNative("eItems_GetGlovesCount", "har");
-	CreateNative("eItems_GetMusicKitsCount", "um");
-	CreateNative("eItems_GetPinsCount", "dString");
-	CreateNative("eItems_GetCoinsCount", "dBool");
-	CreateNative("eItems_GetCoinsSetsCount", "ool");
+	CreateNative("eItems_GetGlovesCount", 419);
+	CreateNative("eItems_GetMusicKitsCount", 455);
+	CreateNative("eItems_GetPinsCount", 477);
+	CreateNative("eItems_GetCoinsCount", 393);
+	CreateNative("eItems_GetCoinsSetsCount", 395);
 	CreateNative("eItems_GetStickersCount", 515);
-	CreateNative("eItems_GetStickersSetsCount", "fReadCoord");
-	CreateNative("eItems_GetAgentsCount", "riteAngles");
-	CreateNative("eItems_GetPatchesCount", "loat");
-	CreateNative("eItems_GetCratesCount", "dChar");
-	CreateNative("eItems_AreItemsSynced", "riteVecCoord");
-	CreateNative("eItems_AreItemsSyncing", "teVecCoord");
-	CreateNative("eItems_ReSync", "ort");
+	CreateNative("eItems_GetStickersSetsCount", 517);
+	CreateNative("eItems_GetAgentsCount", 375);
+	CreateNative("eItems_GetPatchesCount", 467);
+	CreateNative("eItems_GetCratesCount", 417);
+	CreateNative("eItems_AreItemsSynced", 339);
+	CreateNative("eItems_AreItemsSyncing", 341);
+	CreateNative("eItems_ReSync", 671);
 	CreateNative("eItems_GetWeaponNumByDefIndex", 575);
 	CreateNative("eItems_GetWeaponNumByClassName", 573);
-	CreateNative("eItems_GetWeaponNumByWeapon", "fGetNumBytesLeft");
-	CreateNative("eItems_GetWeaponDefIndexByWeaponNum", "rmal");
-	CreateNative("eItems_GetWeaponDefIndexByClassName", "ecNormal");
-	CreateNative("eItems_IsDefIndexKnife", "Char");
-	CreateNative("eItems_GetWeaponDefIndexByWeapon", "Normal");
-	CreateNative("eItems_GetActiveWeaponNum", "teVecNormal");
-	CreateNative("eItems_GetActiveWeaponDefIndex", "riteVecNormal");
+	CreateNative("eItems_GetWeaponNumByWeapon", 577);
+	CreateNative("eItems_GetWeaponDefIndexByWeaponNum", 555);
+	CreateNative("eItems_GetWeaponDefIndexByClassName", 551);
+	CreateNative("eItems_IsDefIndexKnife", 649);
+	CreateNative("eItems_GetWeaponDefIndexByWeapon", 553);
+	CreateNative("eItems_GetActiveWeaponNum", 357);
+	CreateNative("eItems_GetActiveWeaponDefIndex", 355);
 	CreateNative("eItems_GetActiveWeapon", 351);
-	CreateNative("eItems_GetActiveWeaponClassName", "fWriteVecNormal");
-	CreateNative("eItems_GetInSlotWeaponNum", "d");
-	CreateNative("eItems_GetInSlotWeaponDefIndex", "ord");
-	CreateNative("eItems_GetInSlotWeapon", "eadWord");
-	CreateNative("eItems_GetInSlotWeaponClassName", "dWord");
-	CreateNative("eItems_IsSkinnableDefIndex", "fWrite.WriteShort");
-	CreateNative("eItems_FindWeaponByWeaponNum", "rd");
-	CreateNative("eItems_FindWeaponByDefIndex", "oord");
-	CreateNative("eItems_FindWeaponByClassName", "cCoord");
-	CreateNative("eItems_RefillClipAmmo", "t");
+	CreateNative("eItems_GetActiveWeaponClassName", 353);
+	CreateNative("eItems_GetInSlotWeaponNum", 445);
+	CreateNative("eItems_GetInSlotWeaponDefIndex", 443);
+	CreateNative("eItems_GetInSlotWeapon", 439);
+	CreateNative("eItems_GetInSlotWeaponClassName", 441);
+	CreateNative("eItems_IsSkinnableDefIndex", 657);
+	CreateNative("eItems_FindWeaponByWeaponNum", 349);
+	CreateNative("eItems_FindWeaponByDefIndex", 347);
+	CreateNative("eItems_FindWeaponByClassName", 345);
+	CreateNative("eItems_RefillClipAmmo", 673);
 	CreateNative("eItems_RefillReserveAmmo", 675);
-	CreateNative("eItems_IsValidWeapon", "te.WriteShort");
-	CreateNative("eItems_GiveWeapon", "te.WriteChar");
-	CreateNative("eItems_RemoveKnife", "rite.WriteWord");
-	CreateNative("eItems_RemoveWeapon", "te.WriteWord");
-	CreateNative("eItems_RespawnWeapon", ".WriteWord");
-	CreateNative("eItems_RespawnWeaponBySlot", "riteWord");
-	CreateNative("eItems_RemoveAllWeapons", "fWrite.WriteWord");
+	CreateNative("eItems_IsValidWeapon", 661);
+	CreateNative("eItems_GiveWeapon", 641);
+	CreateNative("eItems_RemoveKnife", 679);
+	CreateNative("eItems_RemoveWeapon", 681);
+	CreateNative("eItems_RespawnWeapon", 683);
+	CreateNative("eItems_RespawnWeaponBySlot", 685);
+	CreateNative("eItems_RemoveAllWeapons", 677);
 	CreateNative("eItems_SetWeaponAmmo", 693);
-	CreateNative("eItems_SetAllWeaponsAmmo", "Word");
-	CreateNative("eItems_SetAllWeaponsAmmoByClassName", "rd");
-	CreateNative("eItems_SetActiveWeapon", "teWord");
-	CreateNative("eItems_DropWeapon", "VecCoord");
-	CreateNative("eItems_HasRareInspectByDefIndex", "riteChar");
-	CreateNative("eItems_HasRareDrawByDefIndex", ".WriteChar");
-	CreateNative("eItems_GetRareInspectSequenceByDefIndex", "ing");
-	CreateNative("eItems_GetRareDrawSequenceByDefIndex", "tring");
-	CreateNative("eItems_GetWeaponClassNameByWeaponNum", "oord");
-	CreateNative("eItems_GetWeaponClassNameByDefIndex", "eadCoord");
-	CreateNative("eItems_GetWeaponClassNameByWeapon", "dCoord");
-	CreateNative("eItems_GetWeaponDisplayNameByWeaponNum", "eadAngles");
+	CreateNative("eItems_SetAllWeaponsAmmo", 689);
+	CreateNative("eItems_SetAllWeaponsAmmoByClassName", 691);
+	CreateNative("eItems_SetActiveWeapon", 687);
+	CreateNative("eItems_DropWeapon", 343);
+	CreateNative("eItems_HasRareInspectByDefIndex", 645);
+	CreateNative("eItems_HasRareDrawByDefIndex", 643);
+	CreateNative("eItems_GetRareInspectSequenceByDefIndex", 481);
+	CreateNative("eItems_GetRareDrawSequenceByDefIndex", 479);
+	CreateNative("eItems_GetWeaponClassNameByWeaponNum", 523);
+	CreateNative("eItems_GetWeaponClassNameByDefIndex", 519);
+	CreateNative("eItems_GetWeaponClassNameByWeapon", 521);
+	CreateNative("eItems_GetWeaponDisplayNameByWeaponNum", 563);
 	CreateNative("eItems_GetWeaponDisplayNameByDefIndex", 559);
-	CreateNative("eItems_GetWeaponDisplayNameByClassName", "al");
-	CreateNative("eItems_GetWeaponDisplayNameByWeapon", "fReadAngles");
-	CreateNative("eItems_GetWeaponViewModelByWeaponNum", "te");
-	CreateNative("eItems_GetWeaponViewModelByDefIndex", "teByte");
-	CreateNative("eItems_GetWeaponViewModelByWeapon", "Byte");
-	CreateNative("eItems_GetWeaponViewModelByClassName", "riteByte");
-	CreateNative("eItems_GetWeaponWorldModelByWeaponNum", "rite.WriteChar");
+	CreateNative("eItems_GetWeaponDisplayNameByClassName", 557);
+	CreateNative("eItems_GetWeaponDisplayNameByWeapon", 561);
+	CreateNative("eItems_GetWeaponViewModelByWeaponNum", 631);
+	CreateNative("eItems_GetWeaponViewModelByDefIndex", 627);
+	CreateNative("eItems_GetWeaponViewModelByWeapon", 629);
+	CreateNative("eItems_GetWeaponViewModelByClassName", 625);
+	CreateNative("eItems_GetWeaponWorldModelByWeaponNum", 639);
 	CreateNative("eItems_GetWeaponWorldModelByDefIndex", 635);
-	CreateNative("eItems_GetWeaponWorldModelByWeapon", "fWrite.WriteChar");
+	CreateNative("eItems_GetWeaponWorldModelByWeapon", 637);
 	CreateNative("eItems_GetWeaponWorldModelByClassName", 633);
-	CreateNative("eItems_GetWeaponSlotByWeaponNum", "te.WriteBool");
-	CreateNative("eItems_GetWeaponSlotByDefIndex", "fWrite.WriteBool");
-	CreateNative("eItems_GetWeaponSlotByWeapon", "rite.WriteBool");
+	CreateNative("eItems_GetWeaponSlotByWeaponNum", 601);
+	CreateNative("eItems_GetWeaponSlotByDefIndex", 597);
+	CreateNative("eItems_GetWeaponSlotByWeapon", 599);
 	CreateNative("eItems_GetWeaponSlotByClassName", 595);
-	CreateNative("eItems_GetWeaponTeamByWeaponNum", ".WriteByte");
-	CreateNative("eItems_GetWeaponTeamByDefIndex", "rite.WriteByte");
-	CreateNative("eItems_GetWeaponTeamByWeapon", "te.WriteByte");
-	CreateNative("eItems_GetWeaponTeamByClassName", "fWrite.WriteByte");
-	CreateNative("eItems_GetWeaponClipAmmoByWeaponNum", "eadVecCoord");
+	CreateNative("eItems_GetWeaponTeamByWeaponNum", 623);
+	CreateNative("eItems_GetWeaponTeamByDefIndex", 619);
+	CreateNative("eItems_GetWeaponTeamByWeapon", 621);
+	CreateNative("eItems_GetWeaponTeamByClassName", 617);
+	CreateNative("eItems_GetWeaponClipAmmoByWeaponNum", 531);
 	CreateNative("eItems_GetWeaponClipAmmoByDefIndex", 527);
-	CreateNative("eItems_GetWeaponClipAmmoByWeapon", "fReadVecCoord");
-	CreateNative("eItems_GetWeaponClipAmmoByClassName", "rd");
+	CreateNative("eItems_GetWeaponClipAmmoByWeapon", 529);
+	CreateNative("eItems_GetWeaponClipAmmoByClassName", 525);
 	CreateNative("eItems_GetWeaponReserveAmmoByWeaponNum", 593);
-	CreateNative("eItems_GetWeaponReserveAmmoByDefIndex", "Left");
-	CreateNative("eItems_GetWeaponReserveAmmoByWeapon", "ft");
-	CreateNative("eItems_GetWeaponReserveAmmoByClassName", "esLeft");
-	CreateNative("eItems_GetWeaponPriceByWeaponNum", "ytesLeft");
-	CreateNative("eItems_GetWeaponPriceByDefIndex", "NumBytesLeft");
-	CreateNative("eItems_GetWeaponPriceByWeapon", "mBytesLeft");
-	CreateNative("eItems_GetWeaponPriceByClassName", "etNumBytesLeft");
-	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeaponNum", "s");
-	CreateNative("eItems_GetWeaponMaxPlayerSpeedByDefIndex", "ngles");
-	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeapon", "les");
-	CreateNative("eItems_GetWeaponMaxPlayerSpeedByClassName", "dAngles");
-	CreateNative("eItems_GetWeaponDamageByWeaponNum", "dVecNormal");
-	CreateNative("eItems_GetWeaponDamageByDefIndex", "fReadVecNormal");
-	CreateNative("eItems_GetWeaponDamageByWeapon", "eadVecNormal");
+	CreateNative("eItems_GetWeaponReserveAmmoByDefIndex", 589);
+	CreateNative("eItems_GetWeaponReserveAmmoByWeapon", 591);
+	CreateNative("eItems_GetWeaponReserveAmmoByClassName", 587);
+	CreateNative("eItems_GetWeaponPriceByWeaponNum", 585);
+	CreateNative("eItems_GetWeaponPriceByDefIndex", 581);
+	CreateNative("eItems_GetWeaponPriceByWeapon", 583);
+	CreateNative("eItems_GetWeaponPriceByClassName", 579);
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeaponNum", 571);
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByDefIndex", 567);
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByWeapon", 569);
+	CreateNative("eItems_GetWeaponMaxPlayerSpeedByClassName", 565);
+	CreateNative("eItems_GetWeaponDamageByWeaponNum", 549);
+	CreateNative("eItems_GetWeaponDamageByDefIndex", 545);
+	CreateNative("eItems_GetWeaponDamageByWeapon", 547);
 	CreateNative("eItems_GetWeaponDamageByClassName", 543);
-	CreateNative("eItems_IsWeaponFullAutoByWeaponNum", "Short");
-	CreateNative("eItems_IsWeaponFullAutoByDefIndex", "riteShort");
-	CreateNative("eItems_IsWeaponFullAutoByWeapon", "teShort");
-	CreateNative("eItems_IsWeaponFullAutoByClassName", ".WriteShort");
-	CreateNative("eItems_GetWeaponSpreadByWeaponNum", "Bool");
-	CreateNative("eItems_GetWeaponSpreadByDefIndex", "riteBool");
-	CreateNative("eItems_GetWeaponSpreadByWeapon", "teBool");
-	CreateNative("eItems_GetWeaponSpreadByClassName", ".WriteBool");
-	CreateNative("eItems_GetWeaponCycleTimeByWeaponNum", "d");
-	CreateNative("eItems_GetWeaponCycleTimeByDefIndex", "Coord");
-	CreateNative("eItems_GetWeaponCycleTimeByWeapon", "ord");
-	CreateNative("eItems_GetWeaponCycleTimeByClassName", "ecCoord");
+	CreateNative("eItems_IsWeaponFullAutoByWeaponNum", 669);
+	CreateNative("eItems_IsWeaponFullAutoByDefIndex", 665);
+	CreateNative("eItems_IsWeaponFullAutoByWeapon", 667);
+	CreateNative("eItems_IsWeaponFullAutoByClassName", 663);
+	CreateNative("eItems_GetWeaponSpreadByWeaponNum", 609);
+	CreateNative("eItems_GetWeaponSpreadByDefIndex", 605);
+	CreateNative("eItems_GetWeaponSpreadByWeapon", 607);
+	CreateNative("eItems_GetWeaponSpreadByClassName", 603);
+	CreateNative("eItems_GetWeaponCycleTimeByWeaponNum", 541);
+	CreateNative("eItems_GetWeaponCycleTimeByDefIndex", 537);
+	CreateNative("eItems_GetWeaponCycleTimeByWeapon", 539);
+	CreateNative("eItems_GetWeaponCycleTimeByClassName", 535);
 	CreateNative("eItems_GetWeaponStickersSlotsByWeaponNum", 615);
-	CreateNative("eItems_GetWeaponStickersSlotsByDefIndex", "ol");
+	CreateNative("eItems_GetWeaponStickersSlotsByDefIndex", 611);
 	CreateNative("eItems_GetWeaponStickersSlotsByWeapon", 613);
 	CreateNative("eItems_IsSkinNumGloveApplicable", 655);
-	CreateNative("eItems_GetSkinNumByDefIndex", "fReadEntity");
-	CreateNative("eItems_GetSkinDefIndexBySkinNum", "g");
+	CreateNative("eItems_GetSkinNumByDefIndex", 489);
+	CreateNative("eItems_GetSkinDefIndexBySkinNum", 483);
 	CreateNative("eItems_GetSkinDisplayNameByDefIndex", 485);
 	CreateNative("eItems_GetSkinDisplayNameBySkinNum", 487);
-	CreateNative("eItems_IsNativeSkin", "ar");
+	CreateNative("eItems_IsNativeSkin", 651);
 	CreateNative("eItems_IsNativeSkinByDefIndex", 653);
-	CreateNative("eItems_GetSkinRarity", "eadEntity");
-	CreateNative("eItems_GetSkinRarityName", "dEntity");
-	CreateNative("eItems_GetSkinWearRemapByDefIndex", "ntity");
-	CreateNative("eItems_GetSkinWearRemapBySkinNum", "ity");
-	CreateNative("eItems_GetGlovesNumByDefIndex", "eadShort");
-	CreateNative("eItems_GetGlovesDefIndexByGlovesNum", "r");
+	CreateNative("eItems_GetSkinRarity", 491);
+	CreateNative("eItems_GetSkinRarityName", 493);
+	CreateNative("eItems_GetSkinWearRemapByDefIndex", 495);
+	CreateNative("eItems_GetSkinWearRemapBySkinNum", 497);
+	CreateNative("eItems_GetGlovesNumByDefIndex", 427);
+	CreateNative("eItems_GetGlovesDefIndexByGlovesNum", 421);
 	CreateNative("eItems_GetGlovesDisplayNameByDefIndex", 423);
-	CreateNative("eItems_GetGlovesDisplayNameByGlovesNum", "fReadShort");
-	CreateNative("eItems_GetGlovesViewModelByGlovesNum", "rt");
-	CreateNative("eItems_GetGlovesViewModelByDefIndex", "hort");
-	CreateNative("eItems_GetGlovesWorldModelByGlovesNum", "fReadWord");
+	CreateNative("eItems_GetGlovesDisplayNameByGlovesNum", 425);
+	CreateNative("eItems_GetGlovesViewModelByGlovesNum", 433);
+	CreateNative("eItems_GetGlovesViewModelByDefIndex", 431);
+	CreateNative("eItems_GetGlovesWorldModelByGlovesNum", 437);
 	CreateNative("eItems_GetGlovesWorldModelByDefIndex", 435);
-	CreateNative("eItems_GetGlovesNumBySkinNum", "dShort");
-	CreateNative("eItems_GetMusicKitNumByDefIndex", "dNum");
+	CreateNative("eItems_GetGlovesNumBySkinNum", 429);
+	CreateNative("eItems_GetMusicKitNumByDefIndex", 453);
 	CreateNative("eItems_GetMusicKitDefIndexByMusicKitNum", 447);
-	CreateNative("eItems_GetMusicKitDisplayNameByDefIndex", "fReadNum");
-	CreateNative("eItems_GetMusicKitDisplayNameByMusicKitNum", "eadNum");
-	CreateNative("eItems_GetPinNumByDefIndex", "eadString");
-	CreateNative("eItems_GetPinDefIndexByPinNum", "at");
+	CreateNative("eItems_GetMusicKitDisplayNameByDefIndex", 449);
+	CreateNative("eItems_GetMusicKitDisplayNameByMusicKitNum", 451);
+	CreateNative("eItems_GetPinNumByDefIndex", 475);
+	CreateNative("eItems_GetPinDefIndexByPinNum", 469);
 	CreateNative("eItems_GetPinDisplayNameByDefIndex", 471);
-	CreateNative("eItems_GetPinDisplayNameByPinNum", "fReadString");
-	CreateNative("eItems_GetCoinSetIdByCoinSetNum", "fReadBool");
-	CreateNative("eItems_GetCoinSetNumByCoinSetId", "eadBool");
+	CreateNative("eItems_GetPinDisplayNameByPinNum", 473);
+	CreateNative("eItems_GetCoinSetIdByCoinSetNum", 389);
+	CreateNative("eItems_GetCoinSetNumByCoinSetId", 391);
 	CreateNative("eItems_GetCoinSetDisplayNameByCoinSetNum", 387);
 	CreateNative("eItems_GetCoinSetDisplayNameByCoinSetId", 385);
-	CreateNative("eItems_GetCoinDefIndexByCoinNum", "teAngles");
-	CreateNative("eItems_GetCoinNumByDefIndex", "es");
-	CreateNative("eItems_GetCoinDisplayNameByCoinNum", "Angles");
-	CreateNative("eItems_GetCoinDisplayNameByDefIndex", "gles");
-	CreateNative("eItems_IsCoinInSet", "teChar");
-	CreateNative("eItems_GetStickerSetIdByStickerSetNum", "ngle");
-	CreateNative("eItems_GetStickerSetNumByStickerSetId", "le");
-	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetNum", "dAngle");
-	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetId", "eadAngle");
-	CreateNative("eItems_GetStickerDefIndexByStickerNum", "y");
-	CreateNative("eItems_GetStickerNumByDefIndex", "fReadAngle");
+	CreateNative("eItems_GetCoinDefIndexByCoinNum", 377);
+	CreateNative("eItems_GetCoinNumByDefIndex", 383);
+	CreateNative("eItems_GetCoinDisplayNameByCoinNum", 379);
+	CreateNative("eItems_GetCoinDisplayNameByDefIndex", 381);
+	CreateNative("eItems_IsCoinInSet", 647);
+	CreateNative("eItems_GetStickerSetIdByStickerSetNum", 511);
+	CreateNative("eItems_GetStickerSetNumByStickerSetId", 513);
+	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetNum", 509);
+	CreateNative("eItems_GetStickerSetDisplayNameByStickerSetId", 507);
+	CreateNative("eItems_GetStickerDefIndexByStickerNum", 499);
+	CreateNative("eItems_GetStickerNumByDefIndex", 505);
 	CreateNative("eItems_GetStickerDisplayNameByStickerNum", 503);
 	CreateNative("eItems_GetStickerDisplayNameByDefIndex", 501);
-	CreateNative("eItems_IsStickerInSet", "rite.WriteShort");
-	CreateNative("eItems_GetAgentNumByDefIndex", "mal");
-	CreateNative("eItems_GetAgentDefIndexByAgentNum", "VecNormal");
-	CreateNative("eItems_GetAgentDisplayNameByDefIndex", "ormal");
-	CreateNative("eItems_GetAgentDisplayNameByAgentNum", "cNormal");
+	CreateNative("eItems_IsStickerInSet", 659);
+	CreateNative("eItems_GetAgentNumByDefIndex", 365);
+	CreateNative("eItems_GetAgentDefIndexByAgentNum", 359);
+	CreateNative("eItems_GetAgentDisplayNameByDefIndex", 363);
+	CreateNative("eItems_GetAgentDisplayNameByAgentNum", 361);
 	CreateNative("eItems_GetAgentPlayerModelByDefIndex", 369);
-	CreateNative("eItems_GetAgentPlayerModelByAgentNum", "l");
-	CreateNative("eItems_GetAgentTeamByDefIndex", "fWriteAngles");
+	CreateNative("eItems_GetAgentPlayerModelByAgentNum", 367);
+	CreateNative("eItems_GetAgentTeamByDefIndex", 373);
 	CreateNative("eItems_GetAgentTeamByAgentNum", 371);
-	CreateNative("eItems_GetPatchNumByDefIndex", "dFloat");
+	CreateNative("eItems_GetPatchNumByDefIndex", 465);
 	CreateNative("eItems_GetPatchDefIndexByPatchNum", 459);
-	CreateNative("eItems_GetPatchDisplayNameByDefIndex", "fReadFloat");
-	CreateNative("eItems_GetPatchDisplayNameByPatchNum", "eadFloat");
+	CreateNative("eItems_GetPatchDisplayNameByDefIndex", 461);
+	CreateNative("eItems_GetPatchDisplayNameByPatchNum", 463);
 	CreateNative("eItems_GetCrateNumByDefIndex", 411);
-	CreateNative("eItems_GetCrateDefIndexByCrateNum", "l");
-	CreateNative("eItems_GetCrateDisplayNameByDefIndex", "fReadByte");
+	CreateNative("eItems_GetCrateDefIndexByCrateNum", 397);
+	CreateNative("eItems_GetCrateDisplayNameByDefIndex", 401);
 	CreateNative("eItems_GetCrateDisplayNameByCrateNum", 399);
-	CreateNative("eItems_GetCrateWorldModelByDefIndex", "eadChar");
-	CreateNative("eItems_GetCrateWorldModelByCrateNum", "fReadChar");
-	CreateNative("eItems_GetCrateItemsCountByDefIndex", "e");
-	CreateNative("eItems_GetCrateItemsCountByCrateNum", "yte");
-	CreateNative("eItems_GetCrateItemByDefIndex", "dByte");
-	CreateNative("eItems_GetCrateItemByCrateNum", "eadByte");
+	CreateNative("eItems_GetCrateWorldModelByDefIndex", 415);
+	CreateNative("eItems_GetCrateWorldModelByCrateNum", 413);
+	CreateNative("eItems_GetCrateItemsCountByDefIndex", 409);
+	CreateNative("eItems_GetCrateItemsCountByCrateNum", 407);
+	CreateNative("eItems_GetCrateItemByDefIndex", 405);
+	CreateNative("eItems_GetCrateItemByCrateNum", 403);
 	return 0;
 }
 
@@ -798,7 +798,7 @@ public GetGlovesDisplayNameByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	StringMap.GetArray(g_varba4, var1, var2, 146, 0);
 	strcopy(_arg1, _arg2, var2 + 4);
 	return 1;
 }
@@ -810,7 +810,7 @@ public GetGlovesDisplayNameByGlovesNum(_arg0, _arg1, _arg2)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	StringMap.GetArray(g_varba4, var2, var3, 146, 0);
 	strcopy(_arg1, _arg2, var3 + 4);
 	return 1;
 }
@@ -864,7 +864,7 @@ public GetGlovesViewModelByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	StringMap.GetArray(g_varba4, var1, var2, 146, 0);
 	strcopy(_arg1, _arg2, var2 + 68);
 	return 1;
 }
@@ -880,7 +880,7 @@ public GetGlovesViewModelByGlovesNum(_arg0, _arg1, _arg2)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	StringMap.GetArray(g_varba4, var2, var3, 146, 0);
 	strcopy(_arg1, _arg2, var3 + 68);
 	return 1;
 }
@@ -894,7 +894,7 @@ public GetGlovesWorldModelByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varba4, var1, var2, "Listener", 0);
+	StringMap.GetArray(g_varba4, var1, var2, 146, 0);
 	strcopy(_arg1, _arg2, var2 + 324);
 	return 1;
 }
@@ -910,7 +910,7 @@ public GetGlovesWorldModelByGlovesNum(_arg0, _arg1, _arg2)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varba4, var2, var3, "Listener", 0);
+	StringMap.GetArray(g_varba4, var2, var3, 146, 0);
 	strcopy(_arg1, _arg2, var3 + 324);
 	return 1;
 }
@@ -1091,7 +1091,7 @@ public GetRareDrawSequenceByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 688/* ERROR unknown load Binary */;
 }
 
@@ -1104,7 +1104,7 @@ public GetRareInspectSequenceByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 684/* ERROR unknown load Binary */;
 }
 
@@ -1314,7 +1314,7 @@ public GetWeaponClassNameByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	strcopy(_arg1, _arg2, var2 + 68);
 	return 1;
 }
@@ -1332,7 +1332,7 @@ public GetWeaponClassNameByWeapon(_arg0, _arg1, _arg2)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		strcopy(_arg1, _arg2, var3 + 68);
 		return 1;
 	}
@@ -1350,7 +1350,7 @@ public GetWeaponClassNameByWeaponNum(_arg0, _arg1, _arg2)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	strcopy(_arg1, _arg2, var3 + 68);
 	return 1;
 }
@@ -1365,7 +1365,7 @@ public GetWeaponClipAmmoByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 640/* ERROR unknown load Binary */;
@@ -1384,7 +1384,7 @@ public GetWeaponClipAmmoByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 640/* ERROR unknown load Binary */;
 }
 
@@ -1401,7 +1401,7 @@ public GetWeaponClipAmmoByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 640/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1418,7 +1418,7 @@ public GetWeaponClipAmmoByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 640/* ERROR unknown load Binary */;
 }
 
@@ -1437,7 +1437,7 @@ public GetWeaponCycleTimeByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 660/* ERROR unknown load Binary */;
@@ -1456,7 +1456,7 @@ public GetWeaponCycleTimeByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 660/* ERROR unknown load Binary */;
 }
 
@@ -1473,7 +1473,7 @@ public GetWeaponCycleTimeByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 660/* ERROR unknown load Binary */;
 	}
 	return -1082130432;
@@ -1490,7 +1490,7 @@ public GetWeaponCycleTimeByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 660/* ERROR unknown load Binary */;
 }
 
@@ -1504,7 +1504,7 @@ public GetWeaponDamageByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 668/* ERROR unknown load Binary */;
@@ -1523,7 +1523,7 @@ public GetWeaponDamageByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 668/* ERROR unknown load Binary */;
 }
 
@@ -1540,7 +1540,7 @@ public GetWeaponDamageByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 668/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1557,7 +1557,7 @@ public GetWeaponDamageByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 668/* ERROR unknown load Binary */;
 }
 
@@ -1571,7 +1571,7 @@ public GetWeaponDefIndexByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return GetWeaponDefIndexByWeaponNum(var2);
@@ -1613,7 +1613,7 @@ public GetWeaponDisplayNameByClassName(_arg0, _arg1, _arg2)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			strcopy(_arg1, _arg2, var4 + 4);
@@ -1633,7 +1633,7 @@ public GetWeaponDisplayNameByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	strcopy(_arg1, _arg2, var2 + 4);
 	return 1;
 }
@@ -1651,7 +1651,7 @@ public GetWeaponDisplayNameByWeapon(_arg0, _arg1, _arg2)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		strcopy(_arg1, _arg2, var3 + 4);
 		return 1;
 	}
@@ -1669,7 +1669,7 @@ public GetWeaponDisplayNameByWeaponNum(_arg0, _arg1, _arg2)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	strcopy(_arg1, _arg2, var3 + 4);
 	return 1;
 }
@@ -1684,7 +1684,7 @@ public GetWeaponMaxPlayerSpeedByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 652/* ERROR unknown load Binary */;
@@ -1703,7 +1703,7 @@ public GetWeaponMaxPlayerSpeedByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 652/* ERROR unknown load Binary */;
 }
 
@@ -1720,7 +1720,7 @@ public GetWeaponMaxPlayerSpeedByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 652/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1737,7 +1737,7 @@ public GetWeaponMaxPlayerSpeedByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 652/* ERROR unknown load Binary */;
 }
 
@@ -1751,7 +1751,7 @@ public GetWeaponNumByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var2;
@@ -1777,7 +1777,7 @@ public GetWeaponNumByWeapon(_arg0)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 	return var3;
 }
 
@@ -1791,7 +1791,7 @@ public GetWeaponPriceByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 656/* ERROR unknown load Binary */;
@@ -1810,7 +1810,7 @@ public GetWeaponPriceByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 656/* ERROR unknown load Binary */;
 }
 
@@ -1827,7 +1827,7 @@ public GetWeaponPriceByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 656/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1844,7 +1844,7 @@ public GetWeaponPriceByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 656/* ERROR unknown load Binary */;
 }
 
@@ -1858,7 +1858,7 @@ public GetWeaponReserveAmmoByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 648/* ERROR unknown load Binary */;
@@ -1877,7 +1877,7 @@ public GetWeaponReserveAmmoByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 648/* ERROR unknown load Binary */;
 }
 
@@ -1894,7 +1894,7 @@ public GetWeaponReserveAmmoByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 648/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1911,7 +1911,7 @@ public GetWeaponReserveAmmoByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 648/* ERROR unknown load Binary */;
 }
 
@@ -1925,7 +1925,7 @@ public GetWeaponSlotByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 636/* ERROR unknown load Binary */;
@@ -1944,7 +1944,7 @@ public GetWeaponSlotByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 636/* ERROR unknown load Binary */;
 }
 
@@ -1961,7 +1961,7 @@ public GetWeaponSlotByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 636/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -1978,7 +1978,7 @@ public GetWeaponSlotByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 636/* ERROR unknown load Binary */;
 }
 
@@ -1992,7 +1992,7 @@ public GetWeaponSpreadByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 664/* ERROR unknown load Binary */;
@@ -2011,7 +2011,7 @@ public GetWeaponSpreadByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 664/* ERROR unknown load Binary */;
 }
 
@@ -2028,7 +2028,7 @@ public GetWeaponSpreadByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 664/* ERROR unknown load Binary */;
 	}
 	return -1082130432;
@@ -2045,7 +2045,7 @@ public GetWeaponSpreadByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 664/* ERROR unknown load Binary */;
 }
 
@@ -2058,7 +2058,7 @@ public GetWeaponStickersSlotsByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 644/* ERROR unknown load Binary */;
 }
 
@@ -2075,7 +2075,7 @@ public GetWeaponStickersSlotsByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 644/* ERROR unknown load Binary */;
 	}
 	return -1;
@@ -2092,7 +2092,7 @@ public GetWeaponStickersSlotsByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 644/* ERROR unknown load Binary */;
 }
 
@@ -2106,7 +2106,7 @@ public GetWeaponTeamByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 632/* ERROR unknown load Binary */;
@@ -2125,7 +2125,7 @@ public GetWeaponTeamByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 632/* ERROR unknown load Binary */;
 }
 
@@ -2142,7 +2142,7 @@ public GetWeaponTeamByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 632/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -2159,7 +2159,7 @@ public GetWeaponTeamByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 632/* ERROR unknown load Binary */;
 }
 
@@ -2173,7 +2173,7 @@ public GetWeaponViewModelByClassName(_arg0, _arg1, _arg2)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			strcopy(_arg1, _arg2, var4 + 116);
@@ -2193,7 +2193,7 @@ public GetWeaponViewModelByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	strcopy(_arg1, _arg2, var2 + 116);
 	return 1;
 }
@@ -2211,7 +2211,7 @@ public GetWeaponViewModelByWeapon(_arg0, _arg1, _arg2)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		strcopy(_arg1, _arg2, var3 + 116);
 		return 1;
 	}
@@ -2229,7 +2229,7 @@ public GetWeaponViewModelByWeaponNum(_arg0, _arg1, _arg2)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	strcopy(_arg1, _arg2, var3 + 116);
 	return 1;
 }
@@ -2244,7 +2244,7 @@ public GetWeaponWorldModelByClassName(_arg0, _arg1, _arg2)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			strcopy(_arg1, _arg2, var4 + 372);
@@ -2264,7 +2264,7 @@ public GetWeaponWorldModelByDefIndex(_arg0, _arg1, _arg2)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	strcopy(_arg1, _arg2, var2 + 372);
 	return 1;
 }
@@ -2282,7 +2282,7 @@ public GetWeaponWorldModelByWeapon(_arg0, _arg1, _arg2)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		strcopy(_arg1, _arg2, var3 + 372);
 		return 1;
 	}
@@ -2300,7 +2300,7 @@ public GetWeaponWorldModelByWeaponNum(_arg0, _arg1, _arg2)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	strcopy(_arg1, _arg2, var3 + 372);
 	return 1;
 }
@@ -2314,7 +2314,7 @@ public HasRareDrawByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 680/* ERROR unknown load Binary */;
 }
 
@@ -2327,7 +2327,7 @@ public HasRareInspectByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 676/* ERROR unknown load Binary */;
 }
 
@@ -2353,7 +2353,7 @@ public IsDefIndexKnife(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	if (var2 + 636/* ERROR unknown load Binary */ == 2)
 	{
 		return 1;
@@ -2526,7 +2526,7 @@ public IsWeaponFullAutoByClassName(_arg0)
 		var3 = ArrayList.Get(g_varb9c, var2, 0, 0);
 		IntToString(var3, var1, 12);
 		new var4 = 0;
-		StringMap.GetArray(g_varb98, var1, var4, "ener", 0);
+		StringMap.GetArray(g_varb98, var1, var4, 173, 0);
 		if (!(strcmp(_arg0, var4 + 68, 0)))
 		{
 			return var4 + 672/* ERROR unknown load Binary */;
@@ -2545,7 +2545,7 @@ public IsWeaponFullAutoByDefIndex(_arg0)
 	new var1 = 0;
 	IntToString(_arg0, var1, 12);
 	new var2 = 0;
-	StringMap.GetArray(g_varb98, var1, var2, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var2, 173, 0);
 	return var2 + 672/* ERROR unknown load Binary */;
 }
 
@@ -2562,7 +2562,7 @@ public IsWeaponFullAutoByWeapon(_arg0)
 		new var2 = 0;
 		IntToString(var1, var2, 12);
 		new var3 = 0;
-		StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+		StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 		return var3 + 672/* ERROR unknown load Binary */;
 	}
 	return 0;
@@ -2579,7 +2579,7 @@ public IsWeaponFullAutoByWeaponNum(_arg0)
 	var2 = GetWeaponDefIndexByWeaponNum(_arg0);
 	IntToString(var2, var1, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var1, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var1, var3, 173, 0);
 	return var3 + 672/* ERROR unknown load Binary */;
 }
 
@@ -4807,7 +4807,7 @@ public OnPluginStart()
 	HookEvent("player_death", 17, 1);
 	HookEvent("round_poststart", 15, 1);
 	HookEvent("cs_pre_restart", 13, 1);
-	AddNormalSoundHook("rite.WriteNum");
+	AddNormalSoundHook(699);
 	new var1;
 	var1 = LoadGameConfigFile("sdkhooks.games");
 	StartPrepSDKCall(2);
@@ -5100,7 +5100,7 @@ public ParseGloves(_arg0)
 		strcopy(var15 + 68, "BfWriteFloat", var6);
 		strcopy(var15 + 324, "BfWriteFloat", var7);
 		var15 + 580/* ERROR unknown load Binary */ = var11;
-		StringMap.SetArray(g_varba4, var8, var15, "Listener", 1);
+		StringMap.SetArray(g_varba4, var8, var15, 146, 1);
 		CloseHandle(var1);
 		var1 = 0;
 		var10++;
@@ -5114,14 +5114,14 @@ public ParseItems()
 	new var1 = 0;
 	GetServerAuthId(3, var1, 18);
 	new var2 = 0;
-	Format(var2, "eature", "items_%s.json?steam_id=%s", 6404192, var1);
+	Format(var2, 128, "items_%s.json?steam_id=%s", 6404192, var1);
 	PrintToServer("%s Downloading eItems data from API", "[eItems]");
 	new var3 = 0;
-	Format(var3, "gle", "https://api.sourcefactory.eu/api/v1/plugins/%i/data/%s", 2, var2);
+	Format(var3, 512, "https://api.sourcefactory.eu/api/v1/plugins/%i/data/%s", 2, var2);
 	g_var978 = HTTPRequest.HTTPRequest(var3);
 	HTTPRequest.SetHeader(g_var978, "User-Agent", "eItems HTTP Client 1.0 (730)");
 	HTTPRequest.SetHeader(g_var978, "Authorization", 6404204);
-	HTTPRequest.Get(g_var978, "fWrite.WriteFloat", 0);
+	HTTPRequest.Get(g_var978, 717, 0);
 	return 0;
 }
 
@@ -5133,7 +5133,7 @@ public ParseItemsDownloaded(_arg0)
 		{
 			PrintToServer("%s Downloading eItems data from API failed! Attempt: %i/5, Trying again in 2 seconds", "[eItems]", g_var61b8ac);
 			g_var61b8ac += 1;
-			CreateTimer(1073741824, "String", 2, 0);
+			CreateTimer(1073741824, 749, 2, 0);
 		}
 		else
 		{
@@ -5529,7 +5529,7 @@ public ParseWeapons(_arg0)
 		var30 + 680/* ERROR unknown load Binary */ = var11;
 		var30 + 684/* ERROR unknown load Binary */ = var12;
 		var30 + 688/* ERROR unknown load Binary */ = var13;
-		StringMap.SetArray(g_varb98, var7, var30, "ener", 1);
+		StringMap.SetArray(g_varb98, var7, var30, 173, 1);
 		ArrayList.Push(g_varb9c, var9);
 		var25++;
 	}
@@ -5548,7 +5548,7 @@ public RefillClipAmmo(_arg0)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 	new var4;
 	var4 = var3 + 640/* ERROR unknown load Binary */;
 	return SetWeaponAmmo(_arg0, -1, var4);
@@ -5565,7 +5565,7 @@ public RefillReserveAmmo(_arg0)
 	new var2 = 0;
 	IntToString(var1, var2, 12);
 	new var3 = 0;
-	StringMap.GetArray(g_varb98, var2, var3, "ener", 0);
+	StringMap.GetArray(g_varb98, var2, var3, 173, 0);
 	new var4;
 	var4 = var3 + 648/* ERROR unknown load Binary */;
 	return SetWeaponAmmo(_arg0, var4, -1);

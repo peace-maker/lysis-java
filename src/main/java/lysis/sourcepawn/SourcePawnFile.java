@@ -1073,6 +1073,14 @@ public class SourcePawnFile extends PawnFile {
 			if (address >= range.start && address < range.end)
 				return false;
 		}
+		
+		// Don't reference something in the middle of a string.
+		// This could wrongly ignore a string which is preceded by 
+		// other constant data, but it's better than converting too
+		// many numbers to strings.
+		if (address > 0 && data().bytes()[(int) address - 1] != 0) {
+			return false;
+		}
 
 		int len = 0;
 		for (; address < data().bytes().length; address++, len++) {
