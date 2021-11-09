@@ -24,6 +24,7 @@ import lysis.instructions.LIncGlobal;
 import lysis.instructions.LIncLocal;
 import lysis.instructions.LIncReg;
 import lysis.instructions.LIndexAddress;
+import lysis.instructions.LInitArray;
 import lysis.instructions.LInstruction;
 import lysis.instructions.LJump;
 import lysis.instructions.LJumpCondition;
@@ -57,6 +58,7 @@ import lysis.instructions.LSysReq;
 import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
+import lysis.instructions.Opcode;
 import lysis.lstructure.Function;
 import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
@@ -117,7 +119,7 @@ public class NodeBuilder {
 			// Attempt to find static declarations. This is really
 			// expensive - we could cheapen it by creating per-method
 			// lists of statics.
-			{
+			if (uins.op() != Opcode.Goto) {
 				int i = -1;
 				do {
 					StupidWrapper iStupid = new StupidWrapper(i);
@@ -710,6 +712,13 @@ public class NodeBuilder {
 				DGenArray genarray_ = new DGenArray(ins.pc() + 4 * ins.dims() + 4, dims, ins.autozero());
 				block.stack().push(genarray_);
 				block.add(genarray_);
+				break;
+			}
+			
+			case InitArray: {
+				LInitArray ins = (LInitArray) uins;
+				// TODO: Handle array initialization.
+				// TODO: Infer array dimensions based on referenced indirection vector.
 				break;
 			}
 

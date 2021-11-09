@@ -243,7 +243,7 @@ public class BackwardTypePropagation extends NodeVisitor {
 		switch (arg.type()) {
 		case DeclareLocal: {
 			DDeclareLocal localNode = (DDeclareLocal) arg;
-			if (localNode.value().type() == NodeType.Constant) {
+			if (localNode.value() != null && localNode.value().type() == NodeType.Constant) {
 
 				DConstant constNode = (DConstant) localNode.value();
 				Variable global = graph_.file().lookupGlobal(constNode.value());
