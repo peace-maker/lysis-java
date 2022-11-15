@@ -142,7 +142,7 @@ public class Lysis {
 	 */
 	public static void main(String[] args) {
 		if (args.length < 1) {
-			System.err.println("usage: <file.smx> or <file.amxx>");
+			System.err.println("usage: <file.smx> or <file.amxx> or <file.amx>");
 			return;
 		}
 

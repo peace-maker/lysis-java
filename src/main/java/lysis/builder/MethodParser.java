@@ -650,6 +650,22 @@ public class MethodParser {
 			return new LStoreCtrl(index);
 		}
 
+		// AMXMod plugins seem to contain this.
+		case line: {
+			readUInt32(); // curline
+			readUInt32(); // curfile
+			return new LDebugBreak();
+		}
+
+		// AMXMod plugins possibly contain this, since they have `line` too.
+		// Maybe unused.
+		case file: {
+			long num = readUInt32();
+			readUInt32(); // curfile
+			pc_ += num - 4; // skip dbgname
+			return new LDebugBreak();
+		}
+
 		default:
 			throw new Exception("Unrecognized opcode: " + op);
 		}
