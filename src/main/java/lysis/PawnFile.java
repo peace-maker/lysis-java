@@ -46,7 +46,7 @@ public abstract class PawnFile {
 		int amx_magic = BitConverter.ToUInt16(vec, 4);
 		if (magic == SourcePawnFile.MAGIC)
 			return new SourcePawnFile(vec);
-		if (magic == AMXModXFile.MAGIC2 || amx_magic == AMXModXFile.AMX_MAGIC)
+		if (magic == AMXModXFile.MAGIC2 || magic == AMXModXFile.MAGIC || amx_magic == AMXModXFile.AMX_MAGIC)
 			return new AMXModXFile(vec);
 		throw new Exception("not a .amxx or .smx file!");
 	}

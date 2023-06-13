@@ -1,0 +1,256 @@
+new g_var5ac;
+public checkcamping()
+{
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	get_players(var6, var7, 2340, 2348);
+	var9 = 0;
+	while (var9 < var7)
+	{
+		var8 = var6[var9];
+		528[var8] = 0[var8];
+		528[var8][1] = 0[var8][1];
+		528[var8][2] = 0[var8][2];
+		get_user_origin(var8, 0[var8], "����������������\x04\x0C$,4<DLT\dlt|�");
+		new var1;
+		if ((528[var8] - 0[var8] < 256 && 528[var8] - 0[var8] > -256) && (528[var8][1] - 0[var8][1] < 256 && 528[var8][1] - 0[var8][1] > -256) && (528[var8][2] - 0[var8][2] < 256 && 528[var8][2] - 0[var8][2] > -256))
+		{
+			1056[var8] += 5;
+		}
+		else
+		{
+			1056[var8] = 0;
+		}
+		new var5;
+		if (1188[var8] - 1056[var8] == 5 || 1188[var8] - 1056[var8] == 10)
+		{
+			set_hudmessage(255, "����������������\x04\x0C$,4<DLT\dlt|�", 255, -1082130432, 1062836634, "����������������\x04\x0C$,4<DLT\dlt|�", 1065353216, 1084227584, 1036831949, 1036831949, "");
+			show_hudmessage(var8, "距离放风筝还有%d秒！\r", 1188[var8] - 1056[var8]);
+			client_cmd(var8, "spk scientist/c1a2_sci_1zomb");
+		}
+		if (1188[var8] <= 1056[var8])
+		{
+			new var10 = 0;
+			get_user_name(var8, var10, 31);
+			new var11 = 0;
+			var11 = get_user_flags(var8, "����������������\x04\x0C$,4<DLT\dlt|�");
+			if (var11 & 4 == 0)
+			{
+				1188[var8] = 1188[var8] - 20;
+			}
+			new var12 = 0;
+			num_to_str(get_systime("����������������\x04\x0C$,4<DLT\dlt|�") + 8, var12, 31);
+			set_localinfo("ShowMessage", var12);
+			if (0 >= 1188[var8])
+			{
+				server_cmd("kick #%d %s", get_user_userid(var8), "* 您由于蹲坑次数太多而被系统Kick了.");
+				set_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", 255, 255, 1060320051, 1060152279, 2, 1017370378, 1092616192, 1008981770, 1036831949, "");
+				show_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", "%s 由于蹲坑次数太多而被系统Kick了.", var10);
+			}
+			else
+			{
+				if (1456[var8] == 0)
+				{
+					1456[var8] = 1;
+					message_begin(2, 23, {0,0,0}, "����������������\x04\x0C$,4<DLT\dlt|�");
+					write_byte(124);
+					write_byte(var8);
+					write_coord(80);
+					write_short(g_var5ac);
+					write_short(32767);
+					message_end();
+				}
+				client_cmd(var8, "spk scientist/whatyoudoing");
+				set_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", 255, "����������������\x04\x0C$,4<DLT\dlt|�", 1060320051, 1060152279, 2, 1017370378, 1092616192, 1008981770, 1036831949, "");
+				if (20 < 1188[var8])
+				{
+					show_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", "%s已经蹲坑%d秒\n举牌+放风筝！\n下次Camp时限:%d秒", var10, 1056[var8], 1188[var8]);
+				}
+				else
+				{
+					show_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", "%s已经蹲坑%d秒\n举牌+放风筝！\n下次Camp时限:%d秒+Kick！", var10, 1056[var8], 1188[var8]);
+				}
+				new var13 = 0;
+				var13 = var8;
+				set_task(1056964608, "slap_camper", "����������������\x04\x0C$,4<DLT\dlt|�", var13, 2, 3772, 100);
+				1056[var8] = 0;
+			}
+		}
+		var9++;
+	}
+	return 0;
+}
+
+public checkspecing()
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	get_players(var3, var4, 3780, 2348);
+	new var7 = 0;
+	while (var7 < var4)
+	{
+		var5 = var3[var7];
+		new var1;
+		if (get_user_team(var5, {0}, "����������������\x04\x0C$,4<DLT\dlt|�") != 1 && get_user_team(var5, {0}, "����������������\x04\x0C$,4<DLT\dlt|�") != 2)
+		{
+			1320[var5]++;
+		}
+		else
+		{
+			1320[var5] = 0;
+		}
+		var6 = get_user_flags(var5, "����������������\x04\x0C$,4<DLT\dlt|�");
+		new var2;
+		if (1320[var5] >= 5 && var6 & 1 == 0)
+		{
+			new var8 = 0;
+			get_user_name(var5, var8, 31);
+			new var9 = 0;
+			num_to_str(get_systime("����������������\x04\x0C$,4<DLT\dlt|�") + 8, var9, 31);
+			set_localinfo("ShowMessage", var9);
+			server_cmd("kick #%d %s", get_user_userid(var5), "* 您由于做观众观战超过5分钟而被系统Kick了.");
+			set_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", 255, 255, 1060320051, 1060152279, 2, 1017370378, 1097859072, 1008981770, 1036831949, "");
+			show_hudmessage("����������������\x04\x0C$,4<DLT\dlt|�", "%s 由于做观众观战超过5分钟而被系统Kick了.", var8);
+		}
+		var7++;
+	}
+	return 0;
+}
+
+public client_disconnect(_arg0)
+{
+	1056[_arg0] = 0;
+	if (1456[_arg0] == 1)
+	{
+		1456[_arg0] = 0;
+		message_begin(2, 23, {0,0,0}, "����������������\x04\x0C$,4<DLT\dlt|�");
+		write_byte(125);
+		write_byte(_arg0);
+		message_end();
+	}
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	1056[_arg0] = 0;
+	1188[_arg0] = 0;
+	1320[_arg0] = 0;
+	1456[_arg0] = 0;
+	return 0;
+}
+
+public eDeathMsg()
+{
+	new var1;
+	var1 = read_data(2);
+	1056[var1] = 0;
+	if (1456[var1] == 1)
+	{
+		1456[var1] = 0;
+		message_begin(2, 23, {0,0,0}, "����������������\x04\x0C$,4<DLT\dlt|�");
+		write_byte(125);
+		write_byte(var1);
+		message_end();
+	}
+	return 0;
+}
+
+public eNewRound()
+{
+	if (floatround(floatmul(1114636288, get_cvar_float("mp_roundtime")), "����������������\x04\x0C$,4<DLT\dlt|�") == read_data(1))
+	{
+		new var1 = 1;
+		while (var1 < 33)
+		{
+			if (1456[var1] == 1)
+			{
+				1456[var1] = 0;
+				message_begin(2, 23, {0,0,0}, "����������������\x04\x0C$,4<DLT\dlt|�");
+				write_byte(125);
+				write_byte(var1);
+				message_end();
+			}
+			var1++;
+		}
+	}
+	return 0;
+}
+
+public fx_headshot(_arg0)
+{
+	new var1 = 0;
+	while (var1 < 5)
+	{
+		message_begin("����������������\x04\x0C$,4<DLT\dlt|�", 23, {0,0,0}, "����������������\x04\x0C$,4<DLT\dlt|�");
+		write_byte(101);
+		write_coord(_arg0);
+		write_coord(_arg0 + 4/* ERROR unknown load Binary */);
+		write_coord(_arg0 + 8/* ERROR unknown load Binary */ + 30);
+		write_coord(random_num(-20, 20));
+		write_coord(random_num(-20, 20));
+		write_coord(random_num(50, 300));
+		write_byte(70);
+		write_byte(random_num(100, 200));
+		message_end();
+		var1++;
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("AntiCamping", "0.3", "CRaZy");
+	register_event("DeathMsg", "eDeathMsg", 1752, {0});
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	register_event("TextMsg", "team_join", 1928, "1=1", "2&Game_join_te", "2&Game_join_ct");
+	set_task(1084227584, "checkcamping", "����������������\x04\x0C$,4<DLT\dlt|�", 2124, "����������������\x04\x0C$,4<DLT\dlt|�", 2128, "����������������\x04\x0C$,4<DLT\dlt|�");
+	set_task(1114636288, "checkspecing", "����������������\x04\x0C$,4<DLT\dlt|�", 2188, "����������������\x04\x0C$,4<DLT\dlt|�", 2192, "����������������\x04\x0C$,4<DLT\dlt|�");
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var5ac = precache_model("sprites/camper.spr");
+	return 0;
+}
+
+public slap_camper(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	new var2;
+	var2 = get_user_health(var1);
+	if (var2 <= 1)
+	{
+		user_kill(var1, "����������������\x04\x0C$,4<DLT\dlt|�");
+	}
+	else
+	{
+		user_slap(var1, "����������������\x04\x0C$,4<DLT\dlt|�", 1);
+		user_slap(var1, "����������������\x04\x0C$,4<DLT\dlt|�", 1);
+		user_slap(var1, 1, 1);
+		new var3 = 0;
+		get_user_origin(var1, var3, "����������������\x04\x0C$,4<DLT\dlt|�");
+		fx_headshot(var3);
+	}
+	return 0;
+}
+
+public team_join()
+{
+	new var1 = 0;
+	read_data("", var1, 31);
+	new var2;
+	var2 = get_user_index(var1);
+	if (1188[var2] == 0)
+	{
+		1188[var2] = 60;
+	}
+	return 0;
+}
+

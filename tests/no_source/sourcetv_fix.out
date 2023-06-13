@@ -1159,7 +1159,7 @@ OxOOOOO4C6(_arg0)
 }
 
 
-/* ERROR! null */
+/* ERROR! Cannot read the array length because the return value of "lysis.lstructure.LBlock.instructions()" is null */
  function "OxOOOOOO5C" (number 20)
 
 public OxOOOOO4EC()

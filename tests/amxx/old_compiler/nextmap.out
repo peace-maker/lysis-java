@@ -1,0 +1,104 @@
+new g_var114;
+public changeMap()
+{
+	new var1 = 0;
+	new var2;
+	var2 = get_cvar_float("mp_chattime");
+	set_cvar_float("mp_chattime", floatadd(1077936128, var2));
+	new var3;
+	var3 = sub_664(var1, 31) + 1;
+	set_task(var2, "delayedChange", "1.00", var1, var3, {0}, "1.00");
+	return 0;
+}
+
+public delayedChange(_arg0)
+{
+	set_cvar_float("mp_chattime", floatsub(get_cvar_float("mp_chattime"), 1077936128));
+	server_cmd("changelevel %s", _arg0);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("NextMap", "1.00", "AMXX Dev Team");
+	register_dictionary("nextmap.txt");
+	register_event("30", "changeMap", 468, {0});
+	register_clcmd("say nextmap", "sayNextMap", "1.00", "- displays nextmap");
+	register_cvar("amx_nextmap", 696, 76, "1.00");
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	get_localinfo("lastmapcycle", var1, 31);
+	parse(var1, var2, 31, var3, 7);
+	g_var114 = str_to_num(var3);
+	get_cvar_string("mapcyclefile", 148, 31);
+	if (!equal(148, var2, "1.00"))
+	{
+		g_var114 = 0;
+	}
+	sub_c88(148, 20, 31);
+	set_cvar_string("amx_nextmap", 20);
+	format(var3, 31, "%s %d", 148, g_var114);
+	set_localinfo("lastmapcycle", var3);
+	return 0;
+}
+
+public sayNextMap()
+{
+	new var1 = 0;
+	sub_664(var1, 31);
+	client_print("1.00", "", "%L %s", -1, "NEXT_MAP", var1);
+	return 0;
+}
+
+sub_664(_arg0, _arg1)
+{
+	new var1;
+	var1 = get_cvar_string("amx_nextmap", _arg0, _arg1);
+	if (is_map_valid(_arg0))
+	{
+		return var1;
+	}
+	var1 = copy(_arg0, _arg1, 20);
+	set_cvar_string("amx_nextmap", 20);
+	return var1;
+}
+
+sub_c88(_arg0, _arg1, _arg2)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	if (file_exists(_arg0))
+	{
+		var2++;
+		while (read_file(_arg0, var2, var4, 31, _unused_temp_))
+		{
+			new var1;
+			if (!(!isalnum(var4) || !is_map_valid(var4)))
+			{
+				if (!var3)
+				{
+					copy(var5, 31, var4);
+				}
+				var3++;
+				if (var3 > g_var114)
+				{
+					copy(_arg1, _arg2, var4);
+					g_var114 = var3;
+					return 0;
+				}
+			}
+		}
+	}
+	if (!var3)
+	{
+		log_amx("WARNING: Couldn't find a valid map or the file doesn't exist (file \"%s\")", _arg0);
+		get_mapname(var5, 31);
+	}
+	copy(_arg1, _arg2, var5);
+	g_var114 = 1;
+	return 0;
+}
+

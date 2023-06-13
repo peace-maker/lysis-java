@@ -1,0 +1,1220 @@
+new g_var5f74;
+new g_var5f78;
+public actionBanMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 6:
+		{
+			5296[_arg0]++;
+			5296[_arg0] %= 6;
+			sub_1cc0(_arg0, 280[_arg0]);
+		}
+		case 7:
+		{
+			4900[_arg0]++;
+			4900[_arg0] %= 3;
+			switch (4900[_arg0])
+			{
+				case 0:
+				{
+					5032[_arg0] = 0;
+				}
+				case 1:
+				{
+					5032[_arg0] = 5;
+				}
+				case 2:
+				{
+					5032[_arg0] = 60;
+				}
+				default:
+				{
+				}
+			}
+			sub_1cc0(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 280[_arg0];
+			var2++;
+			sub_1cc0(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 280[_arg0];
+			var1--;
+			sub_1cc0(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 412[_arg0][_arg1 + 280[_arg0] * 6];
+			new var4 = 0;
+			new var5 = 0;
+			new var6 = 0;
+			new var7 = 0;
+			get_user_name(var3, var5, "");
+			get_user_authid(_arg0, var6, "");
+			get_user_authid(var3, var7, "");
+			get_user_name(_arg0, var4, "");
+			new var8;
+			var8 = get_user_userid(var3);
+			log_amx("Ban: \"%s<%d><%s><>\" ban and kick \"%s<%d><%s><>\" (minutes \"%d\")", var4, get_user_userid(_arg0), var6, var5, var8, var7, 5032[_arg0]);
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_BAN_1", var5);
+				}
+				case 2:
+				{
+					client_print("1.00", "", "%s 被管理员 %s BAN出了服务器，原因：%s", var5, var4, 5428[5164[_arg0]]);
+				}
+				default:
+				{
+				}
+			}
+			server_cmd("kick #%d 您被管理员 %s BAN出了服务器，原因：%s", var8, var4, 5428[5296[_arg0]]);
+			new var9 = 0;
+			get_user_ip(var3, var9, "", 1);
+			server_cmd("addip %d %s", 5032[_arg0], var9);
+			server_exec();
+			sub_1cc0(_arg0, 280[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public actionClcmdMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			4900[_arg0]++;
+			4900[_arg0] %= 14608[_arg0];
+			sub_7c54(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 280[_arg0];
+			var2++;
+			sub_7c54(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 280[_arg0];
+			var1--;
+			sub_7c54(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 412[_arg0][_arg1 + 280[_arg0] * 7];
+			new var4;
+			var4 = 24148[6028[_arg0][4900[_arg0]]][1];
+			if (is_user_connected(var3))
+			{
+				new var5 = 0;
+				new var6 = 0;
+				new var7 = 0;
+				new var8 = 0;
+				copy(var5, 63, 17908[6028[_arg0][4900[_arg0]]]);
+				get_user_authid(var3, var6, "");
+				get_user_name(var3, var7, "");
+				num_to_str(get_user_userid(var3), var8, "");
+				replace(var5, 63, "%userid%", var8);
+				replace(var5, 63, "%authid%", var6);
+				replace(var5, 63, "%name%", var7);
+				if (var4 & 1)
+				{
+					server_cmd(var5);
+					server_exec();
+				}
+				else
+				{
+					if (var4 & 2)
+					{
+						client_cmd(_arg0, var5);
+					}
+					if (var4 & 4)
+					{
+						client_cmd(var3, var5);
+					}
+				}
+			}
+			if (var4 & 8)
+			{
+				sub_7c54(_arg0, 280[_arg0]);
+			}
+		}
+	}
+	return 1;
+}
+
+public actionKickMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			5164[_arg0]++;
+			5164[_arg0] %= 6;
+			sub_4ecc(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 280[_arg0];
+			var2++;
+			sub_4ecc(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 280[_arg0];
+			var1--;
+			sub_4ecc(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 412[_arg0][_arg1 + 280[_arg0] * 7];
+			new var4 = 0;
+			new var5 = 0;
+			new var6 = 0;
+			new var7 = 0;
+			get_user_authid(_arg0, var4, "");
+			get_user_authid(var3, var5, "");
+			get_user_name(_arg0, var6, "");
+			get_user_name(var3, var7, "");
+			new var8;
+			var8 = get_user_userid(var3);
+			log_amx("Kick: \"%s<%d><%s><>\" kick \"%s<%d><%s><>\"", var6, get_user_userid(_arg0), var4, var7, var8, var5);
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_KICK_1", var7);
+				}
+				case 2:
+				{
+					client_print("1.00", "", "%s 被管理员 %s 踢出了服务器，原因：%s", var7, var6, 5428[5164[_arg0]]);
+				}
+				default:
+				{
+				}
+			}
+			server_cmd("kick #%d 您被管理员 %s 踢出了服务器，原因：%s", var8, var6, 5428[5164[_arg0]]);
+			server_exec();
+			sub_4ecc(_arg0, 280[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public actionSlapMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			4900[_arg0]++;
+			4900[_arg0] %= 4;
+			switch (4900[_arg0])
+			{
+				case 1:
+				{
+					5032[_arg0] = 0;
+				}
+				case 2:
+				{
+					5032[_arg0] = 1;
+				}
+				case 3:
+				{
+					5032[_arg0] = 5;
+				}
+				default:
+				{
+				}
+			}
+			sub_3830(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var3 = 280[_arg0];
+			var3++;
+			sub_3830(_arg0, var3);
+		}
+		case 9:
+		{
+			new var2 = 280[_arg0];
+			var2--;
+			sub_3830(_arg0, var2);
+		}
+		default:
+		{
+			new var4;
+			var4 = 412[_arg0][_arg1 + 280[_arg0] * 7];
+			new var5 = 0;
+			get_user_name(var4, var5, "");
+			if (!is_user_alive(var4))
+			{
+				client_print(_arg0, "", "%L", _arg0, "CANT_PERF_DEAD", var5);
+				sub_3830(_arg0, 280[_arg0]);
+				return 1;
+			}
+			new var6 = 0;
+			new var7 = 0;
+			new var8 = 0;
+			get_user_authid(_arg0, var6, "");
+			get_user_authid(var4, var7, "");
+			get_user_name(_arg0, var8, "");
+			if (4900[_arg0])
+			{
+				log_amx("Cmd: \"%s<%d><%s><>\" slap with %d damage \"%s<%d><%s><>\"", var8, get_user_userid(_arg0), var6, 5032[_arg0], var5, get_user_userid(var4), var7);
+				switch (get_cvar_num("amx_show_activity"))
+				{
+					case 1:
+					{
+						client_print("1.00", "", "%L", -1, "ADMIN_SLAP_1", var5, 5032[_arg0]);
+					}
+					case 2:
+					{
+						client_print("1.00", "", "%L", -1, "ADMIN_SLAP_2", var8, var5, 5032[_arg0]);
+					}
+					default:
+					{
+					}
+				}
+			}
+			else
+			{
+				log_amx("Cmd: \"%s<%d><%s><>\" slay \"%s<%d><%s><>\"", var8, get_user_userid(_arg0), var6, var5, get_user_userid(var4), var7);
+				switch (get_cvar_num("amx_show_activity"))
+				{
+					case 1:
+					{
+						client_print("1.00", "", "%L", -1, "ADMIN_SLAY_1", var5);
+					}
+					case 2:
+					{
+						client_print("1.00", "", "%L", -1, "ADMIN_SLAY_2", var8, var5);
+					}
+					default:
+					{
+					}
+				}
+			}
+			if (4900[_arg0])
+			{
+				new var1;
+				if (get_user_health(var4) > 5032[_arg0])
+				{
+					var1 = 5032[_arg0];
+				}
+				else
+				{
+					var1 = 0;
+				}
+				user_slap(var4, var1, 1);
+			}
+			else
+			{
+				user_kill(var4, "1.00");
+			}
+			sub_3830(_arg0, 280[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public actionTeamMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			4900[_arg0] = 1 - 4900[_arg0];
+			sub_6540(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var6 = 280[_arg0];
+			var6++;
+			sub_6540(_arg0, var6);
+		}
+		case 9:
+		{
+			new var5 = 280[_arg0];
+			var5--;
+			sub_6540(_arg0, var5);
+		}
+		default:
+		{
+			new var7;
+			var7 = 412[_arg0][_arg1 + 280[_arg0] * 7];
+			new var8 = 0;
+			new var9 = 0;
+			new var10 = 0;
+			new var11 = 0;
+			get_user_name(var7, var11, "");
+			get_user_authid(_arg0, var8, "");
+			get_user_authid(var7, var9, "");
+			get_user_name(_arg0, var10, "");
+			new var1;
+			if (4900[_arg0])
+			{
+				var1 = 31028;
+			}
+			else
+			{
+				var1 = 31068;
+			}
+			log_amx("Cmd: \"%s<%d><%s><>\" transfer \"%s<%d><%s><>\" (team \"%s\")", var10, get_user_userid(_arg0), var8, var11, get_user_userid(var7), var9, var1);
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					new var3;
+					if (4900[_arg0])
+					{
+						var3 = 31348;
+					}
+					else
+					{
+						var3 = 31388;
+					}
+					client_print("1.00", "", "%L", _arg0, "ADMIN_TRANSF_1", var11, var3);
+				}
+				case 2:
+				{
+					new var2;
+					if (4900[_arg0])
+					{
+						var2 = 31224;
+					}
+					else
+					{
+						var2 = 31264;
+					}
+					client_print("1.00", "", "%L", _arg0, "ADMIN_TRANSF_2", var10, var11, var2);
+				}
+				default:
+				{
+				}
+			}
+			new var12;
+			var12 = get_cvar_num("mp_limitteams");
+			set_cvar_num("mp_limitteams", "1.00");
+			user_kill(var7, 1);
+			engclient_cmd(var7, "chooseteam", {0}, {0});
+			new var4;
+			if (4900[_arg0])
+			{
+				var4 = 31608;
+			}
+			else
+			{
+				var4 = 31616;
+			}
+			engclient_cmd(var7, "menuselect", var4, {0});
+			engclient_cmd(var7, "menuselect", 31668, {0});
+			client_cmd(var7, "slot1");
+			set_cvar_num("mp_limitteams", var12);
+			sub_6540(_arg0, 280[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public cmdBanMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	4900[_arg0] = 1;
+	5032[_arg0] = 5;
+	280[_arg0] = 0;
+	sub_1cc0(_arg0, 0);
+	return 1;
+}
+
+public cmdClcmdMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	new var1;
+	var1 = get_user_flags(_arg0, "1.00");
+	14608[_arg0] = 0;
+	new var2 = 0;
+	while (var2 < g_var5f74)
+	{
+		if (var1 & 24148[var2])
+		{
+			new var3 = 14608[_arg0];
+			var3++;
+			6028[_arg0][var3] = var2;
+		}
+		var2++;
+	}
+	4900[_arg0] = 0;
+	280[_arg0] = 0;
+	sub_7c54(_arg0, 0);
+	return 1;
+}
+
+public cmdKickMenu(_arg0, _arg1, _arg2)
+{
+	if (sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		280[_arg0] = 0;
+		sub_4ecc(_arg0, 0);
+	}
+	return 1;
+}
+
+public cmdSlapMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	4900[_arg0] = 0;
+	5032[_arg0] = 0;
+	280[_arg0] = 0;
+	sub_3830(_arg0, 0);
+	return 1;
+}
+
+public cmdTeamMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	4900[_arg0] = 0;
+	280[_arg0] = 0;
+	sub_6540(_arg0, 0);
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin("Players Menu", "1.00", "AMXX Dev Team");
+	register_dictionary("common.txt");
+	register_dictionary("admincmd.txt");
+	register_dictionary("plmenu.txt");
+	register_clcmd("amx_kickmenu", "cmdKickMenu", 4, "- displays kick menu");
+	register_clcmd("amx_banmenu", "cmdBanMenu", 8, "- displays ban menu");
+	register_clcmd("amx_slapmenu", "cmdSlapMenu", 16, "- displays slap/slay menu");
+	register_clcmd("amx_teammenu", "cmdTeamMenu", 4096, "- displays team menu");
+	register_clcmd("amx_clcmdmenu", "cmdClcmdMenu", 4096, "- displays client cmds menu");
+	register_menucmd(register_menuid("Ban Menu", "1.00"), 1023, "actionBanMenu");
+	register_menucmd(register_menuid("Kick Menu", "1.00"), 1023, "actionKickMenu");
+	register_menucmd(register_menuid("Slap/Slay Menu", "1.00"), 1023, "actionSlapMenu");
+	register_menucmd(register_menuid("Team Menu", "1.00"), 1023, "actionTeamMenu");
+	register_menucmd(register_menuid("Client Cmds Menu", "1.00"), 1023, "actionClcmdMenu");
+	g_var5f78 = sub_7bc();
+	new var1 = 0;
+	sub_944(var1, 63);
+	format(var1, 63, "%s/clcmds.ini", var1);
+	sub_8c38(var1);
+	return 0;
+}
+
+sub_1cc0(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(412[_arg0], 4768[_arg0], 27140, 27144);
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10;
+	var10 = _arg1 * 6;
+	if (4768[_arg0] <= var10)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var10 = 0;
+	}
+	new var11;
+	new var1;
+	if (4768[_arg0] % 6)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var5f78)
+	{
+		var2 = 27148;
+	}
+	else
+	{
+		var2 = 27212;
+	}
+	var11 = format(var6, 511, var2, _arg0, "BAN_MENU", _arg1 + 1, var1 + 4768[_arg0] / 6);
+	new var12;
+	var12 = var10 + 6;
+	new var13 = 704;
+	if (4768[_arg0] < var12)
+	{
+		var12 = 4768[_arg0];
+	}
+	new var14;
+	var14 = var10;
+	while (var14 < var12)
+	{
+		var8 = 412[_arg0][var14];
+		get_user_name(var8, var9, "");
+		new var3;
+		if (is_user_bot(var8) || sub_6cc(var8, 1))
+		{
+			var7++;
+			if (g_var5f78)
+			{
+				var11 = format(var6[var11], 511 - var11, "\d%d. %s\n\w", var7, var9) + var11;
+			}
+			else
+			{
+				var11 = format(var6[var11], 511 - var11, "#. %s\n", var9) + var11;
+			}
+		}
+		else
+		{
+			var13 = 1 << var7 | var13;
+			var7++;
+			var11 = format(var6[var11], 511 - var11, "%d. %s\n", var7, var9) + var11;
+		}
+		var14++;
+	}
+	var11 = format(var6[var11], 511 - var11, "\y\n7. 原因: %s", 5428[5296[_arg0]]) + var11;
+	if (5032[_arg0])
+	{
+		var11 = format(var6[var11], 511 - var11, "\n8. %L\n", _arg0, "BAN_FOR_MIN", 5032[_arg0]) + var11;
+	}
+	else
+	{
+		var11 = format(var6[var11], 511 - var11, "\n8. %L\n", _arg0, "BAN_PERM") + var11;
+	}
+	if (4768[_arg0] != var12)
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 27708;
+		}
+		else
+		{
+			var4 = 27728;
+		}
+		format(var6[var11], 511 - var11, "\w\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var4);
+		var13 |= 256;
+	}
+	else
+	{
+		new var5;
+		if (_arg1)
+		{
+			var5 = 27776;
+		}
+		else
+		{
+			var5 = 27796;
+		}
+		format(var6[var11], 511 - var11, "\n0. %L", _arg0, var5);
+	}
+	show_menu(_arg0, var13, var6, -1, "Ban Menu");
+	return 0;
+}
+
+sub_7c54(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(412[_arg0], 4768[_arg0], 27140, 27144);
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10;
+	var10 = _arg1 * 7;
+	if (4768[_arg0] <= var10)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var10 = 0;
+	}
+	new var11;
+	new var1;
+	if (4768[_arg0] % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var5f78)
+	{
+		var2 = 32580;
+	}
+	else
+	{
+		var2 = 32644;
+	}
+	var11 = format(var6, 511, var2, _arg0, "CL_CMD_MENU", _arg1 + 1, var1 + 4768[_arg0] / 7);
+	new var12;
+	var12 = var10 + 7;
+	new var13 = 640;
+	if (4768[_arg0] < var12)
+	{
+		var12 = 4768[_arg0];
+	}
+	new var14;
+	var14 = var10;
+	while (var14 < var12)
+	{
+		var8 = 412[_arg0][var14];
+		get_user_name(var8, var9, "");
+		new var3;
+		if (!14608[_arg0] || sub_6cc(var8, 1))
+		{
+			var7++;
+			if (g_var5f78)
+			{
+				var11 = format(var6[var11], 511 - var11, "\d%d. %s\n\w", var7, var9) + var11;
+			}
+			else
+			{
+				var11 = format(var6[var11], 511 - var11, "#. %s\n", var9) + var11;
+			}
+		}
+		else
+		{
+			var13 = 1 << var7 | var13;
+			var7++;
+			var11 = format(var6[var11], 511 - var11, "%d. %s\n", var7, var9) + var11;
+		}
+		var14++;
+	}
+	if (14608[_arg0])
+	{
+		var11 = format(var6[var11], 511 - var11, "\n8. %s\n", 14740[6028[_arg0][4900[_arg0]]]) + var11;
+	}
+	else
+	{
+		var11 = format(var6[var11], 511 - var11, "\n8. %L\n", _arg0, "NO_CMDS") + var11;
+	}
+	if (4768[_arg0] != var12)
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 33024;
+		}
+		else
+		{
+			var4 = 33044;
+		}
+		format(var6[var11], 511 - var11, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var4);
+		var13 |= 256;
+	}
+	else
+	{
+		new var5;
+		if (_arg1)
+		{
+			var5 = 33092;
+		}
+		else
+		{
+			var5 = 33112;
+		}
+		format(var6[var11], 511 - var11, "\n0. %L", _arg0, var5);
+	}
+	show_menu(_arg0, var13, var6, -1, "Client Cmds Menu");
+	return 0;
+}
+
+sub_4ecc(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(412[_arg0], 4768[_arg0], 27140, 27144);
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9;
+	var9 = _arg1 * 7;
+	if (4768[_arg0] <= var9)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var9 = 0;
+	}
+	new var10;
+	new var1;
+	if (4768[_arg0] % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var5f78)
+	{
+		var2 = 30236;
+	}
+	else
+	{
+		var2 = 30300;
+	}
+	var10 = format(var5, 511, var2, _arg0, "KICK_MENU", _arg1 + 1, var1 + 4768[_arg0] / 7);
+	new var11;
+	var11 = var9 + 7;
+	new var12 = 640;
+	if (4768[_arg0] < var11)
+	{
+		var11 = 4768[_arg0];
+	}
+	new var13;
+	var13 = var9;
+	while (var13 < var11)
+	{
+		var7 = 412[_arg0][var13];
+		get_user_name(var7, var8, "");
+		if (sub_6cc(var7, 1))
+		{
+			var6++;
+			if (g_var5f78)
+			{
+				var10 = format(var5[var10], 511 - var10, "\d%d. %s\n\w", var6, var8) + var10;
+			}
+			else
+			{
+				var10 = format(var5[var10], 511 - var10, "#. %s\n", var8) + var10;
+			}
+		}
+		else
+		{
+			var12 = 1 << var6 | var12;
+			var6++;
+			var10 = format(var5[var10], 511 - var10, "%d. %s\n", var6, var8) + var10;
+		}
+		var13++;
+	}
+	var10 = format(var5[var10], 511 - var10, "\y\n8. 原因: %s\n\w", 5428[5164[_arg0]]) + var10;
+	if (4768[_arg0] != var11)
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 30656;
+		}
+		else
+		{
+			var3 = 30676;
+		}
+		format(var5[var10], 511 - var10, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var3);
+		var12 |= 256;
+	}
+	else
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 30724;
+		}
+		else
+		{
+			var4 = 30744;
+		}
+		format(var5[var10], 511 - var10, "\n0. %L", _arg0, var4);
+	}
+	show_menu(_arg0, var12, var5, -1, "Kick Menu");
+	return 0;
+}
+
+sub_3830(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(412[_arg0], 4768[_arg0], 27140, 27144);
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12;
+	var12 = _arg1 * 7;
+	if (4768[_arg0] <= var12)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var12 = 0;
+	}
+	new var13;
+	new var1;
+	if (4768[_arg0] % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var5f78)
+	{
+		var2 = 28704;
+	}
+	else
+	{
+		var2 = 28768;
+	}
+	var13 = format(var7, 511, var2, _arg0, "SLAP_SLAY_MENU", _arg1 + 1, var1 + 4768[_arg0] / 7);
+	new var14;
+	var14 = var12 + 7;
+	new var15 = 640;
+	if (4768[_arg0] < var14)
+	{
+		var14 = 4768[_arg0];
+	}
+	new var16;
+	var16 = var12;
+	while (var16 < var14)
+	{
+		var9 = 412[_arg0][var16];
+		get_user_name(var9, var10, "");
+		get_user_team(var9, var11, "");
+		new var3;
+		if (!is_user_alive(var9) || sub_6cc(var9, 1))
+		{
+			var8++;
+			if (g_var5f78)
+			{
+				var13 = format(var7[var13], 511 - var13, "\d%d. %s\R%s\n\w", var8, var10, var11) + var13;
+			}
+			else
+			{
+				var13 = format(var7[var13], 511 - var13, "#. %s\x09 %s\n", var10, var11) + var13;
+			}
+		}
+		else
+		{
+			var15 = 1 << var8 | var15;
+			var8++;
+			new var4;
+			if (g_var5f78)
+			{
+				var4 = 28980;
+			}
+			else
+			{
+				var4 = 29044;
+			}
+			var13 = format(var7[var13], 511 - var13, var4, var8, var10, var11) + var13;
+		}
+		var16++;
+	}
+	if (4900[_arg0])
+	{
+		var13 = format(var7[var13], 511 - var13, "\n8. %L\n", _arg0, "SLAP_WITH_DMG", 5032[_arg0]) + var13;
+	}
+	else
+	{
+		var13 = format(var7[var13], 511 - var13, "\n8. %L\n", _arg0, "SLAY") + var13;
+	}
+	if (4768[_arg0] != var14)
+	{
+		new var5;
+		if (_arg1)
+		{
+			var5 = 29316;
+		}
+		else
+		{
+			var5 = 29336;
+		}
+		format(var7[var13], 511 - var13, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var5);
+		var15 |= 256;
+	}
+	else
+	{
+		new var6;
+		if (_arg1)
+		{
+			var6 = 29384;
+		}
+		else
+		{
+			var6 = 29404;
+		}
+		format(var7[var13], 511 - var13, "\n0. %L", _arg0, var6);
+	}
+	show_menu(_arg0, var15, var7, -1, "Slap/Slay Menu");
+	return 0;
+}
+
+sub_6540(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(412[_arg0], 4768[_arg0], 27140, 27144);
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	new var14 = 0;
+	new var15;
+	var15 = _arg1 * 7;
+	if (4768[_arg0] <= var15)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var15 = 0;
+	}
+	new var16;
+	new var1;
+	if (4768[_arg0] % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var5f78)
+	{
+		var2 = 31756;
+	}
+	else
+	{
+		var2 = 31820;
+	}
+	var16 = format(var9, 511, var2, _arg0, "TEAM_MENU", _arg1 + 1, var1 + 4768[_arg0] / 7);
+	new var17;
+	var17 = var15 + 7;
+	new var18 = 640;
+	if (4768[_arg0] < var17)
+	{
+		var17 = 4768[_arg0];
+	}
+	new var19;
+	var19 = var15;
+	while (var19 < var17)
+	{
+		var11 = 412[_arg0][var19];
+		get_user_name(var11, var13, "");
+		var12 = get_user_team(var11, var14, "");
+		new var3;
+		if (4900[_arg0])
+		{
+			var3 = 1;
+		}
+		else
+		{
+			var3 = 2;
+		}
+		new var4;
+		if (var3 != var12 && sub_6cc(var11, 1))
+		{
+			var10++;
+			if (g_var5f78)
+			{
+				var16 = format(var9[var16], 511 - var16, "\d%d. %s\R%s\n\w", var10, var13, var14) + var16;
+			}
+			else
+			{
+				var16 = format(var9[var16], 511 - var16, "#. %s\x09 %s\n", var13, var14) + var16;
+			}
+		}
+		else
+		{
+			var18 = 1 << var10 | var18;
+			var10++;
+			new var5;
+			if (g_var5f78)
+			{
+				var5 = 32012;
+			}
+			else
+			{
+				var5 = 32076;
+			}
+			var16 = format(var9[var16], 511 - var16, var5, var10, var13, var14) + var16;
+		}
+		var19++;
+	}
+	new var6;
+	if (4900[_arg0])
+	{
+		var6 = 32196;
+	}
+	else
+	{
+		var6 = 32236;
+	}
+	var16 = format(var9[var16], 511 - var16, "\n8. %L\n", _arg0, "TRANSF_TO", var6) + var16;
+	if (4768[_arg0] != var17)
+	{
+		new var7;
+		if (_arg1)
+		{
+			var7 = 32332;
+		}
+		else
+		{
+			var7 = 32352;
+		}
+		format(var9[var16], 511 - var16, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var7);
+		var18 |= 256;
+	}
+	else
+	{
+		new var8;
+		if (_arg1)
+		{
+			var8 = 32400;
+		}
+		else
+		{
+			var8 = 32420;
+		}
+		format(var9[var16], 511 - var16, "\n0. %L", _arg0, var8);
+	}
+	show_menu(_arg0, var18, var9, -1, "Team Menu");
+	return 0;
+}
+
+sub_22c(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_14c(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_7bc()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_944(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_8c38(_arg0)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	while (g_var5f74 < 24 && read_file(_arg0, var5, var2, 255, _unused_temp_))
+	{
+		if (!(var2 == 59))
+		{
+			if (3 < parse(var2, 14740[g_var5f74], 31, 17908[g_var5f74], 63, var3, 31, var4, 31))
+			{
+				do {
+				} while (replace(17908[g_var5f74], 63, "\'", 33212));
+				24148[g_var5f74][1] = read_flags(var3);
+				24148[g_var5f74] = read_flags(var4);
+				g_var5f74 += 1;
+			}
+		}
+	}
+	return 1;
+}
+
+sub_6cc(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_14c(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, "1.00");
+}
+
+sub_14c(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

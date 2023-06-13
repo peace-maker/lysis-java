@@ -1,0 +1,437 @@
+new BombCountDef;
+new BombCountVoice;
+new BombDefused;
+new BombDefusing;
+new BombDrop;
+new BombFailed;
+new BombPickUp;
+new BombPlanted;
+new BombPlanting;
+new BombReached;
+new DoubleKill;
+new DoubleKillSound;
+new EnemyRemaining;
+new FirstBloodSound;
+new GrenadeKill;
+new GrenadeSuicide;
+new HeadShotKill;
+new HeadShotKillSound;
+new ItalyBonusKill;
+new KillingStreak;
+new KillingStreakSound;
+new KnifeKill;
+new KnifeKillSound;
+new LastMan;
+new MultiKill;
+new MultiKillSound;
+new PlayerName;
+new RoundCounter;
+new RoundCounterSound;
+new g_var3a0;
+new g_var3a4;
+new g_var444;
+new g_var3b0;
+new g_var3b8;
+new g_var3bc;
+new g_var3a8;
+new g_var3ac;
+new g_var3b4;
+public bombTimer()
+{
+	g_var3a0 -= 1;
+	if (0 < g_var3a0)
+	{
+		if (BombCountVoice)
+		{
+			new var1;
+			if (g_var3a0 == 30 || g_var3a0 == 20)
+			{
+				new var2 = 0;
+				num_to_word(g_var3a0, var2, 63);
+				format(var2, 63, "\"vox/%s seconds until explosion\"", var2);
+				play_sound(var2);
+			}
+			if (g_var3a0 < 11)
+			{
+				new var3 = 0;
+				num_to_word(g_var3a0, var3, 63);
+				format(var3, 63, "\"fvox/%s\"", var3);
+				play_sound(var3);
+			}
+		}
+		if (BombCountDef)
+		{
+			client_print("1.00", 4, "%d", g_var3a0);
+		}
+	}
+	else
+	{
+		remove_task(8038, "1.00");
+	}
+	return 0;
+}
+
+public bomb_defused(_arg0)
+{
+	if (BombDefused)
+	{
+		sub_5590(_arg0, "DEFUSED_BOMB");
+	}
+	return 0;
+}
+
+public bomb_defusing(_arg0)
+{
+	if (BombDefusing)
+	{
+		sub_5590(_arg0, "DEFUSING_BOMB");
+	}
+	g_var3a4 = _arg0;
+	return 0;
+}
+
+public bomb_explode(_arg0, _arg1)
+{
+	new var1;
+	if (BombFailed && _arg1)
+	{
+		sub_5590(_arg1, "FAILED_DEFU");
+	}
+	return 0;
+}
+
+public bomb_planted(_arg0)
+{
+	g_var3a4 = 0;
+	if (BombPlanted)
+	{
+		sub_5590(_arg0, "SET_UP_BOMB");
+	}
+	g_var3a0 = get_cvar_num("mp_c4timer");
+	set_task(1065353216, "bombTimer", 8038, 11488, "1.00", 11492, "1.00");
+	return 0;
+}
+
+public bomb_planting(_arg0)
+{
+	if (BombPlanting)
+	{
+		sub_5590(_arg0, "PLANT_BOMB");
+	}
+	return 0;
+}
+
+public checkKills(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	new var2;
+	var2 = _arg0 + 4/* ERROR unknown load Binary */;
+	if (532[var1] == var2)
+	{
+		var2 += -3;
+		if (var2 > -1)
+		{
+			if (MultiKill)
+			{
+				new var3 = 0;
+				get_user_name(var1, var3, 31);
+				set_hudmessage(255, "1.00", HeadShotKillSound, 1028443341, 1059481190, 2, 1017370378, 1086324736, 1008981770, 1036831949, 2);
+				if (var2 > 6)
+				{
+					var2 = 6;
+				}
+				show_hudmessage("1.00", 1096[var2], var3, -1, "WITH", 532[var1], -1, "KILLS", 532[var1][1], -1, "HS");
+			}
+			if (MultiKillSound)
+			{
+				new var4 = 0;
+				format(var4, 23, "misc/%s", 2120[var2]);
+				play_sound(var4);
+			}
+		}
+	}
+	return 0;
+}
+
+public chickenKill()
+{
+	if (ItalyBonusKill)
+	{
+		sub_5590(0, "KILLED_CHICKEN");
+	}
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "client_death" (number 8)
+
+public client_putinserver(_arg0)
+{
+	return 0;
+}
+
+public eBombDrop()
+{
+	if (BombDrop)
+	{
+		sub_5590(g_var3a8, "DROPPED_BOMB");
+	}
+	return 0;
+}
+
+public eBombPickUp(_arg0)
+{
+	if (BombPickUp)
+	{
+		sub_5590(_arg0, "PICKED_BOMB");
+	}
+	return 0;
+}
+
+public eEndRound()
+{
+	g_var3a0 = -2;
+	g_var3ac = 0;
+	remove_task(8038, "1.00");
+	g_var3b0 = 0;
+	return 0;
+}
+
+public eGotBomb(_arg0)
+{
+	g_var3a8 = _arg0;
+	new var1;
+	if (BombReached && read_data(1) == 2 && sub_90(g_var3ac, get_gametime()))
+	{
+		g_var3ac = floatadd(1097859072, get_gametime());
+		sub_5590(g_var3a8, "REACHED_TARGET");
+	}
+	return 0;
+}
+
+public eNewRound()
+{
+	if (floatround(floatmul(1114636288, get_cvar_float("mp_roundtime")), "1.00") == read_data(1))
+	{
+		g_var444 = 1;
+		g_var3a0 = 0;
+		g_var3b4 += 1;
+		if (RoundCounter)
+		{
+			set_hudmessage(200, "1.00", "1.00", -1082130432, 1050253722, "1.00", 1086324736, 1086324736, 1056964608, 1041865114, 1);
+			show_hudmessage("1.00", "%L", -1, "PREPARE_FIGHT", g_var3b4);
+		}
+		if (RoundCounterSound)
+		{
+			play_sound("misc/prepare");
+		}
+		if (KillingStreak)
+		{
+			new var1 = 0;
+			new var2 = 0;
+			new var3 = 0;
+			get_players(var1, var2, "ac", 10048);
+			new var4 = 0;
+			while (var4 < var2)
+			{
+				var3 = var1[var4];
+				if (2 <= 136[var3])
+				{
+					client_print(var3, "", "* %L", var3, "KILLED_ROW", 136[var3]);
+				}
+				else
+				{
+					if (2 <= 136[var3][1])
+					{
+						client_print(var3, "", "* %L", var3, "DIED_ROUNDS", 136[var3][1]);
+					}
+				}
+				var4++;
+			}
+		}
+	}
+	return 0;
+}
+
+public eRestart()
+{
+	eEndRound();
+	g_var3b4 = 0;
+	g_var444 = 1;
+	return 0;
+}
+
+public hideStatus(_arg0)
+{
+	if (PlayerName)
+	{
+		set_hudmessage("1.00", "1.00", "1.00", "1.00", "1.00", "1.00", "1.00", 1008981770, "1.00", "1.00", 4);
+		show_hudmessage(_arg0, 10380);
+	}
+	return 0;
+}
+
+public play_sound(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_players(var1, var2, 11716, 10048);
+	new var3 = 0;
+	var3 = 0;
+	while (var3 < var2)
+	{
+		if (!(is_user_connecting(var1[var3])))
+		{
+			client_cmd(var1[var3], "spk %s", _arg0);
+		}
+		var3++;
+	}
+	return 0;
+}
+
+public plugin_cfg()
+{
+	new var1;
+	server_cmd(var1, "MultiKill", "MultiKill");
+	server_cmd(var1, "MultiKillSound", "MultiKillSound");
+	server_cmd(var1, "Bomb Planting", "BombPlanting");
+	server_cmd(var1, "Bomb Defusing", "BombDefusing");
+	server_cmd(var1, "Bomb Planted", "BombPlanted");
+	server_cmd(var1, "Bomb Defuse Succ.", "BombDefused");
+	server_cmd(var1, "Bomb Def. Failure", "BombFailed");
+	server_cmd(var1, "Bomb PickUp", "BombPickUp");
+	server_cmd(var1, "Bomb Drop", "BombDrop");
+	server_cmd(var1, "Bomb Count Down", "BombCountVoice");
+	server_cmd(var1, "Bomb Count Down (def)", "BombCountDef");
+	server_cmd(var1, "Bomb Site Reached", "BombReached");
+	server_cmd(var1, "Italy Bonus Kill", "ItalyBonusKill");
+	server_cmd(var1, "Last Man", "LastMan");
+	server_cmd(var1, "Knife Kill", "KnifeKill");
+	server_cmd(var1, "Knife Kill Sound", "KnifeKillSound");
+	server_cmd(var1, "Grenade Kill", "GrenadeKill");
+	server_cmd(var1, "Grenade Suicide", "GrenadeSuicide");
+	server_cmd(var1, "HeadShot Kill", "HeadShotKill");
+	server_cmd(var1, "HeadShot Kill Sound", "HeadShotKillSound");
+	server_cmd(var1, "Round Counter", "RoundCounter");
+	server_cmd(var1, "Round Counter Sound", "RoundCounterSound");
+	server_cmd(var1, "Killing Streak", "KillingStreak");
+	server_cmd(var1, "Killing Streak Sound", "KillingStreakSound");
+	server_cmd(var1, "Enemy Remaining", "EnemyRemaining");
+	server_cmd(var1, "Double Kill", "DoubleKill");
+	server_cmd(var1, "Double Kill Sound", "DoubleKillSound");
+	server_cmd(var1, "Player Name", "PlayerName");
+	server_cmd(var1, "First Blood Sound", "FirstBloodSound");
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("CS Misc. Stats", "1.00", "AMXX Dev Team");
+	register_dictionary("miscstats.txt");
+	register_event("TextMsg", "eRestart", 4380, "2&#Game_C", "2&#Game_w");
+	register_event("SendAudio", "eEndRound", 4548, "2&%!MRAD_terwin", "2&%!MRAD_ctwin", "2&%!MRAD_rounddraw");
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	register_event("StatusValue", "setTeam", "be", "1=1");
+	register_event("StatusValue", "showStatus", "be", "1=2", "2!0");
+	register_event("StatusValue", "hideStatus", "be", "1=1", "2=0");
+	new var2 = 0;
+	get_mapname(var2, 31);
+	new var1;
+	if (equali(var2, "de_", "") || equali(var2, "csde_", 5))
+	{
+		register_event("StatusIcon", "eGotBomb", "be", "1=1", "1=2", "2=c4");
+		register_event("TextMsg", "eBombPickUp", "bc", "2&#Got_bomb");
+		register_event("TextMsg", "eBombDrop", "bc", "2&#Game_bomb_d");
+	}
+	else
+	{
+		if (equali(var2, "cs_italy", "1.00"))
+		{
+			register_event("23", "chickenKill", 5796, "1=108", "15=4");
+			register_event("23", "radioKill", 5900, "1=108", "15=2");
+		}
+	}
+	return 0;
+}
+
+public plugin_modules()
+{
+	require_module("csx");
+	return 0;
+}
+
+public radioKill()
+{
+	if (ItalyBonusKill)
+	{
+		sub_5590(0, "BLEW_RADIO");
+	}
+	return 0;
+}
+
+public setTeam(_arg0)
+{
+	960[_arg0] = read_data(2);
+	return 0;
+}
+
+public showStatus(_arg0)
+{
+	if (PlayerName)
+	{
+		new var1 = 0;
+		new var2;
+		var2 = read_data(2);
+		get_user_name(var2, var1, 31);
+		new var3 = 0;
+		new var4 = 0;
+		if (get_user_team(var2, {0}, "1.00") == 1)
+		{
+			var3 = 255;
+		}
+		else
+		{
+			var4 = 255;
+		}
+		if (960[_arg0] == 1)
+		{
+			new var5;
+			var5 = get_user_weapon(var2, _unused_temp_, _unused_temp_);
+			new var6 = 0;
+			if (var5)
+			{
+				xmod_get_wpnname(var5, var6, 31);
+			}
+			set_hudmessage(var3, 50, var4, -1082130432, 1058642330, 1, 1008981770, 1077936128, 1008981770, 1008981770, 4);
+			show_hudmessage(_arg0, "%s -- %d HP / %d AP / %s", var1, get_user_health(var2), get_user_armor(var2), var6);
+		}
+		else
+		{
+			set_hudmessage(var3, 50, var4, -1082130432, 1058642330, 1, 1008981770, 1077936128, 1008981770, 1008981770, 4);
+			show_hudmessage(_arg0, var1);
+		}
+	}
+	return 0;
+}
+
+sub_5590(_arg0, _arg1)
+{
+	new var1 = 0;
+	get_user_name(_arg0, var1, 31);
+	set_hudmessage(255, HeadShotKillSound, 50, -1082130432, 1050253722, "1.00", 1086324736, 1086324736, 1056964608, 1041865114, 1);
+	show_hudmessage("1.00", "%L", -1, _arg1, var1);
+	return 0;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return floatcmp(_arg0, _arg1) == 0;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return 0 > floatcmp(_arg0, _arg1);
+}
+

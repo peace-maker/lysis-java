@@ -1,0 +1,241 @@
+new g_var0;
+public death_msg()
+{
+	new var1;
+	var1 = read_data(1);
+	new var2;
+	var2 = read_data(2);
+	if (var2 == var1)
+	{
+		return 1;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	get_user_origin(var1, var3, 1);
+	get_user_origin(var2, var4, g_var0);
+	new var5 = 0;
+	get_cvar_string("amx_dib_color", var5, 11);
+	new var6;
+	var6 = str_to_num(var5 + 24);
+	var5 + 24/* ERROR unknown load Binary */ = 0;
+	new var7;
+	var7 = str_to_num(var5 + 12);
+	var5 + 12/* ERROR unknown load Binary */ = 0;
+	new var8;
+	var8 = str_to_num(var5);
+	new var9;
+	var9 = get_cvar_num("amx_dib_cross");
+	message_begin(1, 23, 696, var2);
+	write_byte(g_var0);
+	write_coord(var9 + var3);
+	write_coord(var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var3 + 8/* ERROR unknown load Binary */);
+	write_coord(var3 - var9);
+	write_coord(var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var3 + 8/* ERROR unknown load Binary */);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var1, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(100);
+		write_byte(100);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 836, var2);
+	write_byte(g_var0);
+	write_coord(var3);
+	write_coord(var9 + var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var3 + 8/* ERROR unknown load Binary */);
+	write_coord(var3);
+	write_coord(var3 + 4/* ERROR unknown load Binary */ - var9);
+	write_coord(var3 + 8/* ERROR unknown load Binary */);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var1, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(100);
+		write_byte(100);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 972, var2);
+	write_byte(g_var0);
+	write_coord(var3);
+	write_coord(var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var9 + var3 + 8/* ERROR unknown load Binary */);
+	write_coord(var3);
+	write_coord(var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var3 + 8/* ERROR unknown load Binary */ - var9);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var1, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(100);
+		write_byte(100);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 1108, var2);
+	write_byte(g_var0);
+	write_coord(var9 + var4);
+	write_coord(var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var4 + 8/* ERROR unknown load Binary */);
+	write_coord(var4 - var9);
+	write_coord(var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var4 + 8/* ERROR unknown load Binary */);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var2, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(100);
+		write_byte(100);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 1244, var2);
+	write_byte(g_var0);
+	write_coord(var4);
+	write_coord(var9 + var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var4 + 8/* ERROR unknown load Binary */);
+	write_coord(var4);
+	write_coord(var4 + 4/* ERROR unknown load Binary */ - var9);
+	write_coord(var4 + 8/* ERROR unknown load Binary */);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var2, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(50);
+		write_byte(50);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 1380, var2);
+	write_byte(g_var0);
+	write_coord(var4);
+	write_coord(var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var9 + var4 + 8/* ERROR unknown load Binary */);
+	write_coord(var4);
+	write_coord(var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var4 + 8/* ERROR unknown load Binary */ - var9);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	if (get_user_team(var2, {0}, g_var0) == 1)
+	{
+		write_byte(255);
+		write_byte(50);
+		write_byte(50);
+	}
+	else
+	{
+		write_byte(100);
+		write_byte(100);
+		write_byte(255);
+	}
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	message_begin(1, 23, 1516, var2);
+	write_byte(g_var0);
+	write_coord(var3);
+	write_coord(var3 + 4/* ERROR unknown load Binary */);
+	write_coord(var3 + 8/* ERROR unknown load Binary */);
+	write_coord(var4);
+	write_coord(var4 + 4/* ERROR unknown load Binary */);
+	write_coord(var4 + 8/* ERROR unknown load Binary */);
+	write_short(g_var0);
+	write_byte(1);
+	write_byte(1);
+	write_byte(get_cvar_num("amx_dib_holdtime"));
+	write_byte(get_cvar_num("amx_dib_width"));
+	write_byte(g_var0);
+	write_byte(var8);
+	write_byte(var7);
+	write_byte(var6);
+	write_byte(100);
+	write_byte(g_var0);
+	message_end();
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin("Death-info beams", "3.0", "BMJ");
+	register_event("CS_DeathMsg", "death_msg", 192, {0});
+	register_cvar("amx_dib_holdtime", "200", g_var0, g_var0);
+	register_cvar("amx_dib_width", "10", g_var0, g_var0);
+	register_cvar("amx_dib_cross", "30", g_var0, g_var0);
+	register_cvar("amx_dib_color", "000255000", g_var0, g_var0);
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var0 = precache_model("sprites/dot.spr");
+	return 0;
+}
+

@@ -3100,7 +3100,7 @@ BuildConsoleBufferGeneral(bool:bTeam, iTeam)
 	new var6 = g_sConsoleBuf;
 	new var7 = 24;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferGeneral" (number 110)
 
 BuildConsoleBufferSpecial(bool:bRound, bool:bTeam, iTeam)
@@ -3109,7 +3109,7 @@ BuildConsoleBufferSpecial(bool:bRound, bool:bTeam, iTeam)
 	new var47 = g_sConsoleBuf;
 	new var48 = 24;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferSpecial" (number 111)
 
 BuildConsoleBufferInfected(bool:bRound, bool:bTeam, iTeam)
@@ -3118,7 +3118,7 @@ BuildConsoleBufferInfected(bool:bRound, bool:bTeam, iTeam)
 	new var33 = g_sConsoleBuf;
 	new var34 = 24;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferInfected" (number 112)
 
 BuildConsoleBufferAccuracy(bool:details, bool:bRound, bool:bTeam, iTeam)
@@ -3127,7 +3127,7 @@ BuildConsoleBufferAccuracy(bool:details, bool:bRound, bool:bTeam, iTeam)
 	new var46 = g_sConsoleBuf;
 	new var47 = 24;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferAccuracy" (number 113)
 
 BuildConsoleBufferMVP(bool:bTank, bool:bMore, bool:bRound, bool:bTeam, iTeam)
@@ -3136,7 +3136,7 @@ BuildConsoleBufferMVP(bool:bTank, bool:bMore, bool:bRound, bool:bTeam, iTeam)
 	new var84 = g_sConsoleBuf;
 	new var85 = 24;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferMVP" (number 114)
 
 BuildConsoleBufferFriendlyFireGiven(bool:bRound, bool:bTeam, iTeam)
@@ -3145,7 +3145,7 @@ BuildConsoleBufferFriendlyFireGiven(bool:bRound, bool:bTeam, iTeam)
 	new var41 = g_sConsoleBuf;
 	new var42 = 15;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferFriendlyFireGiven" (number 115)
 
 BuildConsoleBufferFriendlyFireTaken(bool:bRound, bool:bTeam, iTeam)
@@ -3154,7 +3154,7 @@ BuildConsoleBufferFriendlyFireTaken(bool:bRound, bool:bTeam, iTeam)
 	new var41 = g_sConsoleBuf;
 	new var42 = 15;
 
-/* ERROR! null */
+/* ERROR! Cannot invoke "lysis.lstructure.Variable.name()" because the return value of "lysis.nodes.types.DGenArray.var()" is null */
  function "BuildConsoleBufferFriendlyFireTaken" (number 116)
 
 SortPlayersMVP(bool:bRound, sortCol, bool:bTeam, iTeam)
@@ -3986,7 +3986,7 @@ public Action:Timer_AutomaticRoundEndPrint(Handle:timer)
 }
 
 
-/* ERROR! lysis.nodes.types.DJump cannot be cast to lysis.nodes.types.DJumpCondition */
+/* ERROR! class lysis.nodes.types.DJump cannot be cast to class lysis.nodes.types.DJumpCondition (lysis.nodes.types.DJump and lysis.nodes.types.DJumpCondition are in unnamed module of loader 'app') */
  function "AutomaticPrintPerClient" (number 126)
 
 public Action:Timer_DelayedPrint(Handle:timer, Handle:pack)

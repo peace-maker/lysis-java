@@ -1,0 +1,349 @@
+new g_var850;
+new g_var854;
+new g_var84c;
+new g_var10c;
+new g_var110;
+new g_var108;
+public bomb_defused(_arg0)
+{
+	1728[_arg0]++;
+	return 0;
+}
+
+public bomb_defusing(_arg0)
+{
+	1596[_arg0]++;
+	return 0;
+}
+
+public bomb_explode(_arg0)
+{
+	1464[_arg0]++;
+	return 0;
+}
+
+public bomb_planted(_arg0)
+{
+	1332[_arg0]++;
+	return 0;
+}
+
+public bomb_planting(_arg0)
+{
+	1200[_arg0]++;
+	return 0;
+}
+
+public changeMap()
+{
+	remove_task(32377, 0);
+	return 0;
+}
+
+public checkplayers()
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_players(_unused_temp_, var1, 8016, 8020);
+	if (!g_var850)
+	{
+		format(var2, 191, "\x04【注意】当前服务器地图不是迪酷指定的游戏地图，所有数据统计将会暂停！\n");
+		message_begin(2, g_var854, {0,0,0}, 0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+		return 1;
+	}
+	if (var1 < 8)
+	{
+		g_var84c = 0;
+		format(var2, 191, "\x04【注意】当前服务器在线人数少于8人，为防止刷分，所有数据统计将会暂停！\n");
+		message_begin(2, g_var854, {0,0,0}, 0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+	}
+	else
+	{
+		if (!g_var84c)
+		{
+			format(var2, 191, "\x04【注意】当前服务器在线人数超过8人，所有数据统计已经启用！\n");
+			message_begin(2, g_var854, {0,0,0}, 0);
+			write_byte(1);
+			write_string(var2);
+			message_end();
+			g_var84c = 1;
+		}
+	}
+	return 0;
+}
+
+public client_death(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	if (_arg2 == 6)
+	{
+		return 0;
+	}
+	new var1;
+	if (_arg2 == 29 && !_arg4 && _arg1 != _arg0)
+	{
+		new var4 = 0;
+		get_user_name(_arg0, var4, 31);
+		set_hudmessage(0, 255, 0, 1036831949, 1050253722, 0, 1065353216, 1092616192, 1036831949, 1036831949, 1);
+		show_hudmessage(0, "用刀杀敌:  %s\n奖励:  $10000", var4);
+		cs_set_user_money(_arg0, cs_get_user_money(_arg0) + 10000, 1);
+	}
+	new var2;
+	if (!g_var10c && !_arg4 && _arg1 != _arg0)
+	{
+		g_var10c = 1;
+		276[_arg0]++;
+		540[_arg1]++;
+		new var5 = 0;
+		get_user_name(_arg0, var5, 31);
+		set_hudmessage(255, 255, 0, 1036831949, 1050253722, 0, 1065353216, 1092616192, 1036831949, 1036831949, 1);
+		show_hudmessage(0, "最先杀敌:  %s\n奖励:  $10000", var5);
+		cs_set_user_money(_arg0, cs_get_user_money(_arg0) + 10000, 1);
+	}
+	new var3;
+	if (!g_var110 && !_arg4 && _arg1 != _arg0 && is_user_connected(_arg1))
+	{
+		new var6 = 0;
+		get_players(_unused_temp_, var6, "ae", 2136[get_user_team(_arg1, {0}, 0)]);
+		if (var6 == 0)
+		{
+			g_var110 = 1;
+			408[_arg0]++;
+			672[_arg1]++;
+		}
+	}
+	return 0;
+}
+
+public client_disconnect(_arg0)
+{
+	if (is_user_bot(_arg0))
+	{
+		return 1;
+	}
+	remove_task(_arg0, 0);
+	if (!g_var850)
+	{
+		return 1;
+	}
+	if (!g_var84c)
+	{
+		return 1;
+	}
+	new var5;
+	var5 = get_user_time(_arg0, 1);
+	new var1;
+	if (var5 < 60 && get_user_frags(_arg0) == 0 && get_user_deaths(_arg0) == 0)
+	{
+		return 1;
+	}
+	new var6 = 0;
+	get_user_ip(_arg0, var6, 16, 1);
+	get_user_ip(_arg0, _unused_temp_, 4, 1);
+	new var7 = 0;
+	new var8 = 0;
+	var7 = get_user_flags(_arg0, 3);
+	if (var7 == 1)
+	{
+		var7 = -1;
+	}
+	new var9 = 0;
+	var9 = get_user_flags(_arg0, 0);
+	new var2;
+	if (var9 & 1048576 == 0 && var7 == 0)
+	{
+		return 1;
+	}
+	new var3;
+	if (var9 & 8 == 0 && var9 & 2 != 0)
+	{
+		var8 = 1;
+	}
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	new var14;
+	var14 = get_cvar_num("server_type");
+	new var15;
+	var15 = get_cvar_num("server_id");
+	get_user_team(_arg0, _unused_temp_, 15);
+	get_user_name(_arg0, var10, 31);
+	get_user_authid(_arg0, _unused_temp_, 31);
+	new var16 = 0;
+	new var17 = 0;
+	new var18 = 0;
+	get_mapname(var16, 31);
+	get_cvar_string("ip", var17, 19);
+	get_cvar_string("port", var18, 7);
+	new var19 = 0;
+	var19 = get_user_flags(_arg0, 1);
+	new var20 = 1;
+	while (var20 < 31)
+	{
+		if (get_user_wstats(_arg0, var20, var11, var12))
+		{
+			xmod_get_wpnname(var20, var13, 23);
+			dbi_query(g_var108, "Insert into CS_SQL_Log_Weapon (UserCSName,ServerName,ServerIP,ServerPort,ServerType,ServerID,MapName,WeaponID,WeaponName,Shots,Hits,Kills,Headshots,Tks,Damage,Deaths,Head,Chest,Stomach,Leftarm,Rightarm,Leftleg,Rightleg,dv_user_id,Is_Bar_User) values ('%s','','%s',%s,%d,%d,'%s',%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", var10, var17, var18, var14, var15, var16, var20, var13, var11 + 16, var11 + 20, var11, var11 + 8, var11 + 12, var11 + 24, var11 + 4, var12 + 4, var12 + 8, var12 + 12, var12 + 16, var12 + 20, var12 + 24, var12 + 28, var19, var7);
+		}
+		var20++;
+	}
+	new var4;
+	if (132[_arg0])
+	{
+		var4 = 132[_arg0];
+	}
+	else
+	{
+		var4 = 1;
+	}
+	dbi_query(g_var108, "Insert into CS_SQL_Log_Basic (UserCSName,ServerName,ServerIP,ServerPort,ServerType,ServerID,MapName,OnlineTime,Latency,UserIP,FirstKill,LastKill,FirstDead,LastDead,TRound,CTRound,SpRound,TryPlantBomb,PlantedBomb,BombComp,TryDefBomb,DefBombComp,TryReHost,ReHostComp,dv_user_id,Is_Bar_User,SayDirtyWord) values ('%s','','%s',%s,%d,%d,'%s',%d,%d,'%s',%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", var10, var17, var18, var14, var15, var16, var5, 0[_arg0] / var4, var6, 276[_arg0], 408[_arg0], 540[_arg0], 672[_arg0], 804[_arg0], 936[_arg0], 1068[_arg0], 1200[_arg0], 1332[_arg0], 1464[_arg0], 1596[_arg0], 1728[_arg0], 1860[_arg0], 1992[_arg0], var19, var7, var8);
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	if (!is_user_bot(_arg0))
+	{
+		132[_arg0] = 0;
+		0[_arg0] = 0;
+		set_task(1100742656, "getPing", _arg0, 12708, 0, 12712, 0);
+		276[_arg0] = 0;
+		408[_arg0] = 0;
+		540[_arg0] = 0;
+		672[_arg0] = 0;
+		804[_arg0] = 0;
+		936[_arg0] = 0;
+		1068[_arg0] = 0;
+		1200[_arg0] = 0;
+		1332[_arg0] = 0;
+		1464[_arg0] = 0;
+		1596[_arg0] = 0;
+		1728[_arg0] = 0;
+		1860[_arg0] = 0;
+		1992[_arg0] = 0;
+	}
+	return 0;
+}
+
+public eNewRound()
+{
+	if (floatround(floatmul(1114636288, get_cvar_float("mp_roundtime")), 0) == read_data(1))
+	{
+		g_var10c = 0;
+		g_var110 = 0;
+	}
+	return 0;
+}
+
+public eRestart()
+{
+	g_var10c = 0;
+	g_var110 = 0;
+	return 0;
+}
+
+public endround()
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_players(var1, var2, 8016, 8020);
+	new var3 = 0;
+	while (var3 < var2)
+	{
+		if (get_user_team(var1[var3], {0}, 0) == 1)
+		{
+			804[var1[var3]]++;
+		}
+		else
+		{
+			if (get_user_team(var1[var3], {0}, 0) == 2)
+			{
+				936[var1[var3]]++;
+			}
+			1068[var1[var3]]++;
+		}
+		var3++;
+	}
+	return 0;
+}
+
+public eventEndRound()
+{
+	set_task(1050253722, "endround", 997, {0}, 0, {0}, 0);
+	return 0;
+}
+
+public getPing(_arg0)
+{
+	new var1 = 0;
+	get_user_ping(_arg0, var1, _unused_temp_);
+	new var2 = 0[_arg0];
+	var2 = var2[var1];
+	132[_arg0]++;
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Stats SQL Logging", "0.4", "CRaZy");
+	register_cvar("amx_sql_host", "127.0.0.1,2433", 0, 0);
+	register_cvar("amx_sql_user", "sa", 0, 0);
+	register_cvar("amx_sql_pass", "5D5661F75DDD496FC7751BF5DEEA2A", 0, 0);
+	register_cvar("amx_sql_db", "dcoo_database", 0, 0);
+	register_cvar("server_type", 2852, 0, 0);
+	register_cvar("server_id", 2900, 0, 0);
+	register_event("30", "changeMap", 2960, {0});
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	register_event("SendAudio", "eventEndRound", 3160, "2=%!MRAD_terwin", "2=%!MRAD_ctwin", "2=%!MRAD_rounddraw");
+	register_event("TextMsg", "eRestart", 3436, "2&#Game_C", "2&#Game_w");
+	new var1;
+	new var2 = 0;
+	get_mapname(var2, 31);
+	g_var850 = 0;
+	new var3 = 0;
+	while (var3 < 31)
+	{
+		if (equal(var2, var1[var3], 0))
+		{
+			g_var850 = 1;
+		}
+		var3++;
+	}
+	sql_conn();
+	set_task(1106247680, "checkplayers", 32377, 7668, 0, 7672, 0);
+	g_var854 = get_user_msgid("SayText");
+	g_var84c = 0;
+	return 0;
+}
+
+public plugin_modules()
+{
+	require_module("csx");
+	return 0;
+}
+
+public sql_conn()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	get_cvar_string("amx_sql_host", var1, 63);
+	get_cvar_string("amx_sql_user", var2, 31);
+	get_cvar_string("amx_sql_pass", var3, 31);
+	get_cvar_string("amx_sql_db", var4, 127);
+	g_var108 = dbi_connect(var1, var2, var3, var4, var5, 127);
+	if (0 >= g_var108)
+	{
+		server_print("[SQL-Log] %L", 0, "SQL_CANT_CON", var5);
+	}
+	return 0;
+}
+

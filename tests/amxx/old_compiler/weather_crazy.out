@@ -1,0 +1,13 @@
+public client_putinserver(_arg0)
+{
+	client_cmd(_arg0, "cl_weather 1");
+	return 0;
+}
+
+public plugin_precache()
+{
+	register_plugin("Weather", "2.0", "CRaZy");
+	create_entity("env_snow");
+	return 0;
+}
+

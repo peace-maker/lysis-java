@@ -1,0 +1,509 @@
+new g_var13304;
+new g_var15618;
+new g_var13300;
+public actionCmdMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 8:
+		{
+			new var2 = 78600[_arg0];
+			var2++;
+			sub_1690(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 78600[_arg0];
+			var1--;
+			sub_1690(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 78732[_arg0][_arg1 + 78600[_arg0] * 8];
+			new var4;
+			var4 = 38644[var3][1];
+			if (var4 & 1)
+			{
+				server_cmd(13684[var3]);
+			}
+			else
+			{
+				if (var4 & 2)
+				{
+					client_cmd(_arg0, 13684[var3]);
+				}
+				if (var4 & 4)
+				{
+					client_cmd("1.00", 13684[var3]);
+				}
+			}
+			if (var4 & 8)
+			{
+				sub_1690(_arg0, 78600[_arg0]);
+			}
+		}
+	}
+	return 1;
+}
+
+public actionCvarMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 8:
+		{
+			new var2 = 78600[_arg0];
+			var2++;
+			sub_33e8(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 78600[_arg0];
+			var1--;
+			sub_33e8(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 78732[_arg0][_arg1 + 78600[_arg0] * 8];
+			new var4 = 0;
+			get_cvar_string(39808[var3], var4, "");
+			new var5;
+			var5 = 46144[var3][2];
+			new var6;
+			var6 = 46144[var3][1];
+			new var7;
+			var7 = var6;
+			while (var7 < var5)
+			{
+				if (equal(var4, 46912[var7], "1.00"))
+				{
+					var7++;
+					if (var7 >= var5)
+					{
+						var7 = var6;
+					}
+					set_cvar_string(39808[var3], 46912[var7]);
+					sub_33e8(_arg0, 78600[_arg0]);
+				}
+				var7++;
+			}
+			set_cvar_string(39808[var3], 46912[var6]);
+			sub_33e8(_arg0, 78600[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public cmdCmdMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	read_argv("1.00", var1, "");
+	new var2 = 0;
+	while (var2 < 3)
+	{
+		if (!(equal(404[var2], var1, "1.00")))
+		{
+			var2++;
+		}
+		87444[_arg0] = var2;
+		new var3;
+		var3 = get_user_flags(_arg0, "1.00");
+		87312[_arg0] = 0;
+		new var4;
+		var4 = var2 * 32;
+		new var5 = 0;
+		new var6 = 0;
+		while (39796[var2] > var6)
+		{
+			var5 = var6 + var4;
+			if (var3 & 38644[var5])
+			{
+				new var7 = 87312[_arg0];
+				var7++;
+				78732[_arg0][var7] = var5;
+			}
+			var6++;
+		}
+		78600[_arg0] = 0;
+		sub_1690(_arg0, 0);
+		return 1;
+	}
+	87444[_arg0] = var2;
+	new var3;
+	var3 = get_user_flags(_arg0, "1.00");
+	87312[_arg0] = 0;
+	new var4;
+	var4 = var2 * 32;
+	new var5 = 0;
+	new var6 = 0;
+	while (39796[var2] > var6)
+	{
+		var5 = var6 + var4;
+		if (var3 & 38644[var5])
+		{
+			new var7 = 87312[_arg0];
+			var7++;
+			78732[_arg0][var7] = var5;
+		}
+		var6++;
+	}
+	78600[_arg0] = 0;
+	sub_1690(_arg0, 0);
+	return 1;
+}
+
+public cmdCvarMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_22c(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	new var1;
+	var1 = get_user_flags(_arg0, "1.00");
+	87312[_arg0] = 0;
+	new var2 = 0;
+	while (var2 < g_var13304)
+	{
+		if (var1 & 46144[var2])
+		{
+			new var3 = 87312[_arg0];
+			var3++;
+			78732[_arg0][var3] = var2;
+		}
+		var2++;
+	}
+	78600[_arg0] = 0;
+	sub_33e8(_arg0, 0);
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin("Commands Menu", "1.00", "AMXX Dev Team");
+	register_dictionary("cmdmenu.txt");
+	register_dictionary("common.txt");
+	new var1 = 0;
+	new var2 = 0;
+	sub_85c(var1, 63);
+	new var3 = 0;
+	while (var3 < 3)
+	{
+		new var4 = 0;
+		format(var4, 63, "%L", "en", 280[var3]);
+		register_menucmd(register_menuid(var4, "1.00"), 1023, "actionCmdMenu");
+		register_clcmd(404[var3], "cmdCmdMenu", 1048576, 712[var3]);
+		format(var2, 63, "%s/%s", var1, 572[var3]);
+		sub_27a8(var2, var3);
+		var3++;
+	}
+	register_menucmd(register_menuid("Cvars Menu", "1.00"), 1023, "actionCvarMenu");
+	register_clcmd("amx_cvarmenu", "cmdCvarMenu", 64, "- displays cvars menu");
+	new var5 = 0;
+	format(var5, 63, "%s/%s", var1, "cvars.ini");
+	sub_40fc(var5);
+	g_var15618 = sub_6d4();
+	return 0;
+}
+
+sub_1690(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7;
+	var7 = _arg1 * 8;
+	if (87312[_arg0] <= var7)
+	{
+		78600[_arg0] = 0;
+		_arg1 = 0;
+		var7 = 0;
+	}
+	new var8;
+	new var1;
+	if (87312[_arg0] % 8)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var15618)
+	{
+		var2 = 88288;
+	}
+	else
+	{
+		var2 = 88352;
+	}
+	var8 = format(var5, "", var2, _arg0, 280[87444[_arg0]], _arg1 + 1, var1 + 87312[_arg0] / 8);
+	new var9;
+	var9 = var7 + 8;
+	new var10 = 512;
+	if (87312[_arg0] < var9)
+	{
+		var9 = 87312[_arg0];
+	}
+	new var11;
+	var11 = var7;
+	while (var11 < var9)
+	{
+		if (13684[78732[_arg0][var11]] == 45)
+		{
+			if (g_var15618)
+			{
+				var8 = format(var5[var8], 511 - var8, "\d%s\n\w", 1012[78732[_arg0][var11]]) + var8;
+			}
+			else
+			{
+				var8 = format(var5[var8], 511 - var8, "%s\n", 1012[78732[_arg0][var11]]) + var8;
+			}
+			var6++;
+		}
+		else
+		{
+			var10 = 1 << var6 | var10;
+			var6++;
+			var8 = format(var5[var8], 511 - var8, "%d. %s\n", var6, 1012[78732[_arg0][var11]]) + var8;
+		}
+		var11++;
+	}
+	if (87312[_arg0] != var9)
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 88560;
+		}
+		else
+		{
+			var3 = 88580;
+		}
+		format(var5[var8], 511 - var8, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var3);
+		var10 |= 256;
+	}
+	else
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 88628;
+		}
+		else
+		{
+			var4 = 88648;
+		}
+		format(var5[var8], 511 - var8, "\n0. %L", _arg0, var4);
+	}
+	new var12 = 0;
+	format(var12, 63, "%L", "en", 280[87444[_arg0]]);
+	show_menu(_arg0, var10, var5, -1, var12);
+	return 0;
+}
+
+sub_33e8(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7;
+	var7 = _arg1 * 8;
+	if (87312[_arg0] <= var7)
+	{
+		78600[_arg0] = 0;
+		_arg1 = 0;
+		var7 = 0;
+	}
+	new var8;
+	new var1;
+	if (87312[_arg0] % 8)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var15618)
+	{
+		var2 = 88712;
+	}
+	else
+	{
+		var2 = 88808;
+	}
+	var8 = format(var5, "", var2, _arg1 + 1, var1 + 87312[_arg0] / 8);
+	new var9;
+	var9 = var7 + 8;
+	new var10 = 512;
+	new var11 = 0;
+	if (87312[_arg0] < var9)
+	{
+		var9 = 87312[_arg0];
+	}
+	new var12;
+	var12 = var7;
+	while (var12 < var9)
+	{
+		get_cvar_string(39808[78732[_arg0][var12]], var11, "");
+		var10 = 1 << var6 | var10;
+		var6++;
+		if (g_var15618)
+		{
+			var8 = format(var5[var8], 511 - var8, "%d. %s\R%s\n\w", var6, 39808[78732[_arg0][var12]], var11) + var8;
+		}
+		else
+		{
+			var8 = format(var5[var8], 511 - var8, "%d. %s    %s\n", var6, 39808[78732[_arg0][var12]], var11) + var8;
+		}
+		var12++;
+	}
+	if (87312[_arg0] != var9)
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 89080;
+		}
+		else
+		{
+			var3 = 89100;
+		}
+		format(var5[var8], 511 - var8, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var3);
+		var10 |= 256;
+	}
+	else
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 89148;
+		}
+		else
+		{
+			var4 = 89168;
+		}
+		format(var5[var8], 511 - var8, "\n0. %L", _arg0, var4);
+	}
+	show_menu(_arg0, var10, var5, -1, {0});
+	return 0;
+}
+
+sub_22c(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_14c(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_85c(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_27a8(_arg0, _arg1)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7;
+	var7 = _arg1 * 32;
+	while (39796[_arg1] < 32 && read_file(_arg0, var5, var2, 255, _unused_temp_))
+	{
+		if (!(var2 == 59))
+		{
+			var6 = 39796[_arg1][var7];
+			if (3 < parse(var2, 1012[var6], 31, 13684[var6], 63, var3, 31, var4, 31))
+			{
+				do {
+				} while (replace(13684[var6], 63, "\'", 88704));
+				38644[var6][1] = read_flags(var3);
+				38644[var6] = read_flags(var4);
+				39796[_arg1]++;
+			}
+		}
+	}
+	return 1;
+}
+
+
+/* ERROR! null */
+ function "sub_40fc" (number 10)
+
+sub_6d4()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_14c(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

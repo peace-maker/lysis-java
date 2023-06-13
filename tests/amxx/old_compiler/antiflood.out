@@ -1,0 +1,50 @@
+public chkFlood(_arg0)
+{
+	new var1;
+	var1 = get_cvar_float("amx_flood_time");
+	if (!(sub_148(var1)))
+	{
+		new var2;
+		var2 = get_gametime();
+		if (sub_90(20[_arg0], var2))
+		{
+			if (3 <= 152[_arg0])
+			{
+				client_print(_arg0, 1, "** %L **", _arg0, "STOP_FLOOD");
+				20[_arg0] = floatadd(1077936128, floatadd(var2, var1));
+				return 1;
+			}
+			152[_arg0]++;
+		}
+		else
+		{
+			if (152[_arg0])
+			{
+				152[_arg0]--;
+			}
+		}
+		20[_arg0] = floatadd(var2, var1);
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Anti Flood", "1.00", "AMXX Dev Team");
+	register_dictionary("antiflood.txt");
+	register_clcmd("say", "chkFlood", -1, {0});
+	register_clcmd("say_team", "chkFlood", -1, {0});
+	register_cvar("amx_flood_time", "0.75", "1.00", "1.00");
+	return 0;
+}
+
+sub_148(_arg0)
+{
+	return _arg0 & -1 == 0;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+

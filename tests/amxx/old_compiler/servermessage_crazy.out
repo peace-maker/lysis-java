@@ -1,0 +1,337 @@
+new g_var19138;
+new g_var19134;
+new g_var195c0;
+new g_var18;
+new g_var14;
+new g_varc1c;
+new g_varc20;
+new g_varc24;
+new g_var195bc;
+public GetFullSpace(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < _arg0)
+	{
+		_arg1[var1 * 3] = 227;
+		_arg1[var1 * 3 + 1] = 128;
+		_arg1[var1 * 3 + 2] = 128;
+		var1++;
+	}
+	_arg1[_arg0 * 3] = 0;
+	return 0;
+}
+
+public h2s(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (strlen(_arg0) > var1)
+	{
+		_arg1[var1 / 2] = n2h(_arg0[var1], _arg0[var1 + 1]);
+		var1 += 2;
+	}
+	_arg1[strlen(_arg0) / 2] = 0;
+	return 0;
+}
+
+public infoMessage()
+{
+	if (g_var19138 >= g_var19134)
+	{
+		g_var19138 = 0;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	get_players(var1, var2, "bc", 108800);
+	new var3 = 0;
+	while (var3 < var2)
+	{
+		set_hudmessage(3112[g_var19138], 3112[g_var19138][1], 3112[g_var19138][2], -1082130432, 1045220557, 2, 1056964608, 1086324736, 1036831949, 1073741824, 1);
+		show_hudmessage(var1[var3], 4148[g_var19138]);
+		var3++;
+	}
+	g_var19138 += 1;
+	new var4;
+	var4 = get_cvar_float("amx_freq_imessage");
+	if (sub_158(var4, 0))
+	{
+		set_task(var4, "infoMessage", 12345, {0}, "1.00", {0}, "1.00");
+	}
+	return 0;
+}
+
+public msgInit()
+{
+	switch (g_var195c0 % 2)
+	{
+		case 0:
+		{
+			new var1 = 0;
+			format(var1, 511, "迪酷服务器，拥有反作弊系统、\n权威数据排行、特色游戏道具、\n有奖个人混战赛和社团联赛。　", var1);
+			set_hudmessage("1.00", 255, "1.00", 1063675494, 1060320051, "1.00", "1.00", 1101004800, 1077936128, 1077936128, 2);
+			show_hudmessage("1.00", var1);
+		}
+		case 1:
+		{
+			g_var18 = 1;
+			g_var14 = 0;
+			g_varc1c = 1059481190;
+			set_task(1045220557, "showMsg", 123, 108448, "1.00", 108452, g_varc20 + 48);
+		}
+		case 2:
+		{
+			g_var18 = 1;
+			g_var14 = 0;
+			g_varc1c = 1059481190;
+			set_task(1045220557, "showMsg", 123, 108492, "1.00", 108496, g_varc20 + 48);
+		}
+		default:
+		{
+		}
+	}
+	g_var195c0 += 1;
+	return 0;
+}
+
+public n2h(_arg0, _arg1)
+{
+	return s2n(_arg1) + s2n(_arg0) * 16;
+}
+
+public plugin_end()
+{
+	new var1 = 0;
+	num_to_str(g_var19138, var1, 7);
+	set_localinfo("lastinfomsg", var1);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_cvar("amx_sql_host", "127.0.0.1,2433", "1.00", "1.00");
+	register_cvar("amx_sql_user", "sa", "1.00", "1.00");
+	register_cvar("amx_sql_pass", "5D5661F75DDD496FC7751BF5DEEA2A", "1.00", "1.00");
+	register_cvar("amx_sql_db", "dcoo_database", "1.00", "1.00");
+	register_cvar("server_id", 104368, "1.00", "1.00");
+	register_plugin("Scrolling Message", "1.00", "AMXX Dev Team");
+	register_dictionary("scrollmsg.txt");
+	register_dictionary("common.txt");
+	register_srvcmd("amx_scrollmsg", "setMessage", -1, {0});
+	register_plugin("Info. Messages", "1.00", "AMXX Dev Team");
+	register_dictionary("imessage.txt");
+	register_dictionary("common.txt");
+	register_srvcmd("amx_imessage", "setMessage1", -1, {0});
+	register_cvar("amx_freq_imessage", "10", "1.00", "1.00");
+	new var1 = 0;
+	get_localinfo("lastinfomsg", var1, 7);
+	g_var19138 = str_to_num(var1);
+	set_localinfo("lastinfomsg", 105200);
+	set_task(1065353216, "sql_conn", "1.00", {0}, "1.00", {0}, "1.00");
+	return 0;
+}
+
+public s2n(_arg0)
+{
+	new var1;
+	if (_arg0 >= 48 && _arg0 <= 57)
+	{
+		return _arg0 + -48;
+	}
+	new var2;
+	if (_arg0 >= 65 && _arg0 <= 70)
+	{
+		return _arg0 + -55;
+	}
+	return 0;
+}
+
+public setMessage()
+{
+	remove_task(123, "1.00");
+	read_argv(1, 28, 380);
+	new var1 = 0;
+	new var2 = 0;
+	get_cvar_string("hostname", var1, 63);
+	replace(28, 380, "%hostname%", var1);
+	g_varc20 = strlen(28);
+	new var3 = 0;
+	read_argv(2, var3, 31);
+	g_varc24 = str_to_num(var3);
+	if (0 < g_varc24)
+	{
+		new var4;
+		var4 = floatround(sub_90(floatadd(1045220557, 1036831949), g_varc20 + 48), "1.00");
+		if (g_varc24 < var4)
+		{
+			server_print("%L", 0, "MIN_FREQ", var4);
+			g_varc24 = var4;
+		}
+		server_print("%L", 0, "MSG_FREQ", g_varc24 / 60, g_varc24 % 60);
+		set_task(float(g_varc24), "msgInit", 123, 108712, "1.00", 108716, "1.00");
+	}
+	else
+	{
+		server_print("%L", 0, "MSG_DISABLED");
+	}
+	read_argv("", var2, 11);
+	4136 + 8/* ERROR unknown load Binary */ = str_to_num(var2 + 24);
+	var2 + 24/* ERROR unknown load Binary */ = 0;
+	4136 + 4/* ERROR unknown load Binary */ = str_to_num(var2 + 12);
+	var2 + 12/* ERROR unknown load Binary */ = 0;
+	4136/* ERROR unknown load Constant */ = str_to_num(var2);
+	return 1;
+}
+
+public setMessage1()
+{
+	if (g_var19134 >= 64)
+	{
+		server_print("%L", 0, "INF_REACH");
+		return 1;
+	}
+	remove_task(12345, "1.00");
+	read_argv(1, 4148[g_var19134], 380);
+	new var1 = 0;
+	get_cvar_string("hostname", var1, 63);
+	replace(4148[g_var19134], 380, "%hostname%", var1);
+	do {
+	} while (replace(4148[g_var19134], 380, "\n", 109068));
+	new var2 = 0;
+	read_argv(2, var2, 11);
+	3112[g_var19134][2] = str_to_num(var2 + 24);
+	var2 + 24/* ERROR unknown load Binary */ = 0;
+	3112[g_var19134][1] = str_to_num(var2 + 12);
+	var2 + 12/* ERROR unknown load Binary */ = 0;
+	3112[g_var19134] = str_to_num(var2);
+	g_var19134 += 1;
+	new var3;
+	var3 = get_cvar_float("amx_freq_imessage");
+	if (sub_158(var3, 0))
+	{
+		set_task(var3, "infoMessage", 12345, {0}, "1.00", {0}, "1.00");
+	}
+	return 1;
+}
+
+public showMsg()
+{
+	new var1;
+	var1 = g_var14;
+	new var2 = 0;
+	while (var1 < g_var18)
+	{
+		var2++;
+		var1++;
+		1564[var2] = 28[var1];
+	}
+	1564[var2] = 0;
+	if (g_var18 < g_varc20)
+	{
+		g_var18 += 1;
+	}
+	if (sub_158(g_varc1c, 1051931443))
+	{
+		g_varc1c = floatsub(g_varc1c, 1003384891);
+	}
+	else
+	{
+		g_var14 += 1;
+		g_varc1c = 1051931443;
+	}
+	set_hudmessage(4136/* ERROR unknown load Constant */, 4136 + 4/* ERROR unknown load Binary */, 4136 + 8/* ERROR unknown load Binary */, g_varc1c, 1039516303, "1.00", 1045220557, 1045220557, 1028443341, 1028443341, 2);
+	show_hudmessage("1.00", 1564);
+	return 0;
+}
+
+public sql_conn()
+{
+	get_cvar_string("amx_sql_host", 102716, 63);
+	get_cvar_string("amx_sql_user", 102972, 31);
+	get_cvar_string("amx_sql_pass", 103100, 31);
+	get_cvar_string("amx_sql_db", 103228, 31);
+	new var1;
+	var1 = get_cvar_num("server_id");
+	g_var195bc = dbi_connect(102716, 102972, 103100, 103228, 103356, 127);
+	if (0 >= g_var195bc)
+	{
+		server_print("[ServerMessage] %L", 0, "SQL_CANT_CON", 103356);
+		return 1;
+	}
+	server_print("[ServerMessage] SQL Connect!");
+	new var2;
+	var2 = dbi_query(g_var195bc, "SELECT ScrollMessage,convert(varchar(5),Frequency)  as Frequency1,Color FROM Server_ScrollMessage where iswork=1");
+	if (var2 == -1)
+	{
+		dbi_error(g_var195bc, 103356, 127);
+		server_print("[ServerMessage] Can't load ScrollMessage! %s", 103356);
+		dbi_close(g_var195bc);
+		return 1;
+	}
+	if (var2 == 0)
+	{
+		server_print("[ServerMessage] No ScrollMessage!");
+		dbi_close(g_var195bc);
+		return 1;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	dbi_getfield(var2, "1.00", var3, 1023);
+	dbi_getfield(var2, 1, var5, 7);
+	dbi_getfield(var2, 2, var6, 9);
+	h2s(var3, var4);
+	server_cmd("amx_scrollmsg \"%s\" %s %s", var4, var5, var6);
+	var7++;
+	while (0 < dbi_nextrow(var2))
+	{
+		dbi_getfield(var2, "1.00", var3, 1023);
+		dbi_getfield(var2, 1, var5, 7);
+		dbi_getfield(var2, 2, var6, 9);
+		h2s(var3, var4);
+		server_cmd("amx_scrollmsg \"%s\" %s %s", var4, var5, var6);
+		var7++;
+	}
+	server_print("[ServerMessage] Get %d ScrollMessages!", var7);
+	var7 = 0;
+	var2 = dbi_query(g_var195bc, "SELECT iMessage,iColor FROM Server_iMessage where iswork=1 and (ServerID='0' or ServerID like '%%#%d#%%')", var1);
+	if (var2 == -1)
+	{
+		dbi_error(g_var195bc, 103356, 127);
+		server_print("[ServerMessage] Can't load iMessage! %s", 103356);
+		dbi_close(g_var195bc);
+		return 1;
+	}
+	if (var2 == 0)
+	{
+		server_print("[ServerMessage] No iMessage!");
+		dbi_close(g_var195bc);
+		return 1;
+	}
+	dbi_getfield(var2, "1.00", var3, 1023);
+	dbi_getfield(var2, 1, var5, 9);
+	h2s(var3, var4);
+	server_cmd("amx_imessage \"%s\" \"%s\"", var4, var5);
+	var7++;
+	while (0 < dbi_nextrow(var2))
+	{
+		dbi_getfield(var2, "1.00", var3, 1023);
+		dbi_getfield(var2, 1, var5, 9);
+		h2s(var3, var4);
+		server_cmd("amx_imessage \"%s\" \"%s\"", var4, var5);
+		var7++;
+	}
+	server_print("[ServerMessage] Get %d ScreenMessages!!", var7);
+	return 0;
+}
+
+sub_158(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+
+sub_90(_arg0, _arg1)
+{
+	return floatmul(_arg0, float(_arg1));
+}
+

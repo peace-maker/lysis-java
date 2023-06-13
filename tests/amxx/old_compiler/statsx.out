@@ -1,0 +1,1687 @@
+new EndPlayer;
+new EndTop15;
+new KillerChat;
+new SayHP;
+new SayMe;
+new SayMiscFunc;
+new SayRank;
+new SayRankStats;
+new SayReport;
+new SayScore;
+new SayStatsAll;
+new SayStatsMe;
+new SayTop15;
+new ShowAttackers;
+new ShowBestScore;
+new ShowDistHS;
+new ShowFullStats;
+new ShowKiller;
+new ShowMostDisruptive;
+new ShowStats = 1;
+new ShowTeamScore;
+new ShowTotalStats;
+new ShowVictims;
+new SpecRankInfo;
+new g_var1954;
+new g_var1958;
+new g_var524;
+new g_var195c;
+new g_var1944;
+new g_var1950;
+new g_var194c;
+new g_var1948;
+public ERTask()
+{
+	g_var1954 = 1;
+	sub_e698();
+	return 0;
+}
+
+public actionStatsMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0, 1, 2, 3, 4, 5, 6:
+		{
+			new var4 = 0;
+			new var5 = 0;
+			var4 = _arg1 + 1320[_arg0] * 7;
+			new var1;
+			if (var4 >= 0 && var4 < 32)
+			{
+				var5 = 1584[_arg0][var4];
+				if (is_user_connected(var5))
+				{
+					switch (1452[_arg0])
+					{
+						case 0:
+						{
+							sub_84c0(var5, 18008);
+						}
+						case 1:
+						{
+							sub_7858(var5, 18008, _arg0);
+						}
+						default:
+						{
+							18008/* ERROR unknown load Constant */ = 0;
+						}
+					}
+					if (18008/* ERROR unknown load Constant */)
+					{
+						get_user_name(var5, 36440, "");
+						show_motd(_arg0, 18008, 36440);
+					}
+				}
+			}
+			sub_bbe0(_arg0, 1320[_arg0]);
+		}
+		case 7:
+		{
+			1452[_arg0]++;
+			if (2 <= 1452[_arg0])
+			{
+				1452[_arg0] = 0;
+			}
+			sub_bbe0(_arg0, 1320[_arg0]);
+		}
+		case 8:
+		{
+			new var3 = 1320[_arg0];
+			var3++;
+			sub_bbe0(_arg0, var3);
+		}
+		case 9:
+		{
+			if (0 < 1320[_arg0])
+			{
+				new var2 = 1320[_arg0];
+				var2--;
+				sub_bbe0(_arg0, var2);
+			}
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public client_connect(_arg0)
+{
+	if (ShowStats)
+	{
+		get_user_info(_arg0, "_amxstatsx", 35416, 255);
+		new var1;
+		if (35416/* ERROR unknown load Constant */)
+		{
+			var1 = str_to_num(35416);
+		}
+		else
+		{
+			var1 = -1;
+		}
+		6204[_arg0] = var1;
+	}
+	else
+	{
+		6204[_arg0] = 0;
+	}
+	524[_arg0] = 0;
+	524[_arg0][4] = 0;
+	6072[_arg0] = 0;
+	6336[_arg0] = 0;
+	return 0;
+}
+
+public client_death(_arg0, _arg1)
+{
+	if (!_arg0)
+	{
+		return 0;
+	}
+	if (_arg1 != _arg0)
+	{
+		new var1 = 0;
+		new var2 = 0;
+		new var3 = 0;
+		get_user_origin(_arg1, var1, "1.00");
+		get_user_origin(_arg0, var2, "1.00");
+		524[_arg1] = _arg0;
+		524[_arg1][1] = get_user_health(_arg0);
+		524[_arg1][2] = get_user_armor(_arg0);
+		524[_arg1][4] = 0;
+		var3 = get_distance(var1, var2);
+		6788[_arg1] = var3;
+		6920[_arg0][_arg1] = var3;
+	}
+	524[_arg1][3] = get_user_team(_arg1, {0}, "1.00");
+	524[_arg1][4] = 1;
+	if (!g_var1958)
+	{
+		sub_d8b8(_arg1);
+	}
+	return 0;
+}
+
+public cmdCurrentMap()
+{
+	if (!SayMiscFunc)
+	{
+		return 0;
+	}
+	get_mapname(18008, 2047);
+	client_print("1.00", "", "%L:  %s", -1, "PLAYED_MAP", 18008);
+	return 0;
+}
+
+public cmdFf()
+{
+	if (!SayMiscFunc)
+	{
+		return 0;
+	}
+	new var1;
+	if (get_cvar_num("mp_friendlyfire"))
+	{
+		var1 = 52924;
+	}
+	else
+	{
+		var1 = 52936;
+	}
+	client_print("1.00", "", "%L:  %L", -1, "FRIEND_FIRE", -1, var1);
+	return 0;
+}
+
+public cmdHp(_arg0)
+{
+	if (!SayHP)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	new var1;
+	var1 = 524[_arg0];
+	sub_624c(_arg0, var1, 18008);
+	client_print(_arg0, "", "* %s", 18008);
+	return 0;
+}
+
+public cmdMe(_arg0)
+{
+	if (!SayMe)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	sub_68c0(_arg0, 0, 18008);
+	client_print(_arg0, "", "* %s", 18008);
+	return 0;
+}
+
+public cmdPluginMode(_arg0, _arg1, _arg2)
+{
+	if (!sub_774(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	if (1 < read_argc())
+	{
+		read_argv(1, 18008, 2047);
+	}
+	else
+	{
+		18008/* ERROR unknown load Constant */ = 0;
+	}
+	sub_2c44(_arg0, 18008);
+	return 1;
+}
+
+public cmdRank(_arg0)
+{
+	if (!SayRank)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	var2 = get_user_stats(_arg0, var1, _unused_temp_);
+	var3 = get_statsnum();
+	var4 = sub_2a38(var1);
+	var5 = sub_28e4(var1);
+	client_print(_arg0, "", "* %L", _arg0, "YOUR_RANK_IS", var2, var3, var1, var1 + 20, var4, var5);
+	return 0;
+}
+
+public cmdRankStats(_arg0)
+{
+	if (!SayRankStats)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	sub_7858(_arg0, 18008, 0);
+	get_user_name(_arg0, 36440, "");
+	show_motd(_arg0, 18008, 36440);
+	return 0;
+}
+
+public cmdReport(_arg0)
+{
+	if (!SayReport)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	var1 = get_user_weapon(_arg0, var2, var3);
+	xmod_get_wpnname(var1, 36568, "");
+	var4 = get_user_health(_arg0);
+	var5 = get_user_armor(_arg0);
+	new var6 = 0;
+	format(var6, 15, "%L", _arg0, "WEAPON");
+	strtolower(var6);
+	if (0 <= var2)
+	{
+		format(18008, 2047, "%s: %s, %L: %d/%d, %L: %d, %L: %d", var6, 36568, 0, "AMMO", var2, var3, 0, "HEALTH", var4, 0, "ARMOR", var5);
+	}
+	else
+	{
+		format(18008, 2047, "%s: %s, %L: %d, %L: %d", var6, 36568 + 28, 0, "HEALTH", var4, 0, "ARMOR", var5);
+	}
+	engclient_cmd(_arg0, "say_team", 18008, {0});
+	return 0;
+}
+
+public cmdScore(_arg0)
+{
+	if (!SayScore)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	client_print(_arg0, "", "%L: %s", _arg0, "GAME_SCORE", 26200);
+	return 0;
+}
+
+public cmdStats(_arg0)
+{
+	if (!SayStatsAll)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	1320[_arg0] = 0;
+	sub_bbe0(_arg0, 0);
+	return 0;
+}
+
+public cmdStatsMe(_arg0)
+{
+	if (!SayStatsMe)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	sub_84c0(_arg0, 18008);
+	get_user_name(_arg0, 36440, "");
+	show_motd(_arg0, 18008, 36440);
+	return 0;
+}
+
+public cmdSwitch(_arg0)
+{
+	new var1;
+	if (6204[_arg0])
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = -1;
+	}
+	6204[_arg0] = var1;
+	num_to_str(6204[_arg0], 35416, 255);
+	client_cmd(_arg0, "setinfo _amxstatsx %s", 35416);
+	new var3 = 0;
+	new var2;
+	if (6204[_arg0])
+	{
+		var2 = 53052;
+	}
+	else
+	{
+		var2 = 53084;
+	}
+	format(var3, "", "%L", _arg0, var2);
+	client_print(_arg0, "", "* %L", _arg0, "STATS_ANNOUNCE", var3);
+	return 0;
+}
+
+public cmdTheTime()
+{
+	if (!SayMiscFunc)
+	{
+		return 0;
+	}
+	get_time("%H:%M:%S", 18008, 2047);
+	client_print("1.00", "", "%L:  %s", -1, "THE_TIME", 18008);
+	return 0;
+}
+
+public cmdTimeLeft(_arg0)
+{
+	if (!SayMiscFunc)
+	{
+		return 0;
+	}
+	new var1;
+	var1 = get_timeleft();
+	if (var1)
+	{
+		client_print("1.00", "", "%L:  %02d:%02d", _arg0, "TIME_REM", var1 / 60, var1 % 60);
+	}
+	else
+	{
+		client_print("1.00", "", "* %L *", -1, "NO_T_LIMIT");
+	}
+	return 0;
+}
+
+public cmdTop15(_arg0)
+{
+	if (!SayTop15)
+	{
+		client_print(_arg0, "", "%L", _arg0, "DISABLED_MSG");
+		return 1;
+	}
+	sub_6f18(18008);
+	show_motd(_arg0, 18008, "Top 15");
+	return 0;
+}
+
+public delay_resethud(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	new var2 = 0;
+	var2 = get_gametime();
+	sub_93d8(var1, var2);
+	sub_900c(var1, var2);
+	524[var1] = 0;
+	524[var1][4] = 0;
+	6072[var1] = -1;
+	6336[var1] = 0;
+	6788[var1] = 0;
+	new var3 = 0;
+	while (var3 < 33)
+	{
+		6920[var1][var3] = 0;
+		var3++;
+	}
+	return 0;
+}
+
+public end_game_stats()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	if (EndPlayer)
+	{
+		get_players(var1, var3, 53380, 53384);
+		var2 = 0;
+		while (var2 < var3)
+		{
+			var4 = var1[var2];
+			if (6204[var4])
+			{
+				cmdStatsMe(var1[var2]);
+			}
+			var2++;
+		}
+	}
+	else
+	{
+		if (EndTop15)
+		{
+			get_players(var1, var3, 53380, 53384);
+			sub_6f18(18008);
+			var2 = 0;
+			while (var2 < var3)
+			{
+				var4 = var1[var2];
+				if (6204[var4])
+				{
+					show_motd(var1[var2], 18008, "Top 15");
+				}
+				var2++;
+			}
+		}
+	}
+	return 0;
+}
+
+public eventEndRound()
+{
+	sub_2da4();
+	if (!g_var1954)
+	{
+		read_data(2, 35416, 255);
+		if (35416 + 28/* ERROR unknown load Binary */ == 116)
+		{
+			6496/* ERROR unknown load Constant */++;
+		}
+		if (35416 + 28/* ERROR unknown load Binary */ == 99)
+		{
+			6496 + 4/* ERROR unknown load Binary */++;
+		}
+	}
+	set_task(1050253722, "ERTask", 997, {0}, "1.00", {0}, "1.00");
+	return 0;
+}
+
+public eventIntermission()
+{
+	new var1;
+	if (EndPlayer || EndTop15)
+	{
+		set_task(1065353216, "end_game_stats", 900, {0}, "1.00", {0}, "1.00");
+	}
+	return 0;
+}
+
+public eventResetHud(_arg0)
+{
+	new var1 = 0;
+	var1 = _arg0;
+	if (g_var524 & 0)
+	{
+		set_task(1008981770, "delay_resethud", _arg0 + 200, var1, 1, {0}, "1.00");
+	}
+	else
+	{
+		delay_resethud(var1);
+	}
+	return 0;
+}
+
+public eventShowRank(_arg0)
+{
+	new var1;
+	if (SpecRankInfo && 5940[_arg0])
+	{
+		new var2;
+		var2 = read_data(2);
+		if (is_user_connected(var2))
+		{
+			new var3 = 0;
+			new var4 = 0;
+			get_user_name(var2, 36440, "");
+			var3 = get_user_stats(var2, _unused_temp_, _unused_temp_);
+			var4 = get_statsnum();
+			sub_2834();
+			show_hudmessage(_arg0, "%L", _arg0, "X_RANK_IS", 36440, var3, var4);
+		}
+	}
+	return 0;
+}
+
+public eventSpecMode(_arg0)
+{
+	new var1 = 0;
+	read_data(2, var1, 11);
+	5940[_arg0] = var1 + 40/* ERROR unknown load Binary */ == 50;
+	return 0;
+}
+
+public eventStartGame()
+{
+	read_data(2, 35416, 255);
+	if (35416 + 24/* ERROR unknown load Binary */ == 119)
+	{
+		read_data("", 35416, 255);
+		g_var195c = floatadd(get_gametime(), float(str_to_num(35416)));
+	}
+	else
+	{
+		g_var195c = get_gametime();
+	}
+	return 0;
+}
+
+public eventStartRound()
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	var5 = read_data(1);
+	if (sub_380(var5, sub_84(get_cvar_float("mp_roundtime"), 60)))
+	{
+		new var1;
+		if (sub_208(g_var195c, 0) && sub_514(g_var195c, get_gametime()))
+		{
+			g_var195c = 0;
+			var2 = 0;
+			while (var2 < 2)
+			{
+				6504[var2] = 0;
+				var4 = 0;
+				while (var4 < 8)
+				{
+					6584[var2][var4] = 0;
+					var4++;
+				}
+				var2++;
+			}
+			var3 = 0;
+			while (var3 < 33)
+			{
+				var4 = 0;
+				while (var4 < 8)
+				{
+					16820[var3][var4] = 0;
+					var4++;
+				}
+				var3++;
+			}
+		}
+		var2 = 0;
+		while (var2 < 2)
+		{
+			6496[var2] = 6504[var2];
+			var4 = 0;
+			while (var4 < 8)
+			{
+				6512[var2][var4] = 0;
+				var4++;
+			}
+			var2++;
+		}
+		var3 = 0;
+		while (var3 < 33)
+		{
+			11408[var3] = 0;
+			var4 = 0;
+			while (var4 < 8)
+			{
+				15632[var3][var4] = 0;
+				var4++;
+			}
+			6336[var3] = 0;
+			var3++;
+		}
+		g_var1954 = 0;
+		g_var1958 = 0;
+		g_var1944 = 0;
+		sub_2da4();
+	}
+	return 0;
+}
+
+public eventTeamScore()
+{
+	new var2 = 0;
+	new var3 = 0;
+	read_data(1, var2, 1);
+	var3 = read_data(2);
+	new var1;
+	if (var2 == 67)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	6504[var1] = var3;
+	return 0;
+}
+
+public plugin_cfg()
+{
+	new var1;
+	server_cmd(var1, "Show killer hp&ap", "KillerChat");
+	server_cmd(var1, "Show Attackers", "ShowAttackers");
+	server_cmd(var1, "Show Victims", "ShowVictims");
+	server_cmd(var1, "Show killer", "ShowKiller");
+	server_cmd(var1, "Show Team Score", "ShowTeamScore");
+	server_cmd(var1, "Show Total Stats", "ShowTotalStats");
+	server_cmd(var1, "Show Best Score", "ShowBestScore");
+	server_cmd(var1, "Show Most Disruptive", "ShowMostDisruptive");
+	server_cmd(var1, "HUD-stats default", "ShowStats");
+	server_cmd(var1, "Dist&HS in HUD lists", "ShowDistHS");
+	server_cmd(var1, "Stats at the end of map", "EndPlayer");
+	server_cmd(var1, "Top15 at the end of map", "EndTop15");
+	server_cmd(var1, "Say /hp", "SayHP");
+	server_cmd(var1, "Say /statsme", "SayStatsMe");
+	server_cmd(var1, "Say /rankstats", "SayRankStats");
+	server_cmd(var1, "Say /me", "SayMe");
+	server_cmd(var1, "Say /rank", "SayRank");
+	server_cmd(var1, "Say /report", "SayReport");
+	server_cmd(var1, "Say /score", "SayScore");
+	server_cmd(var1, "Say /top15", "SayTop15");
+	server_cmd(var1, "Say /stats", "SayStatsAll");
+	server_cmd(var1, "Misc say commands", "SayMiscFunc");
+	server_cmd(var1, "Spec. Rank Info", "SpecRankInfo");
+	sub_2da4();
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("StatsX", "1.00", "AMXX Dev Team");
+	register_dictionary("statsx.txt");
+	register_event("TextMsg", "eventStartGame", 36916, "2=#Game_Commencing", "2=#Game_will_restart_in");
+	register_event("ResetHUD", "eventResetHud", "be", {0});
+	register_event("RoundTime", "eventStartRound", "bc", {0});
+	register_event("SendAudio", "eventEndRound", 37416, "2=%!MRAD_terwin", "2=%!MRAD_ctwin", "2=%!MRAD_rounddraw");
+	register_event("TeamScore", "eventTeamScore", 37724, {0});
+	register_event("30", "eventIntermission", 37816, {0});
+	register_event("TextMsg", "eventSpecMode", "bd", "2&ec_Mod");
+	register_event("StatusValue", "eventShowRank", "bd", "1=2");
+	register_clcmd("say /hp", "cmdHp", "1.00", "- display info. about your killer (chat)");
+	register_clcmd("say /statsme", "cmdStatsMe", "1.00", "- display your stats (MOTD)");
+	register_clcmd("say /rankstats", "cmdRankStats", "1.00", "- display your server stats (MOTD)");
+	register_clcmd("say /me", "cmdMe", "1.00", "- display current round stats (chat)");
+	register_clcmd("say /score", "cmdScore", "1.00", "- display last score (chat)");
+	register_clcmd("say /rank", "cmdRank", "1.00", "- display your rank (chat)");
+	register_clcmd("say /report", "cmdReport", "1.00", "- display waepon status (say_team)");
+	register_clcmd("say /top15", "cmdTop15", "1.00", "- display top 15 players (MOTD)");
+	register_clcmd("say /stats", "cmdStats", "1.00", "- display players stats (menu/MOTD)");
+	register_clcmd("say /timeleft", "cmdTimeLeft", "1.00", "- display time left on map (say)");
+	register_clcmd("say /thetime", "cmdTheTime", "1.00", "- display the time (say)");
+	register_clcmd("say /currentmap", "cmdCurrentMap", "1.00", "- display current map (say)");
+	register_clcmd("say /ff", "cmdFf", "1.00", "- display friendly fire status (say)");
+	register_clcmd("say /switch", "cmdSwitch", "1.00", "- switch client's stats on or off");
+	register_menucmd(register_menuid("Server Stats", "1.00"), 1023, "actionStatsMenu");
+	register_srvcmd("amx_statsx_mode", "cmdPluginMode", 128, "<flags> - sets plugin options");
+	register_cvar("amx_statsx_duration", "12.0", "1.00", "1.00");
+	register_cvar("amx_statsx_freeze", "-2.0", "1.00", "1.00");
+	18008/* ERROR unknown load Constant */ = 0;
+	sub_5730();
+	return 0;
+}
+
+public plugin_modules()
+{
+	require_module("csx");
+	return 0;
+}
+
+sub_e698()
+{
+	new var1;
+	if (g_var1958 || !g_var1954)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	get_players(var5, var7, 53380, 53384);
+	var6 = 0;
+	while (var6 < var7)
+	{
+		var8 = var5[var6];
+		if (sub_84(0, 6336[var8]))
+		{
+			sub_d8b8(var8);
+		}
+		var6++;
+	}
+	27224/* ERROR unknown load Constant */ = 0;
+	if (ShowBestScore)
+	{
+		sub_4f24(27224);
+	}
+	if (ShowMostDisruptive)
+	{
+		sub_4a84(27224);
+	}
+	new var2;
+	if (ShowTeamScore || ShowTotalStats)
+	{
+		new var3;
+		if (ShowMostDisruptive && ShowBestScore)
+		{
+			add(27224, 2047, 53984, "1.00");
+		}
+		else
+		{
+			new var4;
+			if (ShowMostDisruptive || ShowBestScore)
+			{
+				add(27224, 2047, "\n\n\n\n", "1.00");
+			}
+			add(27224, 2047, "\n\n\n\n\n\n", "1.00");
+		}
+		if (ShowTeamScore)
+		{
+			sub_537c(27224);
+		}
+		if (ShowTotalStats)
+		{
+			sub_5b28(27224);
+		}
+	}
+	sub_5730();
+	g_var1944 = get_gametime();
+	var6 = 0;
+	while (var6 < var7)
+	{
+		var8 = var5[var6];
+		sub_900c(var8, 0);
+		var6++;
+	}
+	g_var1958 = 1;
+	return 0;
+}
+
+sub_84c0(_arg0, _arg1)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	format(var6, 15, "%L", _arg0, "KILLS");
+	format(var7, 15, "%L", _arg0, "DEATHS");
+	format(var8, 15, "%L", _arg0, "HITS");
+	format(var9, 15, "%L", _arg0, "SHOTS");
+	format(var10, 15, "%L", _arg0, "DAMAGE");
+	format(var11, 15, "%L", _arg0, "EFF");
+	format(var12, 15, "%L", _arg0, "ACC");
+	format(var13, 15, "%L", _arg0, "WEAPON");
+	ucfirst(var11);
+	ucfirst(var12);
+	get_user_wstats(_arg0, "1.00", var2, var3);
+	var5 = format(_arg1, 2047, "<body bgcolor=#000000><font color=#FFB000><pre>");
+	var5 = format(_arg1[var5], 2047 - var5, "%6s: %d  (%d with hs)\n%6s: %d\n%6s: %d\n%6s: %d\n%6s: %d\n%6s: %0.2f%%\n%6s: %0.2f%%\n\n", var6, var2, var2 + 8, var7, var2 + 4, var8, var2 + 20, var9, var2 + 16, var10, var2 + 24, var11, sub_2a38(var2), var12, sub_28e4(var2)) + var5;
+	var5 = format(_arg1[var5], 2047 - var5, "%-12.12s  %6s  %6s  %6s  %6s  %6s  %4s\n", var13, var6, var7, var8, var9, var10, var12) + var5;
+	var4 = 1;
+	while (var4 < xmod_get_maxweapons() && 2047 - var5 > 0)
+	{
+		if (get_user_wstats(_arg0, var4, var2, var3))
+		{
+			xmod_get_wpnname(var4, 36568, "");
+			var5 = format(_arg1[var5], 2047 - var5, "%-12.12s  %6d  %6d  %6d  %6d  %6d  %3.0f%%\n", 36568, var2, var2 + 4, var2 + 20, var2 + 16, var2 + 24, sub_28e4(var2)) + var5;
+		}
+		var4++;
+	}
+	return 0;
+}
+
+sub_7858(_arg0, _arg1, _arg2)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	format(var7, 15, "%L", _arg0, "KILLS");
+	format(var8, 15, "%L", _arg0, "DEATHS");
+	format(var9, 15, "%L", _arg0, "HITS");
+	format(var10, 15, "%L", _arg0, "SHOTS");
+	format(var11, 15, "%L", _arg0, "DAMAGE");
+	format(var12, 15, "%L", _arg0, "EFF");
+	format(var13, 15, "%L", _arg0, "ACC");
+	ucfirst(var12);
+	ucfirst(var13);
+	var5 = get_user_stats(_arg0, var3, var4);
+	var6 = format(_arg1, 2047, "<body bgcolor=#000000><font color=#FFB000><pre>");
+	new var1;
+	if (!_arg2 || _arg0 != _arg2)
+	{
+		var2 = 49384;
+	}
+	else
+	{
+		var2 = 49404;
+	}
+	var6 = format(_arg1[var6], 2047 - var6, "%L %L\n\n", _arg0, var2, _arg0, "RANK_IS", var5, get_statsnum()) + var6;
+	var6 = format(_arg1[var6], 2047 - var6, "%6s: %d  (%d with hs)\n%6s: %d\n%6s: %d\n%6s: %d\n%6s: %d\n%6s: %0.2f%%\n%6s: %0.2f%%\n\n", var7, var3, var3 + 8, var8, var3 + 4, var9, var3 + 20, var10, var3 + 16, var11, var3 + 24, var12, sub_2a38(var3), var13, sub_28e4(var3)) + var6;
+	new var14 = 0;
+	new var15 = 1;
+	while (var15 < 8)
+	{
+		format(var14[var15], "", 49828, _arg0, 240[var15]);
+		var15++;
+	}
+	new var16 = var14 + 28;
+	new var17 = var14 + 24;
+	new var18 = var14 + 20;
+	new var19 = var14 + 16;
+	new var20 = var14 + 12;
+	new var21 = var14 + 8;
+	new var22 = var14 + 4;
+	var6 = format(_arg1[var6], 2047 - var6, "%10s:\n%10s: %d\n%10s: %d\n%10s: %d\n%10s: %d\n%10s: %d\n%10s: %d\n%10s: %d", "HITS", var22 + var22, var4 + 4, var21 + var21, var4 + 8, var20 + var20, var4 + 12, var19 + var19, var4 + 16, var18 + var18, var4 + 20, var17 + var17, var4 + 24, var16 + var16, var4 + 28) + var6;
+	return 0;
+}
+
+sub_bbe0(_arg0, _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	get_players(1584[_arg0], var3, 53380, 53384);
+	var5 = var3 + -1 / 7 + 1;
+	if (_arg1 >= var5)
+	{
+		_arg1 = var5 + -1;
+	}
+	var4 = _arg1 * 7;
+	var1 = format(18008, 2047, "\y%L\R%d/%d\n\w\n", _arg0, "SERVER_STATS", _arg1 + 1, var5);
+	var7 = var3 - var4;
+	if (var7 > 7)
+	{
+		var7 = 7;
+	}
+	var6 = 0;
+	while (var6 < var7)
+	{
+		var4++;
+		get_user_name(1584[_arg0][var4], 36440, "");
+		var2 = 1 << var6 | var2;
+		var1 = format(18008[var1], 2047 - var1, "%d. %s\n\w", var6 + 1, 36440) + var1;
+		var6++;
+	}
+	var2 |= 640;
+	var1 = format(18008[var1], 2047 - var1, "\n8. %s\n\w", 53264[1452[_arg0]]) + var1;
+	if (var3 > var4)
+	{
+		var1 = format(18008[var1], 2047 - var1, "\n9. %L...", _arg0, "MORE") + var1;
+		var2 |= 256;
+	}
+	if (0 < _arg1)
+	{
+		var1 = format(18008[var1], 2047 - var1, "\n0. %L", _arg0, "BACK") + var1;
+	}
+	else
+	{
+		var1 = format(18008[var1], 2047 - var1, "\n0. %L", _arg0, "EXIT") + var1;
+	}
+	show_menu(_arg0, var2, 18008, -1, "Server Stats");
+	return 1;
+}
+
+sub_d8b8(_arg0)
+{
+	if (sub_208(6336[_arg0], 0))
+	{
+		return 0;
+	}
+	6336[_arg0] = get_gametime();
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	var6 = 524[_arg0];
+	if (var6)
+	{
+		var4 = 524[_arg0][3] - 1;
+	}
+	else
+	{
+		var4 = get_user_team(_arg0, {0}, "1.00") - 1;
+	}
+	get_user_name(_arg0, 11408[_arg0], "");
+	if (get_user_rstats(_arg0, var3, _unused_temp_))
+	{
+		new var1;
+		if (var4 >= 0 && var4 < 2)
+		{
+			var5 = 0;
+			while (var5 < 8)
+			{
+				new var7 = 6512[var4][var5];
+				var7 = var3[var5][var7];
+				new var8 = 6584[var4][var5];
+				var8 = var3[var5][var8];
+				new var9 = 15632/* ERROR unknown load Constant */ + 15632[var5];
+				var9 = var3[var5][var9];
+				new var10 = 16820/* ERROR unknown load Constant */ + 16820[var5];
+				var10 = var3[var5][var10];
+				var5++;
+			}
+		}
+		if (get_user_userid(_arg0) == 6656[_arg0])
+		{
+			var5 = 0;
+			while (var5 < 8)
+			{
+				new var11 = 15632[_arg0][var5];
+				var11 = var3[var5][var11];
+				new var12 = 16820[_arg0][var5];
+				var12 = var3[var5][var12];
+				var5++;
+			}
+		}
+		6656[_arg0] = get_user_userid(_arg0);
+		var5 = 0;
+		while (var5 < 8)
+		{
+			15632[_arg0][var5] = var3[var5];
+			16820[_arg0][var5] = var3[var5];
+			var5++;
+		}
+	}
+	new var2;
+	if (KillerChat && var6 && _arg0 != var6)
+	{
+		if (sub_624c(_arg0, var6, 18008))
+		{
+			client_print(_arg0, "", "* %s", 18008);
+			sub_68c0(_arg0, var6, 18008);
+		}
+		client_print(_arg0, "", "* %s", 18008);
+	}
+	sub_93d8(_arg0, 0);
+	return 0;
+}
+
+sub_624c(_arg0, _arg1, _arg2)
+{
+	new var2 = 0;
+	new var1;
+	if (_arg1 && _arg0 != _arg1)
+	{
+		new var3 = 0;
+		new var4 = 0;
+		new var5 = 0;
+		var2 = 1;
+		get_user_name(_arg1, 36440, "");
+		var3 + 20/* ERROR unknown load Binary */ = 0;
+		get_user_astats(_arg0, _arg1, var3, var4, 36568, "");
+		var5 = format(_arg2, 2047, "%L (%dhp, %dap) >>", _arg0, "KILLED_BY_WITH", 36440, 36568, sub_2a38(6788[_arg0]), 524[_arg0][1], 524[_arg0][2]);
+		if (var3 + 20/* ERROR unknown load Binary */)
+		{
+			new var6 = 1;
+			while (var6 < 8)
+			{
+				if (var4[var6])
+				{
+					var5 = format(_arg2[var5], 2047 - var5, " %L: %d", _arg0, 240[var6], var4[var6]) + var5;
+				}
+				var6++;
+			}
+		}
+		else
+		{
+			var5 = format(_arg2[var5], 2047 - var5, " %L", _arg0, "NO_HITS") + var5;
+		}
+	}
+	else
+	{
+		format(_arg2, 2047, "%L", _arg0, "YOU_NO_KILLER");
+	}
+	return var2;
+}
+
+sub_68c0(_arg0, _arg1, _arg2)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	var3 + 20/* ERROR unknown load Binary */ = 0;
+	var3 + 24/* ERROR unknown load Binary */ = 0;
+	get_user_vstats(_arg0, _arg1, var3, var4, {0}, "1.00");
+	new var1;
+	if (_arg1 && _arg0 != _arg1)
+	{
+		var2 = 1;
+		get_user_name(_arg1, 36440, "");
+		var5 = format(_arg2, 2047, "%L >>", _arg0, "YOU_HIT", 36440, var3 + 20, var3 + 24);
+	}
+	else
+	{
+		var5 = format(_arg2, 2047, "%L >>", _arg0, "LAST_RES", var3 + 20, var3 + 24);
+	}
+	if (var3 + 20/* ERROR unknown load Binary */)
+	{
+		new var6 = 1;
+		while (var6 < 8)
+		{
+			if (var4[var6])
+			{
+				var5 = format(_arg2[var5], 2047 - var5, " %L: %d", _arg0, 240[var6], var4[var6]) + var5;
+			}
+			var6++;
+		}
+	}
+	else
+	{
+		var5 = format(_arg2[var5], 2047 - var5, " %L", _arg0, "NO_HITS") + var5;
+	}
+	return var2;
+}
+
+sub_774(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_694(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_2c44(_arg0, _arg1)
+{
+	if (_arg1)
+	{
+		g_var524 = read_flags(_arg1);
+	}
+	get_flags(g_var524, 35416, 255);
+	console_print(_arg0, "%L", _arg0, "MODE_SET_TO", 35416);
+	return g_var524;
+}
+
+sub_2a38(_arg0)
+{
+	if (!_arg0)
+	{
+		return 0;
+	}
+	return floatdiv(floatmul(1120403456, float(_arg0)), float(_arg0 + 4/* ERROR unknown load Binary */ + _arg0));
+}
+
+sub_28e4(_arg0)
+{
+	if (!_arg0 + 16/* ERROR unknown load Binary */)
+	{
+		return 0;
+	}
+	return floatdiv(floatmul(1120403456, float(_arg0 + 20/* ERROR unknown load Binary */)), float(_arg0 + 16/* ERROR unknown load Binary */));
+}
+
+sub_6f18(_arg0)
+{
+	new var2;
+	var2 = get_statsnum();
+	new var3 = 0;
+	new var4 = 0;
+	if (var2 > 15)
+	{
+		var2 = 15;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	format(var5, 15, "%L", 0, "KILLS");
+	format(var6, 15, "%L", 0, "DEATHS");
+	format(var7, 15, "%L", 0, "HITS");
+	format(var8, 15, "%L", 0, "SHOTS");
+	format(var9, 15, "%L", 0, "EFF");
+	format(var10, 15, "%L", 0, "ACC");
+	ucfirst(var9);
+	ucfirst(var10);
+	var4 = format(_arg0, 2047, "<body bgcolor=#000000><font color=#FFB000><pre>");
+	var4 = format(_arg0[var4], 2047 - var4, "%2s %-22.22s %6s %6s %6s %6s %4s %4s %4s\n", 48680, "Nick", var5, var6, var7, var8, "HS", var9, var10) + var4;
+	new var11 = 0;
+	while (var11 < var2 && 2047 - var4 > 0)
+	{
+		get_stats(var11, var3, _unused_temp_, 36440, "");
+		var4 = format(_arg0[var4], 2047 - var4, "%2d %-22.22s %6d %6d %6d %6d %4d %3.0f%% %3.0f%%\n", var11 + 1, 36440, var3, var3 + 4, var3 + 20, var3 + 16, var3 + 8, sub_2a38(var3), sub_28e4(var3)) + var4;
+		var11++;
+	}
+	return 0;
+}
+
+sub_93d8(_arg0, _arg1)
+{
+	if (!6204[_arg0])
+	{
+		return 0;
+	}
+	if (sub_84(0, 6336[_arg0]))
+	{
+		return 0;
+	}
+	new var1 = 0;
+	if (sub_84(0, _arg1))
+	{
+		var1 = g_var1950;
+	}
+	else
+	{
+		var1 = floatsub(floatadd(6336[_arg0], g_var1950), _arg1);
+		if (sub_208(var1, floatadd(g_var1948, g_var194c)))
+		{
+			var1 = floatadd(g_var1948, g_var194c);
+		}
+	}
+	if (sub_208(var1, 1045220557))
+	{
+		if (ShowKiller)
+		{
+			new var2 = 0;
+			var2 = 524[_arg0];
+			sub_4384(_arg0, var2, 18008);
+			sub_5cf8(_arg0, var2, 18008);
+			sub_2398(var1);
+			show_hudmessage(_arg0, 18008);
+		}
+		if (ShowVictims)
+		{
+			sub_3990(_arg0, 18008);
+			sub_270c(var1);
+			show_hudmessage(_arg0, 18008);
+		}
+		if (ShowAttackers)
+		{
+			sub_2f30(_arg0, 18008);
+			sub_25e8(var1);
+			show_hudmessage(_arg0, 18008);
+		}
+	}
+	return 0;
+}
+
+sub_900c(_arg0, _arg1)
+{
+	if (!6204[_arg0])
+	{
+		return 0;
+	}
+	if (!27224/* ERROR unknown load Constant */)
+	{
+		return 0;
+	}
+	if (sub_84(0, g_var1944))
+	{
+		sub_24c0(1028443341);
+		show_hudmessage(_arg0, 51272);
+	}
+	new var1 = 0;
+	if (sub_84(0, _arg1))
+	{
+		var1 = g_var1950;
+	}
+	else
+	{
+		var1 = floatsub(floatadd(g_var1944, g_var1950), _arg1);
+		if (sub_208(var1, floatadd(g_var1948, g_var194c)))
+		{
+			var1 = floatadd(g_var1948, g_var194c);
+		}
+	}
+	if (sub_208(var1, 1045220557))
+	{
+		sub_24c0(var1);
+		show_hudmessage(_arg0, 27224);
+	}
+	return 0;
+}
+
+sub_2da4()
+{
+	g_var1948 = get_cvar_float("mp_freezetime");
+	if (sub_380(g_var1948, 0))
+	{
+		g_var1948 = 0;
+	}
+	g_var1950 = get_cvar_float("amx_statsx_duration");
+	if (sub_380(g_var1950, 1065353216))
+	{
+		g_var1950 = 1065353216;
+	}
+	g_var194c = get_cvar_float("amx_statsx_freeze");
+	return 0;
+}
+
+sub_2834()
+{
+	set_hudmessage(255, 255, 255, 1017370378, 1063172178, 2, 1028443341, 1036831949, 1008981770, 1077936128, 1);
+	return 0;
+}
+
+sub_84(_arg0, _arg1)
+{
+	return floatmul(_arg0, float(_arg1));
+}
+
+sub_380(_arg0, _arg1)
+{
+	return 0 <= floatcmp(float(_arg0), _arg1);
+}
+
+sub_208(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+
+sub_514(_arg0, _arg1)
+{
+	return 0 >= floatcmp(_arg0, _arg1);
+}
+
+sub_5730()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	while (var3 < 2)
+	{
+		var1[var3] = sub_2a38(6584[var3]);
+		var2[var3] = sub_28e4(6584[var3]);
+		0[var3] = sub_28e4(6512[var3]);
+		var3++;
+	}
+	format(26200, 2047, "TERRORIST %d / %0.2f%%%% %L / %0.2f%%%% %L  --  CT %d / %0.2f%%%% %L / %0.2f%%%% %L", 6496, var1, 0, "EFF", var2, 0, "ACC", 6496 + 4, var1 + 4, 0, "EFF", var2 + 4, 0, "ACC");
+	return 0;
+}
+
+sub_84(_arg0, _arg1)
+{
+	return floatcmp(_arg0, _arg1) == 0;
+}
+
+sub_4f24(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	var4 = 0;
+	var5 = 0;
+	var6 = 0;
+	var3 = 1;
+	while (var3 < 33)
+	{
+		new var2;
+		if (15632[var3] >= var5 && (15632[var3] > var5 || 15632[var3][2] > var6))
+		{
+			var4 = var3;
+			var5 = 15632[var3];
+			var6 = 15632[var3][2];
+		}
+		var3++;
+	}
+	if (var4)
+	{
+		var3 = var4;
+		format(35416, 255, "本局杀敌最多: %s\n杀敌 %d 次 / 爆头%d 次\n\n", 11408[var3], var5, var6);
+		add(_arg0, 2047, 35416, "1.00");
+	}
+	return var4;
+}
+
+sub_4a84(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	var4 = 0;
+	var5 = 0;
+	var6 = 0;
+	var3 = 1;
+	while (var3 < 33)
+	{
+		new var2;
+		if (15632[var3][6] >= var5 && (15632[var3][6] > var5 || 15632[var3][2] > var6))
+		{
+			var4 = var3;
+			var5 = 15632[var3][6];
+			var6 = 15632[var3][2];
+		}
+		var3++;
+	}
+	if (var4)
+	{
+		var3 = var4;
+		format(35416, 255, "本局命中最多: %s\n命中 %d 次/ 总伤害 %d\n", 11408[var3], 15632[var3][5], var5);
+		add(_arg0, 2047, 35416, "1.00");
+	}
+	return var4;
+}
+
+sub_537c(_arg0)
+{
+	new var1 = 0;
+	while (var1 < 2)
+	{
+		0[var1] = sub_2a38(6584[var1]);
+		0[var1] = sub_28e4(6584[var1]);
+		0[var1] = sub_28e4(6512[var1]);
+		var1++;
+	}
+	format(35416, 255, "TERRORIST %d : %d CT\n", 6496, 6496 + 4);
+	add(_arg0, 2047, 35416, "1.00");
+	return 0;
+}
+
+sub_5b28(_arg0)
+{
+	format(35416, 255, "%L: %d %L / %d hs -- %d %L / %d %L\n", 0, "TOTAL", 15632/* ERROR unknown load Constant */ + 15632, 0, "KILL_S", 15632/* ERROR unknown load Constant */ + 15632 + 8, 15632/* ERROR unknown load Constant */ + 15632 + 20, 0, "HITS", 15632/* ERROR unknown load Constant */ + 15632 + 16, 0, "SHOT_S");
+	add(_arg0, 2047, 35416, "1.00");
+	return 0;
+}
+
+sub_2a38(_arg0)
+{
+	return floatmul(1020269481, float(_arg0));
+}
+
+sub_694(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+
+sub_208(_arg0, _arg1)
+{
+	return 0 <= floatcmp(_arg0, _arg1);
+}
+
+sub_4384(_arg0, _arg1, _arg2)
+{
+	new var2 = 0;
+	new var3 = 0;
+	var2 = 0;
+	_arg2 = 0;
+	new var1;
+	if (_arg1 && _arg0 != _arg1)
+	{
+		new var4 = 0;
+		new var5 = 0;
+		var2 = 1;
+		get_user_name(_arg1, 36440, "");
+		var4 + 20/* ERROR unknown load Binary */ = 0;
+		var4 + 24/* ERROR unknown load Binary */ = 0;
+		36568/* ERROR unknown load Constant */ = 0;
+		get_user_astats(_arg0, _arg1, var4, _unused_temp_, 36568, "");
+		var5 + 20/* ERROR unknown load Binary */ = 0;
+		var5 + 24/* ERROR unknown load Binary */ = 0;
+		get_user_vstats(_arg0, _arg1, var5, _unused_temp_, {0}, "1.00");
+		var3 = format(_arg2, 2047, "%L\n", _arg0, "KILLED_YOU_DIST", 36440, 36568, sub_2a38(6788[_arg0]));
+		var3 = format(_arg2[var3], 2047 - var3, "%L\n", _arg0, "DID_DMG_HITS", var4 + 24, var4 + 20, 524[_arg0][1], 524[_arg0][2]) + var3;
+		var3 = format(_arg2[var3], 2047 - var3, "%L\n", _arg0, "YOU_DID_DMG", var5 + 24, var5 + 20) + var3;
+	}
+	return var2;
+}
+
+sub_5cf8(_arg0, _arg1, _arg2)
+{
+	new var2 = 0;
+	new var1;
+	if (_arg1 && _arg0 != _arg1)
+	{
+		new var3 = 0;
+		new var4 = 0;
+		new var5 = 0;
+		var3 + 20/* ERROR unknown load Binary */ = 0;
+		get_user_astats(_arg0, _arg1, var3, var4, {0}, "1.00");
+		if (var3 + 20/* ERROR unknown load Binary */)
+		{
+			var2 = 1;
+			var5 = strlen(_arg2);
+			get_user_name(_arg1, 36440, "");
+			var5 = format(_arg2[var5], 2047 - var5, "%L:\n", _arg0, "HITS_YOU_IN", 36440) + var5;
+			new var6 = 1;
+			while (var6 < 8)
+			{
+				if (var4[var6])
+				{
+					var5 = format(_arg2[var5], 2047 - var5, "%L: %d\n", _arg0, 240[var6], var4[var6]) + var5;
+				}
+				var6++;
+			}
+		}
+	}
+	return var2;
+}
+
+sub_2398(_arg0)
+{
+	new var1;
+	if (sub_208(_arg0, g_var1950))
+	{
+		var1 = 1065353216;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	set_hudmessage(SayMiscFunc, 80, "1.00", 1028443341, 1041865114, "1.00", 1086324736, _arg0, var1, 1065353216, 2);
+	return 0;
+}
+
+sub_3990(_arg0, _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6;
+	var6 = get_maxplayers();
+	var4 = 0;
+	_arg1 = 0;
+	var1 + 16/* ERROR unknown load Binary */ = 0;
+	get_user_vstats(_arg0, "1.00", var1, var2, {0}, "1.00");
+	if (var1 + 16/* ERROR unknown load Binary */)
+	{
+		var5 = format(_arg1, 2047, "%L -- %0.2f%%%% %L:\n", _arg0, "VICTIMS", sub_28e4(var1), _arg0, "ACC");
+	}
+	else
+	{
+		var5 = format(_arg1, 2047, "%L:\n", _arg0, "VICTIMS");
+	}
+	var3 = 1;
+	while (var3 <= var6)
+	{
+		if (get_user_vstats(_arg0, var3, var1, var2, 36568, ""))
+		{
+			var4 = 1;
+			get_user_name(var3, 36440, "");
+			if (var1 + 4/* ERROR unknown load Binary */)
+			{
+				if (!ShowDistHS)
+				{
+					var5 = format(_arg1[var5], 2047 - var5, "%s -- %d %L / %d %L / %s\n", 36440, var1 + 20, _arg0, "HIT_S", var1 + 24, _arg0, "DMG", 36568) + var5;
+				}
+				else
+				{
+					if (var1 + 8/* ERROR unknown load Binary */)
+					{
+						var5 = format(_arg1[var5], 2047 - var5, "%s -- %d %L / %d %L / %s / %0.0f m / HS\n", 36440, var1 + 20, _arg0, "HIT_S", var1 + 24, _arg0, "DMG", 36568, sub_2a38(6920[_arg0][var3])) + var5;
+					}
+					var5 = format(_arg1[var5], 2047 - var5, "%s -- %d %L / %d %L / %s / %0.0f m\n", 36440, var1 + 20, _arg0, "HIT_S", var1 + 24, _arg0, "DMG", 36568, sub_2a38(6920[_arg0][var3])) + var5;
+				}
+			}
+			var5 = format(_arg1[var5], 2047 - var5, "%s -- %d %L / %d %L\n", 36440, var1 + 20, _arg0, "HIT_S", var1 + 24, _arg0, "DMG") + var5;
+		}
+		var3++;
+	}
+	if (!var4)
+	{
+		_arg1 = 0;
+	}
+	return var4;
+}
+
+sub_270c(_arg0)
+{
+	new var1;
+	if (sub_208(_arg0, g_var1950))
+	{
+		var1 = 1065353216;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	set_hudmessage("1.00", 80, SayMiscFunc, 1057803469, 1058642330, "1.00", 1086324736, _arg0, var1, 1065353216, 4);
+	return 0;
+}
+
+sub_2f30(_arg0, _arg1)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7;
+	var7 = get_maxplayers();
+	var5 = 0;
+	_arg1 = 0;
+	var2 + 16/* ERROR unknown load Binary */ = 0;
+	var4 = 524[_arg0];
+	if (var4)
+	{
+		get_user_astats(_arg0, var4, var2, var3, {0}, "1.00");
+	}
+	new var1;
+	if (var2 + 16/* ERROR unknown load Binary */ && ShowFullStats)
+	{
+		get_user_name(var4, 36440, "");
+		var6 = format(_arg1, 2047, "%L -- %s -- %0.2f%%%% %L:\n", _arg0, "ATTACKERS", 36440, sub_28e4(var2), _arg0, "ACC");
+	}
+	else
+	{
+		var6 = format(_arg1, 2047, "%L:\n", _arg0, "ATTACKERS");
+	}
+	var4 = 1;
+	while (var4 <= var7)
+	{
+		if (get_user_astats(_arg0, var4, var2, var3, 36568, ""))
+		{
+			var5 = 1;
+			get_user_name(var4, 36440, "NO_ACC_COM");
+			if (var2)
+			{
+				if (!ShowDistHS)
+				{
+					var6 = format(_arg1[var6], 2047 - var6, "%s -- %d %L / %d %L / %s\n", 36440, var2 + 20, _arg0, "HIT_S", var2 + 24, _arg0, "DMG", 36568) + var6;
+				}
+				else
+				{
+					if (var2 + 8/* ERROR unknown load Binary */)
+					{
+						var6 = format(_arg1[var6], 2047 - var6, "%s -- %d %L / %d %L / %s / %0.0f m / HS\n", 36440, var2 + 20, _arg0, "HIT_S", var2 + 24, _arg0, "DMG", 36568, sub_2a38(6788[_arg0])) + var6;
+					}
+					var6 = format(_arg1[var6], 2047 - var6, "%s -- %d %L / %d %L / %s / %0.0f m\n", 36440, var2 + 20, _arg0, "HIT_S", var2 + 24, _arg0, "DMG", 36568, sub_2a38(6788[_arg0])) + var6;
+				}
+			}
+			var6 = format(_arg1[var6], 2047 - var6, "%s -- %d %L / %d %L\n", 36440, var2 + 20, _arg0, "HIT_S", var2 + 24, _arg0, "DMG") + var6;
+		}
+		var4++;
+	}
+	if (!var5)
+	{
+		_arg1 = 0;
+	}
+	return var5;
+}
+
+sub_25e8(_arg0)
+{
+	new var1;
+	if (sub_208(_arg0, g_var1950))
+	{
+		var1 = 1065353216;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	set_hudmessage(SayMiscFunc, 80, "1.00", 1057803469, 1051931443, "1.00", 1086324736, _arg0, var1, 1065353216, "");
+	return 0;
+}
+
+sub_24c0(_arg0)
+{
+	new var1;
+	if (sub_208(_arg0, g_var1950))
+	{
+		var1 = 1065353216;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	set_hudmessage(100, SayRank, "1.00", 1028443341, 1057803469, "1.00", 1017370378, _arg0, var1, 1065353216, 1);
+	return 0;
+}
+
+sub_380(_arg0, _arg1)
+{
+	return 0 > floatcmp(_arg0, _arg1);
+}
+

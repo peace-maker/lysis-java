@@ -1,0 +1,94 @@
+new g_var18;
+new g_var14;
+new g_varc1c;
+new g_varc20;
+new g_varc24;
+public msgInit()
+{
+	g_var18 = 1;
+	g_var14 = 0;
+	g_varc1c = 1059481190;
+	set_task(1050253722, "showMsg", 123, 3476, "1.00", 3480, g_varc20 + 48);
+	client_print("1.00", 2, 28);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Scrolling Message", "1.00", "AMXX Dev Team");
+	register_dictionary("scrollmsg.txt");
+	register_dictionary("common.txt");
+	register_srvcmd("amx_scrollmsg", "setMessage", -1, {0});
+	return 0;
+}
+
+public setMessage()
+{
+	remove_task(123, "1.00");
+	read_argv(1, 28, 380);
+	new var1 = 0;
+	get_cvar_string("hostname", var1, 63);
+	replace(28, 380, "%hostname%", var1);
+	g_varc20 = strlen(28);
+	new var2 = 0;
+	read_argv(2, var2, 31);
+	g_varc24 = str_to_num(var2);
+	if (0 < g_varc24)
+	{
+		new var3;
+		var3 = floatround(sub_88(floatadd(1050253722, 1036831949), g_varc20 + 48), "1.00");
+		if (g_varc24 < var3)
+		{
+			server_print("%L", 0, "MIN_FREQ", var3);
+			g_varc24 = var3;
+		}
+		server_print("%L", 0, "MSG_FREQ", g_varc24 / 60, g_varc24 % 60);
+		set_task(float(g_varc24), "msgInit", 123, 3696, "1.00", 3700, "1.00");
+	}
+	else
+	{
+		server_print("%L", 0, "MSG_DISABLED");
+	}
+	return 1;
+}
+
+public showMsg()
+{
+	new var1;
+	var1 = g_var14;
+	new var2 = 0;
+	while (var1 < g_var18)
+	{
+		var2++;
+		var1++;
+		1564[var2] = 28[var1];
+	}
+	1564[var2] = 0;
+	if (g_var18 < g_varc20)
+	{
+		g_var18 += 1;
+	}
+	if (sub_88(g_varc1c, 1051931443))
+	{
+		g_varc1c = floatsub(g_varc1c, 1003384891);
+	}
+	else
+	{
+		g_var14 += 1;
+		g_varc1c = 1051931443;
+	}
+	set_hudmessage(200, 100, "1.00", g_varc1c, 1063675494, "1.00", 1050253722, 1050253722, 1028443341, 1028443341, 2);
+	show_hudmessage("1.00", 1564);
+	return 0;
+}
+
+sub_88(_arg0, _arg1)
+{
+	return floatmul(_arg0, float(_arg1));
+}
+
+sub_88(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+

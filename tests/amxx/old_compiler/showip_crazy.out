@@ -1,0 +1,464 @@
+new g_var3ac88;
+new g_var0;
+new g_var320c4;
+new g_var320c8;
+public checkmodelCT(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	if (!is_user_connected(var1))
+	{
+		return 1;
+	}
+	new var2;
+	var2 = cs_get_user_team(var1);
+	if (var2 == 2)
+	{
+		new var3 = 0;
+		format(var3, 255, "dcoo_ag_ct_%d", g_var320c4, g_var320c4);
+		cs_set_user_model(var1, var3);
+	}
+	return 0;
+}
+
+public checkmodelT(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	if (!is_user_connected(var1))
+	{
+		return 1;
+	}
+	new var2;
+	var2 = cs_get_user_team(var1);
+	if (var2 == 1)
+	{
+		new var3 = 0;
+		format(var3, 255, "dcoo_ag_t_%d", g_var320c8, g_var320c8);
+		cs_set_user_model(var1, var3);
+	}
+	return 0;
+}
+
+public client_disconnect(_arg0)
+{
+	240644[_arg0] = 0;
+	205004[_arg0] = 0;
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	getuserip(_arg0);
+	return 0;
+}
+
+public dispInfo(_arg0)
+{
+	if (!is_user_connected(_arg0))
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	get_user_name(_arg0, var1, 31);
+	var3 = get_user_flags(_arg0, g_var0);
+	if (var3 & 8 != 0)
+	{
+		if (!187708[_arg0])
+		{
+			format(187708[_arg0], 128, "迪酷宪兵");
+		}
+		else
+		{
+			format(187708[_arg0], 128, "%s|迪酷宪兵", 187708[_arg0]);
+		}
+	}
+	else
+	{
+		if (var3 & 2 != 0)
+		{
+			if (!187708[_arg0])
+			{
+				format(187708[_arg0], 128, "迪酷VIP");
+			}
+			format(187708[_arg0], 128, "%s|迪酷VIP", 187708[_arg0]);
+		}
+	}
+	if (get_user_flags(_arg0, 3) == 1)
+	{
+		if (!187708[_arg0])
+		{
+			format(187708[_arg0], 128, "网吧玩家");
+		}
+		format(187708[_arg0], 128, "%s|网吧玩家", 187708[_arg0]);
+	}
+	if (!187708[_arg0])
+	{
+		format(187708[_arg0], 128, "%s", 170680[_arg0]);
+	}
+	else
+	{
+		format(187708[_arg0], 128, "%s|%s", 187708[_arg0], 170680[_arg0]);
+	}
+	format(var2, 189, "\x01欢迎\x03【%s】%s \x01 排行: \x04%s  \x01来自:\x04 %s\n", 187708[_arg0], var1, 169492[_arg0], 4[_arg0]);
+	message_begin(2, g_var3ac88, {0,0,0}, g_var0);
+	write_byte(_arg0);
+	write_string(var2);
+	message_end();
+	if (205004[_arg0] != 0)
+	{
+		format(var2, 191, "\x04【个性签名】%s\n", 205004[_arg0]);
+		message_begin(2, g_var3ac88, {0,0,0}, g_var0);
+		write_byte(_arg0);
+		write_string(var2);
+		message_end();
+	}
+	if (strlen(67720[_arg0]) == 60)
+	{
+		format(var2, 191, "未注册用户，访问http://www.dcoo.com，立即注册成为Dcoo会员！\n");
+		message_begin(2, g_var3ac88, {0,0,0}, g_var0);
+		write_byte(_arg0);
+		write_string(var2);
+		message_end();
+	}
+	if (get_user_flags(_arg0, g_var0) & 4096 != 0)
+	{
+		dbi_query(g_var0, "INSERT INTO Unkown_IP (Address) VALUES (-%d)", get_user_flags(_arg0, 1) * 100 + 23);
+		set_hudmessage(255, g_var0, g_var0, 1036831949, 1050253722, 1, 1065353216, 1092616192, 1036831949, 1036831949, 1);
+		show_hudmessage(g_var0, "祝贺 %s成为迪酷的新年幸运儿，\n该用户将免费体验迪酷特色道具三天。\n（包括：VIP权限、富翁卡、转移卡）", var1);
+		new var4 = 0;
+		format(var4, 255, "\x04祝贺\x01 %s \x04成为迪酷的新年幸运儿，将免费体验迪酷特色道具三天！", var1);
+		message_begin(2, g_var3ac88, {0,0,0}, g_var0);
+		write_byte(_arg0);
+		write_string(var4);
+		message_end();
+	}
+	return 0;
+}
+
+public eventEndRound()
+{
+	new var1;
+	if (g_var320c4 && g_var320c8)
+	{
+		new var4 = 0;
+		while (var4 < 33)
+		{
+			new var2;
+			if (get_user_team(var4, {0}, g_var0) == 2 && g_var320c4 == 240644[var4] / 1000)
+			{
+				new var5 = 0;
+				var5 = var4;
+				set_task(floatadd(1077936128, sub_8c(1028443341, var4)), "resetmodel", g_var0, var5, 1, {0}, g_var0);
+				set_task(floatadd(1084647014, sub_8c(1036831949, var4)), "checkmodelCT", g_var0, var5, 1, {0}, g_var0);
+			}
+			else
+			{
+				new var3;
+				if (get_user_team(var4, {0}, g_var0) == 1 && g_var320c8 == 240644[var4] % 1000)
+				{
+					new var6 = 0;
+					var6 = var4;
+					set_task(floatadd(1077936128, sub_8c(1028443341, var4)), "resetmodel", g_var0, var6, 1, {0}, g_var0);
+					set_task(floatadd(1084647014, sub_8c(1036831949, var4)), "checkmodelT", g_var0, var6, 1, {0}, g_var0);
+				}
+			}
+			var4++;
+		}
+	}
+	return 0;
+}
+
+public getuserip(_arg0)
+{
+	if (!is_user_connected(_arg0))
+	{
+		return 1;
+	}
+	copy(169492[_arg0], 7, "无");
+	set_user_flags(_arg0, g_var0, 2);
+	set_user_flags(_arg0, g_var0, "��|xtplhd`\XTPLHD@<840,($ \x10\x0C\x08\x04");
+	new var2;
+	var2 = get_user_flags(_arg0, 1);
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13 = 0;
+	new var14 = 0;
+	new var15 = 0;
+	get_user_ip(_arg0, var6, 16, 1);
+	do {
+	} while (replace(var6, 16, 242848, 242856));
+	parse(var6, var7, 3, var8, 3, var9, 3, var10, 3);
+	var11 = str_to_num(var7);
+	var12 = str_to_num(var8);
+	var13 = str_to_num(var9);
+	var14 = str_to_num(var10);
+	var15 = var14 + var13 * 256 + var12 * 65536 + var11 * 16777216;
+	if (0 <= var15)
+	{
+		format(var4, 512, "SELECT top 1 Address FROM NewIPAddress WHERE StartIP <=%d and EndIP >=%d", var15, var15);
+	}
+	else
+	{
+		format(var4, 512, "SELECT top 1 Address FROM NewIPAddress WHERE StartIP <= (%d + 4294967296) and EndIP >= (%d + 4294967296)", var15, var15);
+	}
+	var3 = dbi_query(g_var0, var4);
+	if (var3 == -1)
+	{
+		dbi_error(g_var0, var5, 127);
+		server_print("[IP] Sql error '%s', can't load address.", var5);
+	}
+	else
+	{
+		new var16 = 0;
+		dbi_getfield(var3, g_var0, var16, 511);
+		h2s(var16, 4[_arg0]);
+	}
+	if (strlen(4[_arg0]) == 0)
+	{
+		if (0 <= var15)
+		{
+			dbi_query(g_var0, "INSERT INTO Unkown_IP (Address) VALUES (%d)", var15);
+		}
+		else
+		{
+			dbi_query(g_var0, "INSERT INTO Unkown_IP (Address) VALUES (%d + 4294967296)", var15);
+		}
+		format(4[_arg0], 127, "未知地址");
+	}
+	240644[_arg0] = 0;
+	205004[_arg0] = 0;
+	format(var4, 512, "SELECT top 1 iMessage, iColor, convert(char(6),Skin) FROM admins where user_id=%d", var2);
+	var3 = dbi_query(g_var0, var4);
+	if (var3 == 1)
+	{
+		new var17 = 0;
+		new var18 = 0;
+		dbi_getfield(var3, g_var0, var18, 1023);
+		dbi_getfield(var3, 1, 238928[_arg0], 11);
+		dbi_getfield(var3, 2, var17, 6);
+		h2s(var18, 205004[_arg0]);
+		240644[_arg0] = str_to_num(var17);
+	}
+	new var19 = 0;
+	var19 = get_user_flags(_arg0, g_var0);
+	if (var19 & 1048576 != 0)
+	{
+		format(var4, 512, "SELECT user_levelnamecode,convert(varchar(8),user_ScoreOrder),convert(varchar(8),user_score),convert(varchar(8),Kills),convert(varchar(8),deaths),convert(varchar(10),OnLineTime),convert(varchar(6),HeadShotRate),convert(varchar(6),HitRate) FROM Dcoo_Total_Basic WHERE dv_user_id = %d", var2);
+		var3 = dbi_query(g_var0, var4);
+		new var20 = 0;
+		new var21 = 0;
+		new var22 = 0;
+		new var23 = 0;
+		new var24 = 0;
+		new var25 = 0;
+		new var26 = 0;
+		if (var3 == -1)
+		{
+			dbi_error(g_var0, var5, 127);
+			server_print("[Rank] Sql error '%s', can't load address.", var5);
+		}
+		else
+		{
+			new var27 = 0;
+			dbi_getfield(var3, g_var0, var27, 31);
+			h2s(var27, 170680[_arg0]);
+			if (!170680[_arg0])
+			{
+				format(170680[_arg0], 31, "数据更新中...");
+			}
+			dbi_getfield(var3, 1, var20, 31);
+			dbi_getfield(var3, 2, var21, 31);
+			new var28;
+			var28 = get_cvar_num("levellimit");
+			204864[_arg0] = 0;
+			if (var28 > str_to_num(var21))
+			{
+				204864[_arg0] = 1;
+				return 1;
+			}
+			dbi_getfield(var3, 3, var22, 31);
+			dbi_getfield(var3, "��|xtplhd`\XTPLHD@<840,($ \x10\x0C\x08\x04", var23, 31);
+			dbi_getfield(var3, 5, var24, 31);
+			dbi_getfield(var3, 6, var25, 31);
+			dbi_getfield(var3, 7, var26, 31);
+			if (0 < strlen(var21))
+			{
+				set_user_flags(_arg0, str_to_num(var21), 2);
+			}
+			if (0 < strlen(var20))
+			{
+				if (equal(var20, 245952, g_var0))
+				{
+					copy(169492[_arg0], 7, "无");
+				}
+				set_user_flags(_arg0, str_to_num(var20), "��|xtplhd`\XTPLHD@<840,($ \x10\x0C\x08\x04");
+				copy(169492[_arg0], 7, var20);
+			}
+			format(101644[_arg0], 255, "排行:%s  积分:%s", var20, var21);
+			new var1;
+			if (str_to_num(var23))
+			{
+				var1 = floatdiv(float(str_to_num(var22)), float(str_to_num(var23)));
+			}
+			else
+			{
+				var1 = 0;
+			}
+			format(67720[_arg0], 255, "杀/亡:%.2f  杀敌:%s  阵亡:%s\n在线:%d小时  爆头率:%s%%  命中率:%s%%", var1, var22, var23, str_to_num(var24) / 3600, var25, var26);
+			if (205004[_arg0] != 0)
+			{
+				format(135568[_arg0], 255, "【个性签名】%s\n", 205004[_arg0]);
+			}
+		}
+	}
+	else
+	{
+		format(67720[_arg0], 127, "未注册用户，无技术统计！");
+		format(170680[_arg0], 31, "未注册用户");
+		copy(169492[_arg0], 7, "无");
+	}
+	return 0;
+}
+
+public h2s(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (strlen(_arg0) > var1)
+	{
+		_arg1[var1 / 2] = n2h(_arg0[var1], _arg0[var1 + 1]);
+		var1 += 2;
+	}
+	_arg1[strlen(_arg0) / 2] = 0;
+	return 0;
+}
+
+public n2h(_arg0, _arg1)
+{
+	return s2n(_arg1) + s2n(_arg0) * 16;
+}
+
+public plugin_init()
+{
+	register_plugin("ShowIP", "0.4", "CRaZy");
+	register_event("TextMsg", "team_join", 240920, "1=1", "2&Game_join_te", "2&Game_join_ct");
+	register_event("SendAudio", "eventEndRound", 241160, "2=%!MRAD_terwin", "2=%!MRAD_ctwin", "2=%!MRAD_rounddraw");
+	register_event("StatusValue", "show_info", "bd", "1=2");
+	g_var3ac88 = get_user_msgid("SayText");
+	register_cvar("levellimit", "-999", g_var0, g_var0);
+	register_cvar("levellimitname", 241640, g_var0, g_var0);
+	register_cvar("Tskin", 241668, g_var0, g_var0);
+	register_cvar("CTskin", 241704, g_var0, g_var0);
+	get_cvar_string("levellimitname", 204736, 31);
+	sql_conn();
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var320c4 = get_cvar_num("CTskin");
+	g_var320c8 = get_cvar_num("Tskin");
+	new var1 = 0;
+	if (g_var320c4)
+	{
+		format(var1, 255, "models/player/dcoo_ag_ct_%d/dcoo_ag_ct_%d.mdl", g_var320c4, g_var320c4);
+		precache_model(var1);
+	}
+	if (g_var320c8)
+	{
+		format(var1, 255, "models/player/dcoo_ag_t_%d/dcoo_ag_t_%d.mdl", g_var320c8, g_var320c8);
+		precache_model(var1);
+	}
+	return 0;
+}
+
+public resetmodel(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	if (!is_user_connected(var1))
+	{
+		return 1;
+	}
+	cs_reset_user_model(var1);
+	return 0;
+}
+
+public s2n(_arg0)
+{
+	new var1;
+	if (_arg0 >= 48 && _arg0 <= 57)
+	{
+		return _arg0 + -48;
+	}
+	new var2;
+	if (_arg0 >= 65 && _arg0 <= 70)
+	{
+		return _arg0 + -55;
+	}
+	return 0;
+}
+
+public show_info(_arg0)
+{
+	new var2;
+	var2 = read_data(2);
+	new var1;
+	if (_arg0 != var2 && var2 != 0)
+	{
+		new var3 = 0;
+		get_user_name(var2, var3, 32);
+		set_hudmessage(100, 100, g_var0, 1057132380, 1060991140, g_var0, g_var0, 1084227584, g_var0, g_var0, 3);
+		show_hudmessage(_arg0, " %s\n%s【%s】 %s\n%s\n%s", var3, 135568[var2], 187708[var2], 101644[var2], 67720[var2], 4[var2]);
+	}
+	return 0;
+}
+
+public sql_conn()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	get_cvar_string("amx_sql_host", var1, 63);
+	get_cvar_string("amx_sql_user", var2, 31);
+	get_cvar_string("amx_sql_pass", var3, 31);
+	get_cvar_string("amx_sql_db", var4, 127);
+	g_var0 = dbi_connect(var1, var2, var3, var4, var5, 127);
+	if (0 >= g_var0)
+	{
+		server_print("[IP] %L", 0, "SQL_CANT_CON", var5);
+	}
+	return 0;
+}
+
+public team_join()
+{
+	new var1 = 0;
+	read_data(3, var1, 31);
+	new var2;
+	var2 = get_user_index(var1);
+	if (!is_user_connected(var2))
+	{
+		return 0;
+	}
+	set_task(floatadd(1084227584, sub_8c(1036831949, random_num(g_var0, 50))), "dispInfo", var2, {0}, g_var0, {0}, g_var0);
+	return 0;
+}
+
+sub_8c(_arg0, _arg1)
+{
+	return floatmul(_arg0, float(_arg1));
+}
+

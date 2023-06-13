@@ -1,0 +1,731 @@
+new g_var2a0;
+new g_var37c;
+new g_var29c;
+public actionMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 6:
+		{
+			if (file_exists(412))
+			{
+				delete_file(412);
+				client_print(_arg0, "", "* %L", _arg0, "PAUSE_CONF_CLEARED");
+			}
+			else
+			{
+				client_print(_arg0, "", "* %L", _arg0, "PAUSE_ALR_CLEARED");
+			}
+			sub_1b90(_arg0, 280[_arg0]);
+		}
+		case 7:
+		{
+			if (sub_52e0(412))
+			{
+				g_var2a0 = 0;
+				client_print(_arg0, "", "* %L", _arg0, "PAUSE_CONF_SAVED");
+			}
+			else
+			{
+				client_print(_arg0, "", "* %L", _arg0, "PAUSE_SAVE_FAILED");
+			}
+			sub_1b90(_arg0, 280[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 280[_arg0];
+			var2++;
+			sub_1b90(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 280[_arg0];
+			var1--;
+			sub_1b90(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = _arg1 + 280[_arg0] * 6;
+			new var4 = 0;
+			new var5 = 0;
+			get_plugin(var3, var4, "", var5, "1.00", var5, "1.00", var5, "1.00", var5, 1);
+			switch (var5)
+			{
+				case 112:
+				{
+					g_var2a0 = 1;
+					pause("dc", var4, 2840);
+				}
+				case 114:
+				{
+					pause("ac", var4, 2840);
+				}
+				case 115:
+				{
+					g_var2a0 = 1;
+					unpause("ac", var4, 2868);
+				}
+				default:
+				{
+				}
+			}
+			sub_1b90(_arg0, 280[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public cmdMenu(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		280[_arg0] = 0;
+		sub_1b90(_arg0, 0);
+	}
+	return 1;
+}
+
+public cmdOFF(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		sub_2918(_arg0);
+	}
+	return 1;
+}
+
+public cmdON(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		sub_2cbc(_arg0);
+	}
+	return 1;
+}
+
+public cmdPlugin(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	new var6 = 0;
+	read_argv(1, var6, "");
+	new var1;
+	if (equal(var6, "add", "1.00") && read_argc() > 2)
+	{
+		read_argv(2, var6, "");
+		if ((764[g_var37c] = sub_3424(var6, _unused_temp_, 0)) != -1)
+		{
+			if (g_var37c < 32)
+			{
+				g_var37c += 1;
+			}
+			console_print(_arg0, "%L", _arg0, "CANT_MARK_MORE");
+		}
+	}
+	else
+	{
+		if (equal(var6, "off", "1.00"))
+		{
+			sub_2918(_arg0);
+		}
+		if (equal(var6, "on", "1.00"))
+		{
+			sub_2cbc(_arg0);
+		}
+		if (equal(var6, "save", "1.00"))
+		{
+			if (sub_52e0(412))
+			{
+				g_var2a0 = 0;
+				console_print(_arg0, "%L", _arg0, "PAUSE_CONF_SAVED");
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "PAUSE_SAVE_FAILED");
+			}
+		}
+		if (equal(var6, "clear", "1.00"))
+		{
+			if (file_exists(412))
+			{
+				delete_file(412);
+				console_print(_arg0, "%L", _arg0, "PAUSE_CONF_CLEARED");
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "PAUSE_ALR_CLEARED");
+			}
+		}
+		if (equal(var6, "pause", "1.00"))
+		{
+			new var7 = 0;
+			new var8 = 0;
+			new var9;
+			var9 = read_argv(2, var7, "");
+			new var2;
+			if (var9 && (var8 = sub_3064(var7, var9)) != -1 && !sub_1a74(var8) && pause("ac", var7, 2840))
+			{
+				console_print(_arg0, "%L %L", _arg0, "PAUSE_PLUGIN_MATCH", var7, _arg0, "PAUSED");
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "PAUSE_COULDNT_FIND", var7);
+			}
+		}
+		if (equal(var6, "enable", "1.00"))
+		{
+			new var10 = 0;
+			new var11 = 0;
+			new var12;
+			var12 = read_argv(2, var10, "");
+			new var3;
+			if (var12 && (var11 = sub_3064(var10, var12)) != -1 && !sub_1a74(var11) && unpause("ac", var10, 2868))
+			{
+				console_print(_arg0, "%L %L", _arg0, "PAUSE_PLUGIN_MATCH", var10, _arg0, "UNPAUSED");
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "PAUSE_COULDNT_FIND", var10);
+			}
+		}
+		if (equal(var6, "stop", "1.00"))
+		{
+			new var13 = 0;
+			new var14 = 0;
+			new var15;
+			var15 = read_argv(2, var13, "");
+			new var4;
+			if (var15 && (var14 = sub_3064(var13, var15)) != -1 && !sub_1a74(var14) && pause("dc", var13, 2840))
+			{
+				g_var2a0 = 1;
+				console_print(_arg0, "%L %L", _arg0, "PAUSE_PLUGIN_MATCH", var13, _arg0, "STOPPED");
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "PAUSE_COULDNT_FIND", var13);
+			}
+		}
+		if (equal(var6, "list", "1.00"))
+		{
+			new var16 = 0;
+			new var17 = 0;
+			new var18 = 0;
+			new var19 = 0;
+			new var20 = 0;
+			format(var16, "", "%L", _arg0, "NAME");
+			format(var17, "", "%L", _arg0, "VERSION");
+			format(var18, "", "%L", _arg0, "AUTHOR");
+			format(var19, "", "%L", _arg0, "FILE");
+			format(var20, "", "%L", _arg0, "STATUS");
+			new var21 = 0;
+			new var22 = 0;
+			new var23;
+			new var5;
+			if (read_argv(2, var21, 7))
+			{
+				var5 = str_to_num(var21);
+			}
+			else
+			{
+				var5 = 1;
+			}
+			var23 = var5;
+			var23--;
+			if (0 > var23)
+			{
+				var23 = 0;
+			}
+			new var24;
+			var24 = get_pluginsnum();
+			if (var23 >= var24)
+			{
+				var23 = var24 + -1;
+			}
+			console_print(_arg0, "\n----- %L -----", _arg0, "PAUSE_LOADED");
+			console_print(_arg0, "       %-18.17s %-8.7s %-17.16s %-16.15s %-9.8s", var16, var17, var18, var19, var20);
+			new var25 = 0;
+			new var26 = 0;
+			new var27 = 0;
+			new var28 = 0;
+			new var29 = 0;
+			new var30;
+			var30 = var23 + 10;
+			if (var30 > var24)
+			{
+				var30 = var24;
+			}
+			new var31;
+			var31 = var23;
+			while (var31 < var30)
+			{
+				get_plugin(var31, var25, "", var26, "", var27, 15, var28, "", var29, 15);
+				if (var29 == 114)
+				{
+					var22++;
+				}
+				console_print(_arg0, " [%3d] %-18.17s %-8.7s %-17.16s %-16.15s %-9.8s", var31 + 1, var26, var27, var28, var25, var29);
+				var31++;
+			}
+			console_print(_arg0, "----- %L -----", _arg0, "PAUSE_ENTRIES", var23 + 1, var30, var24, var22);
+			if (var30 < var24)
+			{
+				console_print(_arg0, "----- %L -----", _arg0, "PAUSE_USE_MORE", var30 + 1);
+			}
+			else
+			{
+				console_print(_arg0, "----- %L -----", _arg0, "PAUSE_USE_BEGIN");
+			}
+		}
+		console_print(_arg0, "%L", _arg0, "PAUSE_USAGE");
+		console_print(_arg0, "%L:", _arg0, "PAUSE_COMMANDS");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_OFF");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_ON");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_STOP");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_PAUSE");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_ENABLE");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_SAVE");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_CLEAR");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_LIST");
+		console_print(_arg0, "%L", _arg0, "COM_PAUSE_ADD");
+	}
+	return 1;
+}
+
+public plugin_cfg()
+{
+	sub_570c(412);
+	server_cmd("amx_pausecfg add \"%s\"", "Admin Base");
+	server_cmd("amx_pausecfg add \"%s\"", "Admin Base (SQL)");
+	server_cmd("amx_pausecfg add \"%s\"", "Pause Plugins");
+	server_cmd("amx_pausecfg add \"%s\"", "TimeLeft");
+	server_cmd("amx_pausecfg add \"%s\"", "NextMap");
+	server_cmd("amx_pausecfg add \"%s\"", "Slots Reservation");
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Pause Plugins", "1.00", "AMXX Dev Team");
+	register_dictionary("pausecfg.txt");
+	register_dictionary("common.txt");
+	register_dictionary("admincmd.txt");
+	register_concmd("amx_pausecfg", "cmdPlugin", 128, "- list commands for pause/unpause managment");
+	register_clcmd("amx_pausecfgmenu", "cmdMenu", 128, "- pause/unpause plugins with menu");
+	register_concmd("amx_off", "cmdOFF", 128, "- pauses some plugins");
+	register_concmd("amx_on", "cmdON", 128, "- unpauses some plugins");
+	register_menucmd(register_menuid("Pause/Unpause Plugins", "1.00"), 1023, "actionMenu");
+	g_var29c = sub_6d8();
+	sub_860(412, 63);
+	format(412, 63, "%s/pausecfg.ini", 412);
+	return 0;
+}
+
+sub_1b90(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	new var13;
+	var13 = get_pluginsnum();
+	new var14 = 0;
+	new var15;
+	var15 = _arg1 * 6;
+	new var16 = 0;
+	if (var15 >= var13)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var15 = 0;
+	}
+	new var17;
+	new var1;
+	if (var13 % 6)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var29c)
+	{
+		var2 = 3044;
+	}
+	else
+	{
+		var2 = 3108;
+	}
+	var17 = format(var14, 511, var2, _arg0, "PAUSE_UNPAUSE", _arg1 + 1, var1 + var13 / 6);
+	new var18;
+	var18 = var15 + 6;
+	new var19 = 704;
+	if (var18 > var13)
+	{
+		var18 = var13;
+	}
+	new var20;
+	var20 = var15;
+	while (var20 < var18)
+	{
+		get_plugin(var20, _unused_temp_, "", var10, "", var11, "1.00", var11, "1.00", var11, 1);
+		sub_1744(_arg0, var11, var12, var11, 7);
+		new var4;
+		if (sub_1a74(var20) || (var12 != 79 && var12 != 83))
+		{
+			if (g_var29c)
+			{
+				var16++;
+				var17 = format(var14[var17], 511 - var17, "\d%d. %s\R%s\n\w", var16, var10, var11) + var17;
+			}
+			else
+			{
+				var16++;
+				var17 = format(var14[var17], 511 - var17, "#. %s %s\n", var10, var11) + var17;
+			}
+		}
+		else
+		{
+			var19 = 1 << var16 | var19;
+			var16++;
+			new var5;
+			if (g_var29c)
+			{
+				var5 = 3312;
+			}
+			else
+			{
+				var5 = 3376;
+			}
+			var17 = format(var14[var17], 511 - var17, var5, var16, var10, var11) + var17;
+		}
+		var20++;
+	}
+	var17 = format(var14[var17], 511 - var17, "\n7. %L\n", _arg0, "CLEAR_STOPPED") + var17;
+	new var6;
+	if (g_var2a0)
+	{
+		var6 = 3664;
+	}
+	else
+	{
+		var6 = 3672;
+	}
+	new var7;
+	if (g_var29c)
+	{
+		var7 = 3508;
+	}
+	else
+	{
+		var7 = 3572;
+	}
+	var17 = format(var14[var17], 511 - var17, var7, _arg0, "SAVE_STOPPED", var6) + var17;
+	if (var13 != var18)
+	{
+		new var8;
+		if (_arg1)
+		{
+			var8 = 3760;
+		}
+		else
+		{
+			var8 = 3780;
+		}
+		format(var14[var17], 511 - var17, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var8);
+		var19 |= 256;
+	}
+	else
+	{
+		new var9;
+		if (_arg1)
+		{
+			var9 = 3828;
+		}
+		else
+		{
+			var9 = 3848;
+		}
+		format(var14[var17], 511 - var17, "\n0. %L", _arg0, var9);
+	}
+	show_menu(_arg0, var19, var14, -1, "Pause/Unpause Plugins");
+	return 0;
+}
+
+sub_52e0(_arg0)
+{
+	if (file_exists(_arg0))
+	{
+		delete_file(_arg0);
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = get_pluginsnum();
+	if (!write_file(_arg0, ";Generated by Pause Plugins Plugin. Do not modify!\n;Title Filename", -1))
+	{
+		return 0;
+	}
+	new var6 = 0;
+	while (var6 < var5)
+	{
+		get_plugin(var6, var2, "", var3, "", var4, "1.00", var4, "1.00", var4, 1);
+		if (var4 == 115)
+		{
+			format(var1, 255, "\"%s\" ;%s", var3, var2);
+			write_file(_arg0, var1, -1);
+		}
+		var6++;
+	}
+	return 1;
+}
+
+sub_230(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_150(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_2918(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6;
+	var6 = get_pluginsnum();
+	new var7 = 0;
+	while (var7 < var6)
+	{
+		get_plugin(var7, var3, "", _unused_temp_, "", var4, "1.00", var4, "1.00", var4, 1);
+		new var1;
+		if (!sub_1a74(var7) && var4 == 114 && pause("ac", var3, 2840))
+		{
+			var5++;
+		}
+		var7++;
+	}
+	new var2;
+	if (var5 == 1)
+	{
+		var2 = 3980;
+	}
+	else
+	{
+		var2 = 4036;
+	}
+	console_print(_arg0, "%L", _arg0, var2, var5);
+	return 0;
+}
+
+sub_2cbc(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6;
+	var6 = get_pluginsnum();
+	new var7 = 0;
+	while (var7 < var6)
+	{
+		get_plugin(var7, var3, "", _unused_temp_, "", var4, "1.00", var4, "1.00", var4, 1);
+		new var1;
+		if (!sub_1a74(var7) && var4 == 112 && unpause("ac", var3, 2868))
+		{
+			var5++;
+		}
+		var7++;
+	}
+	new var2;
+	if (var5 == 1)
+	{
+		var2 = 4120;
+	}
+	else
+	{
+		var2 = 4184;
+	}
+	console_print(_arg0, "%L", _arg0, var2, var5);
+	return 0;
+}
+
+sub_3424(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3;
+	var3 = get_pluginsnum();
+	new var4 = 0;
+	while (var4 < var3)
+	{
+		get_plugin(var4, _arg1, _arg2, var1, "", var2, "1.00", var2, "1.00", var2, 1);
+		if (equali(var1, _arg0, "1.00"))
+		{
+			return var4;
+		}
+		var4++;
+	}
+	return -1;
+}
+
+sub_3064(_arg0, _arg1)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = get_pluginsnum();
+	new var6 = 0;
+	while (var6 < var5)
+	{
+		get_plugin(var6, var3, "", _unused_temp_, "", var4, "1.00", var4, "1.00", var4, 1);
+		new var2;
+		if (equali(var3, _arg0, _arg1) && (var4 == 114 || var4 == 112 || var4 == 115))
+		{
+			_arg1 = copy(_arg0, "", var3);
+			return var6;
+		}
+		var6++;
+	}
+	return -1;
+}
+
+sub_1a74(_arg0)
+{
+	new var1 = 0;
+	while (var1 < g_var37c)
+	{
+		if (_arg0 == 764[var1])
+		{
+			return 1;
+		}
+		var1++;
+	}
+	return 0;
+}
+
+sub_570c(_arg0)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	var5++;
+	while (read_file(_arg0, var5, var2, 255, var4))
+	{
+		new var1;
+		if (var2 != 59 && parse(var2, var2, 31) && (var4 = sub_3424(var2, var3, "") != -1))
+		{
+			pause("dc", var3, 2840);
+		}
+	}
+	return 1;
+}
+
+sub_6d8()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_860(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_1744(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	switch (_arg1)
+	{
+		case 98:
+		{
+			_arg2 = 69;
+			format(_arg3, _arg4, "%L", _arg0, "ERROR");
+		}
+		case 112:
+		{
+			_arg2 = 79;
+			format(_arg3, _arg4, "%L", _arg0, "OFF");
+		}
+		case 114:
+		{
+			_arg2 = 79;
+			format(_arg3, _arg4, "%L", _arg0, "ON");
+		}
+		case 115:
+		{
+			_arg2 = 83;
+			format(_arg3, _arg4, "%L", _arg0, "STOPPED");
+		}
+		default:
+		{
+			_arg2 = 76;
+			format(_arg3, _arg4, "%L", _arg0, "LOCKED");
+		}
+	}
+	return 0;
+}
+
+sub_150(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

@@ -1,0 +1,78 @@
+public client_disconnect(_arg0)
+{
+	if (is_user_bot(_arg0))
+	{
+		return 0;
+	}
+	remove_task(_arg0, "1.00");
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8;
+	var8 = get_user_userid(_arg0);
+	get_user_team(_arg0, var2, 15);
+	get_user_name(_arg0, var3, 31);
+	get_user_authid(_arg0, var4, 31);
+	new var9 = 1;
+	while (var9 < 31)
+	{
+		if (get_user_wstats(_arg0, var9, var5, var6))
+		{
+			xmod_get_wpnname(var9, var7, 23);
+			log_message("\"%s<%d><%s><%s>\" triggered \"weaponstats\" (weapon \"%s\") (shots \"%d\") (hits \"%d\") (kills \"%d\") (headshots \"%d\") (tks \"%d\") (damage \"%d\") (deaths \"%d\")", var3, var8, var4, var2, var7, var5 + 16, var5 + 20, var5, var5 + 8, var5 + 12, var5 + 24, var5 + 4);
+			log_message("\"%s<%d><%s><%s>\" triggered \"weaponstats2\" (weapon \"%s\") (head \"%d\") (chest \"%d\") (stomach \"%d\") (leftarm \"%d\") (rightarm \"%d\") (leftleg \"%d\") (rightleg \"%d\")", var3, var8, var4, var2, var7, var6 + 4, var6 + 8, var6 + 12, var6 + 16, var6 + 20, var6 + 24, var6 + 28);
+		}
+		var9++;
+	}
+	new var10;
+	var10 = get_user_time(_arg0, 1);
+	log_message("\"%s<%d><%s><%s>\" triggered \"time\" (time \"%d:%02d\")", var3, var8, var4, var2, var10 / 60, var10 % 60);
+	new var1;
+	if (152[_arg0])
+	{
+		var1 = 152[_arg0];
+	}
+	else
+	{
+		var1 = 1;
+	}
+	log_message("\"%s<%d><%s><%s>\" triggered \"latency\" (ping \"%d\")", var3, var8, var4, var2, 20[_arg0] / var1);
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	if (!is_user_bot(_arg0))
+	{
+		152[_arg0] = 0;
+		20[_arg0] = 0;
+		set_task(1100742656, "getPing", _arg0, 2068, "1.00", 2072, "1.00");
+	}
+	return 0;
+}
+
+public getPing(_arg0)
+{
+	new var1 = 0;
+	get_user_ping(_arg0, var1, _unused_temp_);
+	new var2 = 20[_arg0];
+	var2 = var2[var1];
+	152[_arg0]++;
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("CS Stats Logging", "1.00", "AMXX Dev Team");
+	return 0;
+}
+
+public plugin_modules()
+{
+	require_module("csx");
+	return 0;
+}
+

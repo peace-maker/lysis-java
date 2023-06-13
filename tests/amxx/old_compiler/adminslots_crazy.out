@@ -1,0 +1,255 @@
+new g_var214;
+public ackSignal(_arg0)
+{
+	new var1 = 0;
+	format(var1, 63, "%L", _arg0, "DROPPED_RES");
+	server_cmd("kick #%d \"%s\"", get_user_userid(_arg0), var1);
+	return 0;
+}
+
+public client_authorized(_arg0)
+{
+	client_cmd(_arg0, "cl_dlmax 80");
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	get_user_ip(_arg0, var3, 16, 1);
+	do {
+	} while (replace(var3, 16, 5260, 5268));
+	parse(var3, var4, 3, var5, 3, var6, 3, var7, 3);
+	var8 = str_to_num(var4);
+	var9 = str_to_num(var5);
+	var10 = str_to_num(var6);
+	var11 = str_to_num(var7);
+	var12 = var11 + var10 * 256 + var9 * 65536 + var8 * 16777216;
+	536[_arg0] = 0;
+	set_user_flags(_arg0, "1.00", "");
+	new var13 = 0;
+	while (var13 < g_var214)
+	{
+		new var1;
+		if (var12 >= 20[var13] && var12 <= 276[var13])
+		{
+			set_user_flags(_arg0, 1, "");
+			536[_arg0] = 1;
+		}
+		var13++;
+	}
+	new var14;
+	var14 = get_maxplayers();
+	new var15;
+	var15 = get_playersnum(1);
+	new var16;
+	var16 = var14 - get_cvar_num("amx_reservation");
+	if (var15 > var16)
+	{
+		new var2;
+		if (sub_234(_arg0, 2) || var15 <= var16 || 536[_arg0] == 1)
+		{
+			if (!kick_noreg())
+			{
+				if (!kick_reg())
+				{
+					if (var14 == var15)
+					{
+						server_cmd("kick #%d 本服务器目前全是迪酷VIP或网吧用户，请稍后再来  http://www.dcoo.com", get_user_userid(_arg0));
+					}
+				}
+			}
+			set_cvar_num("sv_visiblemaxplayers", get_playersnum(1) + 2);
+			return 0;
+		}
+		new var17 = 0;
+		get_cvar_string("trans_server", var17, 24);
+		if (equal(var17, 5864, "1.00"))
+		{
+			server_cmd("kick #%d Dcoo服务器全部满员，成为VIP会员可以优先进入！http://www.dcoo.com", get_user_userid(_arg0));
+		}
+		else
+		{
+			client_cmd(_arg0, "connect %s", var17);
+		}
+	}
+	return 1;
+}
+
+public client_disconnect()
+{
+	if (get_maxplayers() - get_cvar_num("amx_reservation") < get_playersnum(1))
+	{
+		set_cvar_num("sv_visiblemaxplayers", get_playersnum(1) + 1);
+	}
+	else
+	{
+		set_cvar_num("sv_visiblemaxplayers", get_maxplayers() - get_cvar_num("amx_reservation") + 2);
+	}
+	return 0;
+}
+
+public kick_noreg()
+{
+	new var2 = 0;
+	new var3 = 0;
+	get_players(var2, var3, 6584, 6588);
+	new var4 = 0;
+	while (var4 < var3)
+	{
+		new var1;
+		if (!sub_234(var2[var4], 1048576) && 536[var2[var4]] == 0)
+		{
+			new var5 = 0;
+			get_user_name(var2[var4], var5, 31);
+			log_amx("[AdminSlot Kick Noreg] %s", var5);
+			server_cmd("kick #%d 服务器满员，您不是注册用户而被系统随机KICK了！http://www.dcoo.com", get_user_userid(var2[var4]));
+			server_exec();
+			return 1;
+		}
+		var4++;
+	}
+	return 0;
+}
+
+public kick_reg()
+{
+	new var2 = 0;
+	new var3 = 0;
+	get_players(var2, var3, 6584, 6588);
+	new var4 = 0;
+	while (var4 < var3)
+	{
+		new var1;
+		if (!sub_234(var2[var4], 2) && 536[var2[var4]] == 0)
+		{
+			new var5 = 0;
+			get_user_name(var2[var4], var5, 31);
+			log_amx("[AdminSlot Kick Reg] %s", var5);
+			server_cmd("kick #%d 服务器满员，您不是迪酷VIP而被系统随机KICK了！http://www.dcoo.com", get_user_userid(var2[var4]));
+			server_exec();
+			return 1;
+		}
+		var4++;
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Slots Reservation", "1.00", "AMXX Dev Team");
+	register_dictionary("adminslots.txt");
+	register_dictionary("common.txt");
+	register_cvar("amx_reservation", 2180, "1.00", "1.00");
+	register_cvar("trans_server", "218.89.167.221:27015", "1.00", "1.00");
+	register_cvar("amx_sql_host", "127.0.0.1,2433", "1.00", "1.00");
+	register_cvar("amx_sql_user", "sa", "1.00", "1.00");
+	register_cvar("amx_sql_pass", "5D5661F75DDD496FC7751BF5DEEA2A", "1.00", "1.00");
+	register_cvar("amx_sql_db", "dcoo_database", "1.00", "1.00");
+	register_cvar("levellimit", "-999", "1.00", "1.00");
+	format(668, 15, "amxres%c%c%c%c", random_num(65, 90), random_num(65, 90), random_num(65, 90), random_num(65, 90));
+	register_clcmd(668, "ackSignal", -1, {0});
+	set_cvar_num("sv_visiblemaxplayers", get_maxplayers() - get_cvar_num("amx_reservation") + 2);
+	sql_conn();
+	return 0;
+}
+
+public sql_conn()
+{
+	get_cvar_string("amx_sql_host", 732, 63);
+	get_cvar_string("amx_sql_user", 988, 31);
+	get_cvar_string("amx_sql_pass", 1116, 31);
+	get_cvar_string("amx_sql_db", 1244, 31);
+	new var2;
+	var2 = dbi_connect(732, 988, 1116, 1244, 1372, 127);
+	if (0 >= var2)
+	{
+		server_print("[ServerMessage] %L", 0, "SQL_CANT_CON", 1372);
+		return 1;
+	}
+	new var3;
+	var3 = get_cvar_num("server_id");
+	new var4;
+	var4 = dbi_query(var2, "SELECT convert(varchar(15),user_score), RedirectIP FROM server WHERE ServerID = %d", var3);
+	if (var4 == -1)
+	{
+		dbi_error(var2, 1372, 127);
+		server_print("[Server] Can't load ServerMessage! %s", 1372);
+	}
+	else
+	{
+		if (var4 == 0)
+		{
+			server_print("[Server] No ServerMessage!");
+		}
+		new var5 = 0;
+		new var6 = 0;
+		dbi_getfield(var4, "1.00", var5, 15);
+		dbi_getfield(var4, 1, var6, 31);
+		set_cvar_string("trans_server", var6);
+		new var7;
+		var7 = str_to_num(var5);
+		if (var7 == -2000)
+		{
+			set_cvar_num("amx_mode", 1);
+		}
+		else
+		{
+			if (0 < var7)
+			{
+				set_cvar_num("amx_mode", 2);
+				set_cvar_num("levellimit", var7);
+			}
+		}
+		server_print("[Server Limit & Redirect] Complete!");
+	}
+	new var8;
+	var8 = dbi_query(var2, "SELECT convert(varchar(15),StartIP), convert(varchar(15),EndIP) FROM BarIPList WHERE ServerID = %d", var3);
+	if (var8 == -1)
+	{
+		dbi_error(var2, 1372, 127);
+		server_print("[Server] Can't load BarIP List! %s", 1372);
+	}
+	else
+	{
+		if (var8 == 0)
+		{
+			server_print("[Server] No BarIP List!");
+		}
+		new var9 = 0;
+		new var10 = 0;
+		do {
+			dbi_getfield(var8, "1.00", var9, 15);
+			dbi_getfield(var8, 1, var10, 15);
+			new var1;
+			if (!equal(var9, 4996, "1.00") && !equal(var10, 5000, "1.00"))
+			{
+				20[g_var214] = str_to_num(var9);
+				276[g_var214] = str_to_num(var10);
+				g_var214 += 1;
+			}
+		} while (0 < dbi_nextrow(var8));
+		server_print("[Bar IP] Get %d Lists!", g_var214);
+	}
+	return 0;
+}
+
+sub_234(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_158(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, "1.00");
+}
+
+sub_158(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

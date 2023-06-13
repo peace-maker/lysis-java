@@ -1,0 +1,294 @@
+new g_var268;
+new g_var264;
+new g_var26c;
+public actionMenu(_arg0, _arg1)
+{
+	if (!get_cvar_num("amx_client_languages"))
+	{
+		return 0;
+	}
+	new var7;
+	var7 = sub_6d4(_arg0, 128);
+	if (_arg1 == 0)
+	{
+		if (g_var268 + -1 > 216[_arg0])
+		{
+			216[_arg0]++;
+		}
+		else
+		{
+			216[_arg0] = 0;
+		}
+		sub_1644(_arg0);
+	}
+	new var1;
+	if (var7 && _arg1 == 1)
+	{
+		if (g_var268 + -1 > 216[_arg0][1])
+		{
+			216[_arg0][1]++;
+		}
+		else
+		{
+			216[_arg0][1] = 0;
+		}
+		sub_1644(_arg0);
+	}
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	get_lang(216[_arg0], var8);
+	get_lang(216[_arg0][1], var10);
+	get_user_info(_arg0, "lang", var9, 2);
+	get_lang(g_var264, var11);
+	new var2;
+	if (var7 && _arg1 == 2 && !equali(var10, var11, "1.00"))
+	{
+		set_vaultdata("server_language", var10);
+		set_cvar_string("amxx_language", var10);
+		g_var264 = 216[_arg0][1];
+		format(var12, 63, "%L", var10, "LANG_NAME");
+		client_print(_arg0, "", "%L", var8, "SET_LANG_SERVER", var12);
+	}
+	new var6;
+	if (!equali(var8, var9, "1.00") && ((var7 && _arg1 == 2) || (!var7 && _arg1 == 1)))
+	{
+		client_cmd(_arg0, "setinfo \"lang\" \"%s\"", var8);
+		format(var12, 63, "%L", var8, "LANG_NAME");
+		client_print(_arg0, "", "%L", var8, "SET_LANG_USER", var12);
+	}
+	return 0;
+}
+
+public client_putinserver(_arg0)
+{
+	if (get_cvar_num("amx_client_languages"))
+	{
+		set_task(1092616192, "dispInfo", _arg0, {0}, "1.00", {0}, "1.00");
+	}
+	return 0;
+}
+
+public cmdLang(_arg0, _arg1, _arg2)
+{
+	if (!sub_234(_arg0, _arg1, _arg2, 2))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	read_argv(1, var1, 2);
+	if (!lang_exists(var1))
+	{
+		console_print(_arg0, "[AMXX] %L", _arg0, "LANG_NOT_EXISTS");
+		return 1;
+	}
+	set_vaultdata("server_language", var1);
+	set_cvar_string("amxx_language", var1);
+	g_var264 = sub_26d0(var1);
+	return 1;
+}
+
+public cmdLangMenu(_arg0)
+{
+	new var1 = 0;
+	if (!get_cvar_num("amx_client_languages"))
+	{
+		client_print(_arg0, 2, "[AMXX] %L", 0, "LANG_MENU_DISABLED");
+		return 1;
+	}
+	get_user_info(_arg0, "lang", var1, 2);
+	216[_arg0] = sub_26d0(var1);
+	216[_arg0][1] = g_var264;
+	sub_1644(_arg0);
+	return 1;
+}
+
+public dispInfo(_arg0)
+{
+	if (get_cvar_num("amx_client_languages"))
+	{
+		client_print(_arg0, "", "%L", _arg0, "TYPE_LANGMENU");
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Multi-Lingual System", "1.00", "AMXX Dev Team");
+	register_dictionary("multilingual.txt");
+	register_dictionary("common.txt");
+	register_dictionary("languages.txt");
+	register_cvar("amx_language", "en", "%L:  %s %s", "1.00");
+	register_cvar("amx_client_languages", 1080, "1.00", "1.00");
+	register_concmd("amx_setlang", "cmdLang", 128, "<language>");
+	register_clcmd("amx_langmenu", "cmdLangMenu", "1.00", {0});
+	sub_94c("Language Menu", 1023, "actionMenu", 0);
+	new var1 = 0;
+	if (vaultdata_exists("server_language"))
+	{
+		get_vaultdata("server_language", var1, 2);
+	}
+	else
+	{
+		copy(var1, 2, "en");
+		set_vaultdata("server_language", var1);
+	}
+	set_cvar_string("amxx_language", var1);
+	g_var264 = sub_26d0(var1);
+	g_var268 = get_langsnum();
+	g_var26c = sub_7c4();
+	return 0;
+}
+
+sub_6d4(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_154(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, "1.00");
+}
+
+sub_1644(_arg0)
+{
+	if (!get_cvar_num("amx_client_languages"))
+	{
+		return 1;
+	}
+	new var4 = 0;
+	new var5 = 0;
+	get_lang(216[_arg0], var5);
+	new var6;
+	new var1;
+	if (g_var26c)
+	{
+		var1 = 2484;
+	}
+	else
+	{
+		var1 = 2520;
+	}
+	var6 = format(var4, 511, var1, _arg0, "LANG_MENU");
+	new var2;
+	if (g_var26c)
+	{
+		var2 = 2580;
+	}
+	else
+	{
+		var2 = 2640;
+	}
+	var6 = format(var4[var6], 511 - var6, var2, _arg0, "PERSO_LANG", var5, "LANG_NAME") + var6;
+	if (sub_6d4(_arg0, 128))
+	{
+		new var7 = 0;
+		get_lang(216[_arg0][1], var7);
+		new var3;
+		if (g_var26c)
+		{
+			var3 = 2764;
+		}
+		else
+		{
+			var3 = 2828;
+		}
+		var6 = format(var4[var6], 511 - var6, var3, _arg0, "SERVER_LANG", var7, "LANG_NAME") + var6;
+		var6 = format(var4[var6], 511 - var6, "3. %L", _arg0, "SAVE_LANG") + var6;
+	}
+	else
+	{
+		var6 = format(var4[var6], 511 - var6, "\n2. %L", _arg0, "SAVE_LANG") + var6;
+	}
+	format(var4[var6], 511 - var6, "\n\n0. %L", _arg0, "EXIT");
+	show_menu(_arg0, 519, var4, -1, "Language Menu");
+	return 1;
+}
+
+sub_234(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_154(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_26d0(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < g_var268)
+	{
+		get_lang(var2, var1);
+		if (equali(var1, _arg0, "1.00"))
+		{
+			return var2;
+		}
+		var2++;
+	}
+	return 0;
+}
+
+sub_94c(_arg0, _arg1, _arg2, _arg3)
+{
+	register_menucmd(register_menuid(_arg0, _arg3), _arg1, _arg2);
+	return 0;
+}
+
+sub_7c4()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_154(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

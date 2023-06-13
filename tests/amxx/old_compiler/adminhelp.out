@@ -1,0 +1,111 @@
+public client_putinserver(_arg0)
+{
+	set_task(1097859072, "dispInfo", _arg0, {0}, "1.00", {0}, "1.00");
+	return 0;
+}
+
+public cmdHelp(_arg0)
+{
+	new var4 = 0;
+	new var5;
+	var5 = get_user_flags(_arg0, "1.00");
+	new var6;
+	new var1;
+	if (read_argv(1, var4, 7))
+	{
+		var1 = str_to_num(var4);
+	}
+	else
+	{
+		var1 = 1;
+	}
+	var6 = var1;
+	new var7 = 10;
+	new var2;
+	if (_arg0 == 0 && read_argc() == 3)
+	{
+		new var3;
+		if (read_argv(2, var4, 7))
+		{
+			var3 = str_to_num(var4);
+		}
+		else
+		{
+			var3 = 10;
+		}
+		var7 = var3;
+	}
+	var6--;
+	if (0 > var6)
+	{
+		var6 = 0;
+	}
+	new var8;
+	var8 = get_concmdsnum(var5, _arg0);
+	if (var6 >= var8)
+	{
+		var6 = var8 + -1;
+	}
+	console_print(_arg0, "\n----- %L -----", _arg0, "HELP_COMS");
+	new var9 = 0;
+	new var10 = 0;
+	new var11;
+	var11 = var7 + var6;
+	if (var11 > var8)
+	{
+		var11 = var8;
+	}
+	new var12;
+	var12 = var6;
+	while (var12 < var11)
+	{
+		get_concmd(var12, var10, 31, _unused_temp_, var9, 127, var5, _arg0);
+		console_print(_arg0, "%3d: %s %s", var12 + 1, var10, var9);
+		var12++;
+	}
+	console_print(_arg0, "----- %L -----", _arg0, "HELP_ENTRIES", var6 + 1, var11, var8);
+	if (var11 < var8)
+	{
+		console_print(_arg0, "----- %L -----", _arg0, "HELP_USE_MORE", var11 + 1);
+	}
+	else
+	{
+		console_print(_arg0, "----- %L -----", _arg0, "HELP_USE_BEGIN");
+	}
+	return 1;
+}
+
+public dispInfo(_arg0)
+{
+	client_print(_arg0, "", "【欢迎您来到迪酷混战服务器，按Y输入menu可打开玩家菜单】");
+	new var1 = 0;
+	get_cvar_string("amx_nextmap", var1, 31);
+	if (!(sub_88(get_cvar_float("mp_timelimit"))))
+	{
+		new var2;
+		var2 = get_timeleft();
+		if (0 < var2)
+		{
+			client_print(_arg0, "", "%L", _arg0, "TIME_INFO_1", var2 / 60, var2 % 60, var1);
+		}
+		else
+		{
+			client_print(_arg0, "", "%L", _arg0, "TIME_INFO_2", var1);
+		}
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Admin Help", "1.00", "AMXX Dev Team");
+	register_dictionary("adminhelp.txt");
+	register_concmd("amx_help", "cmdHelp", "1.00", "<page> [nr of cmds (only for server)] - displays this help");
+	return 0;
+}
+
+sub_88(_arg0)
+{
+	return _arg0 & -1 == 0;
+}
+

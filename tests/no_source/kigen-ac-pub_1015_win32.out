@@ -5628,7 +5628,7 @@ public Network4_OnSocketReceive(Handle:socket, String:data[], size, any:we)
 	else
 	{
 
-/* ERROR! String index out of range: 138656 */
+/* ERROR! offset 138656, count 0, length 138632 */
  function "Network4_OnSocketReceive" (number 234)
 
 public Network_OnPluginStart()

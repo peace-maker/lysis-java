@@ -1,10 +1,6 @@
 package lysis.amxmodx;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,6 +24,7 @@ import lysis.lstructure.VariableType;
 
 public class AMXModXFile extends PawnFile {
 
+	public final static long MAGIC = 0x414D5842;
 	public final static long MAGIC2 = 0x414D5858;
 	public final static long MAGIC2_VERSION = 0x0300;
 	public final static long AMX_MAGIC = 0xE0F1;
@@ -57,6 +54,12 @@ public class AMXModXFile extends PawnFile {
 		public int memsize;
 		public int offset;
 	}
+
+	public class TableEntry	{
+		public byte cellSize;
+		public int origSize;			// contains AMX_HEADER->stp
+		public int offset;
+	};
 
 	private class AMX_HEADER {
 		public int size; /* size of the "file" */
@@ -102,9 +105,44 @@ public class AMXModXFile extends PawnFile {
 	public AMXModXFile(byte[] binary) throws Exception {
 		ExtendedDataInputStream reader = new ExtendedDataInputStream(new ByteArrayInputStream(binary));
 		long magic = reader.ReadUInt32();
-		int amx_magic = reader.ReadUInt16();
 
-		if (magic == MAGIC2) {
+		if (magic == MAGIC) {
+			TableEntry tableEntry = null;
+			byte numPlugins = reader.readByte();
+			byte tableIndex = 0;
+			for (tableIndex = 0; tableIndex < numPlugins; tableIndex++) {
+				TableEntry t = new TableEntry();
+				t.cellSize = reader.readByte();
+				t.origSize = reader.ReadInt32();
+				t.offset = reader.ReadInt32();
+				if (t.cellSize == 4) {
+					tableEntry = t;
+					break;
+				}
+			}
+			if (tableEntry == null)
+				throw new Exception("could not find applicable cell size");
+
+			int sectionLength = 0;
+			if ((tableIndex + 1) < numPlugins) {
+				TableEntry nextTableEntry = new TableEntry();
+				nextTableEntry.cellSize = reader.readByte();
+				nextTableEntry.origSize = reader.ReadInt32();
+				nextTableEntry.offset = reader.ReadInt32();
+				sectionLength = nextTableEntry.offset - tableEntry.offset;
+			} else {
+				sectionLength = binary.length - tableEntry.offset;
+			}
+
+			byte[] bits = new byte[tableEntry.origSize];
+
+			Inflater gzip = new Inflater(true);
+			gzip.setInput(binary, tableEntry.offset + 2, sectionLength);
+			gzip.inflate(bits, 0, tableEntry.origSize);
+
+			binary = bits;
+		}
+		else if (magic == MAGIC2) { // AMXModX
 			int version = reader.ReadUInt16();
 			if (version > MAGIC2_VERSION)
 				throw new Exception("unexpected version");
@@ -136,8 +174,11 @@ public class AMXModXFile extends PawnFile {
 				System.err.printf("uncompressed size mismatch, bad file? expected %d, got %d\n", ph.imagesize, read);
 
 			binary = bits;
-		} else if(amx_magic != AMX_MAGIC) {
-			throw new Exception("unrecognized file");
+		} else { // AMXMod
+			int amx_magic = reader.ReadUInt16();
+			if(amx_magic != AMX_MAGIC) {
+				throw new Exception("unrecognized file");
+			}
 		}
 
 		reader.close();
@@ -498,7 +539,10 @@ public class AMXModXFile extends PawnFile {
 			var.setTagId(Q_USER_TAG_STRING);
 		}
 
-		return new Argument(var.type(), var.name(), (int) var.tag().tag_id(), var.tag(), var.dims());
+		int tagId = -1;
+		if (var.tag() != null)
+			tagId = (int) var.tag().tag_id();
+		return new Argument(var.type(), var.name(), tagId, var.tag(), var.dims());
 	}
 
 	private static String ReadName(byte[] bytes, int offset) {
@@ -584,7 +628,7 @@ public class AMXModXFile extends PawnFile {
 		return null;
 	}
 
-	private static VariableType FromIdent(byte ident) {
+	public static VariableType FromIdent(byte ident) {
 		switch (ident) {
 		case IDENT_VARIABLE:
 			return VariableType.Normal;

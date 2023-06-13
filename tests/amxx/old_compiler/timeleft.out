@@ -1,0 +1,288 @@
+new g_var19c;
+new g_var198;
+new g_var194;
+public plugin_init()
+{
+	register_plugin("TimeLeft", "1.00", "AMXX Dev Team");
+	register_dictionary("timeleft.txt");
+	register_cvar("amx_time_voice", 620, "1.00", "1.00");
+	register_srvcmd("amx_time_display", "setDisplaying", -1, {0});
+	register_cvar("amx_timeleft", "00:00", 332, "1.00");
+	register_clcmd("say timeleft", "sayTimeLeft", "1.00", "- displays timeleft");
+	register_clcmd("say thetime", "sayTheTime", "1.00", "- displays current time");
+	set_task(1061997773, "timeRemain", 8648458, 1244, "1.00", 1248, "1.00");
+	set_task(1065353216, "timedis", 456458, 1288, "1.00", 1292, "1.00");
+	return 0;
+}
+
+public sayTheTime(_arg0)
+{
+	if (get_cvar_num("amx_time_voice"))
+	{
+		new var1 = 0;
+		new var2 = 0;
+		new var3 = 0;
+		new var4 = 0;
+		new var5 = 0;
+		get_time("%H", var1, 5);
+		get_time("%M", var2, 5);
+		new var6;
+		var6 = str_to_num(var2);
+		new var7;
+		var7 = str_to_num(var1);
+		if (var6)
+		{
+			num_to_word(var6, var4, 31);
+		}
+		else
+		{
+			var4 = 0;
+		}
+		if (!(var7 < 12))
+		{
+			if (var7 > 12)
+			{
+				var7 += -12;
+			}
+		}
+		if (var7)
+		{
+			num_to_word(var7, var3, 31);
+		}
+		client_cmd(_arg0, "spk \"fvox/time_is_now %s_period %s%s\"", var3, var4, var5);
+	}
+	new var8 = 0;
+	get_time("%m/%d/%Y - %H:%M:%S", var8, 63);
+	client_print("1.00", "", "%L:\x09 %s", -1, "THE_TIME", var8);
+	return 0;
+}
+
+public sayTimeLeft(_arg0)
+{
+	if (sub_88(get_cvar_float("mp_timelimit")))
+	{
+		client_print("1.00", "", "%L", -1, "NO_T_LIMIT");
+	}
+	else
+	{
+		new var1;
+		var1 = get_timeleft();
+		if (get_cvar_num("amx_time_voice"))
+		{
+			new var2 = 0;
+			sub_10e4(var2, 127, 0, var1);
+			client_cmd(_arg0, var2);
+		}
+		client_print("1.00", "", "%L:\x09%d:%02d", -1, "TIME_LEFT", var1 / 60, var1 % 60);
+	}
+	return 0;
+}
+
+public setDisplaying()
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = read_argc() - 1;
+	new var6 = 0;
+	while (var6 < var5 && var6 < 32)
+	{
+		read_argv(var6 + 1, var2, 31);
+		parse(var2, var3, 31, var4, 31);
+		20[var6] = str_to_num(var4);
+		20[var6][1] = read_flags(var3);
+		var6++;
+	}
+	20[var6] = 0;
+	return 1;
+}
+
+public timeRemain()
+{
+	new var4;
+	var4 = get_timeleft();
+	new var5;
+	new var1;
+	if (g_var19c)
+	{
+		g_var198 -= 1;
+		var1 = g_var198;
+	}
+	else
+	{
+		var1 = var4;
+	}
+	var5 = var1;
+	new var6 = 0;
+	format(var6, 11, "%02d:%02d", var4 / 60, var4 % 60);
+	set_cvar_string("amx_timeleft", var6);
+	new var2;
+	if (g_var19c && var4 > g_var19c)
+	{
+		remove_task(34543, "1.00");
+		g_var19c = 0;
+		set_task(1061997773, "timeRemain", 8648458, 3264, "1.00", 3268, "1.00");
+		return 0;
+	}
+	new var3;
+	if (var5 > 0 && var5 != g_var194)
+	{
+		g_var194 = var5;
+		new var7;
+		var7 = sub_17c8(var5);
+		if (var7 != -1)
+		{
+			new var8;
+			var8 = 20[var7][1];
+			new var9 = 0;
+			if (var8 & 1)
+			{
+				new var10 = 0;
+				new var11 = 0;
+				get_players(var10, var11, 3276, 3284);
+				new var12 = 0;
+				while (var12 < var11)
+				{
+					sub_dfc(var9, 127, var5);
+					if (var8 & 16)
+					{
+						set_hudmessage(255, 255, 255, -1082130432, 1060320051, "1.00", "1.00", 1066192077, 1036831949, 1056964608, 1);
+					}
+					else
+					{
+						set_hudmessage(255, 255, 255, -1082130432, 1060320051, "1.00", "1.00", 1092616192, "1.00", 1056964608, 1);
+					}
+					show_hudmessage(var10[var12], var9);
+					var12++;
+				}
+			}
+			if (var8 & 2)
+			{
+				sub_10e4(var9, 127, var8, var5);
+				client_cmd("1.00", var9);
+			}
+		}
+	}
+	return 0;
+}
+
+
+/* ERROR! null */
+ function "timedis" (number 5)
+
+sub_88(_arg0)
+{
+	return _arg0 & -1 == 0;
+}
+
+sub_10e4(_arg0, _arg1, _arg2, _arg3)
+{
+	new var1 = 0;
+	new var2;
+	var2 = _arg3 % 60;
+	new var3;
+	var3 = _arg3 / 60;
+	new var4 = 0;
+	while (var4 < 7)
+	{
+		var1[var4] = 0;
+		var4++;
+	}
+	if (0 < var2)
+	{
+		new var5 = var1 + 16;
+		num_to_word(var2, var5 + var5, 31);
+		if (!_arg2 & 8)
+		{
+			new var6 = var1 + 20;
+		}
+	}
+	if (var3 > 59)
+	{
+		new var7;
+		var7 = var3 / 60;
+		num_to_word(var7, var1 + var1, 31);
+		if (!_arg2 & 8)
+		{
+			new var8 = var1 + 4;
+		}
+		var3 %= 60;
+	}
+	if (0 < var3)
+	{
+		new var9 = var1 + 8;
+		num_to_word(var3, var9 + var9, 31);
+		if (!_arg2 & 8)
+		{
+			new var10 = var1 + 12;
+		}
+	}
+	if (!_arg2 & 4)
+	{
+		new var11 = var1 + 24;
+	}
+	new var12 = var1 + 24;
+	new var13 = var1 + 20;
+	new var14 = var1 + 16;
+	new var15 = var1 + 12;
+	new var16 = var1 + 8;
+	new var17 = var1 + 4;
+	return format(_arg0, _arg1, "spk \"vox/%s%s%s%s%s%s%s\"", var1 + var1, var17 + var17, var16 + var16, var15 + var15, var14 + var14, var13 + var13, var12 + var12);
+}
+
+sub_17c8(_arg0)
+{
+	new var1 = 0;
+	while (20[var1])
+	{
+		if (20[var1][1] & 16)
+		{
+			if (_arg0 < 20[var1])
+			{
+				if (!g_var19c)
+				{
+					new var2 = _arg0;
+					g_var19c = var2;
+					g_var198 = var2;
+					remove_task(8648458, "1.00");
+					set_task(1065353216, "timeRemain", 34543, 2900, "1.00", 2904, "1.00");
+				}
+				return var1;
+			}
+		}
+		else
+		{
+			if (_arg0 == 20[var1])
+			{
+				return var1;
+			}
+		}
+		var1++;
+	}
+	return -1;
+}
+
+sub_dfc(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = _arg2 % 60;
+	new var2;
+	var2 = _arg2 / 60;
+	new var3 = 0;
+	get_cvar_string("amx_nextmap", var3, 31);
+	if (var1 == 0)
+	{
+		format(_arg0, _arg1, "剩余时间：%d 分钟\n\n下幅地图：%s", var2, var3);
+	}
+	else
+	{
+		if (var2 == 0)
+		{
+			format(_arg0, _arg1, "剩余时间：%d 秒\n\n下幅地图：%s", var1, var3);
+		}
+		format(_arg0, _arg1, "剩余时间：%d 分 %d 秒\n\n下幅地图：%s", var2, var1, var3);
+	}
+	return 0;
+}
+

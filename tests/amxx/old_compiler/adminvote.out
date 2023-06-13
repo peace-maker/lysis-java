@@ -1,0 +1,793 @@
+new g_vara80;
+new g_var674;
+new g_vara88;
+new g_vara84;
+new g_var67c;
+new g_var678;
+new g_var670;
+public actionResult(_arg0, _arg1)
+{
+	remove_task(4545454, "1.00");
+	switch (_arg1)
+	{
+		case 0:
+		{
+			set_task(1073741824, "delayedExec", "1.00", 1664, g_vara80, {0}, "1.00");
+			log_amx("Vote: %L", "en", "RES_ACCEPTED");
+			client_print("1.00", "", "%L", -1, "RES_ACCEPTED");
+		}
+		case 1:
+		{
+			autoRefuse();
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public autoRefuse()
+{
+	log_amx("Vote: %L", "en", "RES_REF");
+	client_print("1.00", "", "%L", -1, "RES_REF");
+	return 0;
+}
+
+public checkVotes()
+{
+	new var4 = 0;
+	if (!g_var674)
+	{
+		new var5 = 0;
+		while (var5 < 4)
+		{
+			if (1632[var4] < 1632[var5])
+			{
+				var4 = var5;
+			}
+			var5++;
+		}
+	}
+	new var6;
+	var6 = 1632 + 12/* ERROR unknown load Binary */ + 1632 + 8/* ERROR unknown load Binary */ + 1632 + 4/* ERROR unknown load Binary */ + 1632/* ERROR unknown load Constant */;
+	new var7;
+	new var1;
+	if (var6)
+	{
+		var1 = floatround(floatmul(g_vara88, float(var6)), 2);
+	}
+	else
+	{
+		var1 = 1;
+	}
+	var7 = var1;
+	new var8;
+	var8 = 1632[var4];
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	get_players(var9, var10, 5460, 4636);
+	if (var8 < var7)
+	{
+		new var12 = 0;
+		var11 = 0;
+		while (var11 < var10)
+		{
+			format(var12, 63, "%L", var9[var11], "VOTING_FAILED");
+			if (g_var674)
+			{
+				client_print(var9[var11], "", "%L", var9[var11], "VOTING_RES_1", var12, 1632, 1632 + 4, var7);
+			}
+			else
+			{
+				client_print(var9[var11], "", "%L", var9[var11], "VOTING_RES_2", var12, var8, var7);
+			}
+			var11++;
+		}
+		format(var12, 63, "%L", "en", "VOTING_FAILED");
+		log_amx("Vote: %s (got \"%d\") (needed \"%d\")", var12, var8, var7);
+		return 0;
+	}
+	g_vara80 = format(1664, 255, 592, 1104[var4]) + 1;
+	if (g_vara84)
+	{
+		g_vara84 = 0;
+		if (is_user_connected(g_var67c))
+		{
+			new var13 = 0;
+			new var14 = 0;
+			new var15 = 0;
+			new var16 = 0;
+			format(var14, "", "%L", g_var67c, "THE_RESULT");
+			format(var15, 15, "%L", g_var67c, "YES");
+			format(var16, 15, "%L", g_var67c, "NO");
+			new var17;
+			new var2;
+			if (g_var678)
+			{
+				var2 = 5988;
+			}
+			else
+			{
+				var2 = 6040;
+			}
+			var17 = format(var13, 511, var2, var14, 1664);
+			new var3;
+			if (g_var678)
+			{
+				var3 = 6076;
+			}
+			else
+			{
+				var3 = 6108;
+			}
+			var17 = format(var13[var17], 511 - var17, var3, g_var67c, "WANT_CONTINUE") + var17;
+			format(var13[var17], 511 - var17, "\n1. %s\n2. %s", var15, var16);
+			show_menu(g_var67c, "", var13, 10, "The result: ");
+			set_task(1092616192, "autoRefuse", 4545454, {0}, "1.00", {0}, "1.00");
+		}
+		set_task(1073741824, "delayedExec", "1.00", 1664, g_vara80, {0}, "1.00");
+	}
+	new var18 = 0;
+	var11 = 0;
+	while (var11 < var10)
+	{
+		format(var18, "", "%L", var9[var11], "VOTING_SUCCESS");
+		client_print(var9[var11], "", "%L", var9[var11], "VOTING_RES_3", var18, var8, var7, 1664);
+		var11++;
+	}
+	format(var18, "", "%L", "en", "VOTING_SUCCESS");
+	log_amx("Vote: %s (got \"%d\") (needed \"%d\") (result \"%s\")", var18, var8, var7, 1664);
+	return 0;
+}
+
+public cmdCancelVote(_arg0, _arg1, _arg2)
+{
+	if (!sub_2f0(_arg0, _arg1, _arg2, 0))
+	{
+		return 1;
+	}
+	if (task_exists(99889988, 1))
+	{
+		new var2 = 0;
+		new var3 = 0;
+		get_user_authid(_arg0, var2, "");
+		get_user_name(_arg0, var3, "");
+		log_amx("Vote: \"%s<%d><%s><>\" cancel vote session", var3, get_user_userid(_arg0), var2);
+		new var4 = 0;
+		new var5 = 0;
+		new var6 = 0;
+		new var7;
+		var7 = get_cvar_num("amx_show_activity");
+		get_players(var4, var5, 4628, 4636);
+		new var8 = 0;
+		while (var8 < var5)
+		{
+			new var1;
+			if (sub_210(_arg0))
+			{
+				var1 = 4652;
+			}
+			else
+			{
+				var1 = 4676;
+			}
+			format(var6, 15, "%L", var4[var8], var1);
+			switch (var7)
+			{
+				case 1:
+				{
+					client_print(var4[var8], "", "%L", -1, "ADMIN_CANC_VOTE_1", var6);
+				}
+				case 2:
+				{
+					client_print(var4[var8], "", "%L", -1, "ADMIN_CANC_VOTE_2", var6, var3);
+				}
+				default:
+				{
+				}
+			}
+			var8++;
+		}
+		console_print(_arg0, "%L", _arg0, "VOTING_CANC");
+		client_print("1.00", "", "%L", -1, "VOTING_CANC");
+		remove_task(99889988, 1);
+		set_cvar_float("amx_last_voting", get_gametime());
+	}
+	else
+	{
+		console_print(_arg0, "%L", _arg0, "NO_VOTE_CANC");
+	}
+	return 1;
+}
+
+public cmdVote(_arg0, _arg1, _arg2)
+{
+	if (!sub_2f0(_arg0, _arg1, _arg2, 4))
+	{
+		return 1;
+	}
+	new var5;
+	var5 = get_cvar_float("amx_last_voting");
+	if (sub_90(var5, get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "ALREADY_VOTING");
+		return 1;
+	}
+	new var1;
+	if (var5 && sub_90(floatadd(var5, get_cvar_float("amx_vote_delay")), get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "VOTING_NOT_ALLOW");
+		return 1;
+	}
+	new var6 = 0;
+	read_argv(1, var6, 47);
+	new var2;
+	if (contain(var6, "sv_password") == -1 && contain(var6, "rcon_password") == -1 && contain(var6, "kick") == -1 && contain(var6, "addip") == -1 && contain(var6, "ban") == -1)
+	{
+		console_print(_arg0, "%L", _arg0, "VOTING_FORBIDDEN");
+		return 1;
+	}
+	read_argv(2, 1104/* ERROR unknown load Constant */ + 1104, "");
+	new var7 = 1104 + 4;
+	read_argv("", var7 + var7, "");
+	new var8 = 0;
+	new var9 = 0;
+	get_user_authid(_arg0, var8, "");
+	get_user_name(_arg0, var9, "");
+	new var10 = 1104 + 4;
+	log_amx("Vote: \"%s<%d><%s><>\" vote custom (question \"%s\") (option#1 \"%s\") (option#2 \"%s\")", var9, get_user_userid(_arg0), var8, var6, 1104/* ERROR unknown load Constant */ + 1104, var10 + var10);
+	new var11;
+	var11 = get_cvar_num("amx_show_activity");
+	if (0 < var11)
+	{
+		new var12 = 0;
+		new var13 = 0;
+		new var14 = 0;
+		get_players(var12, var13, 10192, 4636);
+		new var15 = 0;
+		while (var15 < var13)
+		{
+			new var3;
+			if (sub_210(_arg0))
+			{
+				var3 = 10212;
+			}
+			else
+			{
+				var3 = 10236;
+			}
+			format(var14, 15, "%L", var12[var15], var3);
+			switch (var11)
+			{
+				case 1:
+				{
+					client_print(var12[var15], "", "%L", var12[var15], "ADMIN_VOTE_CUS_1", var14);
+				}
+				case 2:
+				{
+					client_print(var12[var15], "", "%L", var12[var15], "ADMIN_VOTE_CUS_2", var14, var9);
+				}
+				default:
+				{
+				}
+			}
+			var15++;
+		}
+	}
+	new var16 = 0;
+	new var17 = 0;
+	format(var17, 15, "%L", 0, "VOTE");
+	new var18 = 1104 + 4;
+	new var4;
+	if (g_var678)
+	{
+		var4 = 10456;
+	}
+	else
+	{
+		var4 = 10560;
+	}
+	format(var16, 255, var4, var17, var6, 1104/* ERROR unknown load Constant */ + 1104, var18 + var18);
+	g_vara84 = 0;
+	new var19;
+	var19 = floatadd(1073741824, get_cvar_float("amx_vote_time"));
+	set_cvar_float("amx_last_voting", floatadd(get_gametime(), var19));
+	g_vara88 = get_cvar_float("amx_vote_ratio");
+	format(592, 127, "%s - %%s", var6);
+	show_menu("1.00", 3/* ERROR unknown load Constant */, var16, floatround(var19, "1.00"), "Vote: ");
+	set_task(var19, "checkVotes", 99889988, {0}, "1.00", {0}, "1.00");
+	g_var67c = _arg0;
+	console_print(_arg0, "%L", _arg0, "VOTING_STARTED");
+	g_var674 = 0;
+	return 1;
+}
+
+public cmdVoteKickBan(_arg0, _arg1, _arg2)
+{
+	if (!sub_2f0(_arg0, _arg1, _arg2, 2))
+	{
+		return 1;
+	}
+	new var11;
+	var11 = get_cvar_float("amx_last_voting");
+	if (sub_90(var11, get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "ALREADY_VOTING");
+		return 1;
+	}
+	new var1;
+	if (var11 && sub_90(floatadd(var11, get_cvar_float("amx_vote_delay")), get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "VOTING_NOT_ALLOW");
+		return 1;
+	}
+	new var12 = 0;
+	read_argv("1.00", var12, "");
+	new var13;
+	var13 = equal(var12, "amx_voteban", "1.00");
+	new var14 = 0;
+	read_argv(1, var14, "");
+	new var15;
+	var15 = sub_794(_arg0, var14, 1);
+	if (!var15)
+	{
+		return 1;
+	}
+	new var2;
+	if (var13 && is_user_bot(var15))
+	{
+		new var16 = 0;
+		get_user_name(var15, var16, "");
+		console_print(_arg0, "%L", _arg0, "ACTION_PERFORMED", var16);
+		return 1;
+	}
+	new var17 = 0;
+	new var18 = 0;
+	new var19 = 0;
+	new var20 = 0;
+	format(var18, 15, "%L", 0, "YES");
+	format(var19, 15, "%L", 0, "NO");
+	new var3;
+	if (var13)
+	{
+		var3 = 11492;
+	}
+	else
+	{
+		var3 = 11508;
+	}
+	format(var20, 15, "%L", 0, var3);
+	ucfirst(var20);
+	get_user_name(var15, var14, "");
+	new var4;
+	if (g_var678)
+	{
+		var4 = 11528;
+	}
+	else
+	{
+		var4 = 11632;
+	}
+	format(var17, 255, var4, var20, var14, var18, var19);
+	g_var674 = 1;
+	if (var13)
+	{
+		get_user_authid(var15, 1104/* ERROR unknown load Constant */ + 1104, "");
+	}
+	else
+	{
+		num_to_str(get_user_userid(var15), 1104/* ERROR unknown load Constant */ + 1104, "");
+	}
+	new var21 = 0;
+	new var22 = 0;
+	get_user_authid(_arg0, var21, "");
+	get_user_name(_arg0, var22, "");
+	new var5;
+	if (var13)
+	{
+		var5 = 11892;
+	}
+	else
+	{
+		var5 = 11908;
+	}
+	log_amx("Vote: \"%s<%d><%s><>\" vote %s (target \"%s\")", var22, get_user_userid(_arg0), var21, var5, var14);
+	new var23;
+	var23 = get_cvar_num("amx_show_activity");
+	if (0 < var23)
+	{
+		new var24 = 0;
+		new var25 = 0;
+		new var26 = 0;
+		get_players(var24, var25, 12000, 4636);
+		new var27 = 0;
+		while (var27 < var25)
+		{
+			new var6;
+			if (sub_210(_arg0))
+			{
+				var6 = 12020;
+			}
+			else
+			{
+				var6 = 12044;
+			}
+			format(var26, 15, "%L", var24[var27], var6);
+			new var7;
+			if (var13)
+			{
+				var7 = 12076;
+			}
+			else
+			{
+				var7 = 12092;
+			}
+			format(var20, 15, "%L", var24[var27], var7);
+			switch (var23)
+			{
+				case 1:
+				{
+					client_print(var24[var27], "", "%L", var24[var27], "ADMIN_VOTE_FOR_1", var26, var20, var14);
+				}
+				case 2:
+				{
+					client_print(var24[var27], "", "%L", var24[var27], "ADMIN_VOTE_FOR_2", var26, var22, var20, var14);
+				}
+				default:
+				{
+				}
+			}
+			var27++;
+		}
+	}
+	g_vara84 = 1;
+	new var28;
+	var28 = floatadd(1073741824, get_cvar_float("amx_vote_time"));
+	set_cvar_float("amx_last_voting", floatadd(get_gametime(), var28));
+	new var8;
+	if (var13)
+	{
+		var8 = 12392;
+	}
+	else
+	{
+		var8 = 12464;
+	}
+	g_vara88 = get_cvar_float(var8);
+	new var9;
+	if (var13)
+	{
+		var9 = 12540;
+	}
+	else
+	{
+		var9 = 12616;
+	}
+	new var10;
+	if (var13)
+	{
+		var10 = 12652;
+	}
+	else
+	{
+		var10 = 12672;
+	}
+	show_menu("1.00", 3/* ERROR unknown load Constant */, var17, floatround(var28, "1.00"), var10);
+	set_task(var28, "checkVotes", 99889988, {0}, "1.00", {0}, "1.00");
+	g_var67c = _arg0;
+	console_print(_arg0, "%L", _arg0, "VOTING_STARTED");
+	return 1;
+}
+
+public cmdVoteMap(_arg0, _arg1, _arg2)
+{
+	if (!sub_2f0(_arg0, _arg1, _arg2, 2))
+	{
+		return 1;
+	}
+	new var7;
+	var7 = get_cvar_float("amx_last_voting");
+	if (sub_90(var7, get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "ALREADY_VOTING");
+		return 1;
+	}
+	new var1;
+	if (var7 && sub_90(floatadd(var7, get_cvar_float("amx_vote_delay")), get_gametime()))
+	{
+		console_print(_arg0, "%L", _arg0, "VOTING_NOT_ALLOW");
+		return 1;
+	}
+	new var8;
+	var8 = read_argc();
+	if (var8 > 5)
+	{
+		var8 = 5;
+	}
+	g_var670 = 0;
+	1104/* ERROR unknown load Constant */ + 1104/* ERROR unknown load Binary */ = 0;
+	new var9 = 1104 + 4;
+	var9 + var9/* ERROR unknown load Binary */ = 0;
+	new var10 = 1104 + 8;
+	var10 + var10/* ERROR unknown load Binary */ = 0;
+	new var11 = 1104 + 12;
+	var11 + var11/* ERROR unknown load Binary */ = 0;
+	new var12 = 1;
+	while (var12 < var8)
+	{
+		read_argv(var12, 1104[g_var670], "");
+		if (is_map_valid(1104[g_var670]))
+		{
+			g_var670 += 1;
+		}
+		var12++;
+	}
+	if (g_var670 == 0)
+	{
+		new var13 = 0;
+		new var2;
+		if (var8 == 2)
+		{
+			var2 = 7324;
+		}
+		else
+		{
+			var2 = 7352;
+		}
+		format(var13, 15, "%L", _arg0, var2);
+		console_print(_arg0, "%L", _arg0, "GIVEN_NOT_VALID", var13);
+		return 1;
+	}
+	new var14 = 0;
+	new var15 = 0;
+	new var16 = 0;
+	if (g_var670 > 1)
+	{
+		var16 = 512;
+		new var3;
+		if (g_var678)
+		{
+			var3 = 7464;
+		}
+		else
+		{
+			var3 = 7508;
+		}
+		var15 = format(var14, 255, var3, 0, "CHOOSE_MAP");
+		new var17 = 0;
+		new var18 = 0;
+		while (var18 < g_var670)
+		{
+			format(var17, 127, "%d.  %s\n", var18 + 1, 1104[var18]);
+			var15 = copy(var14[var15], 255 - var15, var17) + var15;
+			var16 = 1 << var18 | var16;
+			var18++;
+		}
+		format(var14[var15], 255 - var15, "\n0.  %L", 0, "NONE");
+		g_var674 = 0;
+	}
+	else
+	{
+		new var19 = 0;
+		new var20 = 0;
+		new var21 = 0;
+		format(var19, "", "%L", 0, "CHANGE_MAP_TO");
+		format(var20, 15, "%L", 0, "YES");
+		format(var21, 15, "%L", 0, "NO");
+		new var4;
+		if (g_var678)
+		{
+			var4 = 7788;
+		}
+		else
+		{
+			var4 = 7892;
+		}
+		format(var14, 255, var4, var19, 1104/* ERROR unknown load Constant */ + 1104, var20, var21);
+		var16 = 3;
+		g_var674 = 1;
+	}
+	new var22 = 0;
+	new var23 = 0;
+	get_user_authid(_arg0, var22, "");
+	get_user_name(_arg0, var23, "");
+	if (var8 == 2)
+	{
+		log_amx("Vote: \"%s<%d><%s><>\" vote map (map \"%s\")", var23, get_user_userid(_arg0), var22, 1104/* ERROR unknown load Constant */ + 1104);
+	}
+	else
+	{
+		new var24 = 1104 + 12;
+		new var25 = 1104 + 8;
+		new var26 = 1104 + 4;
+		log_amx("Vote: \"%s<%d><%s><>\" vote maps (map#1 \"%s\") (map#2 \"%s\") (map#3 \"%s\") (map#4 \"%s\")", var23, get_user_userid(_arg0), var22, 1104/* ERROR unknown load Constant */ + 1104, var26 + var26, var25 + var25, var24 + var24);
+	}
+	new var27 = 0;
+	new var28;
+	var28 = get_cvar_num("amx_show_activity");
+	if (0 < var28)
+	{
+		new var29 = 0;
+		new var30 = 0;
+		get_players(var29, var30, 8548, 4636);
+		new var31 = 0;
+		while (var31 < var30)
+		{
+			new var5;
+			if (sub_210(_arg0))
+			{
+				var5 = 8568;
+			}
+			else
+			{
+				var5 = 8592;
+			}
+			format(var27, 15, "%L", var29[var31], var5);
+			switch (var28)
+			{
+				case 1:
+				{
+					client_print(var29[var31], "", "%L", var29[var31], "ADMIN_VOTE_MAP_1", var27);
+				}
+				case 2:
+				{
+					client_print(var29[var31], "", "%L", var29[var31], "ADMIN_VOTE_MAP_2", var27, var23);
+				}
+				default:
+				{
+				}
+			}
+			var31++;
+		}
+	}
+	g_vara84 = 1;
+	new var32;
+	var32 = floatadd(1073741824, get_cvar_float("amx_vote_time"));
+	set_cvar_float("amx_last_voting", floatadd(get_gametime(), var32));
+	g_vara88 = get_cvar_float("amx_votemap_ratio");
+	new var6;
+	if (g_var670 > 1)
+	{
+		var6 = 9032;
+	}
+	else
+	{
+		var6 = 9084;
+	}
+	show_menu("1.00", var16, var14, floatround(var32, "1.00"), var6);
+	set_task(var32, "checkVotes", 99889988, {0}, "1.00", {0}, "1.00");
+	g_var67c = _arg0;
+	console_print(_arg0, "%L", _arg0, "VOTING_STARTED");
+	return 1;
+}
+
+public delayedExec(_arg0)
+{
+	server_cmd(_arg0);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Admin Votes", "1.00", "AMXX Dev Team");
+	register_dictionary("adminvote.txt");
+	register_dictionary("common.txt");
+	register_dictionary("mapsmenu.txt");
+	register_menucmd(register_menuid("Change map to ", "1.00"), "", "voteCount");
+	register_menucmd(register_menuid("Choose map: ", "1.00"), 15, "voteCount");
+	register_menucmd(register_menuid("Kick ", "1.00"), "", "voteCount");
+	register_menucmd(register_menuid("Ban ", "1.00"), "", "voteCount");
+	register_menucmd(register_menuid("Vote: ", "1.00"), "", "voteCount");
+	register_menucmd(register_menuid("The result: ", "1.00"), "", "actionResult");
+	register_concmd("amx_votemap", "cmdVoteMap", 512, "<map> [map] [map] [map]");
+	register_concmd("amx_votekick", "cmdVoteKickBan", 512, "<name or #userid>");
+	register_concmd("amx_voteban", "cmdVoteKickBan", 512, "<name or #userid>");
+	register_concmd("amx_vote", "cmdVote", 512, "<question> <answer#1> <answer#2>");
+	register_concmd("amx_cancelvote", "cmdCancelVote", 512, "- cancels last vote");
+	g_var678 = sub_f50();
+	return 0;
+}
+
+public voteCount(_arg0, _arg1)
+{
+	if (get_cvar_num("amx_vote_answers"))
+	{
+		new var2 = 0;
+		get_user_name(_arg0, var2, "");
+		if (g_var674)
+		{
+			new var1;
+			if (_arg1)
+			{
+				var1 = 6872;
+			}
+			else
+			{
+				var1 = 6928;
+			}
+			client_print("1.00", "", "%L", -1, var1, var2);
+		}
+		else
+		{
+			client_print("1.00", "", "%L", -1, "VOTED_FOR_OPT", var2, _arg1 + 1);
+		}
+	}
+	1632[_arg1]++;
+	return 1;
+}
+
+sub_2f0(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_210(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_210(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+
+
+/* ERROR! null */
+ function "sub_794" (number 13)
+
+sub_f50()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+

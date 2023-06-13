@@ -1,0 +1,771 @@
+new g_var154;
+new g_var738;
+public actionMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			if (sub_4588(792))
+			{
+				g_var154 = 0;
+				client_print(_arg0, "", "* %L", _arg0, "CONF_SAV_SUC");
+			}
+			else
+			{
+				client_print(_arg0, "", "* %L", _arg0, "CONF_SAV_FAIL");
+			}
+			sub_2e30(_arg0, 208[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 208[_arg0];
+			var2++;
+			sub_2e30(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 208[_arg0];
+			var1--;
+			sub_2e30(_arg0, var1);
+		}
+		default:
+		{
+			sub_a60(_arg1 + 208[_arg0] * 7, 2);
+			g_var154 = 1;
+			sub_2e30(_arg0, 208[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public ammoRest1(_arg0)
+{
+	return sub_3dc8(_arg0, 0, 5);
+}
+
+public ammoRest2(_arg0)
+{
+	return sub_3dc8(_arg0, 0, 6);
+}
+
+public blockcommand(_arg0)
+{
+	client_print(_arg0, 4, "* This item is restricted *");
+	return 1;
+}
+
+public client_command(_arg0)
+{
+	if (g_var738)
+	{
+		new var2 = 0;
+		if (11 < read_argv("1.00", var2, 12))
+		{
+			return 0;
+		}
+		new var3 = 0;
+		while (equali(7676[1852[var3]], var2, "1.00") || equali(8600[1852[var3]], var2, "1.00"))
+		{
+			var3++;
+			if (var3 < g_var738)
+			{
+			}
+		}
+		client_print(_arg0, 4, "* This item is restricted *");
+		return 1;
+	}
+	return 0;
+}
+
+public cmdMenu(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		208[_arg0] = 0;
+		sub_2e30(_arg0, 0);
+	}
+	return 1;
+}
+
+public cmdRest(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	new var3 = 0;
+	read_argv(1, var3, 7);
+	if (equali("on", var3, "1.00"))
+	{
+		sub_1388(_arg0, 1);
+	}
+	else
+	{
+		if (equali("off", var3, "1.00"))
+		{
+			sub_1388(_arg0, 0);
+		}
+		if (equali("list", var3, "1.00"))
+		{
+			new var4 = 0;
+			new var5;
+			new var1;
+			if (read_argv(2, var4, 7))
+			{
+				var1 = str_to_num(var4);
+			}
+			else
+			{
+				var1 = 1;
+			}
+			var5 = var1;
+			var5--;
+			if (0 > var5)
+			{
+				var5 = 0;
+			}
+			if (var5 >= 34)
+			{
+				var5 = 33;
+			}
+			new var6;
+			var6 = var5 + 10;
+			if (var6 > 34)
+			{
+				var6 = 34;
+			}
+			new var7 = 0;
+			new var8 = 0;
+			new var9 = 0;
+			new var10 = 0;
+			format(var7, 15, "%L", _arg0, "NAME");
+			format(var8, 15, "%L", _arg0, "VALUE");
+			format(var9, 15, "%L", _arg0, "STATUS");
+			console_print(_arg0, "\n----- %L: -----", _arg0, "WEAP_RES");
+			console_print(_arg0, "     %-32.31s   %-10.9s   %-9.8s", var7, var8, var9);
+			if (var5 != -1)
+			{
+				new var11;
+				var11 = var5;
+				while (var11 < var6)
+				{
+					new var2;
+					if (sub_1a50(var11))
+					{
+						var2 = 78344;
+					}
+					else
+					{
+						var2 = 78356;
+					}
+					format(var10, 15, "%L", _arg0, var2);
+					console_print(_arg0, "%3d: %-32.31s   %-10.9s   %-9.8s", var11 + 1, 2532[var11], 7676[var11], var10);
+					var11++;
+				}
+			}
+			console_print(_arg0, "----- %L -----", _arg0, "REST_ENTRIES_OF", var5 + 1, var6, 34);
+			if (var6 < 34)
+			{
+				console_print(_arg0, "----- %L -----", _arg0, "REST_USE_MORE", var6 + 1);
+			}
+			else
+			{
+				console_print(_arg0, "----- %L -----", _arg0, "REST_USE_BEGIN");
+			}
+		}
+		if (equali("save", var3, "1.00"))
+		{
+			if (sub_4588(792))
+			{
+				console_print(_arg0, "%L", _arg0, "REST_CONF_SAVED", 792);
+				g_var154 = 0;
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "REST_COULDNT_SAVE", 792);
+			}
+		}
+		if (equali("load", var3, "1.00"))
+		{
+			setc(344, 112, "1.00");
+			new var12 = 0;
+			if (read_argv(2, var12, 63))
+			{
+				new var13 = 0;
+				sub_6d8(var13, "");
+				format(var12, 63, "%s/%s", var13, var12);
+			}
+			if (sub_4870(var12))
+			{
+				console_print(_arg0, "%L", _arg0, "REST_CONF_LOADED", var12);
+				g_var154 = 1;
+			}
+			else
+			{
+				console_print(_arg0, "%L", _arg0, "REST_COULDNT_LOAD", var12);
+			}
+		}
+		console_print(_arg0, "%L", _arg0, "COM_REST_USAGE");
+		console_print(_arg0, "%L", _arg0, "COM_REST_COMMANDS");
+		console_print(_arg0, "%L", _arg0, "COM_REST_ON");
+		console_print(_arg0, "%L", _arg0, "COM_REST_OFF");
+		console_print(_arg0, "%L", _arg0, "COM_REST_ON");
+		console_print(_arg0, "%L", _arg0, "COM_REST_OFF");
+		console_print(_arg0, "%L", _arg0, "COM_REST_LIST");
+		console_print(_arg0, "%L", _arg0, "COM_REST_SAVE");
+		console_print(_arg0, "%L", _arg0, "COM_REST_LOAD");
+		console_print(_arg0, "%L", _arg0, "COM_REST_VALUES");
+		console_print(_arg0, "%L", _arg0, "COM_REST_TYPE");
+	}
+	return 1;
+}
+
+public fn_autobuy(_arg0)
+{
+	if (!g_var738)
+	{
+		return 0;
+	}
+	new var1 = 0;
+	if (!sub_5060(9696[_arg0], var1))
+	{
+		return 0;
+	}
+	engclient_cmd(_arg0, "cl_setautobuy", var1, {0});
+	return 1;
+}
+
+public fn_setautobuy(_arg0)
+{
+	if (!g_var738)
+	{
+		return 0;
+	}
+	9696[_arg0] = 0;
+	new var1;
+	var1 = read_argc();
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 1;
+	while (var4 < var1)
+	{
+		read_argv(var4, var2, 127);
+		var3 = format(9696[_arg0][var3], 511 - var3, "%s", var2) + var3;
+		if (var1 > var4 + 1)
+		{
+			var3 = format(9696[_arg0][var3], 511 - var3, 81060) + var3;
+		}
+		var4++;
+	}
+	new var5 = 0;
+	if (!sub_5060(9696[_arg0], var5))
+	{
+		return 0;
+	}
+	engclient_cmd(_arg0, "cl_setautobuy", var5, {0});
+	return 1;
+}
+
+public menuBuy(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 0, _arg1);
+}
+
+public menuItem(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 6, _arg1);
+}
+
+public menuMachine(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 5, _arg1);
+}
+
+public menuPistol(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 1, _arg1);
+}
+
+public menuRifle(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 4, _arg1);
+}
+
+public menuShotgun(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, 2, _arg1);
+}
+
+public menuSub(_arg0, _arg1)
+{
+	return sub_3dc8(_arg0, "", _arg1);
+}
+
+public plugin_init()
+{
+	register_plugin("Restrict Weapons", "1.00", "AMXX Dev Team");
+	register_dictionary("restmenu.txt");
+	register_dictionary("common.txt");
+	register_clcmd("buyammo1", "ammoRest1", -1, {0});
+	register_clcmd("buyammo2", "ammoRest2", -1, {0});
+	register_clcmd("cl_setautobuy", "fn_setautobuy", -1, {0});
+	register_clcmd("cl_autobuy", "fn_autobuy", -1, {0});
+	register_clcmd("amx_restmenu", "cmdMenu", 128, "- displays weapons restriction menu");
+	register_menucmd(register_menuid("#Buy", 1), 511, "menuBuy");
+	register_menucmd(register_menuid("Restrict Weapons", "1.00"), 1023, "actionMenu");
+	register_menucmd(register_menuid("BuyPistol", 1), 511, "menuPistol");
+	register_menucmd(register_menuid("BuyShotgun", 1), 511, "menuShotgun");
+	register_menucmd(register_menuid("BuySub", 1), 511, "menuSub");
+	register_menucmd(register_menuid("BuyRifle", 1), 511, "menuRifle");
+	register_menucmd(register_menuid("BuyMachine", 1), 511, "menuMachine");
+	register_menucmd(register_menuid("BuyItem", 1), 511, "menuItem");
+	register_menucmd(-28, 511, "menuBuy");
+	register_menucmd(-29, 511, "menuPistol");
+	register_menucmd(-30, 511, "menuShotgun");
+	register_menucmd(-32, 511, "menuSub");
+	register_menucmd(-31, 511, "menuRifle");
+	register_menucmd(-33, 511, "menuMachine");
+	register_menucmd(-34, 511, "menuItem");
+	register_concmd("amx_restrict", "cmdRest", 128, "- displays help for weapons restriction");
+	new var1 = 0;
+	sub_6d8(var1, 63);
+	format(792, 63, "%s/weaprest.ini", var1);
+	sub_4870(792);
+	return 0;
+}
+
+sub_4588(_arg0)
+{
+	if (file_exists(_arg0))
+	{
+		delete_file(_arg0);
+	}
+	if (!write_file(_arg0, "; Generated by Restrict Weapons Plugin. Do not modify!\n; value name", -1))
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	while (var2 < 34)
+	{
+		if (sub_1a50(var2))
+		{
+			format(var1, 63, "%-16.15s ; %s", 7676[var2], 2532[var2]);
+			write_file(_arg0, var1, -1);
+		}
+		var2++;
+	}
+	return 1;
+}
+
+sub_2e30(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6;
+	var6 = _arg1 * 7;
+	if (var6 >= 34)
+	{
+		208[_arg0] = 0;
+		_arg1 = 0;
+		var6 = 0;
+	}
+	new var7;
+	var7 = format(var5, 511, "\y%L\R%d/5\n\n\w", _arg0, "REST_WEAP", _arg1 + 1);
+	new var8;
+	var8 = var6 + 7;
+	new var9 = 640;
+	new var10 = 0;
+	if (var8 > 34)
+	{
+		var8 = 34;
+	}
+	new var11;
+	var11 = var6;
+	while (var11 < var8)
+	{
+		var9 = 1 << var10 | var9;
+		new var1;
+		if (sub_1a50(var11))
+		{
+			var1 = 80104;
+		}
+		else
+		{
+			var1 = 80116;
+		}
+		var10++;
+		var7 = format(var5[var7], 511 - var7, 4784[var11], var10, 2532[var11], _arg0, var1) + var7;
+		server_print(var5);
+		var11++;
+	}
+	new var2;
+	if (g_var154)
+	{
+		var2 = 80236;
+	}
+	else
+	{
+		var2 = 80244;
+	}
+	var7 = format(var5[var7], 511 - var7, "\n8. %L \y\R%s\n\w", _arg0, "SAVE_SET", var2) + var7;
+	if (var8 != 34)
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 80332;
+		}
+		else
+		{
+			var3 = 80352;
+		}
+		format(var5[var7], 511 - var7, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var3);
+		var9 |= 256;
+	}
+	else
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 80400;
+		}
+		else
+		{
+			var4 = 80420;
+		}
+		format(var5[var7], 511 - var7, "\n0. %L", _arg0, var4);
+	}
+	show_menu(_arg0, var9, var5, -1, "Restrict Weapons");
+	return 0;
+}
+
+sub_a60(_arg0, _arg1)
+{
+	new var3 = 0;
+	new var4;
+	var4 = 1988[_arg0] * 8;
+	if (1988[_arg0][1] != -1)
+	{
+		var3 = 1988[_arg0][1][var4];
+		if (_arg1 == 2)
+		{
+			344[var3] = 1 - 344[var3];
+		}
+		344[var3] = _arg1;
+	}
+	if (1988[_arg0][2] != -1)
+	{
+		var3 = 1988[_arg0][2][var4][14];
+		if (_arg1 == 2)
+		{
+			344[var3] = 1 - 344[var3];
+		}
+		344[var3] = _arg1;
+	}
+	new var5 = 0;
+	while (var5 < g_var738)
+	{
+		if (_arg0 == 1852[var5])
+		{
+			new var1;
+			if (!_arg1 || _arg1 == 2)
+			{
+				g_var738 -= 1;
+				new var6;
+				var6 = var5;
+				while (var6 < g_var738)
+				{
+					1852[var6] = 1852[var6 + 1];
+					var6++;
+				}
+			}
+			return 0;
+		}
+		var5++;
+	}
+	new var2;
+	if (_arg1 && g_var738 < 34)
+	{
+		g_var738 += 1;
+		1852[g_var738] = _arg0;
+	}
+	return 0;
+}
+
+sub_3dc8(_arg0, _arg1, _arg2)
+{
+	new var2;
+	var2 = get_user_team(_arg0, {0}, "1.00");
+	new var1;
+	if (var2 != 1 && var2 != 2)
+	{
+		return 1;
+	}
+	if (344[get_user_team(_arg0, {0}, "1.00") - 1 * 56 + _arg2 + _arg1 * 8])
+	{
+		engclient_cmd(_arg0, "menuselect", "10", {0});
+		client_print(_arg0, 4, "* This item is restricted *");
+		return 1;
+	}
+	return 0;
+}
+
+sub_230(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_150(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_1388(_arg0, _arg1)
+{
+	new var5;
+	var5 = read_argc();
+	if (var5 < 3)
+	{
+		setc(344, 112, _arg1);
+		new var1;
+		if (_arg1)
+		{
+			var1 = 77424;
+		}
+		else
+		{
+			var1 = 77464;
+		}
+		console_print(_arg0, "%L", _arg0, var1);
+		g_var154 = 1;
+	}
+	else
+	{
+		new var6 = 0;
+		new var7 = 0;
+		new var8 = 0;
+		new var9 = 2;
+		while (var9 < var5)
+		{
+			read_argv(var9, var6, "");
+			if ((var7 = sub_10cc(var6)) != -1)
+			{
+				var5 = 1764[var7][1];
+				new var10;
+				var10 = 1764[var7];
+				while (var10 < var5)
+				{
+					sub_a60(var10, _arg1);
+					var10++;
+				}
+				new var2;
+				if (_arg1)
+				{
+					var2 = 77624;
+				}
+				else
+				{
+					var2 = 77668;
+				}
+				new var3;
+				if (var7 < 5)
+				{
+					var3 = 77548;
+				}
+				else
+				{
+					var3 = 77588;
+				}
+				console_print(_arg0, "%s %L %L", 1364[var7], _arg0, var3, _arg0, var2);
+				var8 = 1;
+				g_var154 = 1;
+			}
+			else
+			{
+				if ((var7 = sub_1228(var6)) != -1)
+				{
+					var8 = 1;
+					g_var154 = 1;
+					sub_a60(var7, _arg1);
+					new var4;
+					if (_arg1)
+					{
+						var4 = 77792;
+					}
+					else
+					{
+						var4 = 77836;
+					}
+					console_print(_arg0, "%s %L %L", 2532[var7], _arg0, "HAS_BEEN", _arg0, var4);
+				}
+			}
+			var9++;
+		}
+		if (!var8)
+		{
+			console_print(_arg0, "%L", _arg0, "NO_EQ_WE");
+		}
+	}
+	return 0;
+}
+
+sub_1a50(_arg0)
+{
+	new var3;
+	var3 = 1988[_arg0] * 8;
+	new var4;
+	new var1;
+	if (1988[_arg0][1] == -1)
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 344[1988[_arg0][1][var3]];
+	}
+	var4 = var1;
+	new var2;
+	if (1988[_arg0][2] == -1)
+	{
+		var2 = 0;
+	}
+	else
+	{
+		var2 = 344[1988[_arg0][2][var3][14]];
+	}
+	var4 = var2 + var4;
+	return var4;
+}
+
+sub_6d8(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_4870(_arg0)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	var4++;
+	while (read_file(_arg0, var4, var2, 15, var3))
+	{
+		new var1;
+		if (!(var2 == 59 || !var3))
+		{
+			parse(var2, var2, 15);
+			if ((var3 = sub_1228(var2)) != -1)
+			{
+				sub_a60(var3, 1);
+			}
+		}
+	}
+	return 1;
+}
+
+sub_5060(_arg0, _arg1)
+{
+	format(_arg1, 511, _arg0);
+	new var1 = 0;
+	while (var1 < g_var738)
+	{
+		while (contain(_arg1, 7676[1852[var1]]) != -1)
+		{
+			replace(_arg1, 511, 7676[1852[var1]], 81124);
+		}
+		while (contain(_arg1, 8600[1852[var1]]) != -1)
+		{
+			replace(_arg1, 511, 8600[1852[var1]], 81128);
+		}
+		var1++;
+	}
+	if (strlen(_arg0) > strlen(_arg1))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+sub_150(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+
+sub_10cc(_arg0)
+{
+	new var1 = 0;
+	while (var1 < 7)
+	{
+		if (equali(_arg0, 1160[var1], "1.00"))
+		{
+			return var1;
+		}
+		var1++;
+	}
+	return -1;
+}
+
+sub_1228(_arg0)
+{
+	new var1 = 0;
+	while (var1 < 34)
+	{
+		if (equali(_arg0, 7676[var1], "1.00"))
+		{
+			return var1;
+		}
+		var1++;
+	}
+	return -1;
+}
+

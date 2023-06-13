@@ -666,6 +666,25 @@ public class MethodParser {
 			return new LDebugBreak();
 		}
 
+		case srange: {
+			readUInt32(); // dimension level
+			readUInt32(); // length
+			return new LDebugBreak();
+		}
+
+		case symtag: {
+			readUInt32(); // tag id
+			return new LDebugBreak();
+		}
+
+		case symbol: {
+			long num = readUInt32();
+			readUInt32(); // symbol address
+			readUInt32(); // ident
+			pc_ += num - 8; // skip dbgname
+			return new LDebugBreak();
+		}
+
 		default:
 			throw new Exception("Unrecognized opcode: " + op);
 		}
@@ -674,8 +693,22 @@ public class MethodParser {
 	private void readAll() throws Exception {
 		lir_.entry_pc = pc_;
 
-		if (need_proc_ && readOp() != SPOpcode.proc)
-			throw new Exception("invalid method, first op must be PROC");
+		if (need_proc_) {
+			// Skip ahead until we find a proc instruction while ignoring debug pseudo instructions in AMX
+			while (pc_ < (long) file_.code().bytes().length) {
+				current_pc_ = pc_;
+				SPOpcode op = readOp();
+				if (op == SPOpcode.proc)
+					break;
+				switch (op) {
+					case symtag:
+						add(readInstruction(op));
+						break;
+					default:
+						throw new Exception(String.format("invalid method, first op must be PROC, but found %s", op));
+				}
+			}
+		}
 
 		while (pc_ < (long) file_.code().bytes().length) {
 			current_pc_ = pc_;

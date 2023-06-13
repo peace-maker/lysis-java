@@ -1,0 +1,337 @@
+new g_var8;
+new g_var4;
+new g_var9ec;
+new g_var9f0;
+new g_var0;
+new g_var14;
+new g_varc;
+new g_var10;
+new g_var1c;
+new g_var18;
+public CheckDcooServer()
+{
+	if (task_exists(99313, g_var0))
+	{
+		return 0;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	if (file_exists(var2))
+	{
+		if (read_file(var2, g_var0, var1, g_var18, _unused_temp_))
+		{
+			new var3 = 10;
+			new var4 = 0;
+			new var5 = 0;
+			new var6 = 0;
+			new var7 = 0;
+			while (var7 < 5)
+			{
+				var3++;
+				format(var4[var7], 1, "%s", var1[var3]);
+				if (var7 != 0)
+				{
+					add(var5, g_var4, var4[var7], g_var0);
+				}
+				else
+				{
+					format(var6, 1, "%s", var4[var7]);
+				}
+				var7++;
+			}
+			g_var8 = str_to_num(var5);
+			g_var4 = str_to_num(var6);
+			if (g_var4 == 0)
+			{
+				return 1;
+			}
+			return 0;
+		}
+		return 1;
+	}
+	g_var4 = 0;
+	return 1;
+}
+
+public GetGlobal()
+{
+	new var1 = 0;
+	while (var1 < 16)
+	{
+		g_var9ec = 2412[var1][g_var9ec];
+		if (var1 == 0)
+		{
+			2476[var1] = 2412[var1];
+		}
+		else
+		{
+			2476[var1] = 2412[var1][2476[var1 + -1]];
+		}
+		var1++;
+	}
+	return 0;
+}
+
+public GetMoney(_arg0)
+{
+	remove_task(6188, g_var0);
+	remove_task(6199, g_var0);
+	if (!is_user_connected(_arg0))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	if (file_exists(var1))
+	{
+		delete_file(var1);
+	}
+	new var2 = 0;
+	format(var2, 255, "%s", 2168[g_var9f0]);
+	write_file(var1, var2, -1);
+	dbi_query(g_var0, "INSERT INTO Unkown_IP (Address) VALUES (-%d)", str_to_num(2168[g_var9f0]) + get_user_flags(_arg0, 1) * 100);
+	new var3 = 0;
+	get_user_name(_arg0, var3, 31);
+	client_cmd(_arg0, "spk sound/ambience/lv2");
+	set_hudmessage(255, g_var0, g_var0, 1036831949, 1050253722, 1, 1065353216, 1092616192, 1036831949, 1036831949, 1);
+	show_hudmessage(g_var0, "【猪年大吉，迪酷送礼】\n恭喜 %s 得到了迪酷赠送的【%s】\n请到迪酷网站管理中心领奖！", var3, 56[g_var9f0]);
+	new var4 = 0;
+	format(var4, 255, "\x04【猪年大吉，迪酷送礼】\x03%s \x01得到了迪酷赠送的\x04【%s】，请到迪酷网站管理中心领奖！", var3, 56[g_var9f0]);
+	message_begin(2, g_var14, {0,0,0}, g_var0);
+	write_byte(_arg0);
+	write_string(var4);
+	message_end();
+	return 0;
+}
+
+public GetVIPNum()
+{
+	new var2 = 0;
+	new var3 = 0;
+	while (var3 <= 32)
+	{
+		new var1;
+		if (is_user_connected(var3) && get_user_flags(var3, g_var0) & 2 != 0 && get_user_flags(var3, g_var0) & 8 == 0)
+		{
+			var2++;
+		}
+		var3++;
+	}
+	return var2;
+}
+
+public ShutDownServer()
+{
+	new var1 = 0;
+	if (g_varc == 60)
+	{
+		log_amx("����DcooServer.exeδ�������У��������Զ��رգ�");
+		server_cmd("exit");
+	}
+	else
+	{
+		new var2 = 0;
+		var2 = 60 - g_varc;
+		format(var1, 255, "\x04 DcooServe未正常启动，服务器将于 \x01%d \x04秒后自动关闭！", var2);
+		message_begin(2, g_var14, {0,0,0}, g_var0);
+		write_byte(1);
+		write_string(var1);
+		message_end();
+		server_print("DcooServe.exe δ�������У����������� %d ����Զ��رգ�\n", var2);
+		g_varc += 1;
+	}
+	return 0;
+}
+
+public check_box()
+{
+	new var2 = 0;
+	new var3 = 0;
+	get_players(var2, var3, "ac", 9124);
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	while (var6 < var3)
+	{
+		get_user_origin(var2[var6], var4, g_var0);
+		var5 = get_distance(var4, 32);
+		if (var5 < 64)
+		{
+			new var1;
+			if (GetVIPNum() >= 3 && is_user_connected(var2[var6]) && sub_204(var2[var6], 2) && !sub_204(var2[var6], 4))
+			{
+				GetMoney(var2[var6]);
+				return 0;
+			}
+			set_hudmessage(g_var0, 255, g_var0, -1082130432, 1050253722, g_var0, 1065353216, 1092616192, 1036831949, 1036831949, 1);
+			show_hudmessage(var2[var6], "只有迪酷VIP才能参加【猪年大吉，迪酷送礼】活动");
+		}
+		var6++;
+	}
+	return 0;
+}
+
+public eDeathMsg()
+{
+	g_var10 += 1;
+	new var1;
+	var1 = read_data(2);
+	if (g_var10 < 6)
+	{
+		44/* ERROR unknown load Constant */ = 1000;
+		44 + 4/* ERROR unknown load Binary */ = 1000;
+		44 + 8/* ERROR unknown load Binary */ = 1000;
+	}
+	else
+	{
+		if (g_var10 == 7)
+		{
+			get_user_origin(var1, "���@�8�0�(� ��\x10�\x08�一年VIP卡", g_var0);
+		}
+	}
+	return 0;
+}
+
+public eNewRound()
+{
+	if (floatround(floatmul(1114636288, get_cvar_float("mp_roundtime")), g_var0) == read_data(1))
+	{
+		new var2;
+		if (get_playersnum(1) >= 20 && g_var1c > 1 && GetVIPNum() >= 3 && (44/* ERROR unknown load Constant */ == 1000 && 44 + 4/* ERROR unknown load Binary */ == 1000 && 44 + 8/* ERROR unknown load Binary */ == 1000) && g_var4 == 1)
+		{
+			new var3 = 0;
+			var3 = random_num(1, 10000);
+			if (var3 <= g_var8)
+			{
+				new var4 = 0;
+				var4 = random_num(1, 139852);
+				new var5 = 0;
+				while (var5 < 16)
+				{
+					if (2476[var5] >= var4)
+					{
+						g_var9f0 = var5;
+						var5 = 16;
+					}
+					var5++;
+				}
+				set_task(1058642330, "taskBox", g_var0, {0}, g_var0, {0}, g_var0);
+			}
+		}
+		g_var1c += 1;
+		g_var10 = 0;
+	}
+	return 0;
+}
+
+public eRestart()
+{
+	g_var1c = 0;
+	44/* ERROR unknown load Constant */ = 1000;
+	44 + 4/* ERROR unknown load Binary */ = 1000;
+	44 + 8/* ERROR unknown load Binary */ = 1000;
+	return 0;
+}
+
+public eventEndRound()
+{
+	remove_task(6188, g_var0);
+	remove_task(6199, g_var0);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Newyear Gift", "0.1", "Cool.Cat");
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	register_event("TextMsg", "eRestart", 6908, "2&#Game_C", "2&#Game_w");
+	register_event("DeathMsg", "eDeathMsg", 7072, {0});
+	register_event("SendAudio", "eventEndRound", 7176, "2=%!MRAD_terwin", "2=%!MRAD_ctwin", "2=%!MRAD_rounddraw");
+	set_task(1065353216, "CheckDcooServer", g_var0, {0}, g_var0, {0}, g_var0);
+	set_task(1127481344, "CheckDcooServer", g_var0, 7520, g_var0, 7524, g_var0);
+	new var1 = 0;
+	new var2 = 0;
+	get_mapname(var1, 31);
+	new var3 = 0;
+	while (var3 < 31)
+	{
+		if (!equali(var1, 2548[var3], g_var0))
+		{
+			var2++;
+		}
+		var3++;
+	}
+	if (var2 == 31)
+	{
+		return 1;
+	}
+	set_cvar_num("mp_timelimit", 30);
+	set_task(1036831949, "GetGlobal", g_var0, 7624, g_var0, 7628, 1);
+	g_var14 = get_user_msgid("SayText");
+	sql_conn();
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var18 = precache_model("dcoo/dcoo_cny.spr");
+	return 0;
+}
+
+public show_box1()
+{
+	message_begin(2, 23, {0,0,0}, g_var0);
+	write_byte(17);
+	write_coord(32/* ERROR unknown load Constant */);
+	write_coord(32 + 4/* ERROR unknown load Binary */);
+	write_coord(32 + 8/* ERROR unknown load Binary */ + 20);
+	write_short(g_var18);
+	write_byte(g_var4);
+	write_byte(80);
+	message_end();
+	return 0;
+}
+
+public sql_conn()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	get_cvar_string("amx_sql_host", var1, 63);
+	get_cvar_string("amx_sql_user", var2, 31);
+	get_cvar_string("amx_sql_pass", var3, 31);
+	get_cvar_string("amx_sql_db", var4, 127);
+	g_var0 = dbi_connect(var1, var2, var3, var4, var5, 127);
+	if (0 >= g_var0)
+	{
+		server_print("[Gift] %L", 0, "SQL_CANT_CON", var5);
+	}
+	return 0;
+}
+
+public taskBox()
+{
+	32/* ERROR unknown load Constant */ = 44/* ERROR unknown load Constant */;
+	32 + 4/* ERROR unknown load Binary */ = 44 + 4/* ERROR unknown load Binary */;
+	32 + 8/* ERROR unknown load Binary */ = 44 + 8/* ERROR unknown load Binary */;
+	set_task(1073741824, "show_box1", 6188, 9048, g_var0, 9052, g_var0);
+	set_task(1056964608, "check_box", 6199, 9100, g_var0, 9104, g_var0);
+	return 0;
+}
+
+sub_204(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_128(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, g_var0);
+}
+
+sub_128(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, g_var0) > 0 && !get_user_flags(_arg0, g_var0) & 33554432;
+}
+

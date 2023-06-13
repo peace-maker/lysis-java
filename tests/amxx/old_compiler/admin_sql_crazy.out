@@ -1,0 +1,695 @@
+new g_var40;
+new g_var7c0;
+new g_var7bc;
+new g_var7b8;
+public CheckDcooServer()
+{
+	if (task_exists(99313, "amxx_configsdir"))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	if (file_exists(var3))
+	{
+		if (read_file(var3, "amxx_configsdir", var2, 24, _unused_temp_))
+		{
+			new var4 = 0;
+			new var5 = 0;
+			new var6 = 0;
+			new var7 = 0;
+			new var8 = 0;
+			new var9 = 0;
+			new var10 = 0;
+			while (var10 < 8)
+			{
+				format(var4[var10], 1, "%s", var2[var5]);
+				if (isspace(var4[var10]))
+				{
+					set_task(1065353216, "ShutDownServer", 99313, 5648, "amxx_configsdir", 5652, "amxx_configsdir");
+					return 0;
+				}
+				switch (var10)
+				{
+					case 0:
+					{
+						var8 = 268435456;
+					}
+					case 1:
+					{
+						var8 = 16777216;
+					}
+					case 2:
+					{
+						var8 = 1048576;
+					}
+					case 3:
+					{
+						var8 = 65536;
+					}
+					case 4:
+					{
+						var8 = 4096;
+					}
+					case 5:
+					{
+						var8 = 256;
+					}
+					case 6:
+					{
+						var8 = 16;
+					}
+					case 7:
+					{
+						var8 = 1;
+					}
+					default:
+					{
+					}
+				}
+				var9 = s2n(var4[var10]);
+				var6 = var8 * var9 + var6;
+				var5 += 3;
+				var10++;
+			}
+			var7 = var6 ^ 324478056;
+			new var1;
+			if (get_systime("amxx_configsdir") - var7 > 60 || get_systime("amxx_configsdir") < var7)
+			{
+				set_task(1065353216, "ShutDownServer", 99313, 5720, "amxx_configsdir", 5724, "amxx_configsdir");
+				return 0;
+			}
+			return 1;
+		}
+		set_task(1065353216, "ShutDownServer", 99313, 5792, "amxx_configsdir", 5796, "amxx_configsdir");
+		return 0;
+	}
+	set_task(1065353216, "ShutDownServer", 99313, 5864, "amxx_configsdir", 5868, "amxx_configsdir");
+	return 0;
+}
+
+public Showinfo(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	if (!is_user_connected(var1))
+	{
+		remove_task(var1 + 23778, "amxx_configsdir");
+		return 1;
+	}
+	set_user_maxspeed(var1, 1065353216);
+	client_cmd(var1, "drop");
+	client_cmd(var1, "drop");
+	set_hudmessage("amxx_configsdir", 255, "amxx_configsdir", -1082130432, 1051931443, "amxx_configsdir", "amxx_configsdir", 1065353216, "amxx_configsdir", "amxx_configsdir", "amxx_configsdir");
+	show_hudmessage(var1, "请立即注册成为迪酷会员，参加全国有奖排行\n\n请下载迪酷反作弊登陆器，感受全新游戏环境");
+	set_hudmessage("amxx_configsdir", 255, "amxx_configsdir", -1082130432, 1056964608, "amxx_configsdir", "amxx_configsdir", 1065353216, "amxx_configsdir", "amxx_configsdir", 1);
+	show_hudmessage(var1, "迪酷将会为会员定期举办各种娱乐活动及赛事\n\n迪酷服务器目前支持3213及更高版本的客户端");
+	set_hudmessage("amxx_configsdir", 255, "amxx_configsdir", -1082130432, 1059481190, "amxx_configsdir", "amxx_configsdir", 1065353216, "amxx_configsdir", "amxx_configsdir", "");
+	show_hudmessage(var1, "如果未开迪酷登陆器，您将会在15秒后被 KICK\n\n迪酷电子竞技网    http://www.dcoo.com");
+	return 0;
+}
+
+public ShutDownServer()
+{
+	new var1 = 0;
+	if (g_var40 == 60)
+	{
+		log_amx("����DcooServer.exeδ�������У��������Զ��رգ�");
+		server_cmd("exit");
+	}
+	else
+	{
+		new var2 = 0;
+		var2 = 60 - g_var40;
+		format(var1, 255, "\x04 DcooServe未正常启动，服务器将于 \x01%d \x04秒后自动关闭！", var2);
+		message_begin(2, g_var7c0, {0,0,0}, "amxx_configsdir");
+		write_byte(1);
+		write_string(var1);
+		message_end();
+		server_print("DcooServe.exe δ�������У����������� %d ����Զ��رգ�\n", var2);
+		g_var40 += 1;
+	}
+	return 0;
+}
+
+public ackSignal(_arg0)
+{
+	server_cmd("kick #%d \"%L\"", get_user_userid(_arg0), _arg0, "NO_ENTRY");
+	return 0;
+}
+
+public ackSignala(_arg0)
+{
+	server_cmd("kick #%d \"%L\"", get_user_userid(_arg0), _arg0, "NO_ENTRYA");
+	return 0;
+}
+
+public ackSignalb(_arg0)
+{
+	server_cmd("kick #%d \"%L\"", get_user_userid(_arg0), _arg0, "NO_ENTRYB");
+	return 0;
+}
+
+public changemap()
+{
+	new var1 = 0;
+	get_mapname(var1, 31);
+	server_cmd("changelevel %s", var1);
+	return 0;
+}
+
+public checkDAC(_arg0)
+{
+	new var2;
+	var2 = _arg0;
+	if (!is_user_connected(var2))
+	{
+		1580[var2] = 0;
+		1712[var2] = 0;
+		remove_task(var2, "amxx_configsdir");
+		remove_task(var2 + 108, "amxx_configsdir");
+		return 1;
+	}
+	new var3 = 0;
+	get_user_info(var2, "_DEAC", var3, 32);
+	strtoupper(var3);
+	client_cmd(var2, "setinfo _DEAC \"\"");
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 0;
+	get_user_name(var2, var8, 32);
+	var9 + 4/* ERROR unknown load Binary */ = n2h(var3, var3 + 4/* ERROR unknown load Binary */);
+	var9 + 8/* ERROR unknown load Binary */ = n2h(var3 + 16/* ERROR unknown load Binary */, var3 + 20/* ERROR unknown load Binary */);
+	var9 + 12/* ERROR unknown load Binary */ = n2h(var3 + 32/* ERROR unknown load Binary */, var3 + 36/* ERROR unknown load Binary */);
+	var9 + 16/* ERROR unknown load Binary */ = n2h(var3 + 48/* ERROR unknown load Binary */, var3 + 52/* ERROR unknown load Binary */);
+	var10 + 4/* ERROR unknown load Binary */ = var8;
+	if (2 > strlen(var8))
+	{
+		var10 + 8/* ERROR unknown load Binary */ = 255;
+	}
+	else
+	{
+		var10 + 8/* ERROR unknown load Binary */ = var8 + 4/* ERROR unknown load Binary */;
+		if (255 < var10 + 8/* ERROR unknown load Binary */)
+		{
+			var10 + 8/* ERROR unknown load Binary */ = 255;
+		}
+	}
+	if (3 > strlen(var8))
+	{
+		var10 + 12/* ERROR unknown load Binary */ = 255;
+	}
+	else
+	{
+		var10 + 12/* ERROR unknown load Binary */ = var8 + 8/* ERROR unknown load Binary */;
+		if (255 < var10 + 12/* ERROR unknown load Binary */)
+		{
+			var10 + 12/* ERROR unknown load Binary */ = 255;
+		}
+	}
+	if (4 > strlen(var8))
+	{
+		var10 + 16/* ERROR unknown load Binary */ = 255;
+	}
+	else
+	{
+		var10 + 16/* ERROR unknown load Binary */ = var8 + 12/* ERROR unknown load Binary */;
+		if (255 < var10 + 16/* ERROR unknown load Binary */)
+		{
+			var10 + 16/* ERROR unknown load Binary */ = 255;
+		}
+	}
+	var11 + 4/* ERROR unknown load Binary */ = n2h(260[var2], 260[var2][1]);
+	var11 + 8/* ERROR unknown load Binary */ = n2h(260[var2][2], 260[var2][3]);
+	var11 + 12/* ERROR unknown load Binary */ = n2h(260[var2][4], 260[var2][5]);
+	var11 + 16/* ERROR unknown load Binary */ = n2h(260[var2][6], 260[var2][7]);
+	var12 + 12/* ERROR unknown load Binary */ = var11 + 16/* ERROR unknown load Binary */ ^ var10 + 8/* ERROR unknown load Binary */ ^ var9 + 4/* ERROR unknown load Binary */;
+	var12 + 8/* ERROR unknown load Binary */ = var11 + 8/* ERROR unknown load Binary */ ^ var10 + 4/* ERROR unknown load Binary */ ^ var9 + 16/* ERROR unknown load Binary */;
+	var12 + 16/* ERROR unknown load Binary */ = var11 + 12/* ERROR unknown load Binary */ ^ var10 + 16/* ERROR unknown load Binary */ ^ var9 + 12/* ERROR unknown load Binary */;
+	var12 + 4/* ERROR unknown load Binary */ = var11 + 4/* ERROR unknown load Binary */ ^ var10 + 12/* ERROR unknown load Binary */ ^ var9 + 8/* ERROR unknown load Binary */;
+	var4 = var12 + 4/* ERROR unknown load Binary */;
+	var5 = var12 + 8/* ERROR unknown load Binary */;
+	var6 = var12 + 12/* ERROR unknown load Binary */;
+	var7 = var12 + 16/* ERROR unknown load Binary */;
+	new var1;
+	if (var4 == 189 && var5 == 233 && var6 == 167)
+	{
+		server_cmd("kick #%d 注意:迪酷反作弊系统检测到您试图使用作弊程序！", get_user_userid(var2));
+		new var13 = 0;
+		get_user_ip(var2, var13, 31, 1);
+		server_cmd("addip 0 %s", var13);
+		return 0;
+	}
+	if (var4 != 0)
+	{
+		1712[var2]++;
+	}
+	else
+	{
+		if (var5 != 0)
+		{
+			server_cmd("kick #%d 注意:您没有通过DEAC反作弊系统的检测 [错误代码：%d%4d%d]", get_user_userid(var2), random_num(1, 9), var5 + random_num(11, 102) * 97, random_num("amxx_configsdir", 9));
+		}
+		if (var6 == 94)
+		{
+			1580[var2] = 30;
+			1712[var2] = 0;
+		}
+		log_amx("[DEAC] %d %d", var6, var7);
+		server_cmd("kick #%d %s", get_user_userid(var2), "您的登陆器版本与服务器不同，请升级登陆器或等待服务器升级 [http://www.dcoo.com]");
+	}
+	if (3 < 1712[var2])
+	{
+		server_cmd("kick #%d %s", get_user_userid(var2), "迪酷提供全新娱乐的CS玩法，请下载迪酷登陆器并注册会员 [http://www.dcoo.com]");
+		1580[var2] = 0;
+		1712[var2] = 0;
+	}
+	return 0;
+}
+
+public checkplayers(_arg0)
+{
+	if (0 >= 1580[_arg0])
+	{
+		if (!is_user_connected(_arg0))
+		{
+			1580[_arg0] = 0;
+			1712[_arg0] = 0;
+			remove_task(_arg0, "amxx_configsdir");
+			remove_task(_arg0 + 108, "amxx_configsdir");
+			return 1;
+		}
+		if (!1712[_arg0])
+		{
+			new var1 = 0;
+			new var2 = 0;
+			while (var2 < 8)
+			{
+				var1 = random_num("amxx_configsdir", 15);
+				260[_arg0][var2] = n2s(var1);
+				var2++;
+			}
+			260[_arg0][8] = 0;
+		}
+		client_cmd(_arg0, "joystick %s", 260[_arg0]);
+		new var3 = 0;
+		var3 = _arg0;
+		set_task(1077936128, "checkDAC", _arg0 + 108, var3, 1, {0}, "amxx_configsdir");
+	}
+	return 0;
+}
+
+public client_connect(_arg0)
+{
+	client_cmd(_arg0, "cl_dlmax 80");
+	new var1;
+	if (get_cvar_num("amx_mode"))
+	{
+
+/* ERROR! null */
+ function "client_connect" (number 9)
+
+public client_disconnect(_arg0)
+{
+	if (g_var7bc)
+	{
+		1580[_arg0] = 0;
+		1712[_arg0] = 0;
+		remove_task(_arg0, "amxx_configsdir");
+		remove_task(_arg0 + 108, "amxx_configsdir");
+	}
+	return 0;
+}
+
+public client_infochanged(_arg0)
+{
+	new var1;
+	if (!is_user_connected(_arg0) || !get_cvar_num("amx_mode"))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	get_user_name(_arg0, var3, 31);
+	get_user_info(_arg0, "name", var2, 31);
+	get_user_info(_arg0, "name", _unused_temp_, 8);
+	if (!equal(var2, var3, "amxx_configsdir"))
+	{
+		client_print(_arg0, "", "*** 迪酷服务器禁止在游戏中改名！***");
+		client_print(_arg0, "", "*** 迪酷服务器禁止在游戏中改名！***");
+		set_user_info(_arg0, "name", var3);
+	}
+	return 0;
+}
+
+public delayed_load(_arg0)
+{
+	server_cmd("exec %s", _arg0);
+	return 0;
+}
+
+public jointeam(_arg0)
+{
+	if (1844[_arg0])
+	{
+		new var2 = 0;
+		var2 = _arg0;
+		set_task(1065353216, "Showinfo", _arg0 + 23778, var2, 1, 9892, "amxx_configsdir");
+	}
+	new var1;
+	if (g_var7bc && !task_exists(_arg0, "amxx_configsdir"))
+	{
+		1580[_arg0] = 0;
+		1712[_arg0] = 0;
+		new var3 = 0;
+		var3 = _arg0;
+		set_task(sub_8c(1036831949, random_num("amxx_configsdir", 32)), "startcheck", "amxx_configsdir", var3, 1, {0}, "amxx_configsdir");
+	}
+	return 0;
+}
+
+public n2h(_arg0, _arg1)
+{
+	return s2n(_arg1) + s2n(_arg0) * 16;
+}
+
+public n2s(_arg0)
+{
+	if (_arg0 < 10)
+	{
+		return _arg0 + 48;
+	}
+	new var1;
+	if (_arg0 >= 10 && _arg0 <= 15)
+	{
+		return _arg0 + 55;
+	}
+	return 0;
+}
+
+public plugin_cfg()
+{
+	new var1 = 0;
+	new var2 = 0;
+	sub_2a0(var1, 31);
+	get_mapname(var2, 31);
+	new var3;
+	var3 = format(var1, 63, "%s/maps/%s.cfg", var1, var2);
+	if (file_exists(var1))
+	{
+		set_task(1086534451, "delayed_load", "amxx_configsdir", var1, var3 + 1, {0}, "amxx_configsdir");
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Admin Base (SQL)", "0.4", "CRaZy");
+	register_cvar("amx_sql_host", "127.0.0.1,2433", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_sql_user", "sa", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_sql_pass", "5D5661F75DDD496FC7751BF5DEEA2A", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_sql_db", "dcoo_database", "amxx_configsdir", "amxx_configsdir");
+	register_dictionary("admin.txt");
+	register_dictionary("common.txt");
+	register_cvar("amx_mode", 2668, "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_password_field", "_dcoo", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_default_access", 2852, "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_vote_ratio", "0.02", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_vote_time", "10", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_vote_answers", 3072, "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_vote_delay", "60", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_last_voting", 3216, "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_show_activity", 3296, "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_votekick_ratio", "0.40", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_voteban_ratio", "0.40", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("amx_votemap_ratio", "0.40", "amxx_configsdir", "amxx_configsdir");
+	register_cvar("force_cd_ver", "4.33.4", "amxx_configsdir", "amxx_configsdir");
+	set_cvar_float("amx_last_voting", "amxx_configsdir");
+	set_task(1065353216, "CheckDcooServer", "amxx_configsdir", {0}, "amxx_configsdir", {0}, "amxx_configsdir");
+	set_task(1114636288, "CheckDcooServer", "amxx_configsdir", 3864, "amxx_configsdir", 3868, "amxx_configsdir");
+	g_var7c0 = get_user_msgid("SayText");
+	format(68, 15, "amxauth%c%c%c%c", random_num(65, 90), random_num(65, 90), random_num(65, 90), random_num(65, 90));
+	format(132, 15, "amxauth%c%c%c%c", random_num(65, 90), random_num(65, 90), random_num(65, 90), random_num(65, 90));
+	format(196, 15, "amxauth%c%c%c%c", random_num(65, 90), random_num(65, 90), random_num(65, 90), random_num(65, 90));
+	register_clcmd(68, "ackSignal", -1, {0});
+	register_clcmd(132, "ackSignala", -1, {0});
+	register_clcmd(196, "ackSignalb", -1, {0});
+	remove_user_flags("amxx_configsdir", read_flags(4232), "amxx_configsdir");
+	new var1 = 0;
+	sub_2a0(var1, 63);
+	server_cmd("exec %s/amxx.cfg", var1);
+	server_cmd("exec %s/sql.cfg", var1);
+	set_cvar_num("sv_allowupload", "amxx_configsdir");
+	set_cvar_num("sv_send_logos", "amxx_configsdir");
+	set_cvar_float("hpk_maxsize", 1056964608);
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	get_cvar_string("amx_sql_host", var2, 63);
+	get_cvar_string("amx_sql_user", var3, 31);
+	get_cvar_string("amx_sql_pass", var4, 31);
+	get_cvar_string("amx_sql_db", var5, 127);
+	g_var7b8 = dbi_connect(var2, var3, var4, var5, var6, 127);
+	if (0 >= g_var7b8)
+	{
+		server_print("[AMXX] %L", 0, "SQL_CANT_CON", var6);
+		set_task(1036831949, "changemap", "amxx_configsdir", {0}, "amxx_configsdir", {0}, "amxx_configsdir");
+		return 1;
+	}
+	server_print("[AMXX] SQL Connect Succeed!");
+	new var7 = 0;
+	get_cvar_string("amx_password_field", var7, 31);
+	if (equal(var7, "_dcoo", "amxx_configsdir"))
+	{
+		set_task(1084227584, "updateplayers", "amxx_configsdir", 5136, "amxx_configsdir", 5140, "amxx_configsdir");
+		g_var7bc = 1;
+		register_clcmd("jointeam", "jointeam", -1, {0});
+		register_menucmd(register_menuid("Team_Select", 1), 51, "jointeam");
+	}
+	else
+	{
+		g_var7bc = 0;
+	}
+	return 0;
+}
+
+public s2n(_arg0)
+{
+	new var1;
+	if (_arg0 >= 48 && _arg0 <= 57)
+	{
+		return _arg0 + -48;
+	}
+	new var2;
+	if (_arg0 >= 65 && _arg0 <= 70)
+	{
+		return _arg0 + -55;
+	}
+	return 0;
+}
+
+public startcheck(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	if (!task_exists(var1, "amxx_configsdir"))
+	{
+		set_task(1084227584, "checkplayers", var1, 11432, "amxx_configsdir", 11436, "amxx_configsdir");
+	}
+	return 0;
+}
+
+public updateplayers()
+{
+	new var1 = 1;
+	while (var1 < 33)
+	{
+		1580[var1] = 1580[var1] - 5;
+		var1++;
+	}
+	return 0;
+}
+
+sub_3520(_arg0, _arg1)
+{
+	remove_user_flags(_arg0, -1, "amxx_configsdir");
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	get_user_ip(_arg0, var1, 31, 1);
+	get_user_authid(_arg0, var2, 31);
+	if (_arg1)
+	{
+		copy(var6, 31, _arg1);
+	}
+	else
+	{
+		get_user_name(_arg0, var6, 31);
+	}
+	get_cvar_string("amx_password_field", var5, 31);
+	get_user_info(_arg0, "_dco", var4, 33);
+	if (equal(var4, 7432, "amxx_configsdir"))
+	{
+		get_user_info(_arg0, var5, var3, 31);
+		if (equal(var3, 7436, "amxx_configsdir"))
+		{
+			1844[_arg0] = 1;
+			return 1;
+		}
+		1844[_arg0] = 0;
+		new var8 = 0;
+		md5(var3, var8);
+		var7 = sub_2850(_arg0, var6, var2, var1, var8);
+	}
+	else
+	{
+		strtolower(var4);
+		var7 = sub_2850(_arg0, var6, var2, var1, var4);
+	}
+	if (var7 & 1)
+	{
+		client_cmd(_arg0, "echo \"* %L\"", _arg0, "INV_PAS");
+	}
+	if (var7 & 2)
+	{
+		server_cmd("kick #%d %s", get_user_userid(_arg0), "您的密码错误！请在登陆器中输入迪酷CSID和正确的密码 [www.dcoo.com]");
+		return 1;
+	}
+	if (var7 & 4)
+	{
+		client_cmd(_arg0, "echo \"* %L\"", _arg0, "PAS_ACC");
+	}
+	if (var7 & 8)
+	{
+		client_cmd(_arg0, "echo \"* %L\"", _arg0, "PRIV_SET");
+	}
+	if (var7 & 16)
+	{
+		new var9 = 0;
+		get_cvar_string("trans_server", var9, 24);
+		if (equal(var9, 8140, "amxx_configsdir"))
+		{
+			server_cmd("kick #%d %s", get_user_userid(_arg0), "本服务器仅允许注册用户登录！免费注册帐号请访问http://www.dcoo.com");
+		}
+		else
+		{
+			client_cmd(_arg0, "connect %s", var9);
+		}
+		return 1;
+	}
+	if (var7 & 32)
+	{
+		server_cmd("kick #%d %s", get_user_userid(_arg0), "您的ID已经被冻结，若要申诉请到论坛投诉区发帖 http://www.dcoo.com");
+		return 1;
+	}
+	return 0;
+}
+
+sub_8c(_arg0, _arg1)
+{
+	return floatmul(_arg0, float(_arg1));
+}
+
+sub_2a0(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_2850(_arg0, _arg1, _arg2, _arg3, _arg4)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	copy(var3, 32, _arg1);
+	if (0 < contain(var3, 6700))
+	{
+		do {
+		} while (replace(var3, 33, 6708, 6716));
+		do {
+		} while (replace(var3, 33, 6724, "''"));
+	}
+	var4 = dbi_query(g_var7b8, "SELECT md5pass, access, flags, convert(char(1),isfrozen), convert(char(8), user_id) FROM admins where auth='%s'", var3);
+	if (var4 == -1)
+	{
+		return 1;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	dbi_getfield(var4, "amxx_configsdir", var7, 32);
+	dbi_getfield(var4, 1, var6, 31);
+	dbi_getfield(var4, 2, var5, 31);
+	dbi_getfield(var4, "", var8, 1);
+	dbi_getfield(var4, 4, var9, 15);
+	set_user_flags(_arg0, "amxx_configsdir", 1);
+	new var1;
+	if (!equal(var7, 7192, "amxx_configsdir") && !equal(var6, 7196, "amxx_configsdir"))
+	{
+		new var10 = 0;
+		var10 = read_flags(var6);
+		if (equal(var8, 7200, "amxx_configsdir"))
+		{
+			var2 |= 32;
+		}
+		else
+		{
+			if (equal(_arg4, var7, "amxx_configsdir"))
+			{
+				var2 |= 12;
+				set_user_flags(_arg0, var10, "amxx_configsdir");
+				set_user_flags(_arg0, str_to_num(var9), 1);
+				if (equal(var5, 7208, "amxx_configsdir"))
+				{
+					set_user_flags(_arg0, 1, 5);
+				}
+				else
+				{
+					set_user_flags(_arg0, "amxx_configsdir", 5);
+				}
+			}
+			var2 |= 2;
+		}
+	}
+	else
+	{
+		if (sub_8c(1073741824, get_cvar_float("amx_mode")))
+		{
+			var2 |= 16;
+		}
+		set_user_flags(_arg0, "amxx_configsdir", 5);
+		new var11 = 0;
+		get_cvar_string("amx_default_access", var11, 31);
+		if (!strlen(var11))
+		{
+			copy(var11, 32, 7328);
+		}
+		new var12;
+		var12 = read_flags(var11);
+		if (var12)
+		{
+			var2 |= 8;
+			set_user_flags(_arg0, var12, "amxx_configsdir");
+		}
+	}
+	return var2;
+}
+
+sub_8c(_arg0, _arg1)
+{
+	return floatcmp(_arg0, _arg1) == 0;
+}
+

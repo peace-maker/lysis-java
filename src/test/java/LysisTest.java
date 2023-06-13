@@ -11,6 +11,7 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -74,7 +75,7 @@ public class LysisTest {
 		// Get the matching file containing the expected output.
 		File outFile = new File(path.replaceFirst("\\.(smx|amxx)$", ".out"));
 		if (!UPDATE_OUTPUT_FILES) {
-			assertTrue("Out-file missing.", outFile.exists() || outFile.canRead());
+			assertTrue("Out-file missing.", outFile.exists() && outFile.canRead());
 		}
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -121,7 +122,7 @@ public class LysisTest {
 		if (!UPDATE_OUTPUT_FILES) {
 			// Get the expected result from the .out file.
 			StringBuilder expectedResult = new StringBuilder();
-			try (BufferedReader br = new BufferedReader(new FileReader(outFile.getAbsolutePath()))) {
+			try (BufferedReader br = new BufferedReader(new FileReader(outFile))) {
 				String line;
 				while ((line = br.readLine()) != null) {
 					expectedResult.append(line + System.lineSeparator());
@@ -131,7 +132,7 @@ public class LysisTest {
 			// Make sure we produce the same result still.
 			assertEquals("Mismatching decompilation output", expectedResult.toString(), result);
 		} else {
-			try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile.getAbsolutePath()))) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter(outFile, Charset.forName("UTF-8")))) {
 				bw.append(result);
 			}
 		}

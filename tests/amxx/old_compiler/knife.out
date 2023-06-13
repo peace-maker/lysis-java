@@ -1,0 +1,57 @@
+public GiveHE()
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_players(var1, var2, "ac", 1116);
+	if (var2 == 0)
+	{
+		return 1;
+	}
+	new var3 = 0;
+	while (var3 < var2)
+	{
+		give_item(var1[var3], "weapon_hegrenade");
+		var3++;
+	}
+	return 0;
+}
+
+public eEndRound()
+{
+	pause(1088, 1096, 1100);
+	return 0;
+}
+
+public eNewRound()
+{
+	if (floatround(floatmul(1114636288, get_cvar_float("mp_roundtime")), "Knife Arena") == read_data(1))
+	{
+		engclient_cmd("Knife Arena", "weapon_knife", {0}, {0});
+		client_print("Knife Arena", 4, "第一局只能用刀和手雷！");
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Knife Arena", "0.1", "CRaZy");
+	register_event("CurWeapon", "switchweapon", "be", "1=1", "2!29");
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	register_event("SendAudio", "eEndRound", 404, "2&%!MRAD_terwin", "2&%!MRAD_ctwin", "2&%!MRAD_rounddraw");
+	set_task(1101004800, "GiveHE", 6026, 640, "Knife Arena", 644, "Knife Arena");
+	return 0;
+}
+
+public switchweapon(_arg0)
+{
+	new var2;
+	var2 = read_data(2);
+	new var1;
+	if (var2 != 29 && var2 != 4)
+	{
+		engclient_cmd(_arg0, "weapon_knife", {0}, {0});
+		client_print(_arg0, 4, "第一局只能用刀和手雷！");
+	}
+	return 0;
+}
+

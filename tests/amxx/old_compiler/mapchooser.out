@@ -1,0 +1,290 @@
+new g_var4334;
+new g_var43c0;
+new g_var43c4;
+new g_var4300;
+public checkVotes()
+{
+	new var2 = 0;
+	new var3 = 0;
+	while (var3 < g_var4334)
+	{
+		if (17176[var3] > 17176[var2])
+		{
+			var2 = var3;
+		}
+		var3++;
+	}
+	if (17176[var2] < 17176 + 20/* ERROR unknown load Binary */)
+	{
+		new var4 = 0;
+		get_mapname(var4, 31);
+		new var5;
+		var5 = get_cvar_float("amx_extendmap_step");
+		set_cvar_float("mp_timelimit", floatadd(get_cvar_float("mp_timelimit"), var5));
+		client_print("1.00", "", "%L", -1, "CHO_FIN_EXT", var5);
+		log_amx("Vote: Voting for the nextmap finished. Map %s will be extended to next %.0f minutes", var4, var5);
+		return 0;
+	}
+	new var1;
+	if (17176[var2] && 17176 + 24/* ERROR unknown load Binary */ <= 17176[var2])
+	{
+		set_cvar_string("amx_nextmap", 256[17156[var2]]);
+	}
+	new var6 = 0;
+	get_cvar_string("amx_nextmap", var6, 31);
+	client_print("1.00", "", "%L", -1, "CHO_FIN_NEXT", var6);
+	log_amx("Vote: Voting for the nextmap finished. The nextmap will be %s", var6);
+	return 0;
+}
+
+public countVote(_arg0, _arg1)
+{
+	if (!(sub_148(get_cvar_float("amx_vote_answers"))))
+	{
+		new var1 = 0;
+		get_user_name(_arg0, var1, 31);
+		if (_arg1 == 5)
+		{
+			client_print("1.00", "", "%L", -1, "CHOSE_EXT", var1);
+		}
+		else
+		{
+			if (_arg1 < 5)
+			{
+				client_print("1.00", "", "%L", -1, "X_CHOSE_X", var1, 256[17156[_arg1]]);
+			}
+		}
+	}
+	17176[_arg1]++;
+	return 1;
+}
+
+public plugin_end()
+{
+	new var1 = 0;
+	get_mapname(var1, 31);
+	set_localinfo("lastMap", var1);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Nextmap Chooser", "1.00", "AMXX Dev Team");
+	register_dictionary("mapchooser.txt");
+	register_dictionary("common.txt");
+	new var1 = 0;
+	format(var1, 63, "%L", "en", "CHOOSE_NEXTM");
+	register_menucmd(register_menuid(var1, "1.00"), 127, "countVote");
+	register_cvar("amx_extendmap_max", "90", "1.00", "1.00");
+	register_cvar("amx_extendmap_step", "15", "1.00", "1.00");
+	if (sub_418())
+	{
+		register_event("TeamScore", "team_score", 17948, {0});
+	}
+	get_localinfo("lastMap", 17216, 31);
+	set_localinfo("lastMap", 18024);
+	new var2 = 0;
+	sub_5d8(var2, 63);
+	format(var2, 63, "%s/maps.ini", var2);
+	if (!file_exists(var2))
+	{
+		get_cvar_string("mapcyclefile", var2, 63);
+	}
+	if (sub_246c(var2))
+	{
+		set_task(1097859072, "voteNextmap", 987456, 18176, "1.00", 18180, "1.00");
+	}
+	g_var43c0 = sub_290();
+	return 0;
+}
+
+public team_score()
+{
+	new var2 = 0;
+	read_data(1, var2, 1);
+	new var1;
+	if (var2 == 67)
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	17208[var1] = read_data(2);
+	return 0;
+}
+
+public voteNextmap()
+{
+	new var6;
+	var6 = get_cvar_num("mp_winlimit");
+	new var7;
+	var7 = get_cvar_num("mp_maxrounds");
+	if (var6)
+	{
+		new var8;
+		var8 = var6 + -2;
+		new var1;
+		if (var8 > 17208/* ERROR unknown load Constant */ && var8 > 17208 + 4/* ERROR unknown load Binary */)
+		{
+			g_var43c4 = 0;
+			return 0;
+		}
+	}
+	else
+	{
+		if (var7)
+		{
+			if (17208 + 4/* ERROR unknown load Binary */ + 17208/* ERROR unknown load Constant */ < var7 + -2)
+			{
+				g_var43c4 = 0;
+				return 0;
+			}
+		}
+		new var9;
+		var9 = get_timeleft();
+		new var2;
+		if (var9 < 1 || var9 > 129)
+		{
+			g_var43c4 = 0;
+			return 0;
+		}
+	}
+	if (g_var43c4)
+	{
+		return 0;
+	}
+	g_var43c4 = 1;
+	new var10 = 0;
+	new var11 = 0;
+	new var12 = 64;
+	new var13;
+	new var3;
+	if (g_var43c0)
+	{
+		var3 = 19444;
+	}
+	else
+	{
+		var3 = 19484;
+	}
+	var13 = format(var10, 511, var3, 0, "CHOOSE_NEXTM");
+	new var14;
+	new var4;
+	if (g_var4300 > 5)
+	{
+		var4 = 5;
+	}
+	else
+	{
+		var4 = g_var4300;
+	}
+	var14 = var4;
+	g_var4334 = 0;
+	while (g_var4334 < var14)
+	{
+		var11 = random_num("1.00", g_var4300 + -1);
+		while (countVote(var11))
+		{
+			var11++;
+			if (var11 >= g_var4300)
+			{
+				var11 = 0;
+			}
+		}
+		17156[g_var4334] = var11;
+		var13 = format(var10[var13], 511, "%d. %s\n", g_var4334 + 1, 256[var11]) + var13;
+		var12 = 1 << g_var4334 | var12;
+		17176[g_var4334] = 0;
+		g_var4334 += 1;
+	}
+	var13++;
+	var10[var13] = 10;
+	17176 + 20/* ERROR unknown load Binary */ = 0;
+	17176 + 24/* ERROR unknown load Binary */ = 0;
+	new var15 = 0;
+	get_mapname(var15, 31);
+	new var5;
+	if (var7 + var6 == 0 && sub_90(get_cvar_float("mp_timelimit"), get_cvar_float("amx_extendmap_max")))
+	{
+		var13 = format(var10[var13], 511, "%d. %L\n", 6, 0, "EXTED_MAP", var15) + var13;
+		var12 |= 32;
+	}
+	format(var10[var13], 511, "%d. %L", 7, 0, "NONE");
+	new var16 = 0;
+	format(var16, 63, "%L", "en", "CHOOSE_NEXTM");
+	show_menu("1.00", var12, var10, 15, var16);
+	set_task(1097859072, "checkVotes", "1.00", {0}, "1.00", {0}, "1.00");
+	client_print("1.00", "", "%L", 0, "TIME_CHOOSE");
+	client_cmd("1.00", "spk Gman/Gman_Choose2");
+	log_amx("Vote: Voting for the nextmap started");
+	return 0;
+}
+
+sub_148(_arg0)
+{
+	return _arg0 & -1 == 0;
+}
+
+sub_418()
+{
+	new var2 = 0;
+	get_modname(var2, 31);
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "csv15", "1.00") || equal(var2, "cs13", "1.00");
+}
+
+sub_5d8(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_246c(_arg0)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	get_mapname(var5, 31);
+	while (g_var4300 < 128 && read_file(_arg0, var4, var3, 31, _unused_temp_))
+	{
+		new var2;
+		if (var3 != 59 && parse(var3, 256[g_var4300], 31) && is_map_valid(256[g_var4300]) && !equali(256[g_var4300], 17216, "1.00") && !equali(256[g_var4300], var5, "1.00"))
+		{
+			g_var4300 += 1;
+		}
+	}
+	return g_var4300;
+}
+
+sub_290()
+{
+	new var2 = 0;
+	get_modname(var2, 31);
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+countVote(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < g_var4334)
+	{
+		if (17156[var1] == _arg0)
+		{
+			return 1;
+		}
+		var1++;
+	}
+	return 0;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return 0 > floatcmp(_arg0, _arg1);
+}
+

@@ -1,0 +1,2070 @@
+new g_var2520;
+new g_var0;
+new g_var2524;
+new g_var3ea4;
+new g_var3ea0;
+new g_var3e1c;
+new g_var3ea8 = -1004371968;
+new g_var2508;
+new g_var250c;
+new g_var3eac;
+new g_var2510;
+new g_var2504;
+public AllVoteMap(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_user_name(_arg0, var2, 31);
+	format(var1, 255, "\y请投票是否更换地图为 \r%s \n\y发起人：\r%s\w\n\n8.  YES\n9.  NO\n0.  弃权", 1028[g_var2520], var2);
+	show_menu(g_var0, 896/* ERROR unknown load Constant */, var1, 20, "VoteMapUser Menu");
+	set_task(1101266944, "checkMapVotes", 99889977, {0}, g_var0, {0}, g_var0);
+	g_var0 = format(4, 255, "changelevel %s", 1028[g_var2520]) + 1;
+	g_var2524 = 1;
+	return 0;
+}
+
+public BuyItem(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3;
+	var3 = format(var1, 511, "\y【请选择您想购买的道具】\n\n\r【注意】提交后请耐心等待页面信息完全显示后再关闭，\n购买的道具将会被自动使用，并于半小时内自动生效！\n\n\w", 37404);
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. VIP一个月\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. VIP一天\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 拜年金猪卡\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 转移卡\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 富翁卡\n\w", var2) + var3;
+	var3 = format(var1[var3], 511 - var3, "\n0. 退出") + var3;
+	show_menu(_arg0, 543/* ERROR unknown load Constant */, var1, -1, "Buy_Menu");
+	return 0;
+}
+
+public GetFullSpace(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < _arg0)
+	{
+		_arg1[var1 * 3] = 227;
+		_arg1[var1 * 3 + 1] = 128;
+		_arg1[var1 * 3 + 2] = 128;
+		var1++;
+	}
+	_arg1[_arg0 * 3] = 0;
+	return 0;
+}
+
+public GoBet(_arg0)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	get_user_info(_arg0, "_dcoo", var4, 31);
+	if (equal(var4, 80788, g_var0))
+	{
+		return 1;
+	}
+	md5(var4, var2);
+	if (0 >= get_user_flags(_arg0, 1))
+	{
+		return 1;
+	}
+	new var5 = 0;
+	while (get_user_flags(_arg0, 1) % 81 > var5)
+	{
+		md5(var2, var2);
+		var5++;
+	}
+	copy(var3, 34, var2);
+	RecvStr(var3, var2);
+	if (19348[_arg0][27400[_arg0]] == 0)
+	{
+		return 1;
+	}
+	new var6 = 0;
+	while (19348[_arg0][27400[_arg0]] % 82 > var6)
+	{
+		md5(var2, var2);
+		var6++;
+	}
+	copy(var3, 34, var2);
+	RecvStr(var3, var2);
+	if (28852[_arg0] == 0)
+	{
+		return 1;
+	}
+	new var7 = 0;
+	while (28852[_arg0] % 83 > var7)
+	{
+		md5(var2, var2);
+		var7++;
+	}
+	copy(var3, 34, var2);
+	RecvStr(var3, var2);
+	if (28984[_arg0] == 0)
+	{
+		return 1;
+	}
+	new var8 = 0;
+	while (28984[_arg0] * 13 % 84 > var8)
+	{
+		md5(var2, var2);
+		var8++;
+	}
+	copy(var3, 34, var2);
+	RecvStr(var3, var2);
+	if (28984[_arg0] == 4)
+	{
+		new var1;
+		if (31360[_arg0] >= 1 && 31360[_arg0] <= 5)
+		{
+			27400[_arg0][1] = 27400[_arg0][1][31360[_arg0] - 1 * 10] - 1;
+		}
+		if (31360[_arg0] == 6)
+		{
+			27400[_arg0][1] = -1;
+		}
+		return 1;
+	}
+	new var9 = 0;
+	while (27400[_arg0][1] * 14 % 85 > var9)
+	{
+		md5(var2, var2);
+		var9++;
+	}
+	copy(var3, 34, var2);
+	RecvStr(var3, var2);
+	strtoupper(var2);
+	new var10 = 0;
+	new var11 = 0;
+	while (var11 < 32)
+	{
+		var10[var11 * 2] = n2s(random_num(g_var0, 15));
+		var10[var11 * 2 + 1] = var2[var11];
+		var11++;
+	}
+	var10 + 256/* ERROR unknown load Binary */ = 0;
+	new var12 = 0;
+	format(var12, 1023, "<html><head><title>motd</title></head><body topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p><iframe src='http://www.dcoo.com/team/dcoo_worldcup.asp?uid=%d&guess=%d&fid=%d&money=%d&stype=%d&pass=%s' marginwidth='1' marginheight='1' height='300' width='100%%' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", get_user_flags(_arg0, 1), 27400[_arg0][1], 19348[_arg0][27400[_arg0]], 28852[_arg0], 28984[_arg0], var10);
+	show_motd(_arg0, var12, "迪酷世界杯有奖竞猜");
+	return 0;
+}
+
+public RecvStr(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < 32)
+	{
+		_arg1[var1] = _arg0[31 - var1];
+		var1++;
+	}
+	_arg1 + 128/* ERROR unknown load Binary */ = 0;
+	return 0;
+}
+
+public VoteKick(_arg0, _arg1, _arg2)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	get_user_name(_arg0, var3, 31);
+	get_user_name(_arg1, var4, 31);
+	format(var1, 255, "\y请投票是否KICK %s ?\n原因：%s\w\n\n8.  YES\n9.  NO\n0.  弃权", var4, 14264[_arg2]);
+	format(var2, 191, "\x03%s \x01投票 Kick \x03%s\x01，原因：\x04 %s", var3, var4, 14264[_arg2]);
+	message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+	write_byte(_arg0);
+	write_string(var2);
+	message_end();
+	show_menu(g_var0, 896/* ERROR unknown load Constant */, var1, 20, "VoteKickUser Menu");
+	set_task(1101266944, "checkVotes", 99889988, {0}, g_var0, {0}, g_var0);
+	g_var3ea0 = format(14876, 255, "kick #%d \"您被玩家投票Kick了，原因：%s\"", get_user_userid(_arg1), 14264[_arg2]) + 1;
+	g_var3e1c = _arg2;
+	format(15904, 31, "%s", var4);
+	g_var3ea8 = get_gametime();
+	return 0;
+}
+
+public actionBetMenu1(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			displayBetMenu2(_arg0);
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionBetMenu2(_arg0, _arg1)
+{
+	if (_arg1 < 9)
+	{
+		27400[_arg0] = _arg1;
+		displayBetMenu3(_arg0);
+	}
+	return 1;
+}
+
+public actionBetMenu3(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			28984[_arg0] = 1;
+			displayBetMenu4(_arg0);
+		}
+		case 1:
+		{
+			28984[_arg0] = 2;
+			displayBetMenu4(_arg0);
+		}
+		case 2:
+		{
+			28984[_arg0] = 3;
+			displayBetMenu4(_arg0);
+		}
+		case 3:
+		{
+			28984[_arg0] = 4;
+			displayBetMenu6(_arg0);
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionBetMenu4(_arg0, _arg1)
+{
+	if (_arg1 < 5)
+	{
+		27400[_arg0][1] = _arg1 + 1;
+		28852[_arg0] = 0;
+		displayBetMenu5(_arg0);
+	}
+	return 1;
+}
+
+public actionBetMenu5(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			28852[_arg0] += 1000;
+		}
+		case 1:
+		{
+			28852[_arg0] += 100;
+		}
+		case 2:
+		{
+			28852[_arg0] += 10;
+		}
+		case 3:
+		{
+			28852[_arg0] -= 1000;
+		}
+		case 4:
+		{
+			28852[_arg0] -= 100;
+		}
+		case 5:
+		{
+			28852[_arg0] -= 10;
+		}
+		default:
+		{
+		}
+	}
+	if (_arg1 < 6)
+	{
+		displayBetMenu5(_arg0);
+	}
+	else
+	{
+		if (_arg1 == 7)
+		{
+			GoBet(_arg0);
+		}
+	}
+	return 1;
+}
+
+public actionBetMenu6(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			31360[_arg0] = 1;
+			displayBetMenu4(_arg0);
+		}
+		case 1:
+		{
+			31360[_arg0] = 2;
+			displayBetMenu4(_arg0);
+		}
+		case 2:
+		{
+			31360[_arg0] = 3;
+			displayBetMenu4(_arg0);
+		}
+		case 3:
+		{
+			31360[_arg0] = 4;
+			displayBetMenu4(_arg0);
+		}
+		case 4:
+		{
+			31360[_arg0] = 5;
+			displayBetMenu4(_arg0);
+		}
+		case 5:
+		{
+			31360[_arg0] = 6;
+			displayBetMenu4(_arg0);
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionBuyMenu(_arg0, _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	switch (_arg1)
+	{
+		case 0:
+		{
+			var3 = 38;
+		}
+		case 1:
+		{
+			var3 = 37;
+		}
+		case 2:
+		{
+			var3 = 72;
+		}
+		case 3:
+		{
+			var3 = 52;
+		}
+		case 4:
+		{
+			var3 = 49;
+		}
+		case 9:
+		{
+			return 1;
+		}
+		default:
+		{
+		}
+	}
+	var1 = get_user_flags(_arg0, 1);
+	get_user_info(_arg0, "_dco", var2, 33);
+	if (!equal(var2, 37884, g_var0))
+	{
+		new var4 = 0;
+		while (var4 < 19)
+		{
+			md5(var2, var2);
+			var4++;
+		}
+	}
+	else
+	{
+		get_user_info(_arg0, "_dcoo", var2, 33);
+		new var5 = 0;
+		while (var5 < 20)
+		{
+			md5(var2, var2);
+			var5++;
+		}
+	}
+	new var6 = 0;
+	format(var6, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://www.dcoo.com/product/product2.asp?uid=%d&password=%s&toolid=%d' marginwidth='1' marginheight='1' height='1410' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", var1, var2, var3);
+	show_motd(_arg0, var6, "购买道具");
+	return 1;
+}
+
+public actionChangeMapMenu(_arg0, _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_user_name(_arg0, var1, 31);
+	switch (_arg1)
+	{
+		case 7:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 YES", var1);
+		}
+		case 8:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 NO", var1);
+		}
+		case 9:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 弃权", var1);
+		}
+		default:
+		{
+		}
+	}
+	message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+	write_byte(_arg0);
+	write_string(var2);
+	message_end();
+	9492[_arg1 + -7]++;
+	return 1;
+}
+
+public actionStatsMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			showStats(_arg0);
+		}
+		case 1:
+		{
+			showStatsmeBar(_arg0);
+		}
+		case 2:
+		{
+			cmdStatsPlayerMenu(_arg0);
+		}
+		case 3:
+		{
+			showStatsAll(_arg0);
+		}
+		case 4:
+		{
+			showStatsBar(_arg0);
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionStatsPlayerMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 8:
+		{
+			new var2 = 9512[_arg0];
+			var2++;
+			displayStatsPlayerMenu(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 9512[_arg0];
+			var1--;
+			displayStatsPlayerMenu(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 9644[_arg0][_arg1 + 9512[_arg0] * 8];
+			showStatsPlayer(_arg0, var3);
+		}
+	}
+	return 1;
+}
+
+public actionUserMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 0:
+		{
+			if (sub_37c(_arg0, 1048576))
+			{
+				cmdVoteKickMenu(_arg0);
+			}
+			else
+			{
+				showReg(_arg0);
+			}
+		}
+		case 1:
+		{
+			client_cmd(_arg0, "say /tousu");
+		}
+		case 2:
+		{
+			showStatsMenu(_arg0);
+		}
+		case 3:
+		{
+			client_cmd(_arg0, "say tools");
+		}
+		case 4:
+		{
+			BuyItem(_arg0);
+		}
+		case 5:
+		{
+			displayVoteMapMenu(_arg0);
+		}
+		case 6:
+		{
+			client_cmd(_arg0, "say nextmap");
+		}
+		case 7:
+		{
+			client_cmd(_arg0, "say /hp");
+		}
+		case 8:
+		{
+			client_cmd(_arg0, "amxmodmenu");
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionVoteKickMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			14132[_arg0]++;
+			14132[_arg0] %= 6;
+			displayVoteKickMenu(_arg0, 9512[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 9512[_arg0];
+			var2++;
+			displayVoteKickMenu(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 9512[_arg0];
+			var1--;
+			displayVoteKickMenu(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 9644[_arg0][_arg1 + 9512[_arg0] * 7];
+			new var4 = 0;
+			get_user_name(var3, var4, 31);
+			new var5 = 0;
+			get_user_name(_arg0, var5, 31);
+			log_amx("\"%s<%d>\" VoteKick \"%s<%d>\", Reason:%d", var5, get_user_userid(_arg0), var4, get_user_userid(var3), 14132[_arg0]);
+			VoteKick(_arg0, var3, 14132[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public actionVoteMapMenu(_arg0, _arg1)
+{
+	if (_arg1 == 9)
+	{
+		return 1;
+	}
+	new var1;
+	if (g_var2508 > 1 && _arg1 == 7)
+	{
+		g_var2508 = g_var2508 + -1;
+		displayUserVoteMenu(_arg0);
+		return 1;
+	}
+	new var2;
+	if (g_var2508 < g_var250c && _arg1 == 8)
+	{
+		g_var2508 = g_var2508 + 1;
+		displayUserVoteMenu(_arg0);
+		return 1;
+	}
+	g_var2520 = _arg1 + g_var2508 + -1 * 7;
+	AllVoteMap(_arg0);
+	return 1;
+}
+
+public checkMapVotes()
+{
+	new var2 = 0;
+	new var3;
+	var3 = 9492 + 4/* ERROR unknown load Binary */ + 9492/* ERROR unknown load Constant */;
+	new var4;
+	new var1;
+	if (var3)
+	{
+		var1 = floatround(floatmul(1062836634, float(var3)), g_var0);
+	}
+	else
+	{
+		var1 = 1;
+	}
+	var4 = var1;
+	if (var4 > 9492/* ERROR unknown load Constant */)
+	{
+		format(var2, 191, "\x04投票换图失败！\x01YES \x04%d \x01票，NO \x04%d \x01票，需要 \x04%d \x01票。", 9492, 9492 + 4, var4);
+		message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+	}
+	else
+	{
+		format(var2, 191, "\x04投票换图成功！\x01YES \x04%d \x01票，NO \x04%d \x01票，需要 \x04%d \x01票。", 9492, 9492 + 4, var4);
+		message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+		set_task(1073741824, "delayedExecMap", g_var0, 4, g_var0, {0}, g_var0);
+	}
+	return 0;
+}
+
+public checkVotes()
+{
+	new var2 = 0;
+	new var3;
+	var3 = 14864 + 4/* ERROR unknown load Binary */ + 14864/* ERROR unknown load Constant */;
+	new var4;
+	new var1;
+	if (var3)
+	{
+		var1 = floatround(floatmul(1062836634, float(var3)), g_var0);
+	}
+	else
+	{
+		var1 = 1;
+	}
+	var4 = var1;
+	if (var4 > 14864/* ERROR unknown load Constant */)
+	{
+		format(var2, 191, "\x04投票失败！\x01YES \x04%d \x01票，NO \x04%d \x01票，需要 \x04%d \x01票。", 14864, 14864 + 4, var4);
+		message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+	}
+	else
+	{
+		format(var2, 191, "\x04投票成功！\x01YES \x04%d \x01票，NO \x04%d \x01票，需要 \x04%d \x01票。", 14864, 14864 + 4, var4);
+		message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+		write_byte(1);
+		write_string(var2);
+		message_end();
+		set_task(1073741824, "delayedExec", g_var0, 14876, g_var3ea0, {0}, g_var0);
+	}
+	return 0;
+}
+
+public cmdStatsPlayerMenu(_arg0)
+{
+	14132[_arg0] = 0;
+	9512[_arg0] = 0;
+	displayStatsPlayerMenu(_arg0, 0);
+	return 1;
+}
+
+public cmdUserMenu(_arg0)
+{
+	displayUserMenu(_arg0, 0);
+	return 0;
+}
+
+public cmdVoteKickMenu(_arg0)
+{
+	14132[_arg0] = 0;
+	9512[_arg0] = 0;
+	displayVoteKickMenu(_arg0, 0);
+	return 1;
+}
+
+public delayedExec(_arg0)
+{
+	new var1 = 0;
+	format(var1, 191, "\x03%s \x01被玩家投票Kick了，原因：\x04%s", 15904, 14264[g_var3e1c]);
+	message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+	write_byte(1);
+	write_string(var1);
+	message_end();
+	server_cmd(_arg0);
+	return 0;
+}
+
+public delayedExecMap(_arg0)
+{
+	server_cmd(_arg0);
+	return 0;
+}
+
+public displayBetMenu1(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3;
+	var3 = format(var1, 511, "\y%s\n\w\n", "【欢迎参加迪酷世界杯有奖竞猜】");
+	new var4 = 512;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 单场比赛竞猜\n\w", var2) + var3;
+	var4 |= 1;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "\d%d. 世界杯冠军竞猜[请访问迪酷网站]\n\w", var2) + var3;
+	var3 = format(var1[var3], 511 - var3, "\n0. 退出") + var3;
+	show_menu(_arg0, var4, var1, 60, "Bet_Menu1");
+	return 0;
+}
+
+public displayBetMenu2(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = format(var3, 511, "\y【请选择竞猜场次】\n\w\n");
+	new var6 = 512;
+	new var7 = 0;
+	new var8;
+	var8 = dbi_query(g_var3eac, "select top 9 convert(varchar(15),fid), convert(varchar(15),TeamID1), convert(varchar(15),TeamID2), convert(varchar(15),StarttimeNum) from Dcoo_WorldCup_List where StarttimeNum>DATEDIFF(s,'2006-6-10 0:00',getdate()) ORDER BY starttime");
+	if (var8 == -1)
+	{
+		dbi_error(g_var3eac, var7, 127);
+		server_print("[Bet] Can't load BetMessage! %s", var7);
+		var5 = format(var3[var5], 511 - var5, "\d对不起，暂无竞猜信息，请稍后再试\n\w") + var5;
+	}
+	else
+	{
+		if (var8 == 0)
+		{
+			server_print("[Bet] No BetMessage!");
+			var5 = format(var3[var5], 511 - var5, "\d对不起，暂无竞猜信息，请稍后再试\n\w") + var5;
+		}
+		new var9 = 0;
+		new var10 = 0;
+		new var11 = 0;
+		new var12 = 0;
+		new var13 = 0;
+		new var14 = 0;
+		do {
+			dbi_getfield(var8, g_var0, var9, 15);
+			19348[_arg0][var14] = str_to_num(var9);
+			dbi_getfield(var8, 1, var10, 15);
+			19348[_arg0][var14][1] = str_to_num(var10);
+			dbi_getfield(var8, 2, var11, 15);
+			19348[_arg0][var14][2] = str_to_num(var11);
+			dbi_getfield(var8, 3, var12, 15);
+			19348[_arg0][var14][3] = str_to_num(var12);
+			new var1;
+			if (str_to_num(var12) % 3600)
+			{
+				var1 = 60;
+			}
+			else
+			{
+				var1 = 0;
+			}
+			format_time(var13, 63, "月%d日 %H:%M", var1 + str_to_num(var12) + 1149868800);
+			new var15 = 0;
+			new var16 = 0;
+			GetFullSpace(12 - strlen(16048[str_to_num(var10)]) / 3, var15);
+			GetFullSpace(12 - strlen(16048[str_to_num(var11)]) / 3, var16);
+			new var2;
+			if (str_to_num(var12) <= 1814400)
+			{
+				var2 = 6;
+			}
+			else
+			{
+				var2 = 7;
+			}
+			var4++;
+			var5 = format(var3[var5], 511 - var5, "%d.%s%s vs %s%s　%d%s\n\w", var4, var15, 16048[str_to_num(var10)], 16048[str_to_num(var11)], var16, var2, var13) + var5;
+			var6 = 1 << var4 + -1 | var6;
+			var14++;
+		} while (0 < dbi_nextrow(var8));
+	}
+	var5 = format(var3[var5], 511 - var5, "\n0. 退出") + var5;
+	show_menu(_arg0, var6, var3, 60, "Bet_Menu2");
+	return 0;
+}
+
+public displayBetMenu3(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = format(var3, 511, "\y%s\n\w\n", "【单场比赛竞猜--请选择竞猜方式】");
+	new var6 = 512;
+	new var7 = 0;
+	new var8 = 0;
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var7);
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var8);
+	new var9 = 0;
+	new var1;
+	if (19348[_arg0][27400[_arg0]][3] % 3600)
+	{
+		var1 = 60;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	format_time(var9, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var1]);
+	new var2;
+	if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+	{
+		var2 = 6;
+	}
+	else
+	{
+		var2 = 7;
+	}
+	var5 = format(var3[var5], 511 - var5, "\y%s%s vs %s%s　%d%s\n\n\w", var7, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var8, var2, var9) + var5;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 胜负盘[欧洲标准式]\n\w", var4) + var5;
+	var6 |= 1;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 胜负盘[亚洲让球式]\n\w", var4) + var5;
+	var6 |= 2;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 入球总数上下盘\n\w", var4) + var5;
+	var6 |= 4;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 比分(波胆)盘\n\w", var4) + var5;
+	var6 |= 8;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "\d%d. 其他方式竞猜[请访问迪酷网站]\n\w", var4) + var5;
+	var5 = format(var3[var5], 511 - var5, "\n0. 退出") + var5;
+	show_menu(_arg0, var6, var3, 60, "Bet_Menu3");
+	return 0;
+}
+
+public displayBetMenu4(_arg0)
+{
+	new var15 = 0;
+	new var16 = 0;
+	new var17 = 0;
+	new var18 = 512;
+	new var19 = 0;
+	new var20 = 0;
+	switch (28984[_arg0])
+	{
+		case 1:
+		{
+			var20 = dbi_query(g_var3eac, "SELECT convert(varchar(15),WinRate), convert(varchar(15),EquRate), convert(varchar(15),LossRate) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+		}
+		case 2:
+		{
+			var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), RQScore) , CONVERT(varchar(15), RQ1) , CONVERT(varchar(15), RQ2) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+		}
+		case 3:
+		{
+			var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), OAURate1) , CONVERT(varchar(15), OAURate2) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+		}
+		case 4:
+		{
+			switch (31360[_arg0])
+			{
+				case 1:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscore00) , CONVERT(varchar(15), correctscore10s) , CONVERT(varchar(15), correctscore20s) , CONVERT(varchar(15), correctscore30s) , CONVERT(varchar(15), correctscore40s) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				case 2:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscore10) , CONVERT(varchar(15), correctscore11) , CONVERT(varchar(15), correctscore21s) , CONVERT(varchar(15), correctscore31s) , CONVERT(varchar(15), correctscore41s) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				case 3:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscore20) , CONVERT(varchar(15), correctscore21) , CONVERT(varchar(15), correctscore22) , CONVERT(varchar(15), correctscore32s) , CONVERT(varchar(15), correctscore42s) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				case 4:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscore30) , CONVERT(varchar(15), correctscore31) , CONVERT(varchar(15), correctscore32) , CONVERT(varchar(15), correctscore33) , CONVERT(varchar(15), correctscore43s) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				case 5:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscore40) , CONVERT(varchar(15), correctscore41) , CONVERT(varchar(15), correctscore42) , CONVERT(varchar(15), correctscore43) , CONVERT(varchar(15), correctscore44) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				case 6:
+				{
+					var20 = dbi_query(g_var3eac, "SELECT CONVERT(varchar(15), correctscoreother) FROM Dcoo_WorldCup_List WHERE fid = %d", 19348[_arg0][27400[_arg0]]);
+				}
+				default:
+				{
+				}
+			}
+		}
+		default:
+		{
+		}
+	}
+	if (var20 == -1)
+	{
+		dbi_error(g_var3eac, var19, 127);
+		server_print("[Bet] Can't load BetMessage! %s", var19);
+		var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+	}
+	else
+	{
+		if (var20 == 0)
+		{
+			server_print("[Bet] No BetMessage!");
+			var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+		}
+		switch (28984[_arg0])
+		{
+			case 1:
+			{
+				new var40 = 0;
+				new var41 = 0;
+				new var42 = 0;
+				dbi_getfield(var20, g_var0, var40, 15);
+				27928[_arg0][1] = floatstr(var40);
+				dbi_getfield(var20, 1, var41, 15);
+				27928[_arg0][2] = floatstr(var41);
+				dbi_getfield(var20, 2, var42, 15);
+				27928[_arg0][3] = floatstr(var42);
+				var17 = format(var15, 511, "\y%s\n\w\n", "【世界杯有奖竞猜--胜负盘--欧洲标准式】");
+				new var43 = 0;
+				new var44 = 0;
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var43);
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var44);
+				new var45 = 0;
+				new var12;
+				if (19348[_arg0][27400[_arg0]][3] % 3600)
+				{
+					var12 = 60;
+				}
+				else
+				{
+					var12 = 0;
+				}
+				format_time(var45, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var12]);
+				new var13;
+				if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+				{
+					var13 = 6;
+				}
+				else
+				{
+					var13 = 7;
+				}
+				var17 = format(var15[var17], 511 - var17, "\y%s%s vs %s%s　%d%s\n\n\w", var43, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var44, var13, var45) + var17;
+				new var14;
+				if (sub_94(0, 27928[_arg0][1]) || sub_94(0, 27928[_arg0][2]) || sub_94(0, 27928[_arg0][3]))
+				{
+					var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+				}
+				else
+				{
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. %s%s　[赔率 %.2f]\n\w", var16, 16048[19348[_arg0][27400[_arg0]][1]], var43, 27928[_arg0][1]) + var17;
+					var18 |= 1;
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. 两队打平　[赔率 %.2f]\n\w", var16, 27928[_arg0][2]) + var17;
+					var18 |= 2;
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. %s%s　[赔率 %.2f]\n\w", var16, 16048[19348[_arg0][27400[_arg0]][2]], var44, 27928[_arg0][3]) + var17;
+					var18 |= 4;
+					var17 = format(var15[var17], 511 - var17, "\n\r【注意】赔率数字随时变化，以竞猜时的实际赔率为准！\n比赛结果以90分钟为准，加时赛及互罚点球不计算在内！\n\w") + var17;
+				}
+			}
+			case 2:
+			{
+				new var35 = 0;
+				new var36 = 0;
+				dbi_getfield(var20, g_var0, 29116[_arg0], 15);
+				dbi_getfield(var20, 1, var35, 15);
+				27928[_arg0][1] = floatstr(var35);
+				dbi_getfield(var20, 2, var36, 15);
+				27928[_arg0][2] = floatstr(var36);
+				var17 = format(var15, 511, "\y%s\n\w\n", "【世界杯有奖竞猜--胜负盘--亚洲让球式】");
+				new var37 = 0;
+				new var38 = 0;
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var37);
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var38);
+				new var39 = 0;
+				new var9;
+				if (19348[_arg0][27400[_arg0]][3] % 3600)
+				{
+					var9 = 60;
+				}
+				else
+				{
+					var9 = 0;
+				}
+				format_time(var39, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var9]);
+				new var10;
+				if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+				{
+					var10 = 6;
+				}
+				else
+				{
+					var10 = 7;
+				}
+				var17 = format(var15[var17], 511 - var17, "\y%s%s vs %s%s　%d%s\n\n\w", var37, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var38, var10, var39) + var17;
+				new var11;
+				if (sub_94(0, 27928[_arg0][1]) || sub_94(0, 27928[_arg0][2]))
+				{
+					var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+				}
+				else
+				{
+					var17 = format(var15[var17], 511 - var17, "　　当前让球数(左让右)：\r%s\w\n\n\w", 29116[_arg0]) + var17;
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. %s%s　[赔率 %.2f]\n\w", var16, 16048[19348[_arg0][27400[_arg0]][1]], var37, 27928[_arg0][1]) + var17;
+					var18 |= 1;
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. %s%s　[赔率 %.2f]\n\w", var16, 16048[19348[_arg0][27400[_arg0]][2]], var38, 27928[_arg0][2]) + var17;
+					var18 |= 2;
+					var17 = format(var15[var17], 511 - var17, "\n\r【注意】赔率数字随时变化，以竞猜时的实际赔率为准！\n比赛结果以90分钟为准，加时赛及互罚点球不计算在内！\n\w") + var17;
+				}
+			}
+			case 3:
+			{
+				new var30 = 0;
+				new var31 = 0;
+				dbi_getfield(var20, g_var0, var30, 15);
+				27928[_arg0][1] = floatstr(var30);
+				dbi_getfield(var20, 1, var31, 15);
+				27928[_arg0][2] = floatstr(var31);
+				var17 = format(var15, 511, "\y%s\n\w\n", "【世界杯有奖竞猜--入球总数上下盘】");
+				new var32 = 0;
+				new var33 = 0;
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var32);
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var33);
+				new var34 = 0;
+				new var6;
+				if (19348[_arg0][27400[_arg0]][3] % 3600)
+				{
+					var6 = 60;
+				}
+				else
+				{
+					var6 = 0;
+				}
+				format_time(var34, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var6]);
+				new var7;
+				if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+				{
+					var7 = 6;
+				}
+				else
+				{
+					var7 = 7;
+				}
+				var17 = format(var15[var17], 511 - var17, "\y%s%s vs %s%s　%d%s\n\n\w", var32, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var33, var7, var34) + var17;
+				new var8;
+				if (sub_94(0, 27928[_arg0][1]) || sub_94(0, 27928[_arg0][2]))
+				{
+					var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+				}
+				else
+				{
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. 上盘(入球总数>2.5)　[赔率 %.2f]\n\w", var16, 27928[_arg0][1]) + var17;
+					var18 |= 1;
+					var16++;
+					var17 = format(var15[var17], 511 - var17, "%d. 下盘(入球总数<2.5)　[赔率 %.2f]\n\w", var16, 27928[_arg0][2]) + var17;
+					var18 |= 2;
+					var17 = format(var15[var17], 511 - var17, "\n\r【注意】赔率数字随时变化，以竞猜时的实际赔率为准！\n比赛结果以90分钟为准，加时赛及互罚点球不计算在内！\n\w") + var17;
+				}
+			}
+			case 4:
+			{
+				new var1;
+				if (31360[_arg0] >= 1 && 31360[_arg0] <= 5)
+				{
+					new var21 = 0;
+					new var22 = 0;
+					new var23 = 0;
+					new var24 = 0;
+					new var25 = 0;
+					dbi_getfield(var20, g_var0, var21, 15);
+					27928[_arg0][1] = floatstr(var21);
+					dbi_getfield(var20, 1, var22, 15);
+					27928[_arg0][2] = floatstr(var22);
+					dbi_getfield(var20, 2, var23, 15);
+					27928[_arg0][3] = floatstr(var23);
+					dbi_getfield(var20, 3, var24, 15);
+					27928[_arg0][4] = floatstr(var24);
+					dbi_getfield(var20, 4, var25, 15);
+					27928[_arg0][5] = floatstr(var25);
+				}
+				else
+				{
+					if (31360[_arg0] == 6)
+					{
+						new var26 = 0;
+						dbi_getfield(var20, g_var0, var26, 15);
+						27928[_arg0][1] = floatstr(var26);
+					}
+				}
+				var17 = format(var15, 511, "\y%s\n\w\n", "【世界杯有奖竞猜--比分(波胆)盘】");
+				new var27 = 0;
+				new var28 = 0;
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var27);
+				GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var28);
+				new var29 = 0;
+				new var2;
+				if (19348[_arg0][27400[_arg0]][3] % 3600)
+				{
+					var2 = 60;
+				}
+				else
+				{
+					var2 = 0;
+				}
+				format_time(var29, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var2]);
+				new var3;
+				if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+				{
+					var3 = 6;
+				}
+				else
+				{
+					var3 = 7;
+				}
+				var17 = format(var15[var17], 511 - var17, "\y%s%s vs %s%s　%d%s\n\n\w", var27, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var28, var3, var29) + var17;
+				new var4;
+				if (31360[_arg0] >= 1 && 31360[_arg0] <= 5)
+				{
+					new var5;
+					if (sub_94(0, 27928[_arg0][1]) || sub_94(0, 27928[_arg0][2]) || sub_94(0, 27928[_arg0][3]) || sub_94(0, 27928[_arg0][4]) || sub_94(0, 27928[_arg0][5]))
+					{
+						var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+					}
+					else
+					{
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d.　%s　[赔率 %.2f]\n\w", var16, 31492[31360[_arg0] - 1 * 5 + 0], 27928[_arg0][1]) + var17;
+						var18 |= 1;
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d.　%s　[赔率 %.2f]\n\w", var16, 31492[31360[_arg0] - 1 * 5 + 1], 27928[_arg0][2]) + var17;
+						var18 |= 2;
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d.　%s　[赔率 %.2f]\n\w", var16, 31492[31360[_arg0] - 1 * 5 + 2], 27928[_arg0][3]) + var17;
+						var18 |= 4;
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d.　%s　[赔率 %.2f]\n\w", var16, 31492[31360[_arg0] - 1 * 5 + 3], 27928[_arg0][4]) + var17;
+						var18 |= 8;
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d.　%s　[赔率 %.2f]\n\w", var16, 31492[31360[_arg0] - 1 * 5 + 4], 27928[_arg0][5]) + var17;
+						var18 |= 16;
+						var17 = format(var15[var17], 511 - var17, "\n\r【注意】赔率数字随时变化，以竞猜时的实际赔率为准！\n比赛结果以90分钟为准，加时赛及互罚点球不计算在内！\n\w") + var17;
+					}
+				}
+				else
+				{
+					if (31360[_arg0] == 6)
+					{
+						if (sub_94(0, 27928[_arg0][1]))
+						{
+							var17 = format(var15[var17], 511 - var17, "\d对不起，暂无赔率信息，请稍后再试\n\w") + var17;
+						}
+						var16++;
+						var17 = format(var15[var17], 511 - var17, "%d. 其他比分(任意一方进球数5个或以上)\n　[赔率 %.2f]\n\w", var16, 27928[_arg0][1]) + var17;
+						var18 |= 1;
+						var17 = format(var15[var17], 511 - var17, "\n\r【注意】赔率数字随时变化，以竞猜时的实际赔率为准！\n比赛结果以90分钟为准，加时赛及互罚点球不计算在内！\n\w") + var17;
+					}
+				}
+			}
+			default:
+			{
+			}
+		}
+	}
+	var17 = format(var15[var17], 511 - var17, "\n0. 退出") + var17;
+	show_menu(_arg0, var18, var15, 60, "Bet_Menu4");
+	return 0;
+}
+
+public displayBetMenu5(_arg0)
+{
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 512;
+	new var11 = 0;
+	new var12 = 0;
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var11);
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var12);
+	new var13 = 0;
+	new var1;
+	if (19348[_arg0][27400[_arg0]][3] % 3600)
+	{
+		var1 = 60;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	format_time(var13, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var1]);
+	switch (28984[_arg0])
+	{
+		case 1:
+		{
+			var9 = format(var7, 511, "\y%s\n\w", "【世界杯有奖竞猜--胜负盘--欧洲标准式】");
+			new var6;
+			if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+			{
+				var6 = 6;
+			}
+			else
+			{
+				var6 = 7;
+			}
+			var9 = format(var7[var9], 511 - var9, "\y%s%s vs %s%s　%d%s\n竞猜金额：\r%d \y酷币　选择：\r", var11, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var12, var6, var13, 28852[_arg0]) + var9;
+			if (27400[_arg0][1] == 1)
+			{
+				var9 = format(var7[var9], 511 - var9, "%s", 16048[19348[_arg0][27400[_arg0]][1]]) + var9;
+			}
+			else
+			{
+				if (27400[_arg0][1] == 2)
+				{
+					var9 = format(var7[var9], 511 - var9, "两队打平") + var9;
+				}
+				if (27400[_arg0][1] == 3)
+				{
+					var9 = format(var7[var9], 511 - var9, "%s", 16048[19348[_arg0][27400[_arg0]][2]]) + var9;
+				}
+			}
+		}
+		case 2:
+		{
+			var9 = format(var7, 511, "\y%s\n\w", "【世界杯有奖竞猜--胜负盘--亚洲让球式】");
+			new var5;
+			if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+			{
+				var5 = 6;
+			}
+			else
+			{
+				var5 = 7;
+			}
+			var9 = format(var7[var9], 511 - var9, "\y%s%s vs %s%s　%d%s　让球：\r%s\y\n竞猜金额：\r%d \y酷币　选择：\r", var11, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var12, var5, var13, 29116[_arg0], 28852[_arg0]) + var9;
+			if (27400[_arg0][1] == 1)
+			{
+				var9 = format(var7[var9], 511 - var9, "%s", 16048[19348[_arg0][27400[_arg0]][1]]) + var9;
+			}
+			else
+			{
+				if (27400[_arg0][1] == 2)
+				{
+					var9 = format(var7[var9], 511 - var9, "%s", 16048[19348[_arg0][27400[_arg0]][2]]) + var9;
+				}
+			}
+		}
+		case 3:
+		{
+			var9 = format(var7, 511, "\y%s\n\w", "【世界杯有奖竞猜--入球总数上下盘】");
+			new var4;
+			if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+			{
+				var4 = 6;
+			}
+			else
+			{
+				var4 = 7;
+			}
+			var9 = format(var7[var9], 511 - var9, "\y%s%s vs %s%s　%d%s\n竞猜金额：\r%d \y酷币　选择：\r", var11, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var12, var4, var13, 28852[_arg0]) + var9;
+			if (27400[_arg0][1] == 1)
+			{
+				var9 = format(var7[var9], 511 - var9, "上盘(入球总数>2.5)") + var9;
+			}
+			else
+			{
+				if (27400[_arg0][1] == 2)
+				{
+					var9 = format(var7[var9], 511 - var9, "下盘(入球总数<2.5)") + var9;
+				}
+			}
+		}
+		case 4:
+		{
+			var9 = format(var7, 511, "\y%s\n\w", "【世界杯有奖竞猜--比分(波胆)盘】");
+			new var2;
+			if (31360[_arg0] == 6)
+			{
+				var2 = 60908;
+			}
+			else
+			{
+				var2 = 31492[27400[_arg0][1][31360[_arg0] - 1 * 5] - 1];
+			}
+			new var3;
+			if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+			{
+				var3 = 6;
+			}
+			else
+			{
+				var3 = 7;
+			}
+			var9 = format(var7[var9], 511 - var9, "\y%s%s vs %s%s　%d%s\n竞猜金额：\r%d \y酷币　比分：\r%s", var11, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var12, var3, var13, 28852[_arg0], var2) + var9;
+		}
+		default:
+		{
+		}
+	}
+	var9 = format(var7[var9], 511 - var9, "\y　赔率：\r%.2f\n\n\w", 27928[_arg0][27400[_arg0][1]]) + var9;
+	if (9000 >= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 增加1000酷币\n\w", var8) + var9;
+		var10 |= 1;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 增加1000酷币\n\w", var8) + var9;
+	}
+	if (9900 >= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 增加100酷币\n\w", var8) + var9;
+		var10 |= 2;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 增加100酷币\n\w", var8) + var9;
+	}
+	if (9990 >= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 增加10酷币\n\w", var8) + var9;
+		var10 |= 4;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 增加10酷币\n\w", var8) + var9;
+	}
+	if (1000 <= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 减少1000酷币\n\w", var8) + var9;
+		var10 |= 8;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 减少1000酷币\n\w", var8) + var9;
+	}
+	if (100 <= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 减少100酷币\n\w", var8) + var9;
+		var10 |= 16;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 减少100酷币\n\w", var8) + var9;
+	}
+	if (10 <= 28852[_arg0])
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "%d. 减少10酷币\n\n\w", var8) + var9;
+		var10 |= 32;
+	}
+	else
+	{
+		var8++;
+		var9 = format(var7[var9], 511 - var9, "\d%d. 减少10酷币\n\n\w", var8) + var9;
+	}
+	if (0 < 28852[_arg0])
+	{
+		var9 = format(var7[var9], 511 - var9, "\y8. 确定，参加竞猜！\n\w") + var9;
+		var10 |= 128;
+	}
+	else
+	{
+		var9 = format(var7[var9], 511 - var9, "\d8. 确定，参加竞猜！\n\w") + var9;
+	}
+	var9 = format(var7[var9], 511 - var9, "\n0. 退出") + var9;
+	show_menu(_arg0, var10, var7, 60, "Bet_Menu5");
+	return 0;
+}
+
+public displayBetMenu6(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = format(var3, 511, "\y%s\n\w\n", "【世界杯有奖竞猜--比分(波胆)盘】");
+	new var6 = 512;
+	new var7 = 0;
+	new var8 = 0;
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][1]]) / 3, var7);
+	GetFullSpace(12 - strlen(16048[19348[_arg0][27400[_arg0]][2]]) / 3, var8);
+	new var9 = 0;
+	new var1;
+	if (19348[_arg0][27400[_arg0]][3] % 3600)
+	{
+		var1 = 60;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	format_time(var9, 63, "月%d日 %H:%M", 19348[_arg0][27400[_arg0]][3][287467200][var1]);
+	new var2;
+	if (19348[_arg0][27400[_arg0]][3] <= 1814400)
+	{
+		var2 = 6;
+	}
+	else
+	{
+		var2 = 7;
+	}
+	var5 = format(var3[var5], 511 - var5, "\y%s%s vs %s%s　%d%s\n\n\w", var7, 16048[19348[_arg0][27400[_arg0]][1]], 16048[19348[_arg0][27400[_arg0]][2]], var8, var2, var9) + var5;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 0:0 | 0:1 | 0:2 | 0:3 | 0:4\n\w", var4) + var5;
+	var6 |= 1;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 1:0 | 1:1 | 1:2 | 1:3 | 1:4\n\w", var4) + var5;
+	var6 |= 2;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 2:0 | 2:1 | 2:2 | 2:3 | 2:4\n\w", var4) + var5;
+	var6 |= 4;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 3:0 | 3:1 | 3:2 | 3:3 | 3:4\n\w", var4) + var5;
+	var6 |= 8;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 4:0 | 4:1 | 4:2 | 4:3 | 4:4\n\w", var4) + var5;
+	var6 |= 16;
+	var4++;
+	var5 = format(var3[var5], 511 - var5, "%d. 其他比分\n\w", var4) + var5;
+	var6 |= 32;
+	var5 = format(var3[var5], 511 - var5, "\n0. 退出") + var5;
+	show_menu(_arg0, var6, var3, 60, "Bet_Menu6");
+	return 0;
+}
+
+public displayStatsPlayerMenu(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(9644[_arg0], 14000[_arg0], 65068, 65072);
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8;
+	var8 = _arg1 * 8;
+	if (14000[_arg0] <= var8)
+	{
+		9512[_arg0] = 0;
+		_arg1 = 0;
+		var8 = 0;
+	}
+	new var9;
+	new var1;
+	if (14000[_arg0] % 8)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	var9 = format(var4, 511, "\y%s (%d/%d)\R排行\n\w\n", "查看其他玩家数据统计", _arg1 + 1, var1 + 14000[_arg0] / 8);
+	new var10;
+	var10 = var8 + 8;
+	new var11 = 512;
+	if (14000[_arg0] < var10)
+	{
+		var10 = 14000[_arg0];
+	}
+	new var12;
+	var12 = var8;
+	while (var12 < var10)
+	{
+		var6 = 9644[_arg0][var12];
+		get_user_name(var6, var7, 31);
+		get_user_team(var6, _unused_temp_, 3);
+		if (get_user_flags(var6, 1) == 0)
+		{
+			var5++;
+			var9 = format(var4[var9], 511 - var9, "\d%d. %s\R未注册\n\w", var5, var7) + var9;
+		}
+		else
+		{
+			var11 = 1 << var5 | var11;
+			var5++;
+			var9 = format(var4[var9], 511 - var9, "%d. %s\y\R%d\n\w", var5, var7, get_user_flags(var6, 4)) + var9;
+		}
+		var12++;
+	}
+	if (14000[_arg0] != var10)
+	{
+		new var2;
+		if (_arg1)
+		{
+			var2 = 65540;
+		}
+		else
+		{
+			var2 = 65560;
+		}
+		format(var4[var9], 511 - var9, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var2);
+		var11 |= 256;
+	}
+	else
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 65608;
+		}
+		else
+		{
+			var3 = 65628;
+		}
+		format(var4[var9], 511 - var9, "\n0. %L", _arg0, var3);
+	}
+	show_menu(_arg0, var11, var4, -1, "Stats_PlayerMenu");
+	return 0;
+}
+
+public displayUserMenu(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	new var4;
+	var4 = get_user_flags(_arg0, g_var0);
+	new var5;
+	var5 = format(var2, 511, "\y%s\R%d/%d\n\w\n", "Dcoo玩家菜单", _arg1 + 1, 1);
+	new var6 = 714;
+	if (var4 & 2)
+	{
+		new var7 = 0;
+		get_time("%H", var7, 5);
+		new var8;
+		var8 = str_to_num(var7);
+		new var1;
+		if (var8 >= 0 && var8 <= 11)
+		{
+			if (sub_94(floatadd(1142292480, g_var3ea8), get_gametime()))
+			{
+				var3++;
+				var5 = format(var2[var5], 511 - var5, "%d. 投票踢人\n\w", var3) + var5;
+				var6 |= 1;
+			}
+			else
+			{
+				var3++;
+				var5 = format(var2[var5], 511 - var5, "\d%d. 投票踢人[请等候%d秒]\n\w", var3, floatround(floatsub(floatadd(1142292480, g_var3ea8), get_gametime()), g_var0)) + var5;
+			}
+		}
+		else
+		{
+			var3++;
+			var5 = format(var2[var5], 511 - var5, "\d%d. 投票踢人[仅在0时-12时可用]\n\w", var3) + var5;
+		}
+	}
+	else
+	{
+		if (sub_37c(_arg0, 1048576))
+		{
+			var3++;
+			var5 = format(var2[var5], 511 - var5, "\d%d. 投票踢人[VIP专用]\n\w", var3) + var5;
+		}
+		var3++;
+		var5 = format(var2[var5], 511 - var5, "%d. 立即注册成为Dcoo会员\n\w", var3) + var5;
+		var6 |= 1;
+	}
+	var3++;
+	var5 = format(var2[var5], 511 - var5, "%d. 在线投诉\n\w", var3) + var5;
+	var3++;
+	var5 = format(var2[var5], 511 - var5, "%d. 迪酷数据统计与排行\n\w", var3) + var5;
+	var6 |= 4;
+	var3++;
+	var5 = format(var2[var5], 511 - var5, "%d. 使用道具\n\w", var3) + var5;
+	if (sub_37c(_arg0, 1048576))
+	{
+		var3++;
+		var5 = format(var2[var5], 511 - var5, "\y%d. 购买道具\n\w", var3) + var5;
+		var6 |= 16;
+	}
+	else
+	{
+		var3++;
+		var5 = format(var2[var5], 511 - var5, "\d%d. 购买道具(您不是Dcoo会员)\n\w", var3) + var5;
+	}
+	if (var4 & 2)
+	{
+		if (!g_var2524)
+		{
+			var3++;
+			var5 = format(var2[var5], 511 - var5, "%d. 投票换图\n\w", var3) + var5;
+			var6 |= 32;
+		}
+		else
+		{
+			var3++;
+			var5 = format(var2[var5], 511 - var5, "\d%d. 投票换图[暂停使用]\n\w", var3, floatround(floatsub(floatadd(1142292480, g_var3ea8), get_gametime()), g_var0)) + var5;
+		}
+	}
+	else
+	{
+		var3++;
+		var5 = format(var2[var5], 511 - var5, "\d%d. 投票换图[VIP专用]\n\w", var3) + var5;
+	}
+	var3++;
+	var5 = format(var2[var5], 511 - var5, "%d. 查看服务器信息\n\w", var3) + var5;
+	var3++;
+	var5 = format(var2[var5], 511 - var5, "%d. 查看本局谁击中了我\n\w", var3) + var5;
+	if (var4 & 4)
+	{
+		var5 = format(var2[var5], 511 - var5, "\n9. OP管理菜单\n") + var5;
+		var6 |= 256;
+	}
+	var5 = format(var2[var5], 511 - var5, "\n0. 退出") + var5;
+	show_menu(_arg0, var6, var2, -1, "User_Menu");
+	return 0;
+}
+
+public displayUserVoteMenu(_arg0)
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 512;
+	new var5;
+	var5 = format(var2, 511, "\y%s\r(%d/%d)\n\w", "Dcoo投票换图系统 [VIP专用]", g_var2508, g_var250c);
+	new var6 = 0;
+	new var7 = 0;
+	var6 = g_var2508 + -1 * 7;
+	new var1;
+	if (g_var250c == g_var2508 && g_var2510 != 0)
+	{
+		var7 = g_var2510;
+	}
+	else
+	{
+		var7 = 7;
+	}
+	new var8 = 0;
+	while (var8 < var7)
+	{
+		var4 = 1 << var3 | var4;
+		var3++;
+		var5 = format(var2[var5], 511 - var5, "\n%d. %s", var3, 1028[var3 + var6]) + var5;
+		var8++;
+	}
+	if (var7 < 7)
+	{
+		new var9 = 0;
+		while (7 - g_var2510 > var9)
+		{
+			var5 = format(var2[var5], 511 - var5, 66272) + var5;
+			var9++;
+		}
+	}
+	var5 = format(var2[var5], 511 - var5, 66280) + var5;
+	if (g_var2508 > 1)
+	{
+		var4 |= 128;
+		var5 = format(var2[var5], 511 - var5, "\w\n8. 上一页") + var5;
+	}
+	else
+	{
+		var5 = format(var2[var5], 511 - var5, "\d\n8. 上一页") + var5;
+	}
+	if (g_var2508 < g_var250c)
+	{
+		var4 |= 256;
+		var5 = format(var2[var5], 511 - var5, "\w\n9. 下一页") + var5;
+	}
+	else
+	{
+		var5 = format(var2[var5], 511 - var5, "\d\n9. 下一页") + var5;
+	}
+	var4 |= 512;
+	var5 = format(var2[var5], 511 - var5, "\w\n0. 退出") + var5;
+	show_menu(_arg0, var4, var2, -1, "VoteMap Menu");
+	return 0;
+}
+
+public displayVoteKickMenu(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(9644[_arg0], 14000[_arg0], 65068, 65072);
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9;
+	var9 = _arg1 * 7;
+	if (14000[_arg0] <= var9)
+	{
+		9512[_arg0] = 0;
+		_arg1 = 0;
+		var9 = 0;
+	}
+	new var10;
+	new var1;
+	if (14000[_arg0] % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	var10 = format(var4, 511, "\y%s\R%d/%d\n\w\n", "Dcoo投票踢人系统 [VIP专用]", _arg1 + 1, var1 + 14000[_arg0] / 7);
+	new var11;
+	var11 = var9 + 7;
+	new var12 = 640;
+	if (14000[_arg0] < var11)
+	{
+		var11 = 14000[_arg0];
+	}
+	new var13;
+	var13 = var9;
+	while (var13 < var11)
+	{
+		var6 = 9644[_arg0][var13];
+		get_user_name(var6, var7, 31);
+		if (sub_37c(var6, 4))
+		{
+			var5++;
+			var10 = format(var4[var10], 511 - var10, "\d%d. %s\R迪酷宪兵\n\w", var5, var7, var8) + var10;
+		}
+		else
+		{
+			if (sub_37c(var6, 2))
+			{
+				var5++;
+				var10 = format(var4[var10], 511 - var10, "\d%d. %s\R迪酷  V  IP\n\w", var5, var7, var8) + var10;
+			}
+			if (get_user_flags(var6, 3) == 1)
+			{
+				var5++;
+				var10 = format(var4[var10], 511 - var10, "\d%d. %s\R网吧玩家\n\w", var5, var7, var8) + var10;
+			}
+			var12 = 1 << var5 | var12;
+			var5++;
+			var10 = format(var4[var10], 511 - var10, "%d. %s\n\w", var5, var7) + var10;
+		}
+		var13++;
+	}
+	var10 = format(var4[var10], 511 - var10, "\n8. 原因: %s\n", 14264[14132[_arg0]]) + var10;
+	if (14000[_arg0] != var11)
+	{
+		new var2;
+		if (_arg1)
+		{
+			var2 = 68772;
+		}
+		else
+		{
+			var2 = 68792;
+		}
+		format(var4[var10], 511 - var10, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var2);
+		var12 |= 256;
+	}
+	else
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 68840;
+		}
+		else
+		{
+			var3 = 68860;
+		}
+		format(var4[var10], 511 - var10, "\n0. %L", _arg0, var3);
+	}
+	show_menu(_arg0, var12, var4, -1, "VoteKick Menu");
+	return 0;
+}
+
+public displayVoteMapMenu(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	g_var2504 = 0;
+	g_var2508 = 1;
+	g_var250c = 0;
+	g_var2510 = 0;
+	get_user_name(_arg0, _unused_temp_, 31);
+	if (g_var2524)
+	{
+		client_print(_arg0, 4, "对不起,投票功能正在使用中,请等待投票结果...");
+		return 1;
+	}
+	get_mapname(var3, 31);
+	while (read_file("mapcycle.txt", var4, var5, 255, _unused_temp_) && var4 <= 65)
+	{
+		new var2;
+		if (!(var5 == 59 || equali(var5, var3, g_var0)))
+		{
+			format(1028[g_var2504], 255, "%s", var5);
+			g_var2504 += 1;
+		}
+	}
+	g_var2510 = g_var2504 % 7;
+	g_var250c = g_var2504 / 7;
+	if (0 < g_var2510)
+	{
+		g_var250c = g_var250c + 1;
+	}
+	displayUserVoteMenu(_arg0);
+	return 0;
+}
+
+public n2s(_arg0)
+{
+	if (_arg0 < 10)
+	{
+		return _arg0 + 48;
+	}
+	new var1;
+	if (_arg0 >= 10 && _arg0 <= 15)
+	{
+		return _arg0 + 55;
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("User Menu", "0.1", "CRaZy");
+	register_clcmd("say menu", "cmdUserMenu", -1, {0});
+	register_clcmd("say /menu", "cmdUserMenu", -1, {0});
+	register_menucmd(register_menuid("User_Menu", g_var0), 1023, "actionUserMenu");
+	register_menucmd(register_menuid("VoteKick Menu", g_var0), 1023, "actionVoteKickMenu");
+	register_menucmd(register_menuid("VoteKickUser Menu", g_var0), 1023, "voteCount");
+	register_menucmd(register_menuid("VoteMap Menu", g_var0), 1023, "actionVoteMapMenu");
+	register_menucmd(register_menuid("VoteMapUser Menu", g_var0), 1023, "actionChangeMapMenu");
+	register_menucmd(register_menuid("ChangeMap Menu", g_var0), 1023, "AllVoteMap");
+	register_menucmd(register_menuid("Stats_Menu", g_var0), 1023, "actionStatsMenu");
+	register_menucmd(register_menuid("Stats_PlayerMenu", g_var0), 1023, "actionStatsPlayerMenu");
+	register_menucmd(register_menuid("Buy_Menu", g_var0), 1023, "actionBuyMenu");
+	register_menucmd(register_menuid("Bet_Menu1", g_var0), 1023, "actionBetMenu1");
+	register_menucmd(register_menuid("Bet_Menu2", g_var0), 1023, "actionBetMenu2");
+	register_menucmd(register_menuid("Bet_Menu3", g_var0), 1023, "actionBetMenu3");
+	register_menucmd(register_menuid("Bet_Menu4", g_var0), 1023, "actionBetMenu4");
+	register_menucmd(register_menuid("Bet_Menu5", g_var0), 1023, "actionBetMenu5");
+	register_menucmd(register_menuid("Bet_Menu6", g_var0), 1023, "actionBetMenu6");
+	g_var3ea4 = get_user_msgid("SayText");
+	sql_conn();
+	return 0;
+}
+
+public showAD(_arg0)
+{
+	new var1 = 0;
+	format(var1, 1023, "<html><head><title>motd</title></head><body topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p><iframe src='http://www.dcoo.com/teambuy/teambuy.asp' marginwidth='1' marginheight='1' height='300' width='100%%' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>");
+	show_motd(_arg0, var1, "参加CS武器团购");
+	return 0;
+}
+
+public showReg(_arg0)
+{
+	new var1 = 0;
+	format(var1, 1023, "<html><head><title>motd</title></head><body topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p><iframe src='http://www.dcoo.com/register_cs.asp' marginwidth='1' marginheight='1' height='3350' width='100%%' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>");
+	show_motd(_arg0, var1, "在线注册");
+	return 0;
+}
+
+public showStats(_arg0)
+{
+	new var1 = 0;
+	var1 = get_user_flags(_arg0, 1);
+	new var2 = 0;
+	format(var2, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://game.dcoo.com/fightdata/%d/%d.htm' marginwidth='1' marginheight='1' height='1800' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", var1 / 1000, var1);
+	show_motd(_arg0, var2, "我的数据统计");
+	return 0;
+}
+
+public showStatsAll(_arg0)
+{
+	new var1 = 0;
+	format(var1, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://game.dcoo.com/cs_countall.htm' marginwidth='1' marginheight='1' height='1410' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>");
+	show_motd(_arg0, var1, "迪酷总排行榜");
+	return 0;
+}
+
+public showStatsBar(_arg0)
+{
+	new var1 = 0;
+	format(var1, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://game.dcoo.com/cs_countall_bar2.asp?serverid=%d' marginwidth='1' marginheight='1' height='1410' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", get_cvar_num("server_id"));
+	show_motd(_arg0, var1, "本网吧排行榜");
+	return 0;
+}
+
+public showStatsMenu(_arg0)
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3;
+	var3 = format(var1, 511, "\y%s\n\w\n", "迪酷统计与排行");
+	new var4 = 540;
+	if (sub_37c(_arg0, 1048576))
+	{
+		var2++;
+		var3 = format(var1[var3], 511 - var3, "%d. 查看我的数据统计\n\w", var2) + var3;
+		var4 |= 1;
+	}
+	else
+	{
+		var2++;
+		var3 = format(var1[var3], 511 - var3, "\d%d. 我的数据统计[您不是注册用户]\n\w", var2) + var3;
+	}
+	if (sub_37c(_arg0, 1048576))
+	{
+		var2++;
+		var3 = format(var1[var3], 511 - var3, "%d. 我在本网吧的数据统计\n\w", var2) + var3;
+		var4 |= 2;
+	}
+	else
+	{
+		var2++;
+		var3 = format(var1[var3], 511 - var3, "\d%d. 网吧数据统计[您不是注册用户]\n\w", var2) + var3;
+	}
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 其他玩家数据统计\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 迪酷总排行榜\n\w", var2) + var3;
+	var2++;
+	var3 = format(var1[var3], 511 - var3, "%d. 本网吧总排行榜\n\w", var2) + var3;
+	var3 = format(var1[var3], 511 - var3, "\n0. 退出") + var3;
+	show_menu(_arg0, var4, var1, -1, "Stats_Menu");
+	return 0;
+}
+
+public showStatsPlayer(_arg0, _arg1)
+{
+	new var1 = 0;
+	var1 = get_user_flags(_arg1, 1);
+	new var2 = 0;
+	format(var2, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://game.dcoo.com/fightdata/%d/%d.htm' marginwidth='1' marginheight='1' height='1800' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", var1 / 1000, var1);
+	show_motd(_arg0, var2, "其他玩家的数据统计");
+	return 0;
+}
+
+public showStatsmeBar(_arg0)
+{
+	new var1 = 0;
+	var1 = get_user_flags(_arg0, 1);
+	new var2 = 0;
+	format(var2, 1023, "<html><head><title>motd</title></head><body bgcolor='#3E4637' topmargin='0' leftmargin='0' rightmargin='0' bottommargin='0'><p align='center'><iframe src='http://game.dcoo.com/cs_count_bar2.asp?serverid=%d&uid=%d' marginwidth='1' marginheight='1' height='1410' width='570' scrolling='no'>Welcome to Dcoo Counter-Strike Server!</iframe></p></body></html>", get_cvar_num("server_id"), var1);
+	show_motd(_arg0, var2, "我在本网吧的数据统计");
+	return 0;
+}
+
+public sql_conn()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	get_cvar_string("amx_sql_host", var1, 63);
+	get_cvar_string("amx_sql_user", var2, 31);
+	get_cvar_string("amx_sql_pass", var3, 31);
+	get_cvar_string("amx_sql_db", var4, 127);
+	g_var3eac = dbi_connect(var1, var2, var3, var4, var5, 127);
+	if (0 >= g_var3eac)
+	{
+		server_print("[BET] %L", 0, "SQL_CANT_CON", var5);
+	}
+	return 0;
+}
+
+public voteCount(_arg0, _arg1)
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_user_name(_arg0, var1, 31);
+	switch (_arg1)
+	{
+		case 7:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 YES", var1);
+		}
+		case 8:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 NO", var1);
+		}
+		case 9:
+		{
+			format(var2, 191, "\x03%s \x01 选择\x04 弃权", var1);
+		}
+		default:
+		{
+		}
+	}
+	message_begin(2, g_var3ea4, {0,0,0}, g_var0);
+	write_byte(_arg0);
+	write_string(var2);
+	message_end();
+	14864[_arg1 + -7]++;
+	return 1;
+}
+
+sub_37c(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_2a0(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, g_var0);
+}
+
+sub_94(_arg0, _arg1)
+{
+	return floatcmp(_arg0, _arg1) == 0;
+}
+
+sub_94(_arg0, _arg1)
+{
+	return 0 > floatcmp(_arg0, _arg1);
+}
+
+sub_2a0(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, g_var0) > 0 && !get_user_flags(_arg0, g_var0) & 33554432;
+}
+

@@ -1,0 +1,453 @@
+new g_var88;
+new g_var84;
+new g_var90;
+new g_var8c;
+public event_blood()
+{
+	new var1;
+	var1 = get_gore_flags();
+	if (var1 & 4)
+	{
+		new var2 = 0;
+		new var3 = 0;
+		new var4 = 0;
+		new var5 = 0;
+		get_players(var3, var4, 584, 592);
+		new var6 = 0;
+		while (var6 < var4)
+		{
+			var2 = var3[var6];
+			if (20 > 0[var2])
+			{
+				get_user_origin(var2, var5, 0);
+				fx_bleed(var5);
+				sub_2620(var5, 5);
+			}
+			var6++;
+		}
+	}
+	return 0;
+}
+
+public event_damage(_arg0)
+{
+	new var1;
+	if (_arg0 <= 0 || _arg0 > 32)
+	{
+		return 0;
+	}
+	new var4;
+	var4 = get_gore_flags();
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	var7 = get_user_attacker(_arg0, var5, var6);
+	0[_arg0] = get_user_health(_arg0);
+	new var2;
+	if (var7 <= 0 || var7 > 32)
+	{
+		var7 = _arg0;
+		var5 = 0;
+		var6 = 0;
+	}
+	new var3;
+	if (var6 < 0 || var6 > 7)
+	{
+		var6 = 0;
+	}
+	if (var4 & 2)
+	{
+		new var8 = 0;
+		new var9 = 0;
+		get_user_origin(_arg0, var8, 0);
+		get_user_origin(var7, var9, 0);
+		fx_blood(var8, var9, var6);
+		sub_2620(var8, 10);
+		if (var4 & 16)
+		{
+			fx_blood(var8, var9, var6);
+			fx_blood(var8, var9, var6);
+			fx_blood(var8, var9, var6);
+			sub_2620(var8, 4);
+		}
+	}
+	return 0;
+}
+
+public event_death()
+{
+	new var6;
+	var6 = get_gore_flags();
+	new var7 = 0;
+	new var8 = 0;
+	new var9;
+	var9 = read_data(2);
+	new var10;
+	var10 = read_data(3);
+	new var1;
+	if (var9 <= 0 || var9 > 32)
+	{
+		return 0;
+	}
+	read_data(4, var8, 32);
+	new var2;
+	if (var6 & 1 && var10)
+	{
+		get_user_origin(var9, var7, 0);
+		fx_headshot(var7);
+	}
+	new var11 = 0;
+	new var12 = 0;
+	new var13;
+	var13 = get_user_attacker(var9, var11, var12);
+	new var4;
+	if (var6 & 8 && (gib_wpncheck(var11) || equal(var8, 444, 0) || 0[var9] - get_user_health(var9) > get_cvar_num("amx_gore_exphp")))
+	{
+		new var5;
+		if (var13 <= 0 || var13 > 32)
+		{
+			var13 = var9;
+			var11 = 0;
+			var12 = 0;
+		}
+		get_user_origin(var13, _unused_temp_, 0);
+		get_user_origin(var9, var7, 0);
+		sub_294c(var7, 4);
+		sub_2620(var7, 12);
+		if (var6 & 16)
+		{
+			sub_294c(var7, 2);
+			sub_2620(var7, 4);
+		}
+		set_task(1036831949, "hide_body", var9, {0}, 0, {0}, 0);
+	}
+	return 0;
+}
+
+public event_respawn(_arg0)
+{
+	if (is_user_alive(_arg0))
+	{
+		0[_arg0] = get_user_health(_arg0);
+	}
+	return 0;
+}
+
+public event_roundstart()
+{
+	set_task(1036831949, "roundstart_delay", 0, {0}, 0, {0}, 0);
+	return 0;
+}
+
+public fx_bleed(_arg0)
+{
+	message_begin(0, 23, {0,0,0}, 0);
+	write_byte(101);
+	write_coord(_arg0);
+	write_coord(_arg0 + 4/* ERROR unknown load Binary */);
+	write_coord(_arg0 + 8/* ERROR unknown load Binary */ + 10);
+	write_coord(random_num(-50, 50));
+	write_coord(random_num(-50, 50));
+	write_coord(-10);
+	write_byte(70);
+	write_byte(random_num(50, 100));
+	message_end();
+	return 0;
+}
+
+public fx_blood(_arg0, _arg1, _arg2)
+{
+	new var2;
+	new var1;
+	if (get_distance(_arg0, _arg1))
+	{
+		var1 = get_distance(_arg0, _arg1);
+	}
+	else
+	{
+		var1 = 1;
+	}
+	var2 = var1;
+	new var3;
+	var3 = _arg0 - _arg1 * 300 / var2;
+	new var4;
+	var4 = _arg0 + 4/* ERROR unknown load Binary */ - _arg1 + 4/* ERROR unknown load Binary */ * 300 / var2;
+	new var5;
+	var5 = _arg0 + 8/* ERROR unknown load Binary */ - _arg1 + 8/* ERROR unknown load Binary */ * 300 / var2;
+	message_begin(0, 23, {0,0,0}, 0);
+	write_byte(101);
+	write_coord(316[_arg2] + _arg0);
+	write_coord(316[_arg2][1][_arg0 + 4/* ERROR unknown load Binary */]);
+	write_coord(316[_arg2][2][_arg0 + 8/* ERROR unknown load Binary */]);
+	write_coord(var3);
+	write_coord(var4);
+	write_coord(var5);
+	write_byte(70);
+	write_byte(random_num(100, 200));
+	message_end();
+	return 0;
+}
+
+public fx_headshot(_arg0)
+{
+	new var1;
+	var1 = get_gore_flags();
+	if (var1 & 16)
+	{
+		new var2 = 0;
+		while (var2 < 10)
+		{
+			message_begin(0, 23, {0,0,0}, 0);
+			write_byte(101);
+			write_coord(_arg0);
+			write_coord(_arg0 + 4/* ERROR unknown load Binary */);
+			write_coord(_arg0 + 8/* ERROR unknown load Binary */ + 30);
+			write_coord(random_num(-20, 20));
+			write_coord(random_num(-20, 20));
+			write_coord(random_num(50, 300));
+			write_byte(70);
+			write_byte(random_num(100, 200));
+			message_end();
+			var2++;
+		}
+	}
+	message_begin(0, 23, {0,0,0}, 0);
+	write_byte(115);
+	write_coord(_arg0);
+	write_coord(_arg0 + 4/* ERROR unknown load Binary */);
+	write_coord(_arg0 + 8/* ERROR unknown load Binary */ + 30);
+	write_short(g_var88);
+	write_short(g_var84);
+	write_byte(248);
+	write_byte(10);
+	message_end();
+	return 0;
+}
+
+public get_gore_flags()
+{
+	new var1 = 0;
+	get_cvar_string("amx_gore", var1, 24);
+	return read_flags(var1);
+}
+
+public gib_wpncheck(_arg0)
+{
+	switch (_arg0)
+	{
+		case 1:
+		{
+			return 0;
+		}
+		case 3:
+		{
+			return 0;
+		}
+		case 4:
+		{
+			return 1;
+		}
+		case 5:
+		{
+			return 0;
+		}
+		case 7:
+		{
+			return 0;
+		}
+		case 8:
+		{
+			return 0;
+		}
+		case 9:
+		{
+			return 1;
+		}
+		case 10:
+		{
+			return 0;
+		}
+		case 11:
+		{
+			return 0;
+		}
+		case 12:
+		{
+			return 0;
+		}
+		case 13:
+		{
+			return 0;
+		}
+		case 14:
+		{
+			return 0;
+		}
+		case 15:
+		{
+			return 0;
+		}
+		case 16:
+		{
+			return 0;
+		}
+		case 17:
+		{
+			return 0;
+		}
+		case 18:
+		{
+			return 0;
+		}
+		case 19:
+		{
+			return 0;
+		}
+		case 20:
+		{
+			return 0;
+		}
+		case 21:
+		{
+			return 0;
+		}
+		case 22:
+		{
+			return 0;
+		}
+		case 23:
+		{
+			return 0;
+		}
+		case 24:
+		{
+			return 0;
+		}
+		case 25:
+		{
+			return 1;
+		}
+		case 26:
+		{
+			return 0;
+		}
+		case 27:
+		{
+			return 0;
+		}
+		case 28:
+		{
+			return 0;
+		}
+		case 30:
+		{
+			return 0;
+		}
+		default:
+		{
+			return 0;
+		}
+	}
+}
+
+public hide_body(_arg0)
+{
+	new var1;
+	if (!is_user_connected(_arg0) || is_user_alive(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	get_user_origin(_arg0, var2, 0);
+	var2 + 8/* ERROR unknown load Binary */ -= 20;
+	set_user_origin(_arg0, var2);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Ultimate Gore", "1.3.3", "JTP10181/mike_cao/fizzarum");
+	register_event("DeathMsg", "event_death", 1148, {0});
+	register_event("Damage", "event_damage", 1240, "2!0", "3=0", "4!0");
+	register_event("ResetHUD", "event_respawn", "be", "1=1");
+	register_logevent("event_roundstart", 2, "1=Round_Start");
+	register_cvar("amx_gore", "abcd", 0, 0);
+	register_cvar("amx_gore_exphp", "200", 0, 0);
+	set_task(1065353216, "event_blood", 0, 1720, 0, 1724, 0);
+	get_modname(188, 31);
+	if (equali(188, "cstrike", 0))
+	{
+		g_var90 = 2;
+		g_var8c = 7;
+	}
+	else
+	{
+		if (equali(188, 1804, 0))
+		{
+			g_var90 = 2;
+			g_var8c = 8;
+		}
+		if (equali(188, 1868, 0))
+		{
+			g_var90 = 2;
+			g_var8c = 7;
+		}
+	}
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var84 = precache_model("sprites/blood.spr");
+	g_var88 = precache_model("sprites/bloodspray.spr");
+	return 0;
+}
+
+public roundstart_delay()
+{
+	new var1 = 1;
+	while (var1 <= 32)
+	{
+		if (is_user_alive(var1))
+		{
+			0[var1] = get_user_health(var1);
+		}
+		var1++;
+	}
+	return 0;
+}
+
+sub_2620(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < _arg1)
+	{
+		message_begin(0, 23, {0,0,0}, 0);
+		write_byte(116);
+		write_coord(random_num(-100, 100) + _arg0);
+		write_coord(random_num(-100, 100) + _arg0 + 4/* ERROR unknown load Binary */);
+		write_coord(_arg0 + 8/* ERROR unknown load Binary */ - 36);
+		write_byte(148[random_num(0, g_var8c + -1)]);
+		message_end();
+		var1++;
+	}
+	return 0;
+}
+
+sub_294c(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (var1 < _arg1)
+	{
+		message_begin(0, 23, {0,0,0}, 0);
+		write_byte(116);
+		write_coord(random_num(-50, 50) + _arg0);
+		write_coord(random_num(-50, 50) + _arg0 + 4/* ERROR unknown load Binary */);
+		write_coord(_arg0 + 8/* ERROR unknown load Binary */ - 36);
+		write_byte(180[random_num(0, g_var90 + -1)]);
+		message_end();
+		var1++;
+	}
+	return 0;
+}
+

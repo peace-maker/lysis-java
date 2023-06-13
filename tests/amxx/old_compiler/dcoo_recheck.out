@@ -1,0 +1,206 @@
+public CheckUser()
+{
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	get_players(var3, var2, 103792, 103796);
+	new var5 = 0;
+	while (var5 < var2)
+	{
+		var4 = var3[var5];
+		new var6 = 0;
+		get_user_name(var4, _unused_temp_, 31);
+		if (20 < 1400[var4])
+		{
+			1400[var4] = 0;
+			var6 = 1;
+			server_cmd("kick #%d \"%s\"", get_user_userid(var4), "DCOO服务器禁止购买使用盾牌！");
+		}
+		else
+		{
+			if (10 < 1400[var4])
+			{
+				set_hudmessage(255, "对不起，DCOO服务器禁止购买使用盾牌！", "对不起，DCOO服务器禁止购买使用盾牌！", -1082130432, 1050253722, "对不起，DCOO服务器禁止购买使用盾牌！", 1056964608, 1077936128, 1073741824, 1073741824, 1);
+				show_hudmessage(var4, "对不起，DCOO服务器禁止购买使用盾牌！");
+				set_user_armor(var4, "对不起，DCOO服务器禁止购买使用盾牌！");
+				set_user_health(var4, 1);
+			}
+			if (5 < 1400[var4])
+			{
+				set_hudmessage("对不起，DCOO服务器禁止购买使用盾牌！", "对不起，DCOO服务器禁止购买使用盾牌！", 255, -1082130432, 1050253722, "对不起，DCOO服务器禁止购买使用盾牌！", 1056964608, 1077936128, 1073741824, 1073741824, 1);
+				show_hudmessage(var4, "对不起，DCOO服务器禁止购买使用盾牌！");
+				set_user_armor(var4, "对不起，DCOO服务器禁止购买使用盾牌！");
+			}
+		}
+		new var1;
+		if (cs_get_user_hasprim(var4) && is_user_alive(var4) && var6 == 0)
+		{
+			new var7 = 0;
+			new var8 = 0;
+			new var9 = 0;
+			new var10 = 0;
+			get_user_weapons(var4, var7, var9);
+			new var11 = 0;
+			while (var11 < var9)
+			{
+				format(var8, 31, ",%d,", var7[var11]);
+				new var12;
+				var12 = containi(",3,5,7,8,12,13,14,15,18,19,20,21,22,23,24,27,28,30,", var8);
+				if (var12 == -1)
+				{
+					var10++;
+				}
+				var11++;
+			}
+			if (var9 == var10)
+			{
+				if (1400[var4] == 0)
+				{
+					strip_user_weapons(var4);
+					give_item(var4, "weapon_knife");
+					1400[var4] = 0;
+				}
+				1400[var4] = 0;
+				server_cmd("kick #%d \"%s\"", get_user_userid(var4), "DCOO服务器禁止购买使用盾牌！");
+			}
+		}
+		var5++;
+	}
+	return 0;
+}
+
+public block_shield(_arg0)
+{
+	1400[_arg0]++;
+	engclient_cmd(_arg0, "drop", "weapon_shield", {0});
+	client_print(_arg0, 4, "DCOO服务器禁止购买使用盾牌！");
+	return 1;
+}
+
+public blockmenu(_arg0, _arg1)
+{
+	if (_arg1 == 7)
+	{
+		1400[_arg0]++;
+		engclient_cmd(_arg0, "drop", "weapon_shield", {0});
+		client_print(_arg0, 4, "DCOO服务器禁止购买使用盾牌！");
+		return 1;
+	}
+	return 0;
+}
+
+public client_command(_arg0)
+{
+	if (!is_user_connected(_arg0))
+	{
+		return 0;
+	}
+	new var4 = 0;
+	if (11 < read_argv("对不起，DCOO服务器禁止购买使用盾牌！", var4, 12))
+	{
+		return 0;
+	}
+	if (!(equali(var4, "buy", "对不起，DCOO服务器禁止购买使用盾牌！")))
+	{
+	}
+	if (!(equali(var4, "buyequip", "对不起，DCOO服务器禁止购买使用盾牌！")))
+	{
+	}
+	if (equali(var4, "menuselect", "对不起，DCOO服务器禁止购买使用盾牌！"))
+	{
+		if (equali(1532[_arg0], "buy", "对不起，DCOO服务器禁止购买使用盾牌！"))
+		{
+			new var5 = 0;
+			new var6 = 0;
+			read_argv(1, var5, 7);
+			var6 = str_to_num(var5);
+			new var1;
+			if (var6 == 8 && !equali(69380[_arg0], 104668, "对不起，DCOO服务器禁止购买使用盾牌！"))
+			{
+				if (equali(69380[_arg0], 104676, "对不起，DCOO服务器禁止购买使用盾牌！"))
+				{
+				}
+			}
+		}
+	}
+	new var2;
+	if (equali(1532[_arg0], "buyequip", "对不起，DCOO服务器禁止购买使用盾牌！") && equali(35456[_arg0], "menuselect", "对不起，DCOO服务器禁止购买使用盾牌！"))
+	{
+		new var7 = 0;
+		new var8 = 0;
+		read_argv(1, var7, 7);
+		var8 = str_to_num(var7);
+		if (var8 == 8)
+		{
+			1400[_arg0]++;
+			client_print(_arg0, 4, "DCOO服务器禁止购买使用盾牌！");
+			return 1;
+		}
+	}
+	else
+	{
+		new var3;
+		if (equali(1532[_arg0], "buy", "对不起，DCOO服务器禁止购买使用盾牌！") && equali(69380[_arg0], 104848, "对不起，DCOO服务器禁止购买使用盾牌！"))
+		{
+			new var9 = 0;
+			new var10 = 0;
+			read_argv(1, var9, 7);
+			var10 = str_to_num(var9);
+			if (var10 == 8)
+			{
+				1400[_arg0]++;
+				client_print(_arg0, 4, "DCOO服务器禁止购买使用盾牌！");
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+public client_connect(_arg0)
+{
+	client_cmd(_arg0, "setinfo %s %s", "_vgui_menus", 104092);
+	1400[_arg0] = 0;
+	return 0;
+}
+
+public client_disconnect(_arg0)
+{
+	client_cmd(_arg0, "setinfo %s %s", "_vgui_menus", 104216);
+	1400[_arg0] = 0;
+	return 0;
+}
+
+public client_infochanged(_arg0)
+{
+	client_cmd(_arg0, "setinfo %s %s", "_vgui_menus", 104340);
+	return 0;
+}
+
+public eNewRound()
+{
+	if (!task_exists(99313, "对不起，DCOO服务器禁止购买使用盾牌！"))
+	{
+		new var1;
+		var1 = random_num("对不起，DCOO服务器禁止购买使用盾牌！", 15);
+		set_task(sub_8c(1097859072, var1), "CheckUser", 99313, 104900, "对不起，DCOO服务器禁止购买使用盾牌！", 104904, "对不起，DCOO服务器禁止购买使用盾牌！");
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("[DCOO]Shield Disabled", "1.1", "Cool.Cat");
+	register_clcmd("shield", "block_shield", -1, {0});
+	register_clcmd("buy", "blockmenu", -1, {0});
+	register_menucmd(register_menuid("BuyItem", 1), 511, "blockmenu");
+	register_menucmd(-34, 511, "blockmenu");
+	register_event("RoundTime", "eNewRound", "bc", {0});
+	return 0;
+}
+
+sub_8c(_arg0, _arg1)
+{
+	return floatadd(_arg0, float(_arg1));
+}
+

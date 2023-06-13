@@ -1,0 +1,386 @@
+new g_var104;
+new g_var100;
+new g_var108;
+new g_var10c;
+new g_var110;
+new g_var9e4;
+public DropMoney(_arg0, _arg1)
+{
+	124[_arg0] = 124[_arg0] - _arg1;
+	send_moneymsg(_arg0, 1);
+	get_user_origin(_arg0, 276[_arg0], "%L");
+	new var1 = 0;
+	var1 = _arg0;
+	804[_arg0] = 1;
+	804[_arg0][1] = _arg1;
+	set_task(1065353216, "show_money", _arg0 + 462, var1, 1, 3240, 150);
+	new var2 = 0;
+	get_user_name(_arg0, var2, 31);
+	client_cmd(_arg0, "spk common/bodydrop4");
+	new var3 = 0;
+	format(var3, 255, "%c%s 掉了$%d ......", 2, var2, _arg1);
+	message_begin(2, g_var104, {0,0,0}, "%L");
+	write_byte(_arg0);
+	write_string(var3);
+	message_end();
+	return 0;
+}
+
+public GetMoney(_arg0, _arg1)
+{
+	remove_task(_arg1 + 462, "%L");
+	server_cmd("give_user_um %d %d", _arg0, 804[_arg1][1]);
+	new var1 = 0;
+	get_user_name(_arg0, var1, 31);
+	client_cmd(_arg0, "spk sound/ambience/lv2");
+	new var2 = 0;
+	format(var2, 255, "%c%s 捡到钱了：$%d", 2, var1, 804[_arg1][1]);
+	message_begin(2, g_var104, {0,0,0}, "%L");
+	write_string(var2);
+	write_byte(_arg0);
+	message_end();
+	804[_arg1] = 0;
+	804[_arg1][1] = 0;
+	return 0;
+}
+
+public check_drop_money()
+{
+	new var1 = 0;
+	new var2 = 0;
+	get_players(var1, var2, "ac", 3444);
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	while (var5 < var2)
+	{
+		get_user_origin(var1[var5], var3, "%L");
+		new var6 = 1;
+		while (var6 < 32)
+		{
+			if (804[var6] == 1)
+			{
+				var4 = get_distance(var3, 276[var6]);
+				if (var4 < 64)
+				{
+					GetMoney(var1[var5], var6);
+				}
+			}
+			var6++;
+		}
+		var5++;
+	}
+	return 0;
+}
+
+public client_connect(_arg0)
+{
+	set_cvar_float("mp_startmoney", 1145585664);
+	124[_arg0] = 0;
+	return 0;
+}
+
+public eDeathMsg()
+{
+	new var1;
+	var1 = read_data(2);
+	new var2;
+	var2 = random_num(1, 2);
+	if (var2 == 1)
+	{
+		if (100000 < 124[var1])
+		{
+			new var3;
+			var3 = random_num(1, 124[var1] / 20000);
+			DropMoney(var1, var3 * 10000);
+		}
+		if (10000 < 124[var1])
+		{
+			new var4;
+			var4 = random_num(1, 124[var1] / 2000);
+			DropMoney(var1, var4 * 1000);
+		}
+	}
+	return 0;
+}
+
+public find_money_target(_arg0, _arg1, _arg2)
+{
+	if (!sub_20c(_arg0, _arg1, _arg2, 3))
+	{
+		return 1;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	read_argv(1, var3, 15);
+	read_argv(2, var4, 7);
+	if (var3 == 64)
+	{
+		new var1;
+		if (var3 + 4/* ERROR unknown load Binary */ == 67 || var3 + 4/* ERROR unknown load Binary */ == 99)
+		{
+			get_players(var5, var6, 2600, "CT");
+		}
+		else
+		{
+			new var2;
+			if (var3 + 4/* ERROR unknown load Binary */ == 84 || var3 + 4/* ERROR unknown load Binary */ == 116)
+			{
+				get_players(var5, var6, 2620, "TERRORIST");
+			}
+			console_print(_arg0, "*** No known team by that name. ***");
+			return 1;
+		}
+	}
+	else
+	{
+		if (var3 == 35)
+		{
+			new var7;
+			var7 = str_to_num(var3 + 4);
+			var5 = find_player(2812, var7);
+		}
+		var5 = find_player("bl", var3);
+	}
+	if (var5 == 0)
+	{
+		console_print(_arg0, "*** No target(s) could be found. ***");
+		return 1;
+	}
+	give_money(var5, str_to_num(var4));
+	return 1;
+}
+
+public get_cmd_info()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5;
+	var5 = read_argc();
+	if (var5 < 2)
+	{
+		server_print("*** Not enough arguments when using set_user_um() ***");
+		return 1;
+	}
+	read_argv(1, var1, 2);
+	var3 = str_to_num(var1);
+	if (!is_user_connected(var3))
+	{
+		return 1;
+	}
+	if (var5 < 3)
+	{
+		set_user_um(var3, 0, 1);
+		return 1;
+	}
+	read_argv(2, var2, 7);
+	var4 = str_to_num(var2);
+	if (var5 < 4)
+	{
+		set_user_um(var3, var4, 1);
+		return 1;
+	}
+	set_user_um(var3, var4, 0);
+	return 1;
+}
+
+public give_money(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (_arg0[var1])
+	{
+		if (124[_arg0[var1]])
+		{
+			new var2 = 124[_arg0[var1]];
+			var2 = var2[_arg1];
+			send_moneymsg(_arg0[var1], 1);
+		}
+		else
+		{
+			if (8000 <= _arg1 + cs_get_user_money(_arg0[var1]))
+			{
+				124[_arg0[var1]] = _arg1 + cs_get_user_money(_arg0[var1]);
+				send_moneymsg(_arg0[var1], 1);
+			}
+			_arg1 = cs_get_user_money(_arg0[var1]) + _arg1;
+			cs_set_user_money(_arg0[var1], _arg1, 1);
+			124[_arg0[var1]] = 0;
+		}
+		var1++;
+	}
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Unlimited Money", "0.2", "CRaZy");
+	register_event("Money", "read_gmsg_Money", 1392, {0});
+	register_cvar("amx_startmoney", 1464, "%L", "%L");
+	register_cvar("amx_maxmoney", "999900", "%L", "%L");
+	register_concmd("amx_um", "find_money_target", 4096, "{@team, #userid, or name(can be partial)} <ammount>");
+	register_srvcmd("give_user_um", "get_cmd_info", -1, {0});
+	register_event("DeathMsg", "eDeathMsg", 2044, {0});
+	g_var100 = get_user_msgid("Money");
+	g_var104 = get_user_msgid("SayText");
+	set_task(1065353216, "check_drop_money", "%L", 2176, "%L", 2180, "%L");
+	return 0;
+}
+
+public plugin_precache()
+{
+	g_var108 = precache_model("sprites/Money1.spr");
+	g_var10c = precache_model("sprites/Money2.spr");
+	g_var110 = precache_model("sprites/Money3.spr");
+	return 0;
+}
+
+public read_gmsg_Money(_arg0)
+{
+	new var2;
+	var2 = read_data(1);
+	if (var2 == 801)
+	{
+		var2 = get_cvar_num("amx_startmoney");
+		cs_set_user_money(_arg0, var2, "%L");
+		124[_arg0] = 0;
+	}
+	new var1;
+	if (var2 >= 8000 && !124[_arg0])
+	{
+		124[_arg0] = var2;
+		send_moneymsg(_arg0, 1);
+		return 0;
+	}
+	if (124[_arg0])
+	{
+		new var3 = 124[_arg0];
+		var3 = var3[var2 + -8000];
+		if (8000 > 124[_arg0])
+		{
+			cs_set_user_money(_arg0, 124[_arg0], 1);
+			124[_arg0] = 0;
+		}
+		else
+		{
+			send_moneymsg(_arg0, 1);
+		}
+		return 0;
+	}
+	return 0;
+}
+
+public send_moneymsg(_arg0, _arg1)
+{
+	cs_set_user_money(_arg0, 8000, _arg1);
+	g_var9e4 = get_cvar_num("amx_maxmoney");
+	if (g_var9e4 < 124[_arg0])
+	{
+		124[_arg0] = g_var9e4;
+	}
+	message_begin(1, g_var100, 2588, _arg0);
+	write_long(124[_arg0]);
+	write_byte(_arg1);
+	message_end();
+	return 0;
+}
+
+public set_user_um(_arg0, _arg1, _arg2)
+{
+	new var1;
+	var1 = cs_get_user_money(_arg0);
+	if (var1 == 8000)
+	{
+		var1 = 124[_arg0];
+	}
+	124[_arg0] = _arg1 + var1;
+	send_moneymsg(_arg0, _arg2);
+	return 0;
+}
+
+public show_money(_arg0)
+{
+	new var1;
+	var1 = _arg0;
+	message_begin(2, 23, {0,0,0}, "%L");
+	write_byte(17);
+	write_coord(276[var1]);
+	write_coord(276[var1][1]);
+	write_coord(276[var1][2][5]);
+	if (19999 < 804[var1][1])
+	{
+		write_short(g_var110);
+	}
+	else
+	{
+		if (9999 < 804[var1][1])
+		{
+			write_short(g_var10c);
+		}
+		write_short(g_var108);
+	}
+	write_byte(2);
+	write_byte(1000);
+	message_end();
+	return 0;
+}
+
+sub_20c(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_12c(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "%L"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, 31, _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_12c(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "%L") > 0 && !get_user_flags(_arg0, "%L") & 33554432;
+}
+

@@ -1,0 +1,772 @@
+new g_var25d0;
+new g_var25cc;
+new g_var2218;
+public actionMapsMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 8:
+		{
+			new var2 = 8732[_arg0];
+			var2++;
+			sub_54a8(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 8732[_arg0];
+			var1--;
+			sub_54a8(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = _arg1 + 8732[_arg0] * 8;
+			new var4 = 0;
+			get_modname(var4, 9);
+			if (!equal(var4, "zp", "1.00"))
+			{
+				message_begin(2, 30, {0,0,0}, "1.00");
+				message_end();
+			}
+			new var5 = 0;
+			new var6 = 0;
+			get_user_authid(_arg0, var5, "");
+			get_user_name(_arg0, var6, "");
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_CHANGEL_1", 280[var3]);
+				}
+				case 2:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_CHANGEL_2", var6, 280[var3]);
+				}
+				default:
+				{
+				}
+			}
+			log_amx("Cmd: \"%s<%d><%s><>\" changelevel \"%s\"", var6, get_user_userid(_arg0), var5, 280[var3]);
+			set_task(1073741824, "delayedChange", "1.00", 280[var3], strlen(280[var3]) + 1, {0}, "1.00");
+		}
+	}
+	return 1;
+}
+
+public actionResult(_arg0, _arg1)
+{
+	remove_task(4545454, "1.00");
+	switch (_arg1)
+	{
+		case 0:
+		{
+			new var1 = 0;
+			get_modname(var1, 9);
+			if (!equal(var1, "zp", "1.00"))
+			{
+				message_begin(2, 30, {0,0,0}, "1.00");
+				message_end();
+			}
+			set_task(1073741824, "delayedChange", "1.00", 280[g_var25d0], strlen(280[g_var25d0]) + 1, {0}, "1.00");
+			log_amx("Vote: %L", "en", "RESULT_ACC");
+			client_print("1.00", "", "%L", -1, "RESULT_ACC");
+		}
+		case 1:
+		{
+			autoRefuse();
+		}
+		default:
+		{
+		}
+	}
+	return 1;
+}
+
+public actionVoteMapMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 7:
+		{
+			new var10;
+			var10 = get_cvar_float("amx_last_voting");
+			if (sub_90(var10, get_gametime()))
+			{
+				client_print(_arg0, "", "%L", _arg0, "ALREADY_VOT");
+				return 1;
+			}
+			new var1;
+			if (var10 && sub_90(floatadd(var10, get_cvar_float("amx_vote_delay")), get_gametime()))
+			{
+				client_print(_arg0, "", "%L", _arg0, "VOT_NOW_ALLOW");
+				return 1;
+			}
+			new var11;
+			var11 = floatadd(1073741824, get_cvar_float("amx_vote_time"));
+			set_cvar_float("amx_last_voting", floatadd(get_gametime(), var11));
+			new var12;
+			var12 = floatround(var11, "1.00");
+			set_task(var11, "checkVotes", _arg0 + 34567, {0}, "1.00", {0}, "1.00");
+			new var13 = 0;
+			new var14 = 0;
+			new var15 = 0;
+			new var16 = 0;
+			new var17 = 0;
+			get_players(var14, var15, 14284, 11376);
+			if (1 < 9544[_arg0])
+			{
+				new var2;
+				if (g_var25cc)
+				{
+					var2 = 14288;
+				}
+				else
+				{
+					var2 = 14324;
+				}
+				var17 = format(var13, 511, var2, _arg0, "WHICH_MAP");
+				new var18 = 0;
+				while (9544[_arg0] > var18)
+				{
+					var17 = format(var13[var17], 511, "%d. %s\n", var18 + 1, 280[8884[_arg0][var18]]) + var17;
+					var16 = 1 << var18 | var16;
+					var18++;
+				}
+				var16 |= 256;
+				var17 = format(var13[var17], 511, "\n9. None\n") + var17;
+			}
+			else
+			{
+				new var3;
+				if (g_var25cc)
+				{
+					var3 = 14456;
+				}
+				else
+				{
+					var3 = 14556;
+				}
+				var17 = format(var13, 511, var3, _arg0, "CHANGE_MAP_TO", 280[8884[_arg0]], _arg0, "YES", _arg0, "NO");
+				var16 = 3;
+			}
+			new var19 = 0;
+			format(var19, 63, "%L", "en", "WHICH_MAP");
+			new var20 = 0;
+			while (var20 < var15)
+			{
+				if (_arg0 != var14[var20])
+				{
+					show_menu(var14[var20], var16, var13, var12, var19);
+				}
+				var20++;
+			}
+			format(var13[var17], 511, "\n0. %L", _arg0, "CANC_VOTE");
+			var16 |= 512;
+			show_menu(_arg0, var16, var13, var12, var19);
+			new var21 = 0;
+			new var22 = 0;
+			get_user_authid(_arg0, var21, "");
+			get_user_name(_arg0, var22, "");
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_V_MAP_1");
+				}
+				case 2:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_V_MAP_2", var22);
+				}
+				default:
+				{
+				}
+			}
+			new var4;
+			if (9544[_arg0] > 3)
+			{
+				var4 = 280[8884[_arg0][3]];
+			}
+			else
+			{
+				var4 = 15408;
+			}
+			new var5;
+			if (9544[_arg0] > 2)
+			{
+				var5 = 280[8884[_arg0][2]];
+			}
+			else
+			{
+				var5 = 15404;
+			}
+			new var6;
+			if (9544[_arg0] > 1)
+			{
+				var6 = 280[8884[_arg0][1]];
+			}
+			else
+			{
+				var6 = 15400;
+			}
+			new var7;
+			if (9544[_arg0] > 0)
+			{
+				var7 = 280[8884[_arg0]];
+			}
+			else
+			{
+				var7 = 15396;
+			}
+			log_amx("Vote: \"%s<%d><%s><>\" vote maps (map#1 \"%s\") (map#2 \"%s\") (map#3 \"%s\") (map#4 \"%s\")", var22, get_user_userid(_arg0), var21, var7, var6, var5, var4);
+		}
+		case 8:
+		{
+			new var9 = 8732[_arg0];
+			var9++;
+			sub_24e8(_arg0, var9);
+		}
+		case 9:
+		{
+			new var8 = 8732[_arg0];
+			var8--;
+			sub_24e8(_arg0, var8);
+		}
+		default:
+		{
+			new var23 = 9544[_arg0];
+			var23++;
+			8884[_arg0][var23] = _arg1 + 8732[_arg0] * 7;
+			sub_24e8(_arg0, 8732[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public autoRefuse()
+{
+	log_amx("Vote: %L", "en", "RESULT_REF");
+	client_print("1.00", "", "%L", -1, "RESULT_REF");
+	return 0;
+}
+
+public checkVotes(_arg0)
+{
+	new var3 = 0;
+	new var4 = 0;
+	get_players(_unused_temp_, var3, 11368, 11376);
+	if (var3 == 0)
+	{
+		var3 = 1;
+	}
+	g_var25d0 = -1;
+	new var5 = 0;
+	while (9544[_arg0] > var5)
+	{
+		if (8864[var5] > 8864[var4])
+		{
+			var4 = var5;
+		}
+		var5++;
+	}
+	if (50 < 8864[var4] * 100 / var3)
+	{
+		g_var25d0 = 8884[_arg0][var4];
+		client_print("1.00", "", "%L %s", -1, "VOTE_SUCCESS", 280[g_var25d0]);
+		log_amx("Vote: %L %s", "en", "VOTE_SUCCESS", 280[g_var25d0]);
+	}
+	if (g_var25d0 != -1)
+	{
+		if (is_user_connected(_arg0))
+		{
+			new var6 = 0;
+			new var7;
+			new var1;
+			if (g_var25cc)
+			{
+				var1 = 11568;
+			}
+			else
+			{
+				var1 = 11620;
+			}
+			var7 = format(var6, 511, var1, _arg0, "THE_WINNER", 280[g_var25d0]);
+			new var2;
+			if (g_var25cc)
+			{
+				var2 = 11700;
+			}
+			else
+			{
+				var2 = 11732;
+			}
+			var7 = format(var6[var7], 511 - var7, var2, _arg0, "WANT_CONT") + var7;
+			format(var6[var7], 511 - var7, "\n1. %L\n2. %L", _arg0, "YES", _arg0, "NO");
+			show_menu(_arg0, "", var6, 10, "The winner: ");
+			set_task(1092616192, "autoRefuse", 4545454, {0}, "1.00", {0}, "1.00");
+		}
+		else
+		{
+			new var8 = 0;
+			get_modname(var8, 9);
+			if (!equal(var8, "zp", "1.00"))
+			{
+				message_begin(2, 30, {0,0,0}, "1.00");
+				message_end();
+			}
+			set_task(1073741824, "delayedChange", "1.00", 280[g_var25d0], strlen(280[g_var25d0]) + 1, {0}, "1.00");
+		}
+	}
+	else
+	{
+		client_print("1.00", "", "%L", -1, "VOTE_FAILED");
+		log_amx("Vote: %L", "en", "VOTE_FAILED");
+	}
+	remove_task(_arg0 + 34567, "1.00");
+	return 0;
+}
+
+public cmdMapsMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_370(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	if (g_var2218)
+	{
+		8732[_arg0] = 0;
+		sub_54a8(_arg0, 0);
+	}
+	else
+	{
+		console_print(_arg0, "%L", _arg0, "NO_MAPS_MENU");
+		client_print(_arg0, "", "%L", _arg0, "NO_MAPS_MENU");
+	}
+	return 1;
+}
+
+public cmdVoteMapMenu(_arg0, _arg1, _arg2)
+{
+	if (!sub_370(_arg0, _arg1, _arg2, 1))
+	{
+		return 1;
+	}
+	if (sub_90(get_cvar_float("amx_last_voting"), get_gametime()))
+	{
+		client_print(_arg0, "", "%L", _arg0, "ALREADY_VOT");
+		return 1;
+	}
+	9544[_arg0] = 0;
+	if (g_var2218)
+	{
+		8732[_arg0] = 0;
+		sub_24e8(_arg0, 0);
+	}
+	else
+	{
+		console_print(_arg0, "%L", _arg0, "NO_MAPS_MENU");
+		client_print(_arg0, "", "%L", _arg0, "NO_MAPS_MENU");
+	}
+	return 1;
+}
+
+public delayedChange(_arg0)
+{
+	server_cmd("changelevel %s", _arg0);
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("Maps Menu", "1.00", "AMXX Dev Team");
+	register_dictionary("mapsmenu.txt");
+	register_dictionary("common.txt");
+	register_clcmd("amx_mapmenu", "cmdMapsMenu", "NO_ACC_COM", "- displays changelevel menu");
+	register_clcmd("amx_votemapmenu", "cmdVoteMapMenu", "NO_ACC_COM", "- displays votemap menu");
+	register_menucmd(register_menuid("Changelevel Menu", "1.00"), 1023, "actionMapsMenu");
+	register_menucmd(register_menuid("Which map do you want?", "1.00"), 527, "voteCount");
+	register_menucmd(register_menuid("Change map to", "1.00"), 527, "voteCount");
+	register_menucmd(register_menuid("Votemap Menu", "1.00"), 1023, "actionVoteMapMenu");
+	register_menucmd(register_menuid("The winner: ", "1.00"), "", "actionResult");
+	new var1 = 0;
+	sub_9a0(var1, 63);
+	format(var1, 63, "%s/maps.ini", var1);
+	if (!file_exists(var1))
+	{
+		format(var1, 63, "mapcycle.txt");
+	}
+	sub_5c40(var1);
+	g_var25cc = sub_818();
+	return 0;
+}
+
+public voteCount(_arg0, _arg1)
+{
+	if (_arg1 > 3)
+	{
+		client_print("1.00", "", "%L", -1, "VOT_CANC");
+		remove_task(_arg0 + 34567, "1.00");
+		set_cvar_float("amx_last_voting", get_gametime());
+		log_amx("Vote: Cancel vote session");
+		return 1;
+	}
+	if (!(sub_90(get_cvar_float("amx_vote_answers"))))
+	{
+		new var1 = 0;
+		get_user_name(_arg0, var1, "");
+		client_print("1.00", "", "%L", -1, "X_VOTED_FOR", var1, _arg1 + 1);
+	}
+	8864[_arg1]++;
+	return 1;
+}
+
+sub_54a8(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6;
+	var6 = _arg1 * 8;
+	new var7 = 0;
+	if (var6 >= g_var2218)
+	{
+		8732[_arg0] = 0;
+		_arg1 = 0;
+		var6 = 0;
+	}
+	new var8;
+	new var1;
+	if (g_var2218 % 8)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var25cc)
+	{
+		var2 = 15852;
+	}
+	else
+	{
+		var2 = 15916;
+	}
+	var8 = format(var5, 511, var2, _arg0, "CHANGLE_MENU", _arg1 + 1, var1 + g_var2218 / 8);
+	new var9;
+	var9 = var6 + 8;
+	new var10 = 512;
+	if (var9 > g_var2218)
+	{
+		var9 = g_var2218;
+	}
+	new var11;
+	var11 = var6;
+	while (var11 < var9)
+	{
+		var10 = 1 << var7 | var10;
+		var7++;
+		var8 = format(var5[var8], 511 - var8, "%d. %s\n", var7, 280[var11]) + var8;
+		var11++;
+	}
+	if (g_var2218 != var9)
+	{
+		new var3;
+		if (_arg1)
+		{
+			var3 = 16128;
+		}
+		else
+		{
+			var3 = 16148;
+		}
+		format(var5[var8], 511 - var8, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var3);
+		var10 |= 256;
+	}
+	else
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 16196;
+		}
+		else
+		{
+			var4 = 16216;
+		}
+		format(var5[var8], 511 - var8, "\n0. %L", _arg0, var4);
+	}
+	new var12 = 0;
+	format(var12, 63, "%L", "en", "CHANGLE_MENU");
+	show_menu(_arg0, var10, var5, -1, var12);
+	return 0;
+}
+
+sub_90(_arg0, _arg1)
+{
+	return 0 < floatcmp(_arg0, _arg1);
+}
+
+sub_24e8(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var8 = 0;
+	new var9 = 0;
+	new var10;
+	var10 = _arg1 * 7;
+	if (var10 >= g_var2218)
+	{
+		8732[_arg0] = 0;
+		_arg1 = 0;
+		var10 = 0;
+	}
+	new var11;
+	new var1;
+	if (g_var2218 % 7)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_var25cc)
+	{
+		var2 = 12536;
+	}
+	else
+	{
+		var2 = 12600;
+	}
+	var11 = format(var8, 511, var2, _arg0, "VOTEMAP_MENU", _arg1 + 1, var1 + g_var2218 / 7);
+	new var12;
+	var12 = var10 + 7;
+	new var13 = 512;
+	if (var12 > g_var2218)
+	{
+		var12 = g_var2218;
+	}
+	new var14;
+	var14 = var10;
+	while (var14 < var12)
+	{
+		new var3;
+		if (9544[_arg0] == 4 || sub_2368(_arg0, var9 + _arg1 * 7))
+		{
+			var9++;
+			if (g_var25cc)
+			{
+				var11 = format(var8[var11], 511 - var11, "\d%d. %s\n\w", var9, 280[var14]) + var11;
+			}
+			else
+			{
+				var11 = format(var8[var11], 511 - var11, "#. %s\n", 280[var14]) + var11;
+			}
+		}
+		else
+		{
+			var13 = 1 << var9 | var13;
+			var9++;
+			var11 = format(var8[var11], 511 - var11, "%d. %s\n", var9, 280[var14]) + var11;
+		}
+		var14++;
+	}
+	if (9544[_arg0])
+	{
+		var13 |= 128;
+		var11 = format(var8[var11], 511 - var11, "\n8. %L\n", _arg0, "START_VOT") + var11;
+	}
+	else
+	{
+		new var4;
+		if (g_var25cc)
+		{
+			var4 = 12876;
+		}
+		else
+		{
+			var4 = 12924;
+		}
+		var11 = format(var8[var11], 511 - var11, var4, _arg0, "START_VOT") + var11;
+	}
+	if (g_var2218 != var12)
+	{
+		new var5;
+		if (_arg1)
+		{
+			var5 = 13084;
+		}
+		else
+		{
+			var5 = 13104;
+		}
+		var11 = format(var8[var11], 511 - var11, "\n9. %L...\n0. %L\n", _arg0, "MORE", _arg0, var5) + var11;
+		var13 |= 256;
+	}
+	else
+	{
+		new var6;
+		if (_arg1)
+		{
+			var6 = 13156;
+		}
+		else
+		{
+			var6 = 13176;
+		}
+		var11 = format(var8[var11], 511 - var11, "\n0. %L\n", _arg0, var6) + var11;
+	}
+	if (9544[_arg0])
+	{
+		new var7;
+		if (g_var25cc)
+		{
+			var7 = 13196;
+		}
+		else
+		{
+			var7 = 13236;
+		}
+		var11 = format(var8[var11], 511 - var11, var7, _arg0, "SEL_MAPS") + var11;
+	}
+	else
+	{
+		var11 = format(var8[var11], 511 - var11, "\n\n") + var11;
+	}
+	new var15 = 0;
+	while (var15 < 4)
+	{
+		if (9544[_arg0] > var15)
+		{
+			var11 = format(var8[var11], 511 - var11, "%s\n", 280[8884[_arg0][var15]]) + var11;
+		}
+		else
+		{
+			var11 = format(var8[var11], 511 - var11, 13324) + var11;
+		}
+		var15++;
+	}
+	new var16 = 0;
+	format(var16, 63, "%L", "en", "VOTEMAP_MENU");
+	show_menu(_arg0, var13, var8, -1, var16);
+	return 0;
+}
+
+sub_370(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_290(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_9a0(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_5c40(_arg0)
+{
+	if (!file_exists(_arg0))
+	{
+		return 0;
+	}
+	new var2 = 0;
+	new var3 = 0;
+	while (g_var2218 < 64 && read_file(_arg0, var3, var2, 255, _unused_temp_))
+	{
+		if (!(var2 == 59))
+		{
+			if (!(1 > parse(var2, 280[g_var2218], 31)))
+			{
+				if (is_map_valid(280[g_var2218]))
+				{
+					g_var2218 += 1;
+				}
+			}
+		}
+	}
+	return 1;
+}
+
+sub_818()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_90(_arg0, _arg1)
+{
+	return _arg0 & -1 == 0;
+}
+
+sub_2368(_arg0, _arg1)
+{
+	new var1 = 0;
+	while (9544[_arg0] > var1)
+	{
+		if (_arg1 == 8884[_arg0][var1])
+		{
+			return 1;
+		}
+		var1++;
+	}
+	return 0;
+}
+
+sub_290(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

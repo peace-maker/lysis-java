@@ -1,0 +1,312 @@
+new g_var19c;
+new g_varcba0;
+public AddMenu(_arg0, _arg1, _arg2, _arg3)
+{
+	if (g_var19c + 1 == 128)
+	{
+		log_amx("Error: Plugin \"%s\" tried to add a menu item to Menu Front-End plugin with maximum menu items reached!", _arg3);
+		return 0;
+	}
+	copy(416[g_var19c], "", _arg0);
+	17312[g_var19c] = 0;
+	copy(17824[g_var19c], "", _arg1);
+	34720[g_var19c] = _arg2;
+	copy(35232[g_var19c], "", _arg3);
+	g_var19c += 1;
+	server_print("Menu item %d added to Menus Front-End: \"%s\" from plugin \"%s\"", g_var19c, _arg0, _arg3);
+	return 0;
+}
+
+public AddMenuLang(_arg0, _arg1, _arg2, _arg3)
+{
+	if (g_var19c + 1 == 128)
+	{
+		log_amx("Error: Plugin \"%s\" tried to add a menu item to Menu Front-End plugin with maximum menu items reached!", _arg3);
+		return 0;
+	}
+	copy(416[g_var19c], "", _arg0);
+	17312[g_var19c] = 1;
+	copy(17824[g_var19c], "", _arg1);
+	34720[g_var19c] = _arg2;
+	copy(35232[g_var19c], "", _arg3);
+	g_var19c += 1;
+	return 0;
+}
+
+public actionMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 8:
+		{
+			new var2 = 280[_arg0];
+			var2++;
+			sub_1690(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 280[_arg0];
+			var1--;
+			sub_1690(_arg0, var1);
+		}
+		default:
+		{
+			client_cmd(_arg0, 17824[_arg1 + 280[_arg0] * 8]);
+		}
+	}
+	return 1;
+}
+
+public addmenuitem_cmd(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, 5))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	read_argv(1, var1, "");
+	read_argv(2, var2, "");
+	read_argv("", var3, "");
+	var4 = read_flags(var3);
+	read_argv(4, var5, "");
+	AddMenu(var1, var2, var4, var5);
+	return 1;
+}
+
+public cmdMenu(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		280[_arg0] = 0;
+		sub_1690(_arg0, 0);
+	}
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin("Menus Front-End", "1.00", "AMXX Dev Team");
+	register_dictionary("menufront.txt");
+	register_dictionary("common.txt");
+	register_menucmd(register_menuid("AMX Mod X Menu", "1.00"), 1023, "actionMenu");
+	register_clcmd("amxmodmenu", "cmdMenu", 4, "- displays menus");
+	register_srvcmd("amx_addmenuitem", "addmenuitem_cmd", "1.00", "<menu text> <menu command> <access flags> <plugin name> - Add a menu item to Menus Front-End");
+	g_varcba0 = sub_6d8();
+	sub_10bc();
+	new var1 = 0;
+	sub_860(var1, 127);
+	server_cmd("exec %s/custommenuitems.cfg", var1);
+	return 0;
+}
+
+sub_1690(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	new var6 = 0;
+	new var7 = 0;
+	new var8;
+	var8 = _arg1 * 8;
+	if (var8 >= g_var19c)
+	{
+		280[_arg0] = 0;
+		_arg1 = 0;
+		var8 = 0;
+	}
+	new var9;
+	new var1;
+	if (g_var19c % 8 > 0)
+	{
+		var1 = 1;
+	}
+	else
+	{
+		var1 = 0;
+	}
+	new var2;
+	if (g_varcba0)
+	{
+		var2 = 55648;
+	}
+	else
+	{
+		var2 = 55760;
+	}
+	var9 = format(var6, 511, var2, _arg1 + 1, var1 + g_var19c / 8);
+	new var10;
+	var10 = var8 + 8;
+	new var11 = 512;
+	if (var10 > g_var19c)
+	{
+		var10 = g_var19c;
+	}
+	new var12;
+	var12 = get_user_flags(_arg0, "1.00");
+	new var13;
+	var13 = var8;
+	while (var13 < var10)
+	{
+		new var3;
+		if (34720[var13] & var12 && is_plugin_loaded(35232[var13]) != -1)
+		{
+			var11 = 1 << var7 | var11;
+			if (17312[var13])
+			{
+				var7++;
+				var9 = format(var6[var9], 511 - var9, "%d. %L\n", var7, _arg0, 416[var13]) + var9;
+			}
+			else
+			{
+				var7++;
+				var9 = format(var6[var9], 511 - var9, "%d. %s\n", var7, 416[var13]) + var9;
+			}
+		}
+		else
+		{
+			var7++;
+			if (g_varcba0)
+			{
+				if (17312[var13])
+				{
+					var9 = format(var6[var9], 511 - var9, "\d%d. %L\n\w", var7, _arg0, 416[var13]) + var9;
+				}
+				else
+				{
+					var9 = format(var6[var9], 511 - var9, "\d%d. %s\n\w", var7, 416[var13]) + var9;
+				}
+			}
+			if (17312[var13])
+			{
+				var9 = format(var6[var9], 511 - var9, "#. %L\n", _arg0, 416[var13]) + var9;
+			}
+			var9 = format(var6[var9], 511 - var9, "#. %s\n", 416[var13]) + var9;
+		}
+		var13++;
+	}
+	if (g_var19c != var10)
+	{
+		new var4;
+		if (_arg1)
+		{
+			var4 = 56152;
+		}
+		else
+		{
+			var4 = 56172;
+		}
+		format(var6[var9], 511 - var9, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var4);
+		var11 |= 256;
+	}
+	else
+	{
+		new var5;
+		if (_arg1)
+		{
+			var5 = 56220;
+		}
+		else
+		{
+			var5 = 56240;
+		}
+		format(var6[var9], 511 - var9, "\n0. %L", _arg0, var5);
+	}
+	show_menu(_arg0, var11, var6, -1, {0});
+	return 0;
+}
+
+sub_230(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_150(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_6d8()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_10bc()
+{
+	AddMenuLang("KICK_PLAYER", "amx_kickmenu", 4, "Players Menu");
+	AddMenuLang("BAN_PLAYER", "amx_banmenu", 8, "Players Menu");
+	AddMenuLang("SLAP_SLAY", "amx_slapmenu", 16, "Players Menu");
+	AddMenuLang("TEAM_PLAYER", "amx_teammenu", 4096, "Players Menu");
+	AddMenuLang("CHANGEL", "amx_mapmenu", "NO_ACC_COM", "Maps Menu");
+	AddMenuLang("VOTE_MAPS", "amx_votemapmenu", "NO_ACC_COM", "Maps Menu");
+	AddMenuLang("SPECH_STUFF", "amx_speechmenu", 4, "Commands Menu");
+	AddMenuLang("CLIENT_COM", "amx_clcmdmenu", 4096, "Players Menu");
+	AddMenuLang("SERVER_COM", "amx_cmdmenu", 4, "Commands Menu");
+	AddMenuLang("CVARS_SET", "amx_cvarmenu", 64, "Commands Menu");
+	AddMenuLang("CONFIG", "amx_cfgmenu", 4, "Commands Menu");
+	AddMenuLang("LANG_SET", "amx_langmenu", 128, "Multi-Lingual System");
+	AddMenuLang("STATS_SET", "amx_statscfgmenu", 128, "Stats Configuration");
+	AddMenuLang("PAUSE_PLUG", "amx_pausecfgmenu", 128, "Pause Plugins");
+	AddMenuLang("RES_WEAP", "amx_restmenu", 128, "Restrict Weapons");
+	AddMenuLang("TELE_PLAYER", "amx_teleportmenu", 4096, "Teleport Menu");
+	return 0;
+}
+
+sub_860(_arg0, _arg1)
+{
+	return get_localinfo("amxx_configsdir", _arg0, _arg1);
+}
+
+sub_150(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

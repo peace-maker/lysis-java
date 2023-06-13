@@ -1,0 +1,91 @@
+public checkkill()
+{
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	get_players(var1, var2, 1004, 1012);
+	var4 = 0;
+	while (var4 < var2)
+	{
+		var3 = var1[var4];
+		if (0[var3] == 0)
+		{
+			if (2 < 264[var3])
+			{
+				new var5 = 0;
+				var5 = 660[var3] - 528[var3];
+				if (var5 == 0)
+				{
+					var5 = 1;
+				}
+				new var6 = 0;
+				get_user_name(var3, var6, 31);
+				new var7;
+				var7 = 396[var3][264[var3] - 2] * 10000 + 264[var3] * 3 - var5 * 1500;
+				new var8 = 0;
+				num_to_str(get_systime(0) + 8, var8, 31);
+				set_localinfo("ShowMessage", var8);
+				set_hudmessage(255, 255, 0, 1036831949, 1050253722, 0, 1065353216, 1092616192, 1036831949, 1036831949, 3);
+				show_hudmessage(0, "%s\n在 %i 秒内连续杀敌 %i 次 / 爆头 %i 次\n奖励 $%d", var6, var5, 264[var3], 396[var3], var7);
+				server_cmd("give_user_um %d %d", var3, var7);
+				new var9 = 0;
+				new var10 = 0;
+				num_to_word(264[var3], var9, 47);
+				num_to_word(var5, var10, 47);
+				client_cmd(0, "spk \"woop %s kill in %s seconds\"", var9, var10);
+			}
+			528[var3] = 0;
+			0[var3] = 0;
+			132[var3] = 0;
+			264[var3] = 0;
+			396[var3] = 0;
+		}
+		else
+		{
+			new var11 = 264[var3];
+			var11 = 0[var3][var11];
+			new var12 = 396[var3];
+			var12 = 132[var3][var12];
+			0[var3] = 0;
+			132[var3] = 0;
+		}
+		var4++;
+	}
+	set_task(1084227584, "checkkill", 1, {0}, 0, {0}, 0);
+	return 0;
+}
+
+public eDeathMsg()
+{
+	new var3;
+	var3 = read_data(1);
+	new var4;
+	var4 = read_data(2);
+	new var1;
+	if (var3 != 0 && var4 != var3)
+	{
+		return 0;
+	}
+	new var5;
+	var5 = read_data(3);
+	660[var3] = get_systime(0);
+	new var2;
+	if (0[var3] == 0 && 264[var3] == 0)
+	{
+		528[var3] = 660[var3];
+	}
+	0[var3]++;
+	new var6 = 132[var3];
+	var6 = var6[var5];
+	return 0;
+}
+
+public plugin_init()
+{
+	register_plugin("MutiKill", "1.0", "CRaZy");
+	register_event("DeathMsg", "eDeathMsg", 944, {0});
+	set_task(1084227584, "checkkill", 1, {0}, 0, {0}, 0);
+	return 0;
+}
+

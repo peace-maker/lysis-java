@@ -1,0 +1,308 @@
+new g_var1578;
+public actionTelMenu(_arg0, _arg1)
+{
+	switch (_arg1)
+	{
+		case 6:
+		{
+			4836[_arg0] = 1 - 4836[_arg0];
+			sub_15e0(_arg0, 216[_arg0]);
+		}
+		case 7:
+		{
+			if (0 > 4836[_arg0])
+			{
+				4836[_arg0] = 0;
+			}
+			get_user_origin(_arg0, 4968[_arg0], "1.00");
+			sub_15e0(_arg0, 216[_arg0]);
+		}
+		case 8:
+		{
+			new var2 = 216[_arg0];
+			var2++;
+			sub_15e0(_arg0, var2);
+		}
+		case 9:
+		{
+			new var1 = 216[_arg0];
+			var1--;
+			sub_15e0(_arg0, var1);
+		}
+		default:
+		{
+			new var3;
+			var3 = 348[_arg0][_arg1 + 216[_arg0] * 6];
+			new var4 = 0;
+			get_user_name(var3, var4, "");
+			if (!is_user_alive(var3))
+			{
+				client_print(_arg0, "", "%L", _arg0, "CANT_PERF_DEAD", var4);
+				sub_15e0(_arg0, 216[_arg0]);
+				return 1;
+			}
+			if (0 < 4836[_arg0])
+			{
+				set_user_origin(var3, 4968[_arg0]);
+			}
+			else
+			{
+				new var5 = 0;
+				get_user_origin(_arg0, var5, "1.00");
+				set_user_origin(var3, var5);
+			}
+			new var6 = 0;
+			new var7 = 0;
+			new var8 = 0;
+			get_user_authid(_arg0, var6, "");
+			get_user_authid(var3, var7, "");
+			get_user_name(_arg0, var8, "");
+			log_amx("Cmd: \"%s<%d><%s><>\" teleport \"%s<%d><%s><>\"", var8, get_user_userid(_arg0), var6, var4, get_user_userid(var3), var7);
+			switch (get_cvar_num("amx_show_activity"))
+			{
+				case 1:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_TELEPORT_1", var4);
+				}
+				case 2:
+				{
+					client_print("1.00", "", "%L", -1, "ADMIN_TELEPORT_2", var8, var4);
+				}
+				default:
+				{
+				}
+			}
+			sub_15e0(_arg0, 216[_arg0]);
+		}
+	}
+	return 1;
+}
+
+public cmdTelMenu(_arg0, _arg1, _arg2)
+{
+	if (sub_230(_arg0, _arg1, _arg2, 1))
+	{
+		216[_arg0] = 0;
+		sub_15e0(_arg0, 0);
+	}
+	return 1;
+}
+
+public plugin_init()
+{
+	register_plugin("Teleport Menu", "1.00", "AMXX Dev Team");
+	register_dictionary("telemenu.txt");
+	register_dictionary("common.txt");
+	register_clcmd("amx_teleportmenu", "cmdTelMenu", 128, "- displays teleport menu");
+	register_menucmd(register_menuid("Teleport Menu", "1.00"), 1023, "actionTelMenu");
+	g_var1578 = sub_6d8();
+	return 0;
+}
+
+public plugin_modules()
+{
+	require_module("fun");
+	return 0;
+}
+
+sub_15e0(_arg0, _arg1)
+{
+	if (0 > _arg1)
+	{
+		return 0;
+	}
+	get_players(348[_arg0], 4704[_arg0], 6528, 6532);
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	new var12;
+	var12 = _arg1 * 6;
+	new var13;
+	new var1;
+	if (is_user_alive(_arg0) && 4836[_arg0] < 1)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		var2 = 0;
+	}
+	var13 = var2;
+	if (4704[_arg0] <= var12)
+	{
+		216[_arg0] = 0;
+		_arg1 = 0;
+		var12 = 0;
+	}
+	new var14;
+	new var3;
+	if (4704[_arg0] % 6)
+	{
+		var3 = 1;
+	}
+	else
+	{
+		var3 = 0;
+	}
+	new var4;
+	if (g_var1578)
+	{
+		var4 = 6536;
+	}
+	else
+	{
+		var4 = 6600;
+	}
+	var14 = format(var8, 511, var4, _arg0, "TELE_MENU", _arg1 + 1, var3 + 4704[_arg0] / 6);
+	new var15;
+	var15 = var12 + 6;
+	new var16 = 640;
+	if (4704[_arg0] < var15)
+	{
+		var15 = 4704[_arg0];
+	}
+	new var17;
+	var17 = var12;
+	while (var17 < var15)
+	{
+		var10 = 348[_arg0][var17];
+		get_user_name(var10, var11, "");
+		new var5;
+		if (var13 || !is_user_alive(var10) || get_user_flags(var10, "1.00") & 1)
+		{
+			var9++;
+			if (g_var1578)
+			{
+				var14 = format(var8[var14], 511 - var14, "\d%d. %s\n\w", var9, var11) + var14;
+			}
+			else
+			{
+				var14 = format(var8[var14], 511 - var14, "#. %s\n", var11) + var14;
+			}
+		}
+		else
+		{
+			var16 = 1 << var9 | var16;
+			var9++;
+			var14 = format(var8[var14], 511 - var14, "%d. %s\n", var9, var11) + var14;
+		}
+		var17++;
+	}
+	if (0 < 4836[_arg0])
+	{
+		var16 |= 64;
+		var14 = format(var8[var14], 511 - var14, "\n7. To location: %d %d %d\n", 4968[_arg0], 4968[_arg0][1], 4968[_arg0][2]) + var14;
+	}
+	else
+	{
+		if (4836[_arg0])
+		{
+			if (g_var1578)
+			{
+				var14 = format(var8[var14], 511 - var14, "\n\d7. %L\n\w", _arg0, "CUR_LOC") + var14;
+			}
+			else
+			{
+				var14 = format(var8[var14], 511 - var14, "\n#. %L\n", _arg0, "CUR_LOC") + var14;
+			}
+		}
+		var16 |= 64;
+		var14 = format(var8[var14], 511 - var14, "\n7. %L\n", _arg0, "CUR_LOC") + var14;
+	}
+	var14 = format(var8[var14], 511 - var14, "8. %L\n", _arg0, "SAVE_LOC") + var14;
+	if (4704[_arg0] != var15)
+	{
+		new var6;
+		if (_arg1)
+		{
+			var6 = 7256;
+		}
+		else
+		{
+			var6 = 7276;
+		}
+		format(var8[var14], 511 - var14, "\n9. %L...\n0. %L", _arg0, "MORE", _arg0, var6);
+		var16 |= 256;
+	}
+	else
+	{
+		new var7;
+		if (_arg1)
+		{
+			var7 = 7324;
+		}
+		else
+		{
+			var7 = 7344;
+		}
+		format(var8[var14], 511 - var14, "\n0. %L", _arg0, var7);
+	}
+	show_menu(_arg0, var16, var8, -1, "Teleport Menu");
+	return 0;
+}
+
+sub_230(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_150(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_6d8()
+{
+	new var2 = 0;
+	get_modname(var2, "");
+	new var1;
+	return equal(var2, "cstrike", "1.00") || equal(var2, "czero", "1.00") || equal(var2, "dod", "1.00");
+}
+
+sub_150(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+

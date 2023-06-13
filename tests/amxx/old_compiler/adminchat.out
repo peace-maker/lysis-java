@@ -1,0 +1,317 @@
+new g_var208;
+public cmdChat(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, 2))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	read_args(var1, 191);
+	remove_quotes(var1);
+	get_user_authid(_arg0, var5, "");
+	get_user_name(_arg0, var2, "");
+	var6 = get_user_userid(_arg0);
+	get_players(var3, var4, 4140, 4144);
+	log_amx("Chat: \"%s<%d><%s><>\" chat \"%s\"", var2, var6, var5, var1);
+	log_message("\"%s<%d><%s><>\" triggered \"amx_chat\" (text \"%s\")", var2, var6, var5, var1);
+	format(var1, 191, "(ADMINS) %s :   %s", var2, var1);
+	console_print(_arg0, var1);
+	new var7 = 0;
+	while (var7 < var4)
+	{
+		if (sub_6d0(var3[var7], 256))
+		{
+			client_print(var3[var7], "", var1);
+		}
+		var7++;
+	}
+	return 1;
+}
+
+public cmdPsay(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, ""))
+	{
+		return 1;
+	}
+	new var3 = 0;
+	read_argv(1, var3, "");
+	new var4;
+	var4 = sub_7bc(_arg0, var3, 0);
+	if (!var4)
+	{
+		return 1;
+	}
+	new var5;
+	var5 = strlen(var3) + 1;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	new var10 = 0;
+	new var11 = 0;
+	get_user_authid(_arg0, var8, "");
+	get_user_name(_arg0, var7, "");
+	var10 = get_user_userid(_arg0);
+	read_args(var6, 191);
+	new var1;
+	if (var6 == 34 && var6[var5] == 34)
+	{
+		var6 = 32;
+		var6[var5] = 32;
+		var5 += 2;
+	}
+	remove_quotes(var6[var5]);
+	get_user_name(var4, var3, "");
+	new var2;
+	if (_arg0 && var4 != _arg0)
+	{
+		client_print(_arg0, "", "(%s) %s :   %s", var3, var7, var6[var5]);
+	}
+	client_print(var4, "", "(%s) %s :   %s", var3, var7, var6[var5]);
+	console_print(_arg0, "(%s) %s :   %s", var3, var7, var6[var5]);
+	get_user_authid(var4, var9, "");
+	var11 = get_user_userid(var4);
+	log_amx("Chat: \"%s<%d><%s><>\" psay \"%s<%d><%s><>\" \"%s\"", var7, var10, var8, var3, var11, var9, var6[var5]);
+	log_message("\"%s<%d><%s><>\" triggered \"amx_psay\" against \"%s<%d><%s><>\" (text \"%s\")", var7, var10, var8, var3, var11, var9, var6[var5]);
+	return 1;
+}
+
+public cmdSay(_arg0, _arg1, _arg2)
+{
+	if (!sub_230(_arg0, _arg1, _arg2, 2))
+	{
+		return 1;
+	}
+	new var1 = 0;
+	new var2 = 0;
+	new var3 = 0;
+	new var4 = 0;
+	read_args(var1, 191);
+	remove_quotes(var1);
+	get_user_authid(_arg0, var3, "");
+	get_user_name(_arg0, var2, "");
+	var4 = get_user_userid(_arg0);
+	client_print("1.00", "", "(ALL) %s :   %s", var2, var1);
+	console_print(_arg0, "(ALL) %s :   %s", var2, var1);
+	log_amx("Chat: \"%s<%d><%s><>\" say \"%s\"", var2, var4, var3, var1);
+	log_message("\"%s<%d><%s><>\" triggered \"amx_say\" (text \"%s\")", var2, var4, var3, var1);
+	return 1;
+}
+
+public cmdSayAdmin(_arg0)
+{
+	new var2 = 0;
+	read_argv(1, var2, 1);
+	if (var2 != 64)
+	{
+		return 0;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	new var5 = 0;
+	new var6 = 0;
+	new var7 = 0;
+	new var8 = 0;
+	read_args(var3, 191);
+	remove_quotes(var3);
+	get_user_authid(_arg0, var5, "");
+	get_user_name(_arg0, var4, "");
+	var6 = get_user_userid(_arg0);
+	log_amx("Chat: \"%s<%d><%s><>\" chat \"%s\"", var4, var6, var5, var3 + 4);
+	log_message("\"%s<%d><%s><>\" triggered \"amx_chat\" (text \"%s\")", var4, var6, var5, var3 + 4);
+	format(var3, 191, "(ADMINS) %s :  %s", var4, var3 + 4);
+	get_players(var7, var8, 4140, 4144);
+	new var9 = 0;
+	while (var9 < var8)
+	{
+		new var1;
+		if (_arg0 != var7[var9] && get_user_flags(var7[var9], "1.00") & 256)
+		{
+			client_print(var7[var9], "", var3);
+		}
+		var9++;
+	}
+	client_print(_arg0, "", var3);
+	return 1;
+}
+
+public cmdSayChat(_arg0)
+{
+	if (!sub_6d0(_arg0, 256))
+	{
+		return 0;
+	}
+	new var3 = 0;
+	new var4 = 0;
+	read_argv(1, var3, 5);
+	while (var3[var4] == 64)
+	{
+		var4++;
+	}
+	new var1;
+	if (!var4 || var4 > 3)
+	{
+		return 0;
+	}
+	new var5 = 0;
+	new var6 = 0;
+	read_args(var5, 191);
+	remove_quotes(var5);
+	switch (var3[var4])
+	{
+		case 98:
+		{
+			var6 = 3;
+		}
+		case 99:
+		{
+			var6 = 6;
+		}
+		case 103:
+		{
+			var6 = 2;
+		}
+		case 109:
+		{
+			var6 = 5;
+		}
+		case 111:
+		{
+			var6 = 7;
+		}
+		case 114:
+		{
+			var6 = 1;
+		}
+		case 121:
+		{
+			var6 = 4;
+		}
+		default:
+		{
+		}
+	}
+	new var7 = 0;
+	new var8 = 0;
+	new var9 = 0;
+	get_user_authid(_arg0, var8, "");
+	get_user_name(_arg0, var7, "");
+	var9 = get_user_userid(_arg0);
+	log_amx("Chat: \"%s<%d><%s><>\" tsay \"%s\"", var7, var9, var8, var5[var4 + 1]);
+	log_message("\"%s<%d><%s><>\" triggered \"amx_tsay\" (text \"%s\") (color \"%L\")", var7, var9, var8, var5[var4 + 1], "en", 524[var6]);
+	g_var208 += 1;
+	new var2;
+	if (g_var208 > 6 || g_var208 < 3)
+	{
+		g_var208 = 3;
+	}
+	new var10;
+	var10 = floatadd(1128[var4][1], floatdiv(float(g_var208), 1108082688));
+	set_hudmessage(968[var6], 968[var6][1], 968[var6][2], 1128[var4], var10, "1.00", 1086324736, 1086324736, 1056964608, 1041865114, g_var208);
+	if (get_cvar_num("amx_show_activity") == 2)
+	{
+		show_hudmessage("1.00", "%s :   %s", var7, var5[var4 + 1]);
+		client_print("1.00", 1, "%s :   %s", var7, var5[var4 + 1]);
+	}
+	else
+	{
+		show_hudmessage("1.00", var5[var4 + 1]);
+		client_print("1.00", 1, var5[var4 + 1]);
+	}
+	return 1;
+}
+
+
+/* ERROR! null */
+ function "cmdTsay" (number 5)
+
+public plugin_init()
+{
+	register_plugin("Admin Chat", "1.00", "AMXX Dev Team");
+	register_dictionary("adminchat.txt");
+	register_dictionary("common.txt");
+	register_clcmd("say", "cmdSayChat", 256, "@[@|@|@][w|r|g|b|y|m|c]<text> - displays hud message");
+	register_clcmd("say_team", "cmdSayAdmin", "1.00", "@<text> - displays message to admins");
+	register_concmd("amx_say", "cmdSay", 256, "<message> - sends message to all players");
+	register_concmd("amx_chat", "cmdChat", 256, "<message> - sends message to admins");
+	register_concmd("amx_psay", "cmdPsay", 256, "<name or #userid> <message> - sends private message");
+	register_concmd("amx_tsay", "cmdTsay", 256, "<color> <message> - sends left side hud message to all players");
+	register_concmd("amx_csay", "cmdTsay", 256, "<color> <message> - sends center hud message to all players");
+	return 0;
+}
+
+sub_230(_arg0, _arg1, _arg2, _arg3)
+{
+	new var2 = 0;
+	new var1;
+	if (is_dedicated_server())
+	{
+		var1 = 0;
+	}
+	else
+	{
+		var1 = 1;
+	}
+	if (var1 == _arg0)
+	{
+		var2 = 1;
+	}
+	else
+	{
+		if (_arg1 == 16777216)
+		{
+			if (sub_150(_arg0))
+			{
+				var2 = 1;
+			}
+		}
+		if (_arg1 & get_user_flags(_arg0, "1.00"))
+		{
+			var2 = 1;
+		}
+		if (_arg1 == 0)
+		{
+			var2 = 1;
+		}
+	}
+	if (var2 == 0)
+	{
+		console_print(_arg0, "%L", _arg0, "NO_ACC_COM");
+		return 0;
+	}
+	if (_arg3 > read_argc())
+	{
+		new var3 = 0;
+		new var4 = 0;
+		get_concmd(_arg2, var3, "", _unused_temp_, var4, 127, _arg1, -1);
+		console_print(_arg0, "%L:  %s %s", _arg0, "USAGE", var3, var4);
+		return 0;
+	}
+	return 1;
+}
+
+sub_6d0(_arg0, _arg1)
+{
+	if (_arg1 == 16777216)
+	{
+		return sub_150(_arg0);
+	}
+	return _arg1 & get_user_flags(_arg0, "1.00");
+}
+
+
+/* ERROR! null */
+ function "sub_7bc" (number 9)
+
+sub_150(_arg0)
+{
+	new var1;
+	return get_user_flags(_arg0, "1.00") > 0 && !get_user_flags(_arg0, "1.00") & 33554432;
+}
+
