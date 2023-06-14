@@ -571,7 +571,7 @@ public class SourceBuilder {
 	}
 
 	private String buildCharacter(DCharacter node) {
-		String str = new Character(node.value()).toString();
+		String str = Character.valueOf(node.value()).toString();
 		str = replaceChatColorCharacters(str);
 		return "'" + str + "'";
 	}
