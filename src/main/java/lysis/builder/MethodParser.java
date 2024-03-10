@@ -72,7 +72,6 @@ import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
 import lysis.instructions.SwitchCase;
-import lysis.instructions.LAlign;
 import lysis.lstructure.Function;
 import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
@@ -227,13 +226,6 @@ public class MethodParser {
 
 		case idxaddr_b:
 			return new LIndexAddress(readInt32());
-
-		case align_pri:
-		case align_alt:
-		{
-			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
-			return new LAlign(reg);
-		}
 
 		case move_pri:
 		case move_alt: {
@@ -691,6 +683,13 @@ public class MethodParser {
 			readUInt32(); // ident
 			pc_ += num - 8; // skip dbgname
 			return new LDebugBreak();
+		}
+		
+		case align_pri:
+		case align_alt:
+		{
+			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
+			return new LAlign(trackGlobal(readInt32()), reg);
 		}
 
 		default:
