@@ -66,6 +66,7 @@ import lysis.lstructure.LGraph;
 import lysis.lstructure.Register;
 import lysis.lstructure.Scope;
 import lysis.lstructure.Variable;
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoundsCheck;
@@ -384,6 +385,15 @@ public class NodeBuilder {
 				LIndexAddress ins = (LIndexAddress) uins;
 				DArrayRef node = new DArrayRef(block.stack().alt(), block.stack().pri(), ins.shift());
 				block.stack().set(Register.Pri, node);
+				block.add(node);
+				break;
+			}
+			
+			case Align: {
+				LAlign ins = (LAlign) uins;
+				DAlign node = new DAlign((ins.reg() == Register.Pri) ? block.stack().pri() : block.stack().alt(), ins.number());
+					
+				block.stack().set((ins.reg() == Register.Pri) ? Register.Pri : Register.Alt, node);
 				block.add(node);
 				break;
 			}
@@ -790,15 +800,6 @@ public class NodeBuilder {
 						block.stack().pop();
 				}
 				block.add(new DLabel(ins.pc()));
-				break;
-			}
-			
-			case Align: {
-				LAlign ins = (LAlign) uins;
-				if (ins.reg() == Register.Pri)
-					block.stack().set(Register.Pri, block.stack().alt());
-				else
-					block.stack().set(Register.Alt, block.stack().pri());
 				break;
 			}
 

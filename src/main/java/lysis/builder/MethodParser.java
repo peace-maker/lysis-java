@@ -236,7 +236,7 @@ public class MethodParser {
 		case align_pri:
 		case align_alt:
 		{
-			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
+			Register reg = (op == SPOpcode.align_pri) ? Register.Pri : Register.Alt;
 			return new LAlign(trackGlobal(readInt32LittleEndian()), reg);
 		}
 

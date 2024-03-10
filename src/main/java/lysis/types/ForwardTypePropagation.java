@@ -9,6 +9,7 @@ import lysis.nodes.NodeGraph;
 import lysis.nodes.NodeList;
 import lysis.nodes.NodeType;
 import lysis.nodes.NodeVisitor;
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoundsCheck;
@@ -292,5 +293,9 @@ public class ForwardTypePropagation extends NodeVisitor {
 			assert (tu != null);
 			genarray.addType(new TypeUnit(tu));
 		}
+	}
+	
+	@Override
+	public void visit(DAlign node) {
 	}
 }

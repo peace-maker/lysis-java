@@ -1,5 +1,6 @@
 package lysis.nodes;
 
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoolean;
@@ -116,5 +117,8 @@ public abstract class NodeVisitor {
 	}
 
 	public void visit(DLabel gototarget) {
+	}
+	
+	public void visit(DAlign number) {
 	}
 }

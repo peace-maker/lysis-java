@@ -1,5 +1,6 @@
 package lysis.nodes;
 
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoundsCheck;
@@ -290,6 +291,10 @@ public class NodeRewriter extends NodeVisitor {
 		default:
 			throw new Exception("unknown spop");
 		}
+	}
+	
+	@Override
+	public void visit(DAlign check) {
 	}
 
 	private void rewriteBlock(NodeBlock block) throws Exception {
