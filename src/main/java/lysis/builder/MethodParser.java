@@ -684,6 +684,13 @@ public class MethodParser {
 			pc_ += num - 8; // skip dbgname
 			return new LDebugBreak();
 		}
+		
+		case align_pri:
+		case align_alt:
+		{
+			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
+			return new LStackAddress(trackStack(readInt32()), reg);
+		}
 
 		default:
 			throw new Exception("Unrecognized opcode: " + op);

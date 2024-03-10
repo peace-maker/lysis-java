@@ -58,6 +58,7 @@ import lysis.instructions.LSysReq;
 import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
+import lysis.instructions.LAlign;
 import lysis.instructions.Opcode;
 import lysis.lstructure.Function;
 import lysis.lstructure.LBlock;
@@ -789,6 +790,15 @@ public class NodeBuilder {
 						block.stack().pop();
 				}
 				block.add(new DLabel(ins.pc()));
+				break;
+			}
+			
+			case Align: {
+				LAlign ins = (LAlign) uins;
+				if (ins.reg() == Register.Pri)
+					block.stack().set(Register.Pri, block.stack().alt());
+				else
+					block.stack().set(Register.Alt, block.stack().pri());
 				break;
 			}
 
