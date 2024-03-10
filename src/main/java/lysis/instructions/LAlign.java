@@ -5,16 +5,16 @@ import java.io.IOException;
 
 import lysis.lstructure.Register;
 
-public class LAlign extends LInstructionReg {
-	
-	private long offset_;
+public class LAlign extends LInstructionRegStack {
+    
+    private long number_;
 
-	public long offset() {
-		return offset_;
-	}
-    public LAlign(long offset, Register reg) {
-		super(reg);
-		offset_ = offset;
+    public long number() {
+        return number_;
+    }
+    public LAlign(long number, Register reg) {
+        super(reg, number);
+        number_ = number;
     }
 
     @Override
@@ -24,7 +24,6 @@ public class LAlign extends LInstructionReg {
 
     @Override
     public void print(DataOutputStream tw) throws IOException {
-        tw.writeBytes("align." + RegisterName(reg()) + ", "
-				+ (reg() == Register.Pri ? RegisterName(Register.Alt) : RegisterName(Register.Pri)) + offset());
+        tw.writeBytes("align." + (reg() == Register.Pri ? RegisterName(Register.Pri) : RegisterName(Register.Alt)) + number());
     }
 }

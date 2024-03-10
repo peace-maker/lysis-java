@@ -118,6 +118,11 @@ public class MethodParser {
 		return BitConverter.ToUInt32(file_.code().bytes(), (int) pc_ - 4);
 	}
 
+	private int readInt32LittleEndian() {
+	    pc_ += 4;
+	    return BitConverter.ToInt32LittleEndian(file_.code().bytes(), (int) pc_ - 4);
+	}
+
 	private SPOpcode readOp() {
 		return SPOpcode.values()[(int) readUInt32()];
 	}
@@ -227,6 +232,13 @@ public class MethodParser {
 
 		case idxaddr_b:
 			return new LIndexAddress(readInt32());
+
+		case align_pri:
+		case align_alt:
+		{
+			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
+			return new LAlign(trackGlobal(readInt32LittleEndian()), reg);
+		}
 
 		case move_pri:
 		case move_alt: {
@@ -684,13 +696,6 @@ public class MethodParser {
 			readUInt32(); // ident
 			pc_ += num - 8; // skip dbgname
 			return new LDebugBreak();
-		}
-		
-		case align_pri:
-		case align_alt:
-		{
-			Register reg = (op == SPOpcode.addr_pri) ? Register.Pri : Register.Alt;
-			return new LAlign(trackGlobal(readInt32()), reg);
 		}
 
 		default:
