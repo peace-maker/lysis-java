@@ -26,6 +26,7 @@ import lysis.lstructure.VariableType;
 import lysis.nodes.NodeBlock;
 import lysis.nodes.NodeList;
 import lysis.nodes.NodeType;
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoolean;
@@ -410,6 +411,10 @@ public class SourceBuilder {
 		case Unary: {
 			return buildUnary((DUnary) node) + "/* ERROR unknown load Unary */";
 		}
+		
+		case Align: {
+			return buildAlign((DAlign) node);
+		}
 
 		default:
 			throw new Exception("unknown load " + node.type());
@@ -418,6 +423,10 @@ public class SourceBuilder {
 
 	private String buildLoad(DLoad load) throws Exception {
 		return buildLoadStoreRef(load.getOperand(0));
+	}
+	
+	private String buildAlign(DAlign alg) throws Exception {
+		return buildLoadStoreRef(alg.getOperand(0));
 	}
 
 	private String buildSysReq(DSysReq sysreq) throws Exception {
@@ -812,6 +821,9 @@ public class SourceBuilder {
 
 		case Label:
 			writeLabel((DLabel) node);
+			break;
+			
+		case Align:
 			break;
 
 		default:

@@ -15,6 +15,7 @@ import lysis.nodes.NodeGraph;
 import lysis.nodes.NodeList;
 import lysis.nodes.NodeType;
 import lysis.nodes.NodeVisitor;
+import lysis.nodes.types.DAlign;
 import lysis.nodes.types.DArrayRef;
 import lysis.nodes.types.DBinary;
 import lysis.nodes.types.DBoolean;
@@ -400,5 +401,8 @@ public class BackwardTypePropagation extends NodeVisitor {
 		for (int i = 0; i < genarray.numOperands(); i++) {
 			genarray.getOperand(i).accept(this);
 		}
+	}
+	
+	public void visit(DAlign check) {
 	}
 }
