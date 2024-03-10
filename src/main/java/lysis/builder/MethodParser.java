@@ -72,6 +72,7 @@ import lysis.instructions.LUnary;
 import lysis.instructions.LZeroGlobal;
 import lysis.instructions.LZeroLocal;
 import lysis.instructions.SwitchCase;
+import lysis.instructions.LAlign;
 import lysis.lstructure.Function;
 import lysis.lstructure.LBlock;
 import lysis.lstructure.LGraph;
